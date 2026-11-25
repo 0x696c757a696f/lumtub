@@ -205,6 +205,28 @@ void main() {
     expect(updated.last, path);
   });
 
+  test('stops following a track once another video plays', () async {
+    String stamp(int minute) => '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
+    final vtt = StringBuffer('WEBVTT\n\n');
+    for (var i = 0; i < 60; i++) {
+      vtt.write('${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
+    }
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final translator = _Upper();
+    var position = Duration.zero;
+    var playing = 'a';
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => position, playing: () => playing, poll: const Duration(milliseconds: 10), onUpdated: (path) async => true);
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    await files.pathFor(option);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    final asked = translator.asked.length;
+    // Another video, at a place this track has not reached.
+    playing = 'b';
+    position = const Duration(minutes: 30);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(translator.asked, hasLength(asked));
+  });
+
   test('joins caption fragments into sentences for translation', () {
     ({String timing, String text}) cue(String from, String to, String text) => (timing: '00:00:$from --> 00:00:$to align:start', text: text);
     final joined = WebVtt.sentences([

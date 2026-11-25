@@ -44,6 +44,13 @@ it builds everything: while debugging one platform, name it (`[ios]`).
 One build runs at a time: a newer run waits for older ones, and a newer push
 to a pull request cancels its older run.
 
+A run that finds a passed build of the same files reuses its packages
+instead of building again (a release signs that build's packages). Only a
+push or daily run on `main`, or a pull request from this repository, counts,
+and only when the commit it ran for has exactly those files, `build.yml`
+included. A pull request that was behind `main` when it built has other
+files than the merge, so `main` builds it again.
+
 ## Heavy dependencies are built elsewhere
 
 Nothing that takes long to compile is compiled in this repository's CI.
@@ -72,3 +79,7 @@ Rules:
   it the next day and the upstream run pins it.
 - A pin of `none` means "no release yet": `build.yml` falls back to
   building it here.
+- The tools the jobs download (the Flutter SDK, `rustup-init`, `7zr.exe`,
+  vcpkg's commit, the Windows libmpv) are pinned in `pins.env` too and
+  checked by SHA-256. `lockfiles.yml` moves the Flutter sums with
+  `.flutter-version`; the upstream run moves the Windows libmpv.

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:math';
 
 import 'native_core.dart';
 import 'app_log.dart';
@@ -27,7 +28,17 @@ abstract interface class SocksBridge {
     return bridge;
   }
 
+  /// The user name a client gives with [token] as its password.
+  static const user = 'lumtub';
+
   int get port;
+
+  /// The password the bridge asks every client for, so other programs on
+  /// this PC cannot use the user's proxy through it.
+  String get token;
+
+  /// `lumtub:token@127.0.0.1:port`, for dart:io's `PROXY` rule and, after
+  /// `http://`, for libmpv and the relay.
   String get hostPort;
 
   /// Stops listening and drops the connections still open.
@@ -35,7 +46,7 @@ abstract interface class SocksBridge {
 }
 
 class _NativeBridge implements SocksBridge {
-  _NativeBridge(this._core, this._handle) : port = _core.socksPort(_handle);
+  _NativeBridge(this._core, this._handle) : port = _core.socksPort(_handle), token = _core.take(_core.socksToken(_handle)) ?? '';
 
   final NativeCore _core;
   Pointer<Void> _handle;
@@ -43,7 +54,9 @@ class _NativeBridge implements SocksBridge {
   @override
   final int port;
   @override
-  String get hostPort => '127.0.0.1:$port';
+  final String token;
+  @override
+  String get hostPort => '${SocksBridge.user}:$token@127.0.0.1:$port';
 
   @override
   Future<void> close() async {
@@ -55,16 +68,26 @@ class _NativeBridge implements SocksBridge {
 
 /// The bridge in Dart, used when lumtub_core cannot start one.
 class DartSocksBridge implements SocksBridge {
-  DartSocksBridge._(this._server, this._proxy);
+  DartSocksBridge._(this._server, this._proxy) : token = _newToken() {
+    _login = 'Basic ${base64.encode(utf8.encode('${SocksBridge.user}:$token'))}';
+  }
 
   final ServerSocket _server;
   final Uri _proxy;
   final _open = <Socket>{};
+  late final String _login;
+
+  static String _newToken() {
+    final random = Random.secure();
+    return [for (var i = 0; i < 16; i++) random.nextInt(256).toRadixString(16).padLeft(2, '0')].join();
+  }
 
   @override
   int get port => _server.port;
   @override
-  String get hostPort => '127.0.0.1:$port';
+  final String token;
+  @override
+  String get hostPort => '${SocksBridge.user}:$token@127.0.0.1:$port';
 
   @override
   Future<void> close() async {
@@ -81,6 +104,17 @@ class DartSocksBridge implements SocksBridge {
       final reader = _Reader(client);
       final head = await reader.head().timeout(_timeout, onTimeout: () => throw const _Bad());
       final end = head.indexOf(13); // end of the request line
+      // The other header lines, without the login: it is not sent on.
+      final fields = <String>[];
+      var allowed = false;
+      for (final field in latin1.decode(head.sublist(end + 2)).split('\r\n')) {
+        if (field.toLowerCase().startsWith('proxy-authorization:')) {
+          allowed |= _same(field.substring(20).trim(), _login);
+        } else {
+          fields.add(field);
+        }
+      }
+      if (!allowed) throw const _Bad(407);
       final line = latin1.decode(head.sublist(0, end)).split(' ');
       if (line.length != 3) throw const _Bad();
       final String host;
@@ -97,7 +131,7 @@ class DartSocksBridge implements SocksBridge {
         host = uri.host;
         port = uri.hasPort ? uri.port : 80;
         final target = '${uri.path.isEmpty ? '/' : uri.path}${uri.hasQuery ? '?${uri.query}' : ''}';
-        forward = [...latin1.encode('${line[0]} $target ${line[2]}'), ...head.sublist(end)];
+        forward = latin1.encode('${line[0]} $target ${line[2]}\r\n${fields.join('\r\n')}');
       }
       if (port <= 0 || port > 65535) throw const _Bad();
       try {
@@ -114,7 +148,12 @@ class DartSocksBridge implements SocksBridge {
       await Future.wait([_pump(reader, upstream.socket), _pump(upstream, client)]);
     } on _Bad catch (e) {
       try {
-        client.add(latin1.encode('HTTP/1.1 ${e.status} ${e.status == 502 ? 'Bad Gateway' : 'Bad Request'}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'));
+        final status = switch (e.status) {
+          502 => '502 Bad Gateway',
+          407 => '407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm="lumtub"',
+          _ => '400 Bad Request',
+        };
+        client.add(latin1.encode('HTTP/1.1 $status\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'));
         await client.flush();
       } catch (e) {
         logDebug(() => 'Could not send the proxy error answer: $e');
@@ -146,6 +185,17 @@ class DartSocksBridge implements SocksBridge {
 
 const _timeout = Duration(seconds: 15);
 
+/// Whether [a] and [b] are equal, compared in time that does not depend on
+/// where they differ.
+bool _same(String a, String b) {
+  if (a.length != b.length) return false;
+  var difference = 0;
+  for (var i = 0; i < a.length; i++) {
+    difference |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+  }
+  return difference == 0;
+}
+
 class _Bad implements Exception {
   const _Bad([this.status = 400]);
   final int status;
@@ -174,10 +224,13 @@ class _Reader {
 
   /// An HTTP request head, up to and including the blank line.
   Future<List<int>> head() async {
+    // Each byte is looked at once, not again with every chunk.
+    var from = 0;
     while (true) {
-      for (var i = 0; i + 3 < _buffer.length; i++) {
+      for (var i = from; i + 3 < _buffer.length; i++) {
         if (_buffer[i] == 13 && _buffer[i + 1] == 10 && _buffer[i + 2] == 13 && _buffer[i + 3] == 10) return take(i + 4);
       }
+      from = max(0, _buffer.length - 3);
       if (_buffer.length > 64 * 1024) throw const _Bad();
       await _more();
     }

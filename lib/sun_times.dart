@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'sun_zones.dart';
+import 'system_env.dart';
 
 /// Sunrise and sunset where the computer's time zone puts it: the zone's
 /// main city, found offline from the zone's name. Nothing is looked up on
@@ -24,6 +26,24 @@ class SunTimes {
 
   static SunTimes _find() {
     final zone = _ianaZone();
+    if (zone == null && Platform.isWindows) unawaited(_readWindowsZone());
+    return _fromZone(zone);
+  }
+
+  /// Asks reg.exe in the background, so the first frame does not wait for a
+  /// process to start; until it answers, the UTC offset decides.
+  static Future<void> _readWindowsZone() async {
+    try {
+      final result = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', r'HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation', '/v', 'TimeZoneKeyName']).timeout(const Duration(seconds: 10));
+      final name = RegExp(r'TimeZoneKeyName\s+REG_SZ\s+(.+)').firstMatch('${result.stdout}')?.group(1)?.trim();
+      final zone = name == null ? null : windowsZones[name];
+      if (zone != null && zoneCoordinates.containsKey(zone)) _here = _fromZone(zone);
+    } catch (_) {
+      // The offset stays.
+    }
+  }
+
+  static SunTimes _fromZone(String? zone) {
     final place = zone == null ? null : zoneCoordinates[zone];
     if (place != null) return SunTimes._(place.$1, place.$2, zone);
     // Only the offset: the zone's middle meridian, at a latitude most
@@ -36,11 +56,7 @@ class SunTimes {
     try {
       final tz = Platform.environment['TZ'];
       if (tz != null && zoneCoordinates.containsKey(tz)) return tz;
-      if (Platform.isWindows) {
-        final result = Process.runSync('reg', ['query', r'HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation', '/v', 'TimeZoneKeyName']);
-        final name = RegExp(r'TimeZoneKeyName\s+REG_SZ\s+(.+)').firstMatch('${result.stdout}')?.group(1)?.trim();
-        return name == null ? null : windowsZones[name];
-      }
+      if (Platform.isWindows) return null;
       final file = File('/etc/timezone');
       if (file.existsSync()) {
         final name = file.readAsStringSync().trim();

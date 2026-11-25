@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
 import 'l10n/l10n.dart';
+import 'network_proxy.dart' show isLocalHost;
 import 'translation.dart';
 import 'translation_cache.dart';
 
@@ -749,9 +750,8 @@ class AiTranslator extends _CachedTranslator {
       ], temperature, const Duration(seconds: 120));
 
   Future<String> _chat(List<Map<String, String>> messages, double temperature, Duration timeout) async {
-    final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.tryParse('$base/chat/completions');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
+    final uri = aiEndpoint(baseUrl, 'chat/completions');
+    if (uri == null) {
       throw TranslationException(tr('The AI endpoint address or model name is wrong'));
     }
     final body = {'model': model, 'temperature': temperature, 'messages': messages};
@@ -776,11 +776,21 @@ class AiTranslator extends _CachedTranslator {
     throw _unrecognized();
   }
 
+  /// [path] under [baseUrl], or null when it is no web address. Plain http
+  /// is kept only for servers on this computer or the local network; the
+  /// key goes to any other over https.
+  static Uri? aiEndpoint(String baseUrl, String path) {
+    final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.tryParse('$base/$path');
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) return null;
+    if (uri.scheme == 'http' && !isLocalHost(uri.host)) return uri.replace(scheme: 'https', port: uri.hasPort && uri.port != 80 ? uri.port : 443);
+    return uri;
+  }
+
   /// The models [baseUrl] lists at `/models`, for picking one.
   static Future<List<String>> listModels(http.Client client, String baseUrl, String key) async {
-    final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.tryParse('$base/models');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('The AI endpoint address or model name is wrong'));
+    final uri = aiEndpoint(baseUrl, 'models');
+    if (uri == null) throw TranslationException(tr('The AI endpoint address or model name is wrong'));
     final http.Response response;
     try {
       response = await client.get(uri, headers: {if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'}).timeout(const Duration(seconds: 20));

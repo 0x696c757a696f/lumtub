@@ -86,11 +86,13 @@ if (workspace.windowList) {
   /// loaded it last.
   static Future<void> set(bool on) async {
     if (!KWinKeepAbove.available) return;
+    Directory? folder;
     try {
       await KWinKeepAbove._call('/Scripting', 'org.kde.kwin.Scripting.unloadScript', const [_name]);
       if (!on) return;
-      final folder = Directory('${Directory.systemTemp.path}/lumtub-kwin-$pid');
-      await folder.create(recursive: true);
+      // A folder of its own that only this user can write to, so no one
+      // else can swap the script before KWin reads it.
+      folder = await Directory.systemTemp.createTemp('lumtub-kwin-');
       final file = File('${folder.path}/minimize-to-tray.js');
       await file.writeAsString(script(pid));
       final loaded = await KWinKeepAbove._call('/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, _name]);
@@ -99,6 +101,12 @@ if (workspace.windowList) {
       await KWinKeepAbove._call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ?? await KWinKeepAbove._call('/$id', 'org.kde.kwin.Script.run', const []);
     } catch (e) {
       logDebug(() => 'Could not run the KWin keep-above script: $e');
+    } finally {
+      try {
+        await folder?.delete(recursive: true);
+      } catch (e) {
+        logDebug(() => 'Could not remove the KWin script folder: $e');
+      }
     }
   }
 }

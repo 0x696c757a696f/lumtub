@@ -40,7 +40,10 @@ extension SearchActions on AppController {
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
     final keep = _keepsPlaying;
-    if (!keep) _unload();
+    if (!keep) {
+      _leavePlayback();
+      _unload();
+    }
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory && !incognito) unawaited(searchHistory?.add(query));
@@ -51,6 +54,7 @@ extension SearchActions on AppController {
         mini = true;
       } else {
         playing = null;
+        playbackError = null;
       }
       _query = query;
       searchFilter = chosen;
@@ -59,6 +63,7 @@ extension SearchActions on AppController {
         ..addListener(_passOn('search'))
         ..loadMore();
     });
+    if (!keep) _syncDanmaku();
   }
 
   /// Fetches the next page of the current search. After a failed page,

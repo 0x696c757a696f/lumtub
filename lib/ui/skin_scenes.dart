@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'dart:ui' show PointMode;
@@ -20,7 +21,8 @@ enum SkinScene {
   collage,
   dunes;
 
-  static SkinScene? byName(String? name) => values.where((s) => s.name == name).firstOrNull;
+  static final _byName = {for (final s in values) s.name: s};
+  static SkinScene? byName(String? name) => _byName[name];
 }
 
 /// The colours a scene is made of, for checking what is read over it.
@@ -46,39 +48,87 @@ class ScenePainter extends CustomPainter {
   final bool night;
   final int seed;
 
-  static final _cache = <(SkinScene, bool, int, int, int), ui.Picture>{};
+  /// Pictures by scene and size; the last flag says whether the size is a
+  /// [step] one, stretched while the window is being resized.
+  static final _cache = <(SkinScene, bool, int, int, int, bool), ui.Picture>{};
+
+  /// While the window is being resized, scenes are recorded in steps of
+  /// this many pixels and stretched the little rest of the way, so a
+  /// resize records one only now and then, not at every size it passes
+  /// through. Once the size has rested for [settle], the scene is
+  /// recorded at its exact size: a still window never shows it stretched.
+  static const step = 64;
+  static const settle = Duration(milliseconds: 200);
+
+  /// Tells whoever paints scenes to paint again once a resize has rested.
+  static final settled = ValueNotifier<int>(0);
+
+  static final _sincePaint = Stopwatch();
+  static (int, int)? _lastSize;
+  static (int, int)? _restedSize;
+  static Timer? _settling;
+
+  /// How many scenes have been recorded, for tests.
+  @visibleForTesting
+  static int recordings = 0;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
-    final key = (scene, night, seed, size.width.round(), size.height.round());
-    var picture = _cache[key];
+    final exact = (size.width.round(), size.height.round());
+    final resizing = _lastSize != null && _lastSize != exact && _sincePaint.isRunning && _sincePaint.elapsed < settle;
+    _lastSize = exact;
+    _sincePaint
+      ..reset()
+      ..start();
+    final kept = _cache.remove((scene, night, seed, exact.$1, exact.$2, false));
+    if (kept != null || !resizing || _restedSize == exact) {
+      _draw(canvas, size, kept, exact, stepped: false);
+      return;
+    }
+    final stepped = ((size.width / step).ceil() * step, (size.height / step).ceil() * step);
+    _draw(canvas, size, _cache.remove((scene, night, seed, stepped.$1, stepped.$2, true)), stepped, stepped: true);
+    _settling?.cancel();
+    _settling = Timer(settle, () {
+      _restedSize = exact;
+      settled.value++;
+    });
+  }
+
+  void _draw(Canvas canvas, Size size, ui.Picture? picture, (int, int) at, {required bool stepped}) {
+    final width = at.$1, height = at.$2;
     if (picture == null) {
+      final recorded = Size(width.toDouble(), height.toDouble());
+      recordings++;
       final recorder = ui.PictureRecorder();
       final c = Canvas(recorder);
       final random = math.Random(seed);
       switch (scene) {
         case SkinScene.meadow:
-          _meadow(c, size, random, night);
+          _meadow(c, recorded, random, night);
         case SkinScene.sky:
-          _sky(c, size, random, night);
+          _sky(c, recorded, random, night);
         case SkinScene.underwater:
-          _underwater(c, size, random, night);
+          _underwater(c, recorded, random, night);
         case SkinScene.aurora:
-          _aurora(c, size, random);
+          _aurora(c, recorded, random);
         case SkinScene.city:
-          _city(c, size, random, night);
+          _city(c, recorded, random, night);
         case SkinScene.collage:
-          _collage(c, size, random, night);
+          _collage(c, recorded, random, night);
         case SkinScene.dunes:
-          _dunes(c, size, random, night);
+          _dunes(c, recorded, random, night);
       }
       picture = recorder.endRecording();
-      // A window is one size at a time; keep a few for resizing back.
+      // A window is one size at a time; keep a few for resizing back,
+      // dropping the one used longest ago.
       if (_cache.length > 6) _cache.remove(_cache.keys.first)?.dispose();
-      _cache[key] = picture;
     }
+    _cache[(scene, night, seed, width, height, stepped)] = picture;
+    canvas.save();
+    canvas.scale(size.width / width, size.height / height);
     canvas.drawPicture(picture);
+    canvas.restore();
   }
 
   @override

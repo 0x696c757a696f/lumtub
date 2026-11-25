@@ -141,6 +141,23 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     expect(String.fromCharCodes(open.readSync(3)), 'old');
     expect(image.statSync().modeString(), 'rwxr-xr-x');
   }, skip: Platform.isWindows ? 'Linux only' : null);
+
+  test('an AppImage update is checked again as copied, and not put in place when that fails', () async {
+    final temp = await Directory.systemTemp.createTemp('lumtub-appimage');
+    addTearDown(() => temp.delete(recursive: true));
+    final image = File('${temp.path}/Lumtub.AppImage')..writeAsStringSync('old');
+    final update = File('${temp.path}/download.AppImage')..writeAsStringSync('new');
+    final checked = <String>[];
+    Future<bool> refuse(File copy) async {
+      checked.add(copy.readAsStringSync());
+      return false;
+    }
+
+    await expectLater(replaceAppImage(update, image.path, check: refuse), throwsStateError);
+    expect(checked, ['new']);
+    expect(image.readAsStringSync(), 'old');
+    expect(File('${image.path}.update').existsSync(), isFalse);
+  }, skip: Platform.isWindows ? 'Linux only' : null);
 }
 
 /// A CI Mac has no unlocked login keychain, where the vault keeps its key;

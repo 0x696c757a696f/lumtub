@@ -5,6 +5,7 @@
 //! YouTube is always among the proxied sites.
 
 use crate::taste::{give, text};
+use std::io::Read;
 use std::os::raw::c_char;
 use std::time::Duration;
 
@@ -33,6 +34,9 @@ pub fn proxy_in(script: &str) -> Option<String> {
     })
 }
 
+/// The most a PAC script may hold; no more is read.
+const LIMIT: usize = 4 << 20;
+
 /// The script at [url]: `file://` read from disk, `http(s)://` fetched
 /// directly, as the proxy tool serves it on this PC.
 pub fn fetch(url: &str) -> Result<String, String> {
@@ -42,7 +46,14 @@ pub fn fetch(url: &str) -> Result<String, String> {
             .filter(|p| p.as_bytes().get(1) == Some(&b':'))
             .unwrap_or(path);
         let path = path.replace("%20", " ");
-        return std::fs::read_to_string(path).map_err(|e| e.to_string());
+        let mut body = Vec::new();
+        std::fs::File::open(path)
+            .and_then(|file| file.take(LIMIT as u64 + 1).read_to_end(&mut body))
+            .map_err(|e| e.to_string())?;
+        if body.len() > LIMIT {
+            return Err("too large for a PAC script".into());
+        }
+        return Ok(String::from_utf8_lossy(&body).into_owned());
     }
     if !url.starts_with("http://") && !url.starts_with("https://") {
         return Err("not an http, https or file address".into());
@@ -54,13 +65,20 @@ pub fn fetch(url: &str) -> Result<String, String> {
         .build()
         .map_err(|e| e.to_string())?;
     crate::http::runtime().block_on(async {
-        let response = client.get(url).send().await.map_err(|e| e.to_string())?;
+        let mut response = client.get(url).send().await.map_err(|e| e.to_string())?;
         if !response.status().is_success() {
             return Err(format!("HTTP {}", response.status().as_u16()));
         }
-        let body = response.bytes().await.map_err(|e| e.to_string())?;
-        if body.len() > 4 << 20 {
-            return Err("too large for a PAC script".into());
+        let too_large = || Err("too large for a PAC script".to_owned());
+        if response.content_length().is_some_and(|n| n > LIMIT as u64) {
+            return too_large();
+        }
+        let mut body = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {
+            if body.len() + chunk.len() > LIMIT {
+                return too_large();
+            }
+            body.extend_from_slice(&chunk);
         }
         Ok(String::from_utf8_lossy(&body).into_owned())
     })

@@ -79,7 +79,6 @@ Future<void> showWordCard(BuildContext context, AppController controller, WordTo
   if (learning.closeTrialCard() && context.mounted) {
     // Told once, as it happens, rather than at the next lookup.
     await showLearningLocked(context, learning, title: tr('The free trial is over'), lead: tr('From now on, {0} free word lookups a day.', [Learning.trialPerDay]));
-    return;
   }
   if (wasPlaying && controller.player == player) unawaited(player?.play());
 }

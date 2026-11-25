@@ -11,6 +11,7 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
   private let context: CGLContextObj
   private let textureCache: CVOpenGLTextureCache
   private var renderContext: OpaquePointer?
+  private var updateTarget: Unmanaged<TextureHWUpdateTarget>?
   private var textureContexts = SwappableObjectManager<TextureGLContext>(
     objects: [],
     skipCheckArgs: true
@@ -42,7 +43,9 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
 
     super.init()
 
-    self.initMPV()
+    guard self.initMPV() else {
+      return nil
+    }
   }
 
   deinit {
@@ -67,16 +70,13 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
     return Unmanaged.passRetained(textureContext!.pixelBuffer)
   }
 
-  private func initMPV() {
+  private func initMPV() -> Bool {
     CGLSetCurrentContext(context)
     defer {
       OpenGLHelpers.checkError("initMPV")
       CGLSetCurrentContext(nil)
     }
 
-    let api = UnsafeMutableRawPointer(
-      mutating: (MPV_RENDER_API_TYPE_OPENGL as NSString).utf8String
-    )
     var procAddress = mpv_opengl_init_params(
       get_proc_address: {
         (ctx, name) in
@@ -85,37 +85,54 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
       get_proc_address_ctx: nil
     )
 
-    var params: [mpv_render_param] = withUnsafeMutableBytes(of: &procAddress) {
-      procAddress in
-      return [
-        mpv_render_param(type: MPV_RENDER_PARAM_API_TYPE, data: api),
-        mpv_render_param(
-          type: MPV_RENDER_PARAM_OPENGL_INIT_PARAMS,
-          data: procAddress.baseAddress.map {
-            UnsafeMutableRawPointer($0)
-          }
-        ),
-        mpv_render_param(),
-      ]
+    // Lumtub: the pointers handed to mpv are used only inside the closures
+    // that make them.
+    let created: CInt = MPV_RENDER_API_TYPE_OPENGL.withCString { api in
+      withUnsafeMutableBytes(of: &procAddress) { procAddress -> CInt in
+        var params: [mpv_render_param] = [
+          mpv_render_param(
+            type: MPV_RENDER_PARAM_API_TYPE,
+            data: UnsafeMutableRawPointer(mutating: api)
+          ),
+          mpv_render_param(
+            type: MPV_RENDER_PARAM_OPENGL_INIT_PARAMS,
+            data: procAddress.baseAddress
+          ),
+          mpv_render_param(),
+        ]
+        return mpv_render_context_create(&renderContext, handle, &params)
+      }
     }
 
-    MPVHelpers.checkError(
-      mpv_render_context_create(&renderContext, handle, &params)
-    )
+    if created < 0 {
+      NSLog("TextureHW: OpenGL rendering unavailable: \(String(cString: mpv_error_string(created)))")
+      renderContext = nil
+      return false
+    }
 
+    let target = Unmanaged.passRetained(TextureHWUpdateTarget(self))
+    updateTarget = target
     mpv_render_context_set_update_callback(
       renderContext,
       { (ctx) in
-        let that = unsafeBitCast(ctx, to: TextureHW.self)
+        guard let ctx = ctx else {
+          return
+        }
+        let target = Unmanaged<TextureHWUpdateTarget>.fromOpaque(ctx)
+          .takeUnretainedValue()
         DispatchQueue.main.async {
-          that.updateCallback()
+          target.texture?.updateCallback()
         }
       },
-      UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+      target.toOpaque()
     )
+    return true
   }
 
   private func disposeMPV() {
+    guard renderContext != nil else {
+      return
+    }
     CGLSetCurrentContext(context)
     defer {
       OpenGLHelpers.checkError("disposeMPV")
@@ -124,6 +141,9 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
 
     mpv_render_context_set_update_callback(renderContext, nil, nil)
     mpv_render_context_free(renderContext)
+    renderContext = nil
+    updateTarget?.release()
+    updateTarget = nil
   }
 
   public func resize(_ size: CGSize) {
@@ -187,13 +207,13 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
       h: Int32(size.height),
       internal_format: 0
     )
-    let fboPtr = withUnsafeMutablePointer(to: &fbo) { $0 }
-
-    var params: [mpv_render_param] = [
-      mpv_render_param(type: MPV_RENDER_PARAM_OPENGL_FBO, data: fboPtr),
-      mpv_render_param(type: MPV_RENDER_PARAM_INVALID, data: nil),
-    ]
-    mpv_render_context_render(renderContext, &params)
+    withUnsafeMutablePointer(to: &fbo) { fboPtr -> Void in
+      var params: [mpv_render_param] = [
+        mpv_render_param(type: MPV_RENDER_PARAM_OPENGL_FBO, data: fboPtr),
+        mpv_render_param(type: MPV_RENDER_PARAM_INVALID, data: nil),
+      ]
+      mpv_render_context_render(renderContext, &params)
+    }
 
     glFlush()
 
@@ -218,5 +238,16 @@ public class TextureHW: NSObject, FlutterTexture, ResizableTextureProtocol {
       NSLog("Cannot get OpenGL function pointer!")
     }
     return addr
+  }
+}
+
+/// Lumtub: what mpv's update callback is given. It is released only after
+/// the callback is removed, and holds the texture weakly, so a callback in
+/// flight while the texture goes away finds nil instead of a freed object.
+private final class TextureHWUpdateTarget {
+  weak var texture: TextureHW?
+
+  init(_ texture: TextureHW) {
+    self.texture = texture
   }
 }

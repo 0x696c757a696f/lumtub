@@ -50,6 +50,8 @@ class VideoListLoader extends ChangeNotifier {
   final Map<String, int>? dropped;
 
   List<VideoItem> items = const [];
+  /// Set while the list is put away: it reads no further pages by itself.
+  bool paused = false;
   /// Channels the listing found; only searches list them.
   List<ChannelResult> channels = const [];
   /// Playlists the listing found.
@@ -201,7 +203,7 @@ class VideoListLoader extends ChangeNotifier {
         final wanting = order == null
             ? (matches != null || where != null) && shown < fill
             : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < (pageSize * gather).ceil() && skipped < (gather * 2).ceil());
-        if (error == null && more && wanting && skipped < pages - 1 && !_disposed) {
+        if (error == null && more && wanting && skipped < pages - 1 && !_disposed && !paused) {
           // What was found so far shows while the next page is read.
           if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
             if (order != null) _showFromPool();

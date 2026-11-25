@@ -115,6 +115,9 @@ class SpeechAudio {
     final fetched = File('${folder.path}${Platform.pathSeparator}audio.txt');
     var printed = await fetched.exists() ? (await fetched.readAsString()).trim() : null;
     if (printed == null || !await File(printed.substring(printed.indexOf('|') + 1)).exists()) {
+      // A try stopped part way leaves audio that yt-dlp (with --no-part)
+      // would take as already downloaded.
+      await _removeAudio(folder);
       final result = await runWithTimeout(
         ytDlp,
         arguments(videoId, folder, proxy: proxy, cacheDirectory: cacheDirectory, deno: deno),
@@ -123,7 +126,10 @@ class SpeechAudio {
         onStart: (process) => lowerPriority(process.pid),
       );
       printed = const LineSplitter().convert(result.stdout.toString()).where((l) => l.contains('|')).lastOrNull;
-      if (result.exitCode != 0 || printed == null) throw TranslationException(tr("Could not download this video's audio"));
+      if (result.exitCode != 0 || printed == null) {
+        await _removeAudio(folder);
+        throw TranslationException(tr("Could not download this video's audio"));
+      }
       await fetched.writeAsString(printed);
     }
     final split = printed.indexOf('|');
@@ -143,6 +149,18 @@ class SpeechAudio {
       throw TranslationException(tr('Could not split the audio'));
     }
     return [for (final p in parts) (file: File(p.path), offset: Duration(milliseconds: (p.start * 1000).round()))];
+  }
+
+  static Future<void> _removeAudio(Directory folder) async {
+    await for (final entry in folder.list()) {
+      final name = entry.uri.pathSegments.lastWhere((s) => s.isNotEmpty, orElse: () => '');
+      if (entry is! File || !name.startsWith('audio.')) continue;
+      try {
+        await entry.delete();
+      } on FileSystemException {
+        // Tried again next time.
+      }
+    }
   }
 }
 

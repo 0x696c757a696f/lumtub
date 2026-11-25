@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include "data_root.h"
 #include "flutter_window.h"
@@ -15,31 +16,57 @@
 
 namespace {
 
-std::wstring CrashLogDirectory() {
-  if (DataRoot().empty()) return L"";
+// Where a crash dump goes and the file that turns logging off, worked out
+// at start: the filter below runs in a crashing process, where allocating
+// can deadlock or fault again, so it only formats into these buffers.
+wchar_t crash_directory[MAX_PATH]{};
+wchar_t logs_off_file[MAX_PATH]{};
+constexpr size_t kCrashDumpsKept = 5;
+
+// Keeps the newest few dumps; the names sort by the time they were written.
+void PruneCrashDumps(const std::wstring& logs) {
+  std::vector<std::wstring> dumps;
+  WIN32_FIND_DATAW found{};
+  const HANDLE search = ::FindFirstFileW((logs + L"\\lumtub-crash-*.dmp").c_str(), &found);
+  if (search == INVALID_HANDLE_VALUE) return;
+  do {
+    if (!(found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) dumps.push_back(found.cFileName);
+  } while (::FindNextFileW(search, &found));
+  ::FindClose(search);
+  std::sort(dumps.begin(), dumps.end());
+  // One place is left for the next dump.
+  for (size_t i = 0; i + kCrashDumpsKept - 1 < dumps.size(); ++i) {
+    ::DeleteFileW((logs + L"\\" + dumps[i]).c_str());
+  }
+}
+
+void PrepareCrashDumps() {
+  if (DataRoot().empty()) return;
   const std::wstring logs = DataRoot() + L"\\logs";
+  const std::wstring off = DataRoot() + L"\\config\\logs-off";
+  // Room is left for the file name added at crash time.
+  if (logs.size() + 40 >= MAX_PATH || off.size() >= MAX_PATH) return;
   ::CreateDirectoryW(logs.c_str(), nullptr);
-  return logs;
+  PruneCrashDumps(logs);
+  wcscpy_s(crash_directory, logs.c_str());
+  wcscpy_s(logs_off_file, off.c_str());
 }
 
 LONG WINAPI WriteCrashDump(EXCEPTION_POINTERS* exception) {
   // Logging turned off in the settings (lib/app/settings_actions.dart
   // writes config\logs-off): no crash dump either.
-  if (DataRoot().empty() ||
-      ::GetFileAttributesW((DataRoot() + L"\\config\\logs-off").c_str()) !=
-          INVALID_FILE_ATTRIBUTES) {
+  if (crash_directory[0] == L'\0' ||
+      ::GetFileAttributesW(logs_off_file) != INVALID_FILE_ATTRIBUTES) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
-  const std::wstring logs = CrashLogDirectory();
-  if (logs.empty()) return EXCEPTION_CONTINUE_SEARCH;
 
   SYSTEMTIME now{};
   ::GetLocalTime(&now);
-  wchar_t name[96]{};
-  swprintf_s(name, _countof(name), L"\\lumtub-crash-%04u%02u%02u-%02u%02u%02u.dmp",
-             now.wYear, now.wMonth, now.wDay, now.wHour, now.wMinute,
-             now.wSecond);
-  const HANDLE file = ::CreateFileW((logs + name).c_str(), GENERIC_WRITE, 0,
+  wchar_t path[MAX_PATH]{};
+  swprintf_s(path, _countof(path), L"%ls\\lumtub-crash-%04u%02u%02u-%02u%02u%02u.dmp",
+             crash_directory, now.wYear, now.wMonth, now.wDay, now.wHour,
+             now.wMinute, now.wSecond);
+  const HANDLE file = ::CreateFileW(path, GENERIC_WRITE, 0,
                                     nullptr, CREATE_ALWAYS,
                                     FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) return EXCEPTION_CONTINUE_SEARCH;
@@ -105,14 +132,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
-  // Dart errors are logged in main.dart. This catches process-level failures
-  // from the Windows runner, libmpv, ANGLE, or a graphics driver and keeps a
-  // small stack dump beside the normal app logs for the next diagnosis.
-  ::SetUnhandledExceptionFilter(WriteCrashDump);
-
   // Before anything reads or writes its files: the portable package keeps
   // them next to the executable.
   DataRoot();
+
+  // Dart errors are logged in main.dart. This catches process-level failures
+  // from the Windows runner, libmpv, ANGLE, or a graphics driver and keeps a
+  // small stack dump beside the normal app logs for the next diagnosis.
+  PrepareCrashDumps();
+  ::SetUnhandledExceptionFilter(WriteCrashDump);
 
   // Restarting: the old process started this one and is ending; wait for it
   // so its single-instance lock is gone.

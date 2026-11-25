@@ -408,15 +408,22 @@ class Learning extends ChangeNotifier {
   /// [text] as words a tap looks up, when a dictionary for its language
   /// is ready; readings above them only while [unlocked].
   List<WordToken>? wordsOf(String text) {
-    var words = _words.remove(text);
-    if (words == null) {
-      words = _wordsOf(text);
+    var cut = _words.remove(text);
+    if (cut == null) {
+      final words = _wordsOf(text);
       // A line not cut yet (its dictionary still loading) is asked again.
-      if (words != null && _words.length >= _wordsKept) _words.remove(_words.keys.first);
+      if (words == null) return null;
+      if (_words.length >= _wordsKept) _words.remove(_words.keys.first);
+      cut = (words: words, plain: null);
     }
-    if (words != null) _words[text] = words;
-    if (words == null || unlocked) return words;
-    return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    if (unlocked) {
+      _words[text] = cut;
+      return cut.words;
+    }
+    // Without readings, made once per line too.
+    final plain = cut.plain ?? [for (final w in cut.words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    _words[text] = (words: cut.words, plain: plain);
+    return plain;
   }
 
   /// Lines already cut, newest last. The video's line and every row of the
@@ -424,7 +431,7 @@ class Learning extends ChangeNotifier {
   /// cutting a line (the core's segmenter, then a dictionary look-up per
   /// word) is too slow to repeat on the window's thread for each of them.
   /// Emptied whenever anything that changes the words does.
-  final _words = <String, List<WordToken>>{};
+  final _words = <String, ({List<WordToken> words, List<WordToken>? plain})>{};
   static const _wordsKept = 512;
 
   List<WordToken>? _wordsOf(String text) {
@@ -682,14 +689,32 @@ class Learning extends ChangeNotifier {
     }
   }
 
-  /// The published SHA256SUMS, checked against its signature.
-  static Future<SignedSums> _signedSums(http.Client client) async {
+  static ({DateTime at, Future<SignedSums> sums})? _lastSums;
+
+  /// The published SHA256SUMS, checked against its signature. Kept for a few
+  /// minutes, as one dictionary's download asks for it several times.
+  static Future<SignedSums> _signedSums(http.Client client) {
+    final last = _lastSums;
+    if (last != null && DateTime.now().difference(last.at) < const Duration(minutes: 5)) return last.sums;
+    final sums = _fetchSignedSums(client);
+    final kept = (at: DateTime.now(), sums: sums);
+    _lastSums = kept;
+    unawaited(sums.then((_) {}, onError: (Object _) {
+      if (identical(_lastSums, kept)) _lastSums = null;
+    }));
+    return sums;
+  }
+
+  static Future<SignedSums> _fetchSignedSums(http.Client client) async {
     final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
     _serverDay = _dayOf(sums.headers['date']);
     final signature = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS.sig')).timeout(const Duration(seconds: 30));
     if (signature.statusCode != 200) throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
-    final signed = SignedSums.verify(sums.bodyBytes, signature.body);
+    final bytes = sums.bodyBytes;
+    final text = signature.body;
+    // Ed25519 in Dart's BigInt takes long enough to drop frames.
+    final signed = await Isolate.run(() => SignedSums.verify(bytes, text));
     if (signed == null) throw const FormatException('The dictionary list is not signed by Lumtub');
     return signed;
   }
@@ -1080,7 +1105,10 @@ class Learning extends ChangeNotifier {
           hasher.add(chunk);
           received += chunk.length;
           if (!quiet && total != null && total > 0) {
-            state.progress = received / total;
+            // Once a percent, not once a network chunk.
+            final now = received / total;
+            if ((now * 100).floor() == ((state.progress ?? -1) * 100).floor()) continue;
+            state.progress = now;
             notifyListeners();
           }
         }

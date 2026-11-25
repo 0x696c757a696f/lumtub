@@ -201,6 +201,24 @@ class HomeFeed extends ChangeNotifier {
   /// [ahead], a new page comes first and the videos seen before follow it,
   /// below [seenFrom].
   Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false, bool ahead = false}) async {
+    final done = _refresh(sources, filter: filter, keep: keep, ahead: ahead);
+    final generation = _generation;
+    try {
+      await done;
+    } catch (e) {
+      // Not left loading for good: the next refresh would wait on it.
+      logWarn('The home feed could not be made: $e');
+      if (generation == _generation && !_disposed) {
+        loading = false;
+        gathering = false;
+        _retrying = false;
+        error = friendlyError(e);
+        _notify();
+      }
+    }
+  }
+
+  Future<void> _refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false, bool ahead = false}) async {
     final generation = ++_generation;
     _sources = sources;
     _filter = filter;
@@ -363,7 +381,7 @@ class HomeFeed extends ChangeNotifier {
   Future<void> loadMore() async {
     if (loading || loadingMore || _longTaste == null) return;
     var expanded = false;
-    if (_remaining < pageSize && _sources != null && _seeds.isNotEmpty) {
+    if (_remaining < pageSize && _sources != null && _hasSeeds) {
       loadingMore = expanded = true;
       _notify();
       await _expand();
@@ -409,6 +427,7 @@ class HomeFeed extends ChangeNotifier {
         if (_disposed) return;
         final list = _candidates.putIfAbsent(FeedLane.recent, () => []);
         list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: FeedReason.of(ReasonKind.nextUp, tr('Just watched "{0}", up next', [_short(watched.title)])))));
+        _trim(list, newestFirst: true);
       } catch (e) {
         logWarn('Recommendation source failed: $e');
       }
@@ -435,7 +454,40 @@ class HomeFeed extends ChangeNotifier {
     await notInterested.add(item);
   }
 
-  int get _remaining => _queues.values.fold(0, (sum, queue) => sum + queue.where((r) => !_taken.contains(r.item.id)).length);
+  /// The ranked videos not shown yet. Counted again only when a ranking,
+  /// a page or a video shown changed it: [loadMore] asks on every frame.
+  int get _remaining {
+    var queued = 0;
+    for (final queue in _queues.values) {
+      queued += queue.length;
+    }
+    final key = (_ranks, _taken.length, queued);
+    if (key != _remainingFor) {
+      _remainingFor = key;
+      _remainingCount = _queues.values.fold(0, (sum, queue) => sum + queue.where((r) => !_taken.contains(r.item.id)).length);
+    }
+    return _remainingCount;
+  }
+
+  (int, int, int)? _remainingFor;
+  int _remainingCount = 0;
+  /// Rankings made so far.
+  int _ranks = 0;
+
+  /// Whether [_seeds] has any, worked out again only when [items] or
+  /// [_expanded] changed.
+  bool get _hasSeeds {
+    if (!identical(_seedsOf, items) || _seedsExpanded != _expanded.length) {
+      _seedsOf = items;
+      _seedsExpanded = _expanded.length;
+      _seedsLeft = _seeds.isNotEmpty;
+    }
+    return _seedsLeft;
+  }
+
+  List<VideoItem>? _seedsOf;
+  int _seedsExpanded = -1;
+  bool _seedsLeft = false;
 
   /// Older entries weigh next to nothing at the decay used, so the long-term
   /// taste reads only this many of the history.
@@ -462,6 +514,7 @@ class HomeFeed extends ChangeNotifier {
   }
 
   void _rankAll() {
+    _ranks++;
     for (final lane in FeedLane.values) {
       final taste = lane == FeedLane.recent ? _recentTaste! : _longTaste!;
       _queues[lane] = recommend(
@@ -505,15 +558,30 @@ class HomeFeed extends ChangeNotifier {
         final found = await _inTurn(() => generation == _generation && !_disposed ? sources.related(seed.id) : Future.value(const <VideoItem>[]));
         if (generation != _generation) return;
         final close = (_recentTaste?.titleMatch(seed) ?? 0) > 0.3;
-        _candidates.putIfAbsent(close ? FeedLane.recent : FeedLane.explore, () => []).addAll(found.take(12).map(
+        final list = _candidates.putIfAbsent(close ? FeedLane.recent : FeedLane.explore, () => []);
+        list.addAll(found.take(12).map(
               (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: FeedReason.of(ReasonKind.related, tr('More like "{0}"', [_short(seed.title)]))),
             ));
+        _trim(list);
       } catch (e) {
         logWarn('Recommendation source failed: $e');
       }
     }));
     if (generation != _generation || _disposed) return;
     _rankAll();
+  }
+
+  /// The most candidates a lane keeps; every ranking reads them all.
+  static const _laneKept = 300;
+
+  /// Keeps [list] within [_laneKept]: the videos already shown go first,
+  /// then the oldest found (at its end when [newestFirst]).
+  void _trim(List<Candidate> list, {bool newestFirst = false}) {
+    if (list.length <= _laneKept) return;
+    list.removeWhere((candidate) => _taken.contains(candidate.item.id));
+    final over = list.length - _laneKept;
+    if (over <= 0) return;
+    newestFirst ? list.removeRange(_laneKept, list.length) : list.removeRange(0, over);
   }
 
   static String _short(String title) => title.length > 24 ? '${title.substring(0, 24)}…' : title;

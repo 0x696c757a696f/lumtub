@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/playback_recovery.dart';
 
@@ -171,6 +173,23 @@ void main() {
     test('a stopped video never settles', () {
       settled.stop();
       expect(play(20), isFalse);
+    });
+  });
+
+  group('firstSuccess', () {
+    test('a quick failure does not beat a success still coming', () async {
+      final slow = Completer<String>();
+      final first = firstSuccess([Future<String>.error(StateError('yt-dlp failed')), slow.future]);
+      await pumpEventQueue();
+      slow.complete('quick start');
+      expect(await first, 'quick start');
+    });
+
+    test('fails only once every one failed', () async {
+      final later = Completer<String>();
+      final first = firstSuccess([Future<String>.error(StateError('one')), later.future]);
+      later.completeError(StateError('two'));
+      await expectLater(first, throwsStateError);
     });
   });
 }

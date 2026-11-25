@@ -44,6 +44,9 @@ four lines above, or `# zizmor: ignore[<audit>] <reason>` in a workflow.
 
 8. **No shell.** `Process.start(program, [arguments])`; never
    `runInShell: true`, never a command line built from strings.
+   A program that comes with Windows (`reg`, `tar`, `powershell`, `explorer`,
+   `rundll32`) starts by its full path from `windowsProgram()`, never by bare
+   name, which Windows looks for in the current folder first.
 9. **Values by argument or environment.** When a shell or PowerShell is
    unavoidable, the script is a raw constant string (`r'…'`) and values come
    in as `"$1"` or `$env:NAME`. PowerShell also reads curly quotes as quotes,

@@ -75,6 +75,7 @@ pub mod update;
 pub mod vault;
 pub mod web_account;
 pub mod words;
+pub mod ytdlp_signature;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]

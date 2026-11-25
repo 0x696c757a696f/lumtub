@@ -194,7 +194,8 @@ pub unsafe extern "C" fn lumtub_sponsor_segments(json: *const u8, length: usize)
         video_id: String,
         categories: Vec<String>,
     }
-    let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
+    let Ok(ask) = serde_json::from_str::<Ask>(unsafe { crate::taste::outside(json, length) })
+    else {
         return std::ptr::null_mut();
     };
     let answer = serde_json::from_str(&ask.answer).unwrap_or(Value::Null);
@@ -214,7 +215,7 @@ pub unsafe extern "C" fn lumtub_dearrow_branding(json: *const u8, length: usize)
         answer: String,
         video_id: String,
     }
-    let input = unsafe { text(json, length) };
+    let input = unsafe { crate::taste::outside(json, length) };
     // The video id, a newline and the answer as it came, which spares the
     // app escaping the answer into JSON; or the older JSON object.
     if let Some((video_id, body)) = input.split_once('\n')

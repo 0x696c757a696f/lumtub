@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -125,21 +126,56 @@ class SecureJsonFile {
     }
   }
 
-  Future<void> write(Map<String, dynamic> value) async {
+  Timer? _retry;
+  int _retries = 0;
+  int _generation = 0;
+
+  /// Writes [value] sealed. When the system keyring is locked or slow and
+  /// nothing could be sealed, the file on disk stays as it was, this throws,
+  /// and the write is tried again a few times, further apart each time.
+  Future<void> write(Map<String, dynamic> value) {
+    _retries = 0;
+    return _write(value);
+  }
+
+  Future<void> _write(Map<String, dynamic> value) async {
+    _retry?.cancel();
+    _retry = null;
+    final generation = ++_generation;
     final temporary = File('${file.path}.tmp');
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(value)));
     final protector = this.protector;
-    final sealed = protector is VaultProtector ? await Isolate.run(() => protector.protect(plain)) : protector.protect(plain);
+    final Uint8List sealed;
+    try {
+      sealed = protector is VaultProtector ? await Isolate.run(() => protector.protect(plain)) : protector.protect(plain);
+    } catch (_) {
+      if (generation == _generation && _retries < 4) {
+        _retry = Timer(Duration(minutes: 1 << _retries++), () => _write(value).catchError((_) {}));
+      }
+      rethrow;
+    }
+    // A newer write or a delete came while this was sealing: what is on
+    // disk is theirs to decide, so an account signed out stays signed out.
+    if (generation != _generation) return;
     if (!Platform.isWindows) {
       // Readable by the user alone before anything is in it.
       await temporary.writeAsBytes(const [], flush: true);
       setFileMode(temporary.path, ownerOnlyMode);
     }
     await temporary.writeAsBytes(sealed, flush: true);
+    if (generation != _generation) {
+      try {
+        await temporary.delete();
+      } catch (_) {}
+      return;
+    }
     await temporary.rename(file.path);
   }
 
   Future<void> delete() async {
+    _retry?.cancel();
+    _retry = null;
+    _generation++;
     if (await file.exists()) await file.delete();
   }
 }

@@ -120,7 +120,7 @@ extension PictureHealth on AppController {
   /// minute, so the log shows why a video stutters.
   Future<void> _checkDrops() async {
     final platform = player?.platform;
-    if (platform is! NativePlayer || _tracking == null || !(player?.state.playing ?? false)) return;
+    if (platform is! NativePlayer || _tracking == null || _fileSerial != _playSerial || !(player?.state.playing ?? false)) return;
     await _logMemory(platform);
     await _logUpscaling(platform);
     try {
@@ -154,8 +154,9 @@ extension PictureHealth on AppController {
         values.add('$name=${await platform.getProperty(name)}');
       }
       logDebug(() => 'Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
-    } catch (_) {
-      // Statistics are best effort.
+    } catch (e) {
+      // Statistics are best effort; what they set off is logged.
+      logWarn('Could not check the playback statistics: $e');
     }
   }
 
@@ -223,7 +224,9 @@ extension PictureHealth on AppController {
     final unplugged = _lightRendering == 'battery' && !Power.saving;
     if (unplugged || (_lightRendering == 'software' && software == false)) {
       _lightRendering = null;
-      await PlayerOptionApplicator.apply(player, settings);
+      // Only the scaling goes back: the decoder and the audio filters
+      // (silence skipping, volume balance) stay as they are.
+      await PlayerOptionApplicator.apply(player, settings, previous: _applied ?? settings, lightened: true);
       _optionsApplied(player);
       _applied = settings;
       _refitCrop(player);
@@ -246,8 +249,9 @@ extension PictureHealth on AppController {
       logDebug(() => 'Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
     }
     _lightRendering = reason;
+    final custom = settings.customOptions;
     for (final MapEntry(:key, :value) in PlayerOptionApplicator.fastRendering.entries) {
-      if (settings.customOptions.containsKey(key)) continue;
+      if (custom.containsKey(key)) continue;
       try {
         await platform.setProperty(key, value);
       } catch (e) {

@@ -89,17 +89,34 @@ CastMessage _message(Object? json) {
 CastMessage decodeCastMessage(Uint8List bytes) => _message(readInCore('lumtub_cast_message', bytes));
 
 /// Splits the bytes of a socket into the messages they frame, in the core.
+/// The core is asked only once a whole frame has come, so a message sent
+/// in small pieces is not copied over again for each.
 class CastFrameReader {
   final _bytes = BytesBuilder(copy: false);
+  /// The first bytes of the frame being read, up to its 4-byte length.
+  final _head = <int>[];
+  /// The core's `MAX_CAST_MESSAGE`: a longer frame is its error to give.
+  static const _maxMessage = 1 << 20;
 
   List<CastMessage> add(List<int> data) {
+    for (var i = 0; _head.length < 4 && i < data.length; i++) {
+      _head.add(data[i]);
+    }
     _bytes.add(data);
+    if (_head.length < 4) return const [];
+    final length = (_head[0] << 24) | (_head[1] << 16) | (_head[2] << 8) | _head[3];
+    if (length <= _maxMessage && _bytes.length < 4 + length) return const [];
     final buffer = _bytes.takeBytes();
     final answer = readInCore('lumtub_cast_frames', buffer);
     if (answer is! Map) throw const FormatException('bad frames');
     if (answer['error'] case final String error) throw FormatException(error);
     final used = (answer['used'] as num?)?.toInt() ?? 0;
-    if (used < buffer.length) _bytes.add(Uint8List.sublistView(buffer, used));
+    _head.clear();
+    if (used < buffer.length) {
+      final rest = Uint8List.sublistView(buffer, used);
+      _head.addAll(rest.take(4));
+      _bytes.add(rest);
+    }
     return [for (final message in answer['messages'] as List? ?? const []) _message(message)];
   }
 }
@@ -148,6 +165,7 @@ typedef CastConnector = Future<Socket> Function(InternetAddress host, int port);
 Future<Socket> _secureConnect(InternetAddress host, int port) =>
     // Chromecasts present a self-signed certificate; it is accepted for
     // this connection only.
+    // security-lint: allow tls-bypass (a Chromecast's certificate is self-signed and chains to no public root)
     SecureSocket.connect(host, port, onBadCertificate: (_) => true, timeout: const Duration(seconds: 6));
 
 /// A Chromecast, driven through the Default Media Receiver.

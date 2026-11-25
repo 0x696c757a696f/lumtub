@@ -26,6 +26,25 @@ void main() {
     expect(parse({'background': ['#008080'], 'veil': 0.5}).warnings.where((w) => w.contains('on window.background')), isEmpty);
   });
 
+  test('a skin with many layers, colours or tiny spacings stays cheap to read and draw', () {
+    Skin parse(Map<String, Object?> window) => Skin.parse({'lumtubSkin': 1, 'id': 't', 'name': 'T', 'colors': {'page': '#ffffff', 'text': '#000000'}, 'window': window}, folder: 'skins/aero', builtIn: true);
+    final colours = [for (var i = 0; i < 40; i++) '#${(i * 6).toRadixString(16).padLeft(2, '0')}8080'];
+    final watch = Stopwatch()..start();
+    final heavy = parse({'background': [for (var i = 0; i < 20; i++) {'linear': {'colors': colours}}]});
+    expect(heavy.veil, inInclusiveRange(0, 0.9));
+    expect(watch.elapsed, lessThan(const Duration(seconds: 5)));
+    expect(heavy.background, hasLength(SkinPaint.maxLayers));
+    expect((heavy.background.first as LinearPaint).colors, hasLength(16));
+    final dots = parse({
+      'background': [{'pattern': {'type': 'dots', 'color': '#000000', 'spacing': 0.001, 'size': 50}}],
+      'decorations': [{'type': 'perspectiveGrid', 'spacing': 0}],
+    });
+    final pattern = dots.background.single as PatternPaint;
+    expect(pattern.spacing, 3);
+    expect(pattern.size, 3);
+    expect((dots.decorations.single as PerspectiveGridDecoration).spacing, 8);
+  });
+
   test('jsonc allows comments and trailing commas', () {
     expect(decodeJsonc('{\n // a\n "a": "x//y", /* b */ "b": [1, 2,],\n}'), {'a': 'x//y', 'b': [1, 2]});
     expect(() => decodeJsonc('{\n"a": 1\n"b": 2}'), throwsA(isA<FormatException>().having((e) => e.message, 'message', startsWith('line 3'))));

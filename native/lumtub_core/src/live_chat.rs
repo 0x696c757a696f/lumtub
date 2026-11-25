@@ -192,12 +192,16 @@ pub fn line(line: &str) -> Vec<Message> {
         .collect()
 }
 
-/// The chat items of every line of [contents].
+/// The most chat items read from one replay file.
+const MAX_MESSAGES: usize = 200_000;
+
+/// The chat items of every line of [contents], up to [MAX_MESSAGES].
 pub fn lines(contents: &str) -> Vec<Message> {
     contents
         .lines()
         .filter(|l| !l.trim().is_empty())
         .flat_map(line)
+        .take(MAX_MESSAGES)
         .collect()
 }
 
@@ -386,8 +390,8 @@ fn send_body(send: &Send) -> Value {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_live_chat_composer(json: *const u8, length: usize) -> *mut c_char {
-    let answer =
-        serde_json::from_str::<Value>(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let answer = serde_json::from_str::<Value>(unsafe { crate::taste::outside(json, length) })
+        .unwrap_or(Value::Null);
     give_json(&composer(&answer))
 }
 

@@ -20,6 +20,12 @@ const TIMECODE_SCALE: u32 = 0x2A_D7B1;
 const DURATION: u32 = 0x4489;
 const TIMESTAMP: u32 = 0xE7;
 
+/// The most read whole of a WebM's EBML head, Info or Tracks.
+const MAX_WEBM_HEAD: u64 = 1 << 20;
+/// The most read whole of an MP4's `moov` and of one `moof`.
+const MAX_MOOV: u64 = 64 << 20;
+const MAX_MOOF: u64 = 16 << 20;
+
 /// One part written: its file and where it starts in the whole, in seconds.
 #[derive(Debug, PartialEq)]
 pub struct Part {
@@ -35,16 +41,19 @@ struct Piece {
     time: u64,
 }
 
-fn read_at(file: &mut File, at: u64, length: usize) -> Result<Vec<u8>, String> {
+fn read_at(file: &mut impl ReadSeek, at: u64, length: usize) -> Result<Vec<u8>, String> {
     file.seek(SeekFrom::Start(at)).map_err(|e| e.to_string())?;
-    let mut bytes = Vec::with_capacity(length);
+    let mut bytes = Vec::with_capacity(length.min(1 << 16));
     file.take(length as u64)
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     Ok(bytes)
 }
 
-fn copy(file: &mut File, from: u64, to: u64, out: &mut impl Write) -> Result<(), String> {
+fn copy(file: &mut impl ReadSeek, from: u64, to: u64, out: &mut impl Write) -> Result<(), String> {
+    if to < from {
+        return Err("damaged file".into());
+    }
     file.seek(SeekFrom::Start(from))
         .map_err(|e| e.to_string())?;
     let copied = std::io::copy(&mut file.take(to - from), out).map_err(|e| e.to_string())?;
@@ -54,17 +63,44 @@ fn copy(file: &mut File, from: u64, to: u64, out: &mut impl Write) -> Result<(),
     Ok(())
 }
 
+/// What the cutter reads from: a file, or bytes in memory.
+pub trait ReadSeek: Read + Seek {}
+impl<T: Read + Seek> ReadSeek for T {}
+
 /// Cuts `input` into parts of about `every` seconds named `stem` plus a
 /// number and the input's extension.
 pub fn cut(input: &str, stem: &str, every: f64) -> Result<Vec<Part>, String> {
     let mut file = File::open(input).map_err(|e| format!("{input}: {e}"))?;
     let total = file.metadata().map_err(|e| e.to_string())?.len();
-    let start = read_at(&mut file, 0, 8)?;
     let extension = input.rsplit_once('.').map_or("", |(_, e)| e);
+    let mut paths = Vec::new();
+    let starts = cut_from(&mut file, total, every, |n| {
+        let path = format!("{stem}{n:03}.{extension}");
+        let out = File::create(&path).map_err(|e| e.to_string())?;
+        paths.push(path);
+        Ok(BufWriter::new(out))
+    })?;
+    Ok(paths
+        .into_iter()
+        .zip(starts)
+        .map(|(path, start)| Part { path, start })
+        .collect())
+}
+
+/// Cuts the `total` bytes of `file` into parts of about `every` seconds,
+/// each written to what `create` gives for its number; answers where each
+/// part starts, in seconds.
+pub fn cut_from<W: Write>(
+    file: &mut impl ReadSeek,
+    total: u64,
+    every: f64,
+    mut create: impl FnMut(usize) -> Result<W, String>,
+) -> Result<Vec<f64>, String> {
+    let start = read_at(file, 0, 8)?;
     if start.len() >= 4 && u32::from_be_bytes([start[0], start[1], start[2], start[3]]) == EBML {
-        webm(&mut file, total, stem, extension, every)
+        webm(file, total, every, &mut create)
     } else if start.len() >= 8 && &start[4..8] == b"ftyp" {
-        mp4(&mut file, total, stem, extension, every)
+        mp4(file, total, every, &mut create)
     } else {
         Err("neither WebM nor MP4".into())
     }
@@ -89,20 +125,22 @@ fn groups(pieces: &[Piece], every: f64) -> Vec<std::ops::Range<usize>> {
     groups
 }
 
-fn webm(
-    file: &mut File,
+fn webm<R: ReadSeek, W: Write>(
+    file: &mut R,
     total: u64,
-    stem: &str,
-    extension: &str,
     every: f64,
-) -> Result<Vec<Part>, String> {
-    let at = |file: &mut File, at: u64| -> Result<(crate::cast_webm::Element, Vec<u8>), String> {
+    create: &mut impl FnMut(usize) -> Result<W, String>,
+) -> Result<Vec<f64>, String> {
+    let at = |file: &mut R, at: u64| -> Result<(crate::cast_webm::Element, Vec<u8>), String> {
         let bytes = read_at(file, at, 12)?;
         let e = element(&bytes, 0).ok_or("damaged WebM")?;
         Ok((e, bytes))
     };
     let (ebml, _) = at(file, 0)?;
     let head_end = ebml.end as u64;
+    if head_end > total.min(MAX_WEBM_HEAD) {
+        return Err("damaged WebM".into());
+    }
     let (segment, _) = at(file, head_end)?;
     if segment.id != SEGMENT {
         return Err("no segment".into());
@@ -121,6 +159,9 @@ fn webm(
             return Err("element of unknown size".into());
         }
         let end = position + e.end as u64;
+        if matches!(e.id, INFO | TRACKS) && (end > total || e.end as u64 > MAX_WEBM_HEAD) {
+            return Err("damaged WebM".into());
+        }
         match e.id {
             INFO => {
                 let bytes = read_at(file, position, e.end)?;
@@ -148,6 +189,9 @@ fn webm(
                 let stamp = element(&header, e.data)
                     .filter(|t| t.id == TIMESTAMP && t.end <= header.len())
                     .ok_or("cluster without a timestamp")?;
+                if stamp.end - stamp.data > 8 || position + stamp.end as u64 > end.min(total) {
+                    return Err("damaged WebM".into());
+                }
                 let time = header[stamp.data..stamp.end]
                     .iter()
                     .fold(0u64, |v, &x| (v << 8) | x as u64);
@@ -169,11 +213,8 @@ fn webm(
     let mut parts = Vec::new();
     for (n, group) in groups(&pieces, every * ticks).into_iter().enumerate() {
         let base = pieces[group.start].time;
-        let path = format!("{stem}{n:03}.{extension}");
-        let mut out = BufWriter::new(File::create(&path).map_err(|e| e.to_string())?);
-        let write = |out: &mut BufWriter<File>, bytes: &[u8]| {
-            out.write_all(bytes).map_err(|e| e.to_string())
-        };
+        let mut out = create(n)?;
+        let write = |out: &mut W, bytes: &[u8]| out.write_all(bytes).map_err(|e| e.to_string());
         copy(file, 0, head_end, &mut out)?;
         write(
             &mut out,
@@ -188,10 +229,12 @@ fn webm(
         for piece in &pieces[group] {
             let (cluster, _) = at(file, piece.from)?;
             let header = read_at(file, piece.from, cluster.data + 12)?;
-            let stamp = element(&header, cluster.data).ok_or("cluster without a timestamp")?;
+            let stamp = element(&header, cluster.data)
+                .filter(|t| t.end <= header.len() && t.end - t.data <= 8)
+                .ok_or("cluster without a timestamp")?;
             let mut moved = header[..stamp.end].to_vec();
             let width = stamp.end - stamp.data;
-            let value = piece.time - base;
+            let value = piece.time.saturating_sub(base);
             if width < 8 && value >> (8 * width) != 0 {
                 return Err("timestamp too wide".into());
             }
@@ -202,10 +245,7 @@ fn webm(
             copy(file, piece.from + stamp.end as u64, piece.to, &mut out)?;
         }
         out.flush().map_err(|e| e.to_string())?;
-        parts.push(Part {
-            path,
-            start: base as f64 / ticks,
-        });
+        parts.push(base as f64 / ticks);
     }
     Ok(parts)
 }
@@ -217,27 +257,36 @@ fn size8(size: u64) -> [u8; 8] {
     out
 }
 
-/// A box header at `at`: its kind, where its body starts and where it ends.
-fn mp4_box(file: &mut File, at: u64, total: u64) -> Result<([u8; 4], u64, u64), String> {
+/// A box header at `at`: its kind, where its body starts and where it ends,
+/// always past `at`.
+fn mp4_box(file: &mut impl ReadSeek, at: u64, total: u64) -> Result<([u8; 4], u64, u64), String> {
     let h = read_at(file, at, 16)?;
     if h.len() < 8 {
         return Err("damaged MP4".into());
     }
     let size = u32::from_be_bytes([h[0], h[1], h[2], h[3]]) as u64;
     let kind = [h[4], h[5], h[6], h[7]];
-    let (body, end) = match size {
-        0 => (at + 8, total),
-        1 if h.len() >= 16 => (
-            at + 16,
-            at + u64::from_be_bytes(h[8..16].try_into().unwrap()),
-        ),
-        n if n >= 8 => (at + 8, at + n),
-        _ => return Err("damaged MP4".into()),
+    let (header, size) = match size {
+        0 => (8, total.saturating_sub(at)),
+        1 if h.len() >= 16 => (16, u64::from_be_bytes(h[8..16].try_into().unwrap())),
+        n => (8, n),
     };
+    if size < header {
+        return Err("damaged MP4".into());
+    }
+    let end = at.checked_add(size).ok_or("damaged MP4")?;
     if end > total {
         return Err("the file ends early".into());
     }
-    Ok((kind, body, end))
+    Ok((kind, at + header, end))
+}
+
+/// A `moov` or `moof` read whole, unless larger than `most`.
+fn read_box(file: &mut impl ReadSeek, at: u64, end: u64, most: u64) -> Result<Vec<u8>, String> {
+    if end - at > most {
+        return Err("damaged MP4".into());
+    }
+    read_at(file, at, (end - at) as usize)
 }
 
 /// The `tfdt` of each track in `moof`: where its decode time is and how
@@ -249,7 +298,7 @@ fn decode_times(moof: &[u8]) -> Vec<(usize, usize)> {
         let mut at = from;
         while at + 8 <= to {
             let size = u32::from_be_bytes(moof[at..at + 4].try_into().unwrap()) as usize;
-            if size < 8 || at + size > to {
+            if size < 8 || size > to - at {
                 break;
             }
             list.push((&moof[at + 4..at + 8], at + 8, at + size));
@@ -277,13 +326,12 @@ fn be(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0u64, |v, &x| (v << 8) | x as u64)
 }
 
-fn mp4(
-    file: &mut File,
+fn mp4<W: Write>(
+    file: &mut impl ReadSeek,
     total: u64,
-    stem: &str,
-    extension: &str,
     every: f64,
-) -> Result<Vec<Part>, String> {
+    create: &mut impl FnMut(usize) -> Result<W, String>,
+) -> Result<Vec<f64>, String> {
     let (mut head, mut timescale) = (Vec::new(), 0u32);
     let mut pieces = Vec::new();
     let mut at = 0;
@@ -291,15 +339,15 @@ fn mp4(
     while at < total {
         let (kind, _, end) = mp4_box(file, at, total)?;
         match &kind {
-            b"ftyp" => head.push((at, end)),
-            b"moov" => {
+            b"ftyp" if head.len() < 2 => head.push((at, end)),
+            b"moov" if head.len() < 2 => {
                 head.push((at, end));
-                let moov = read_at(file, at, (end - at) as usize)?;
+                let moov = read_box(file, at, end, MAX_MOOV)?;
                 let mdhd = moov
                     .windows(4)
                     .position(|w| w == b"mdhd")
                     .ok_or("no mdhd")?;
-                let version = moov[mdhd + 4];
+                let version = *moov.get(mdhd + 4).ok_or("damaged mdhd")?;
                 let field = mdhd + 4 + if version == 1 { 20 } else { 12 };
                 timescale = u32::from_be_bytes(
                     moov.get(field..field + 4)
@@ -309,7 +357,7 @@ fn mp4(
                 );
             }
             b"moof" => {
-                let moof = read_at(file, at, (end - at) as usize)?;
+                let moof = read_box(file, at, end, MAX_MOOF)?;
                 let time = decode_times(&moof)
                     .first()
                     .map(|&(p, w)| be(&moof[p..p + w]))
@@ -341,14 +389,13 @@ fn mp4(
         .enumerate()
     {
         let base = pieces[group.start].time;
-        let path = format!("{stem}{n:03}.{extension}");
-        let mut out = BufWriter::new(File::create(&path).map_err(|e| e.to_string())?);
+        let mut out = create(n)?;
         for &(from, to) in &head {
             copy(file, from, to, &mut out)?;
         }
         for piece in &pieces[group] {
             let (_, _, moof_end) = mp4_box(file, piece.from, total)?;
-            let mut moof = read_at(file, piece.from, (moof_end - piece.from) as usize)?;
+            let mut moof = read_box(file, piece.from, moof_end, MAX_MOOF)?;
             for (p, w) in decode_times(&moof) {
                 let value = be(&moof[p..p + w]).saturating_sub(base);
                 for i in 0..w {
@@ -359,10 +406,7 @@ fn mp4(
             copy(file, moof_end, piece.to, &mut out)?;
         }
         out.flush().map_err(|e| e.to_string())?;
-        parts.push(Part {
-            path,
-            start: base as f64 / timescale as f64,
-        });
+        parts.push(base as f64 / timescale as f64);
     }
     Ok(parts)
 }
@@ -531,6 +575,33 @@ mod tests {
         }
         let _ = std::fs::remove_dir_all(&dir);
         assert!(cut("/nonexistent/a.webm", "x", 5.0).is_err());
+    }
+
+    fn cut_bytes(bytes: &[u8]) -> Result<Vec<f64>, String> {
+        let mut input = std::io::Cursor::new(bytes);
+        cut_from(&mut input, bytes.len() as u64, 5.0, |_| Ok(std::io::sink()))
+    }
+
+    #[test]
+    fn refuses_boxes_and_elements_that_do_not_fit() {
+        let mut file = mp4_box(b"ftyp", b"iso6\0\0\0\0");
+        for largesize in [0u64, 1, 15, u64::MAX - 4, u64::MAX] {
+            let mut bad = file.clone();
+            bad.extend_from_slice(&1u32.to_be_bytes());
+            bad.extend_from_slice(b"moof");
+            bad.extend_from_slice(&largesize.to_be_bytes());
+            bad.extend_from_slice(&[0; 32]);
+            assert!(cut_bytes(&bad).is_err(), "{largesize}");
+        }
+        file.extend(mp4_box(b"moov", b"mdhd"));
+        assert_eq!(cut_bytes(&file), Err("damaged mdhd".into()));
+        // Info claiming far more than the file holds.
+        let mut webm = ebml(&[0x1A, 0x45, 0xDF, 0xA3], &[]);
+        webm.extend_from_slice(&[0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF]);
+        webm.extend_from_slice(&[0xFF, 0xFF, 0xFF]);
+        webm.extend_from_slice(&[0x15, 0x49, 0xA9, 0x66, 0x01, 0x00, 0xFF, 0xFF]);
+        webm.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFE]);
+        assert_eq!(cut_bytes(&webm), Err("damaged WebM".into()));
     }
 
     /// Cuts the sample sound files (LUMTUB_CAST_SAMPLES: o.webm, a.mp4).

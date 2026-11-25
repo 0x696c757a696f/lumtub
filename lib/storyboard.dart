@@ -26,7 +26,7 @@ class StoryboardTile {
 }
 
 class Storyboard {
-  const Storyboard({required this.width, required this.height, required this.rows, required this.columns, required this.sheets, required this.interval});
+  Storyboard({required this.width, required this.height, required this.rows, required this.columns, required this.sheets, required this.interval});
 
   /// Size of one frame in pixels.
   final int width;
@@ -84,20 +84,31 @@ class Storyboard {
 
   /// The frame shown at [time]; the first or last one outside the video.
   StoryboardTile tileAt(Duration time) {
-    var start = Duration.zero;
-    for (var i = 0; i < sheets.length; i++) {
-      final end = start + sheets[i].duration;
-      if (time < end || i == sheets.length - 1) {
-        final index = ((time - start).inMicroseconds / interval.inMicroseconds).floor();
-        // The last sheet is shorter than a full one.
-        final count = min(tilesPerSheet, max(1, (sheets[i].duration.inMicroseconds / interval.inMicroseconds).ceil()));
-        final tile = index.clamp(0, count - 1);
-        return StoryboardTile(i, tile ~/ columns, tile % columns);
+    if (sheets.isEmpty) return const StoryboardTile(0, 0, 0);
+    // The first sheet ending after [time], else the last: found by halves,
+    // as this runs on every pointer move over the seek bar.
+    var i = 0, last = sheets.length - 1;
+    while (i < last) {
+      final mid = (i + last) >> 1;
+      if (time < _ends[mid]) {
+        last = mid;
+      } else {
+        i = mid + 1;
       }
-      start = end;
     }
-    return const StoryboardTile(0, 0, 0);
+    final start = i == 0 ? Duration.zero : _ends[i - 1];
+    final index = ((time - start).inMicroseconds / interval.inMicroseconds).floor();
+    // The last sheet is shorter than a full one.
+    final count = min(tilesPerSheet, max(1, (sheets[i].duration.inMicroseconds / interval.inMicroseconds).ceil()));
+    final tile = index.clamp(0, count - 1);
+    return StoryboardTile(i, tile ~/ columns, tile % columns);
   }
+
+  /// Where each sheet ends.
+  late final List<Duration> _ends = () {
+    var end = Duration.zero;
+    return [for (final sheet in sheets) end += sheet.duration];
+  }();
 }
 
 /// Downloads sprite sheets on demand and keeps the latest few decoded.

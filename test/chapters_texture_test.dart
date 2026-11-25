@@ -27,6 +27,8 @@ void main() {
         {'start_time': 60, 'title': 'B'},
       ]);
       expect(Chapter.at(chapters, const Duration(seconds: 5)), isNull);
+      expect([for (final s in [0, 10, 59, 60, 900]) Chapter.indexAt(chapters, Duration(seconds: s))], [-1, 0, 0, 1, 1]);
+      expect(Chapter.indexAt(const [], Duration.zero), -1);
       expect(Chapter.at(chapters, const Duration(seconds: 10))?.title, 'A');
       expect(Chapter.at(chapters, const Duration(minutes: 5))?.title, 'B');
     });

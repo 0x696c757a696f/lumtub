@@ -204,7 +204,8 @@ fn keep(jar: &Jar, hello: bool) -> Result<Guard, String> {
         )
     };
     let header = Zeroizing::new(jar.header());
-    let sealer = Sealer::new(hello, &reason);
+    let sealer =
+        Sealer::new(hello, &reason).ok_or("the system keyring did not answer; try again")?;
     let sealed = sealer
         .seal(header.as_bytes())
         .ok_or("Windows could not encrypt the cookies")?;
@@ -845,7 +846,7 @@ async fn watched(port: i64, request: WatchedRequest) {
             .as_ref()
             .and_then(|p| crate::innertube::at(p, &["playbackTracking", key, "baseUrl"]))
             .and_then(Value::as_str)
-            .filter(|url| url.starts_with("https://") && url.contains('?'))
+            .filter(|url| url.contains('?') && youtube_https(url))
             .map(str::to_owned)
     };
     let (Some(playback), Some(watchtime)) = (
@@ -890,6 +891,20 @@ async fn watched(port: i64, request: WatchedRequest) {
     post(port, vec![Item::Int(1)]);
 }
 
+/// Whether [url] is https on youtube.com or a host under it: the only
+/// places the sign-in's cookies are sent.
+fn youtube_https(url: &str) -> bool {
+    reqwest::Url::parse(url).is_ok_and(|url| {
+        url.scheme() == "https"
+            && url.port().is_none()
+            && url.username().is_empty()
+            && url.password().is_none()
+            && url
+                .host_str()
+                .is_some_and(|host| host == "youtube.com" || host.ends_with(".youtube.com"))
+    })
+}
+
 /// Adds [json] `{"video_id", "from", "to", "length", "hl", "clientVersion"}`
 /// to the signed-in account's watch history, answering `[1]` on [port], or
 /// `[0, why]`. It never brings up the system's prompt to open the cookies.
@@ -908,6 +923,23 @@ pub unsafe extern "C" fn lumtub_web_watched(port: i64, json: *const u8, length: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cookies_go_only_to_youtube() {
+        assert!(youtube_https(
+            "https://s.youtube.com/api/stats/watchtime?ns=yt"
+        ));
+        for url in [
+            "http://s.youtube.com/api/stats?x",
+            "https://evil.example/api?x",
+            "https://youtube.com.evil.example/?x",
+            "https://evilyoutube.com/?x",
+            "https://s.youtube.com:8443/?x",
+            "https://s.youtube.com@evil.example/?x",
+        ] {
+            assert!(!youtube_https(url), "{url}");
+        }
+    }
 
     #[test]
     fn stats_addresses_say_where_watching_stood() {

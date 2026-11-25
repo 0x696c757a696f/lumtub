@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::os::raw::c_char;
 
 use crate::innertube::at;
-use crate::taste::{give_json, text};
+use crate::taste::{give_json, outside};
 
 /// Text from `simpleText`, `runs` or `content`.
 pub(crate) fn plain_text(node: Option<&Value>) -> String {
@@ -109,7 +109,10 @@ fn attached_emojis(content: Option<&Value>) -> Emojis {
         else {
             continue;
         };
-        let Some(slice) = units.get(start..start + length) else {
+        let Some(slice) = start
+            .checked_add(length)
+            .and_then(|end| units.get(start..end))
+        else {
             continue;
         };
         let name = String::from_utf16_lossy(slice);
@@ -613,7 +616,7 @@ pub fn page(response: &Value) -> Page {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_comments(body: *const u8, length: usize) -> *mut c_char {
-    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
     give_json(&page(&data))

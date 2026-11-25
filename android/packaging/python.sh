@@ -98,10 +98,12 @@ build_abi x86_64 x86_64-linux-android x86_64-linux-android "$PYTHON_ANDROID_SHA2
 [ -z "$unpinned" ] || exit 1
 
 # yt-dlp: the pinned release's zip app, also checked against the
-# SHA2-256SUMS that release publishes.
+# SHA2-256SUMS that release publishes, signed with yt-dlp's key.
 base="https://github.com/yt-dlp/yt-dlp/releases/download/$YTDLP_VERSION"
 fetch "$base/yt-dlp" "$downloads/yt-dlp-$YTDLP_VERSION" "$YTDLP_SHA256"
 curl -fsSL --retry 5 --retry-all-errors -o "$downloads/SHA2-256SUMS-$YTDLP_VERSION" "$base/SHA2-256SUMS"
+curl -fsSL --retry 5 --retry-all-errors -o "$downloads/SHA2-256SUMS-$YTDLP_VERSION.sig" "$base/SHA2-256SUMS.sig"
+python3 -I "$root/.github/scripts/ytdlp_sums_verify.py" "$downloads/SHA2-256SUMS-$YTDLP_VERSION" "$downloads/SHA2-256SUMS-$YTDLP_VERSION.sig"
 listed=$(awk '$2 == "yt-dlp" { print $1 }' "$downloads/SHA2-256SUMS-$YTDLP_VERSION")
 [ "$listed" = "$YTDLP_SHA256" ] || { echo "yt-dlp $YTDLP_VERSION: SHA2-256SUMS lists '$listed', pinned $YTDLP_SHA256" >&2; exit 1; }
 mkdir -p "$root/android/app/src/main/res/raw"

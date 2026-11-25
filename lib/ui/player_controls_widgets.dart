@@ -186,19 +186,24 @@ class _FeedbackBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
         valueListenable: feedback,
-        builder: (context, value, _) {
-          if (value == null) return const SizedBox.shrink();
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(value.icon, size: 22, color: Colors.white),
-                const SizedBox(width: 4),
-                Text(value.text, style: const TextStyle(color: Colors.white, fontSize: 12)),
-              ]),
-            ),
-          );
-        },
+        // Fades in and out as the rest of the player does; a new value
+        // while it shows changes it in place.
+        builder: (context, value, _) => AnimatedSwitcher(
+          duration: Motion.of(Ease.fade),
+          child: value == null
+              ? const SizedBox.shrink(key: ValueKey(false))
+              : Center(
+                  key: const ValueKey(true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(value.icon, size: 22, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(value.text, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    ]),
+                  ),
+                ),
+        ),
       );
 }

@@ -67,7 +67,12 @@ struct Shared {
     /// playlist fetched again names the same ones.
     parts: HashMap<String, Target>,
     part_tokens: HashMap<String, String>,
-    part_order: VecDeque<String>,
+    /// Tokens from least to most recently named, each with the stamp it
+    /// was named with; an entry whose stamp is no longer the token's own
+    /// in `part_stamps` was named again later and is skipped.
+    part_order: VecDeque<(String, u64)>,
+    part_stamps: HashMap<String, u64>,
+    part_stamp: u64,
 }
 
 pub struct Relay {
@@ -368,6 +373,7 @@ const PARTS_KEPT: usize = 4096;
 /// playlist named; the same one each time the playlist names it.
 fn register_part(shared: &Mutex<Shared>, port: u16, part: Target) -> String {
     let mut shared = shared.lock().unwrap();
+    let shared = &mut *shared;
     let key = format!("{:?} {}", part.hls, part.url);
     let token = match shared.part_tokens.get(&key) {
         Some(token) if shared.parts.contains_key(token) => token.clone(),
@@ -375,19 +381,38 @@ fn register_part(shared: &Mutex<Shared>, port: u16, part: Target) -> String {
             let token = token(&part.url);
             shared.parts.insert(token.clone(), part);
             shared.part_tokens.insert(key, token.clone());
-            shared.part_order.push_back(token.clone());
-            while shared.part_order.len() > PARTS_KEPT {
-                if let Some(old) = shared.part_order.pop_front()
-                    && let Some(gone) = shared.parts.remove(&old)
-                {
-                    shared
-                        .part_tokens
-                        .remove(&format!("{:?} {}", gone.hls, gone.url));
-                }
-            }
             token
         }
     };
+    // Named again, it goes to the back: a live variant playlist a master
+    // named once stays while its segments come and go.
+    shared.part_stamp += 1;
+    shared.part_stamps.insert(token.clone(), shared.part_stamp);
+    shared
+        .part_order
+        .push_back((token.clone(), shared.part_stamp));
+    while shared.parts.len() > PARTS_KEPT {
+        let Some((old, stamp)) = shared.part_order.pop_front() else {
+            break;
+        };
+        if shared.part_stamps.get(&old) != Some(&stamp) {
+            continue;
+        }
+        shared.part_stamps.remove(&old);
+        if let Some(gone) = shared.parts.remove(&old) {
+            shared
+                .part_tokens
+                .remove(&format!("{:?} {}", gone.hls, gone.url));
+        }
+    }
+    // Skipped entries are dropped in one pass once they are as many as
+    // the kept ones, so each registration costs O(1) amortised.
+    if shared.part_order.len() > 2 * PARTS_KEPT {
+        let stamps = &shared.part_stamps;
+        shared
+            .part_order
+            .retain(|(token, stamp)| stamps.get(token) == Some(stamp));
+    }
     format!("http://127.0.0.1:{port}/{token}")
 }
 
@@ -544,10 +569,23 @@ fn answer(
     fetch: &dyn Fetch,
 ) {
     let mut buffer = vec![0u8; 256 << 10];
+    let mut first = true;
     loop {
-        let Some((method, path, headers)) = read_request(reader) else {
+        // The first request has to come soon and whole: a connection that
+        // only holds a place under the cap is let go. Between requests
+        // libmpv may wait long.
+        let ask = if first {
+            read_request_within(reader, Some(FIRST_HEAD))
+        } else {
+            read_request(reader)
+        };
+        let Some((method, path, headers)) = ask else {
             return;
         };
+        if first {
+            first = false;
+            let _ = reader.get_ref().set_read_timeout(Some(IDLE_TIMEOUT));
+        }
         let keep_open = !headers
             .get("connection")
             .is_some_and(|v| v.eq_ignore_ascii_case("close"));
@@ -560,12 +598,12 @@ fn answer(
                 .or_else(|| shared.parts.get(token))
                 .cloned()
         };
+        // Nothing it may have: the connection is not kept for more.
         let Some(target) = target.filter(|_| method == "GET" || method == "HEAD") else {
-            let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
-            if !keep_open {
-                return;
-            }
-            continue;
+            let _ = writer.write_all(
+                b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            );
+            return;
         };
         if target.hls != crate::relay_hls::Hls::No {
             if method == "GET" {
@@ -701,6 +739,8 @@ pub(crate) type Request = (String, String, HashMap<String, String>);
 const MAX_CONNECTIONS: usize = 64;
 /// How long a connection may wait for its next request.
 const IDLE_TIMEOUT: Duration = Duration::from_secs(300);
+/// How long a new connection has to send its first request head whole.
+const FIRST_HEAD: Duration = Duration::from_secs(10);
 /// The longest request or header line read.
 const MAX_LINE: u64 = 8 << 10;
 
@@ -1224,6 +1264,42 @@ mod tests {
             live: None,
             hls: Default::default(),
         }
+    }
+
+    #[test]
+    fn a_part_named_again_outlives_newer_parts() {
+        let shared = Mutex::new(Shared::default());
+        let part = |url: String, hls| Target {
+            url,
+            hls,
+            ..target(0)
+        };
+        let playlist = || {
+            part(
+                "https://example.com/v.m3u8".into(),
+                crate::relay_hls::Hls::Playlist,
+            )
+        };
+        let first = register_part(&shared, 1, playlist());
+        for i in 0..3 * PARTS_KEPT {
+            register_part(
+                &shared,
+                1,
+                part(
+                    format!("https://example.com/{i}.ts"),
+                    crate::relay_hls::Hls::Part,
+                ),
+            );
+            if i % 100 == 0 {
+                assert_eq!(register_part(&shared, 1, playlist()), first);
+            }
+        }
+        let shared = shared.lock().unwrap();
+        assert_eq!(shared.parts.len(), PARTS_KEPT);
+        assert!(shared.part_order.len() <= 2 * PARTS_KEPT);
+        assert_eq!(shared.part_tokens.len(), PARTS_KEPT);
+        let token = first.rsplit('/').next().unwrap();
+        assert!(shared.parts.contains_key(token));
     }
 
     #[test]

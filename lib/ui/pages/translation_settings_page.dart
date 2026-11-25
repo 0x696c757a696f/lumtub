@@ -146,7 +146,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(controller: controller)),
+      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(key: ValueKey(service), controller: controller)),
     ),
     header(tr('AI interface')),
     tip(tr('AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.')),
@@ -186,7 +186,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(controller: controller, ai: true)),
+      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(key: const ValueKey(#aiTest), controller: controller, ai: true)),
     ),
     if (service == TranslationService.ai) ...[
       header(tr('AI translation')),
@@ -375,7 +375,7 @@ enum _Layout { below, above, replace }
 String _masked(String key) => key.length <= 8 ? '••••' : '${key.substring(0, 3)}••••${key.substring(key.length - 4)}';
 
 class _TestButton extends StatefulWidget {
-  const _TestButton({required this.controller, this.ai = false});
+  const _TestButton({super.key, required this.controller, this.ai = false});
   final AppController controller;
 
   /// Checks the AI interface instead of the translation service.

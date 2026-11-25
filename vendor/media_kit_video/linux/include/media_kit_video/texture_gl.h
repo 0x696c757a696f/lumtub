@@ -23,6 +23,12 @@ G_DECLARE_FINAL_TYPE(TextureGL, texture_gl, TEXTURE_GL, TEXTURE_GL, FlTextureGL)
 TextureGL* texture_gl_new(VideoOutput* video_output);
 
 /**
+ * @brief Lumtub: waits for a frame being drawn, frees mpv's GL resources and
+ * stops drawing; called before the |VideoOutput| frees its render context.
+ */
+void texture_gl_detach(TextureGL* texture);
+
+/**
  * @brief Populates texture with video frame.
  */
 gboolean texture_gl_populate_texture(FlTextureGL* texture,

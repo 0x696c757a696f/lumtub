@@ -52,7 +52,7 @@ class LocalDb {
   /// has been set aside by then.
   Future<DbContents> read(List<String> lists, {List<String> prefixes = const []}) async {
     final ask = jsonEncode({'path': path, 'lists': lists, 'prefixes': prefixes});
-    final answer = await Isolate.run(() => _read(ask));
+    final (answer, bodies) = await Isolate.run(() => _readWithBodies(ask));
     if (answer['error'] case final String error) throw LocalDbException(error, answer['setAside'] as String?);
     final found = <String, List<(String, Object?)>>{};
     for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries) {
@@ -61,7 +61,7 @@ class LocalDb {
         if (pair is List && pair.length == 2 && pair[0] is String) entries.add((pair[0] as String, pair[1]));
       }
       found[key as String] = entries;
-      _sent[key] = {for (final (k, body) in entries) k: jsonEncode(body)};
+      _sent[key] = bodies[key] ?? const {};
     }
     final meta = <String, String>{
       for (final MapEntry(:key, :value) in (answer['meta'] as Map? ?? const {}).entries)
@@ -87,14 +87,11 @@ class LocalDb {
     for (final MapEntry(key: name, value: entries) in lists.entries) {
       final before = _sent[name] ?? const {};
       final now = <String, String>{};
-      final keys = StringBuffer();
       final bodies = StringBuffer();
       var changed = false;
       for (final (key, body) in entries) {
         if (now.containsKey(key)) continue;
         now[key] = body;
-        if (keys.isNotEmpty) keys.write(',');
-        keys.write(jsonEncode(key));
         final old = before[key];
         if (!identical(old, body) && old != body) {
           if (bodies.isNotEmpty) bodies.write(',');
@@ -121,12 +118,37 @@ class LocalDb {
       if (!changed) continue;
       if (!firstList) ask.write(',');
       firstList = false;
+      final known = _sent[name];
+      if (known != null && _inOrder(known, now)) {
+        // No entry moved: only what was added or removed is sent, each
+        // added key with the one before it, so the core touches only those rows.
+        final added = StringBuffer();
+        String? previous;
+        for (final key in now.keys) {
+          if (!known.containsKey(key)) {
+            if (added.isNotEmpty) added.write(',');
+            added.write(jsonEncode([key, previous]));
+          }
+          previous = key;
+        }
+        ask
+          ..write('{"name":')
+          ..write(jsonEncode(name))
+          ..write(',"remove":')
+          ..write(jsonEncode([for (final key in known.keys) if (!now.containsKey(key)) key]))
+          ..write(',"insert":[')
+          ..write(added)
+          ..write('],"bodies":{')
+          ..write(bodies)
+          ..write('}}');
+        continue;
+      }
       ask
         ..write('{"name":')
         ..write(jsonEncode(name))
-        ..write(',"keys":[')
-        ..write(keys)
-        ..write('],"bodies":{')
+        ..write(',"keys":')
+        ..write(jsonEncode(now.keys.toList()))
+        ..write(',"bodies":{')
         ..write(bodies)
         ..write('}}');
     }
@@ -142,6 +164,16 @@ class LocalDb {
     _sent.addAll(sending);
     dropped.forEach(_sent.remove);
   }
+}
+
+/// Whether the keys [before] and [now] share are in the same order in both.
+bool _inOrder(Map<String, String> before, Map<String, String> now) {
+  final kept = before.keys.where(now.containsKey).iterator;
+  for (final key in now.keys) {
+    if (!before.containsKey(key)) continue;
+    if (!kept.moveNext() || kept.current != key) return false;
+  }
+  return true;
 }
 
 /// Texts made for a video (transcripts and AI summaries), kept in the
@@ -266,5 +298,18 @@ Map<String, dynamic> callCoreJson(String symbol, String ask) {
 }
 
 Map<String, dynamic> _read(String ask) => callCoreJson('lumtub_store_read', ask);
+
+/// [_read]'s answer and each list's bodies as JSON text, encoded here
+/// rather than on the UI isolate.
+(Map<String, dynamic>, Map<String, Map<String, String>>) _readWithBodies(String ask) {
+  final answer = _read(ask);
+  return (answer, {
+    for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries)
+      key as String: {
+        for (final pair in value is List ? value : const [])
+          if (pair is List && pair.length == 2 && pair[0] is String) pair[0] as String: jsonEncode(pair[1]),
+      },
+  });
+}
 
 Map<String, dynamic> _write(String ask) => callCoreJson('lumtub_store_write', ask);

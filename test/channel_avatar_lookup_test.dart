@@ -24,6 +24,7 @@ void main() {
     });
     final file = File('${dir.path}/channel_avatars.json');
     lookup.configure(client, file);
+    await lookup.loaded;
     var told = 0;
     void listener() => told++;
     lookup.addListener(listener);
@@ -39,9 +40,14 @@ void main() {
     expect(lookup.of(other), 'https://yt3.ggpht.com/given');
     expect(asked, [id]);
     await Future<void>.delayed(const Duration(milliseconds: 2100));
+    for (var i = 0; i < 50 && !file.existsSync(); i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
     expect(jsonDecode(file.readAsStringSync()), {id: 'https://yt3.googleusercontent.com/$id=s900', other: 'https://yt3.ggpht.com/given'});
     lookup.reset();
     lookup.configure(MockClient((_) async => throw StateError('asked again')), file);
+    expect(lookup.of(id), isNull);
+    await lookup.loaded;
     expect(lookup.of(id), 'https://yt3.googleusercontent.com/$id=s900');
   });
 

@@ -70,4 +70,19 @@ fn main() {
     );
     let target = Path::new(&std::env::var("OUT_DIR").unwrap()).join("lists_files.rs");
     std::fs::write(target, out).unwrap();
+    // QuickJS's version names the bytecode js.rs keeps, so bytecode an
+    // earlier QuickJS wrote is never read back.
+    let lock = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.lock");
+    println!("cargo:rerun-if-changed={}", lock.display());
+    let quickjs = std::fs::read_to_string(&lock)
+        .ok()
+        .and_then(|lock| {
+            // Line by line: a checkout with CRLF endings has \r\n between.
+            let mut lines = lock.lines().map(str::trim);
+            lines.find(|line| *line == "name = \"rquickjs-sys\"")?;
+            let version = lines.next()?.strip_prefix("version = \"")?;
+            Some(version.trim_end_matches('"').to_string())
+        })
+        .expect("rquickjs-sys's version in Cargo.lock");
+    println!("cargo:rustc-env=LUMTUB_QUICKJS={quickjs}");
 }

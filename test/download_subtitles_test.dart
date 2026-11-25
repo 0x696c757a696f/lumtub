@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/downloads/download_subtitles.dart';
@@ -23,6 +25,24 @@ void main() {
     final top = [cue(0, 3000, 'A long top line')];
     final bottom = [cue(0, 1500, 'first'), cue(1500, 3000, 'second')];
     expect(bilingualCues(top, bottom), [cue(0, 1500, 'A long top line\nfirst'), cue(1500, 3000, 'A long top line\nsecond')]);
+  });
+
+  test('overlapping lines join in their own order, as a scan of every line joined them', () async {
+    final random = Random(7);
+    List<SubtitleCue> track(String name) => [
+          for (var i = 0; i < 300; i++)
+            if ((random.nextInt(600) * 100, random.nextInt(30) * 100) case (final from, final length)) cue(from, from + length, '$name$i'),
+        ];
+    final top = track('t'), bottom = track('b');
+    String at(List<SubtitleCue> cues, Duration from, Duration to) =>
+        [for (final c in cues) if (c.start <= from && c.end >= to) c.text].join(' ');
+    final marks = <Duration>{for (final c in [...top, ...bottom]) ...[c.start, c.end]}.toList()..sort();
+    final lines = await bilingualLinesInBackground(top, bottom);
+    expect(lines, isNotEmpty);
+    for (final l in lines) {
+      final from = marks.firstWhere((m) => m >= l.start), to = marks.firstWhere((m) => m > from);
+      expect((l.top, l.bottom), (at(top, from, to), at(bottom, from, to)));
+    }
   });
 
   test('picks are found again, translations made from the video\'s own subtitle', () {

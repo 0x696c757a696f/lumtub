@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'system_env.dart';
+
 class WindowsVideoInfo {
   final List<String> gpuNames;
   final ExtensionStatus vp9Extension;
@@ -26,7 +28,7 @@ class WindowsVideoInfo {
     try {
       // The name goes in by environment, never into the command text.
       final result = await Process.run(
-        'powershell.exe',
+        windowsProgram(r'System32\WindowsPowerShell\v1.0\powershell.exe'),
         ['-NoProfile', '-NonInteractive', '-Command', r"if (Get-AppxPackage -Name $env:LUMTUB_PACKAGE -ErrorAction SilentlyContinue) { 'present' } else { 'missing' }"],
         environment: {'LUMTUB_PACKAGE': name},
       ).timeout(const Duration(seconds: 8));
@@ -39,7 +41,7 @@ class WindowsVideoInfo {
 
   static Future<List<String>> _runLines(String command) async {
     try {
-      final result = await Process.run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command]).timeout(const Duration(seconds: 8));
+      final result = await Process.run(windowsProgram(r'System32\WindowsPowerShell\v1.0\powershell.exe'), ['-NoProfile', '-NonInteractive', '-Command', command]).timeout(const Duration(seconds: 8));
       if (result.exitCode != 0) return const [];
       return result.stdout.toString().split(RegExp(r'\r?\n')).map((value) => value.trim()).where((value) => value.isNotEmpty).toSet().toList();
     } catch (_) {

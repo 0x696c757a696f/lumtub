@@ -40,6 +40,7 @@ struct _VideoOutput {
   VideoOutputConfiguration configuration;
   TextureUpdateCallback texture_update_callback;
   gpointer texture_update_callback_context;
+  GDestroyNotify texture_update_callback_context_destroy;
   FlTextureRegistrar* texture_registrar;
   gboolean destroyed;
   /* Lumtub: the GPU's render node, handed to mpv for VA-API (see below). */
@@ -90,6 +91,9 @@ static void video_output_dispose(GObject* object) {
 
   // H/W
   if (self->texture_gl) {
+    // Lumtub: waits for a frame Flutter's raster thread is drawing and stops
+    // later ones from using this object or the render context freed below.
+    texture_gl_detach(self->texture_gl);
     fl_texture_registrar_unregister_texture(self->texture_registrar,
                                             FL_TEXTURE(self->texture_gl));
     
@@ -106,7 +110,6 @@ static void video_output_dispose(GObject* object) {
       }
       mpv_render_context_free(self->render_context);
       self->render_context = NULL;
-  self->drm_render_fd = -1;
       
       // Restore Flutter's context
       if (flutter_context != EGL_NO_CONTEXT) {
@@ -121,6 +124,7 @@ static void video_output_dispose(GObject* object) {
     }
     
     g_object_unref(self->texture_gl);
+    self->texture_gl = NULL;
   }
   if (self->drm_render_fd >= 0) {
     close(self->drm_render_fd);
@@ -130,20 +134,32 @@ static void video_output_dispose(GObject* object) {
   if (self->texture_sw) {
     fl_texture_registrar_unregister_texture(self->texture_registrar,
                                             FL_TEXTURE(self->texture_sw));
-    g_free(self->pixel_buffer);
-    g_object_unref(self->texture_sw);
     if (self->render_context != NULL) {
       mpv_render_context_free(self->render_context);
       self->render_context = NULL;
     }
+    g_free(self->pixel_buffer);
+    self->pixel_buffer = NULL;
+    g_object_unref(self->texture_sw);
+    self->texture_sw = NULL;
   }
   
-  g_mutex_clear(&self->mutex);
   G_OBJECT_CLASS(video_output_parent_class)->dispose(object);
+}
+
+static void video_output_finalize(GObject* object) {
+  VideoOutput* self = VIDEO_OUTPUT(object);
+  if (self->texture_update_callback_context_destroy != NULL) {
+    self->texture_update_callback_context_destroy(
+        self->texture_update_callback_context);
+  }
+  g_mutex_clear(&self->mutex);
+  G_OBJECT_CLASS(video_output_parent_class)->finalize(object);
 }
 
 static void video_output_class_init(VideoOutputClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = video_output_dispose;
+  G_OBJECT_CLASS(klass)->finalize = video_output_finalize;
 }
 
 static void video_output_init(VideoOutput* self) {
@@ -160,8 +176,10 @@ static void video_output_init(VideoOutput* self) {
   self->configuration = VideoOutputConfiguration{};
   self->texture_update_callback = NULL;
   self->texture_update_callback_context = NULL;
+  self->texture_update_callback_context_destroy = NULL;
   self->texture_registrar = NULL;
   self->destroyed = FALSE;
+  self->drm_render_fd = -1;
   g_mutex_init(&self->mutex);
 }
 
@@ -186,6 +204,7 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
   // Causes frame drops with `pulse` audio output. (SlotSun/dart_simple_live#42)
   // mpv_set_option_string(self->handle, "video-timing-offset", "0");
   gboolean hardware_acceleration_supported = FALSE;
+  gboolean texture_gl_registered = FALSE;
   if (self->configuration.enable_hardware_acceleration) {
     // Get Flutter's current EGL display (DO NOT share context)
     EGLDisplay flutter_display = eglGetCurrentDisplay();
@@ -239,6 +258,7 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
             
             if (fl_texture_registrar_register_texture(
                     texture_registrar, FL_TEXTURE(self->texture_gl))) {
+              texture_gl_registered = TRUE;
               // Initialize mpv with our isolated EGL context
               mpv_opengl_init_params gl_init_params{
                   [](auto, auto name) {
@@ -314,7 +334,24 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
     g_printerr("media_kit: VideoOutput: S/W rendering.\n");
     // H/W rendering failed. Fallback to S/W rendering.
     self->pixel_buffer = g_new0(guint8, SW_RENDERING_PIXEL_BUFFER_SIZE);
-    self->texture_gl = NULL;
+    // Lumtub: undo what the H/W attempt made before it failed.
+    if (self->texture_gl != NULL) {
+      if (texture_gl_registered) {
+        fl_texture_registrar_unregister_texture(texture_registrar,
+                                                FL_TEXTURE(self->texture_gl));
+      }
+      texture_gl_detach(self->texture_gl);
+      g_object_unref(self->texture_gl);
+      self->texture_gl = NULL;
+    }
+    if (self->egl_context != EGL_NO_CONTEXT) {
+      eglDestroyContext(self->egl_display, self->egl_context);
+      self->egl_context = EGL_NO_CONTEXT;
+    }
+    if (self->drm_render_fd >= 0) {
+      close(self->drm_render_fd);
+      self->drm_render_fd = -1;
+    }
     self->texture_sw = texture_sw_new(self);
     if (fl_texture_registrar_register_texture(texture_registrar,
                                               FL_TEXTURE(self->texture_sw))) {
@@ -331,6 +368,7 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
                   [](gpointer data) -> gboolean {
                     VideoOutput* self = (VideoOutput*)data;
                     if (self->destroyed) {
+                      g_object_unref(self);
                       return FALSE;
                     }
                     g_mutex_lock(&self->mutex);
@@ -352,9 +390,10 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
                           FL_TEXTURE(self->texture_sw));
                     }
                     g_mutex_unlock(&self->mutex);
+                    g_object_unref(self);
                     return FALSE;
                   },
-                  data);
+                  g_object_ref(data));
             },
             self);
       }
@@ -367,9 +406,12 @@ VideoOutput* video_output_new(FlTextureRegistrar* texture_registrar,
 void video_output_set_texture_update_callback(
     VideoOutput* self,
     TextureUpdateCallback texture_update_callback,
-    gpointer texture_update_callback_context) {
+    gpointer texture_update_callback_context,
+    GDestroyNotify texture_update_callback_context_destroy) {
   self->texture_update_callback = texture_update_callback;
   self->texture_update_callback_context = texture_update_callback_context;
+  self->texture_update_callback_context_destroy =
+      texture_update_callback_context_destroy;
   // Notify initial dimensions as (1, 1) if |width| & |height| are 0 i.e.
   // texture & video frame size is based on playing file's resolution. This
   // will make sure that `Texture` widget on Flutter's widget tree is actually
@@ -434,11 +476,11 @@ gint64 video_output_get_width(VideoOutput* self) {
   gint64 width = 0;
   gint64 height = 0;
 
-  mpv_node params;
-  mpv_get_property(self->handle, "video-out-params", MPV_FORMAT_NODE, &params);
+  mpv_node params{};
+  int error = mpv_get_property(self->handle, "video-out-params", MPV_FORMAT_NODE, &params);
 
   int64_t dw = 0, dh = 0, rotate = 0;
-  if (params.format == MPV_FORMAT_NODE_MAP) {
+  if (error == 0 && params.format == MPV_FORMAT_NODE_MAP) {
     for (int32_t i = 0; i < params.u.list->num; i++) {
       char* key = params.u.list->keys[i];
       auto value = params.u.list->values[i];
@@ -454,6 +496,8 @@ gint64 video_output_get_width(VideoOutput* self) {
         }
       }
     }
+  }
+  if (error == 0) {
     mpv_free_node_contents(&params);
   }
 
@@ -467,7 +511,7 @@ gint64 video_output_get_width(VideoOutput* self) {
       return SW_RENDERING_MAX_WIDTH;
     }
     if (height >= SW_RENDERING_MAX_HEIGHT) {
-      return width / height * SW_RENDERING_MAX_HEIGHT;
+      return (gint64)((double)width / height * SW_RENDERING_MAX_HEIGHT);
     }
   }
 
@@ -484,11 +528,11 @@ gint64 video_output_get_height(VideoOutput* self) {
   gint64 width = 0;
   gint64 height = 0;
 
-  mpv_node params;
-  mpv_get_property(self->handle, "video-out-params", MPV_FORMAT_NODE, &params);
+  mpv_node params{};
+  int error = mpv_get_property(self->handle, "video-out-params", MPV_FORMAT_NODE, &params);
 
   int64_t dw = 0, dh = 0, rotate = 0;
-  if (params.format == MPV_FORMAT_NODE_MAP) {
+  if (error == 0 && params.format == MPV_FORMAT_NODE_MAP) {
     for (int32_t i = 0; i < params.u.list->num; i++) {
       char* key = params.u.list->keys[i];
       auto value = params.u.list->values[i];
@@ -504,6 +548,8 @@ gint64 video_output_get_height(VideoOutput* self) {
         }
       }
     }
+  }
+  if (error == 0) {
     mpv_free_node_contents(&params);
   }
 
@@ -517,7 +563,7 @@ gint64 video_output_get_height(VideoOutput* self) {
       return SW_RENDERING_MAX_HEIGHT;
     }
     if (width >= SW_RENDERING_MAX_WIDTH) {
-      return height / width * SW_RENDERING_MAX_WIDTH;
+      return (gint64)((double)height / width * SW_RENDERING_MAX_WIDTH);
     }
   }
 

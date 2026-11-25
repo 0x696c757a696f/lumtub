@@ -67,9 +67,21 @@ class _AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTick
   @override
   Widget build(BuildContext context) {
     if (widget.visible) _last = widget.child;
-    final child = _last;
+    final last = _last;
     final horizontal = widget._axis == Axis.horizontal;
     final rtl = horizontal && Directionality.of(context) == TextDirection.rtl;
+    final child = last == null
+        ? null
+        : FadeTransition(
+            opacity: _progress,
+            child: IgnorePointer(
+              ignoring: !widget.visible,
+              child: ExcludeFocus(
+                excluding: !widget.visible,
+                child: ExcludeSemantics(excluding: !widget.visible, child: last),
+              ),
+            ),
+          );
     return AnimatedBuilder(
       animation: _controller,
       child: child,
@@ -85,16 +97,7 @@ class _AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTick
             heightFactor: horizontal ? null : t,
             child: FractionalTranslation(
               translation: horizontal ? Offset(away, 0) : Offset(0, away),
-              child: Opacity(
-                opacity: t,
-                child: IgnorePointer(
-                  ignoring: !widget.visible,
-                  child: ExcludeFocus(
-                    excluding: !widget.visible,
-                    child: ExcludeSemantics(excluding: !widget.visible, child: child),
-                  ),
-                ),
-              ),
+              child: child,
             ),
           ),
         );

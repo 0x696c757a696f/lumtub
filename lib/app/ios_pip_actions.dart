@@ -19,6 +19,9 @@ class _IosPipSync {
   /// When the window's button back to the app was pressed: the window
   /// closing then is no reason to turn the picture off.
   DateTime? restoredAt;
+
+  /// The listener on [IosVideoLayer.active], kept to be removed.
+  VoidCallback? onActive;
 }
 
 extension IosPipActions on AppController {
@@ -27,7 +30,7 @@ extension IosPipActions on AppController {
     if (!Platform.isIOS || _iosPip != null) return;
     final sync = _iosPip = _IosPipSync();
     IosVideoLayer.onEvent = _onIosPipEvent;
-    IosVideoLayer.active.addListener(_iosPipActiveChanged);
+    IosVideoLayer.active.addListener(sync.onActive = _iosPipActiveChanged);
     void send({bool force = false}) => unawaited(_sendIosPipState(player, sync, force: force));
     sync.subscriptions.addAll([
       player.stream.playing.listen((_) => send(force: true)),
@@ -35,6 +38,18 @@ extension IosPipActions on AppController {
       player.stream.duration.listen((_) => send(force: true)),
       player.stream.position.listen((_) => send()),
     ]);
+  }
+
+  /// Stops following the player for the window, as the controller goes.
+  void _stopIosPip() {
+    final sync = _iosPip;
+    if (sync == null) return;
+    for (final subscription in sync.subscriptions) {
+      unawaited(subscription.cancel());
+    }
+    sync.subscriptions.clear();
+    if (sync.onActive case final listener?) IosVideoLayer.active.removeListener(listener);
+    sync.onActive = null;
   }
 
   Future<void> _sendIosPipState(Player player, _IosPipSync sync, {bool force = false}) async {

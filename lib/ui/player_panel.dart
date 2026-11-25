@@ -257,21 +257,33 @@ class PanelToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 116,
-      child: Material(
-        color: value ? colors.primaryContainer : Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => onChanged(!value),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: Column(children: [
-              Icon(icon, size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
-              const SizedBox(height: 4),
-              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: value ? colors.onPrimaryContainer : colors.onSurface)),
-            ]),
+    // A long label is cut short; the tooltip shows it whole.
+    return Semantics(
+      toggled: value,
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: () => onChanged(!value),
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: SizedBox(
+          width: 116,
+          child: Material(
+            color: value ? colors.primaryContainer : Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => onChanged(!value),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Column(children: [
+                  Icon(icon, size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
+                  const SizedBox(height: 4),
+                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: value ? colors.onPrimaryContainer : colors.onSurface)),
+                ]),
+              ),
+            ),
           ),
         ),
       ),

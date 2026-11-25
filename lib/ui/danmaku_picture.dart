@@ -197,6 +197,13 @@ class DanmakuPainter {
     }
   }
 
+  static const _redBlueSwapped = ColorFilter.matrix([
+    0, 0, 1, 0, 0, //
+    0, 1, 0, 0, 0, //
+    1, 0, 0, 0, 0, //
+    0, 0, 0, 1, 0, //
+  ]);
+
   Future<DanmakuBitmap?> _drawWith(List<DanmakuPart> parts, Map<String, ui.Image?> images, {required double osdHeight, required bool paid}) async {
     final scale = osdHeight / 1080;
     final border = _border(scale);
@@ -219,6 +226,9 @@ class DanmakuPainter {
     }
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
+    // libmpv takes BGRA: red and blue trade places as the bitmap is drawn,
+    // not in a loop over every pixel afterwards.
+    canvas.saveLayer(Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()), Paint()..colorFilter = _redBlueSwapped);
     final offset = Offset(pad, (height - fill.height) / 2);
     outline.paint(canvas, offset);
     fill.paint(canvas, offset);
@@ -245,6 +255,7 @@ class DanmakuPainter {
         case DanmakuText():
       }
     }
+    canvas.restore();
     outline.dispose();
     fill.dispose();
     final picture = recorder.endRecording();
@@ -262,11 +273,6 @@ class DanmakuPainter {
     final pixels = calloc<Uint8>(rgba.length);
     final bgra = pixels.asTypedList(rgba.length);
     bgra.setAll(0, rgba);
-    for (var i = 0; i < bgra.length; i += 4) {
-      final red = bgra[i];
-      bgra[i] = bgra[i + 2];
-      bgra[i + 2] = red;
-    }
     return DanmakuBitmap._(pixels, width, height, pad, osdHeight);
   }
 }

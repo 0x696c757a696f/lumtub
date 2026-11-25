@@ -81,6 +81,7 @@ class NativeCore {
         relayLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_relay_log'),
         socksStart = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_socks_start'),
         socksPort = library.lookupFunction<Uint16 Function(Pointer<Void>), int Function(Pointer<Void>)>('lumtub_socks_port'),
+        socksToken = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>), Pointer<Utf8> Function(Pointer<Void>)>('lumtub_socks_token'),
         socksClose = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_socks_close'),
         youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
@@ -260,6 +261,8 @@ class NativeCore {
   /// URL is not a SOCKS proxy or it cannot listen.
   final Pointer<Void> Function(Pointer<Uint8> url, int length) socksStart;
   final int Function(Pointer<Void> bridge) socksPort;
+  /// The password a bridge asks its clients for.
+  final Pointer<Utf8> Function(Pointer<Void> bridge) socksToken;
   /// Stops a bridge and frees it.
   final void Function(Pointer<Void> bridge) socksClose;
   /// The comment section token of a community post's HTML.
@@ -292,7 +295,7 @@ class NativeCore {
     final core = instance;
     if (core == null) return;
     try {
-      final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_set_language');
+      final call = core._setLanguage;
       core.withText(hl, call);
     } catch (e) {
       logWarn('The core cannot be told the language: $e');
@@ -305,7 +308,7 @@ class NativeCore {
   static String? micStart() {
     final core = instance;
     if (core == null) return 'the Lumtub core is missing';
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_mic_start');
+    final call = core._micStart;
     final answer = core.take(call());
     if (answer == null) return null;
     return (jsonDecode(answer) as Map)['error']?.toString() ?? answer;
@@ -316,7 +319,7 @@ class NativeCore {
   static ({double? seconds, String? error}) micStop(String path) {
     final core = instance;
     if (core == null) return (seconds: null, error: 'the Lumtub core is missing');
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_stop');
+    final call = core._micStop;
     final answer = jsonDecode(core.take(core.withText(path, call)) ?? '{}') as Map;
     return (seconds: (answer['seconds'] as num?)?.toDouble(), error: answer['error']?.toString());
   }
@@ -328,7 +331,7 @@ class NativeCore {
   static ({double? seconds, String? error}) micJoin(List<Map<String, Object>> parts, String out, {double gap = 0.8}) {
     final core = instance;
     if (core == null) return (seconds: null, error: 'the Lumtub core is missing');
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_join');
+    final call = core._micJoin;
     final answer = jsonDecode(core.take(core.withText(jsonEncode({'parts': parts, 'gap': gap, 'out': out}), call)) ?? '{}') as Map;
     return (seconds: (answer['seconds'] as num?)?.toDouble(), error: answer['error']?.toString());
   }
@@ -339,7 +342,7 @@ class NativeCore {
   static String? ankiPackage(Map<String, Object?> package) {
     final core = instance;
     if (core == null) return 'the Lumtub core is missing';
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_anki_package');
+    final call = core._ankiPackage;
     final answer = jsonDecode(core.take(core.withText(jsonEncode(package), call)) ?? '{}') as Map;
     return answer['error']?.toString();
   }
@@ -517,7 +520,7 @@ class NativeCore {
   /// `stem.live-audio.part`; the recording's id, or why not.
   ({int? id, String? error}) recordStart({required String video, required String audio, required String stem, String? userAgent, String? proxy}) {
     Map<String, Object?> target(String url) => {'url': url, 'size': 0, if (userAgent != null) 'user_agent': userAgent, if (proxy != null) 'proxy': proxy, 'live': 'record'};
-    final call = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
+    final call = _recordStart;
     final map = _answer(take(withText(jsonEncode({'video': target(video), 'audio': target(audio), 'stem': stem}), call)));
     return map['id'] is int ? (id: map['id'] as int, error: null) : (id: null, error: '${map['error'] ?? 'the recording could not start'}');
   }
@@ -525,13 +528,13 @@ class NativeCore {
   /// How recording [id] goes: `bytes`, `seconds`, `running`, `renew` (an
   /// address expired), `error`, and `log` lines; empty for no such one.
   Map<String, dynamic> recordState(int id) {
-    final call = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_state');
+    final call = _recordState;
     return _answer(take(call(id)));
   }
 
   /// New addresses for recording [id].
   bool recordRenew(int id, String video, String audio) {
-    final call = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
+    final call = _recordRenew;
     return withText(jsonEncode({'id': id, 'video': video, 'audio': audio}), call);
   }
 
@@ -541,11 +544,23 @@ class NativeCore {
   static String? recordStop(int id) {
     final core = instance;
     if (core == null) return 'lumtub_core is missing';
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_stop');
+    final call = core._recordStop;
     final error = core._answer(core.take(call(id)))['error'];
     return error == null ? null : '$error';
   }
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _cutAudio;
+  // Looked up once, when first used: a core without them still loads.
+  late final _setLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_set_language');
+  late final _micStart = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_mic_start');
+  late final _micStop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_stop');
+  late final _micJoin = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_join');
+  late final _ankiPackage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_anki_package');
+  late final _recordStart = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
+  late final _recordState = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_state');
+  late final _recordRenew = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
+  late final _recordStop = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_stop');
+  /// For learning/video_words.dart, on its own isolate.
+  late final wordCoverage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_word_coverage');
 
   /// Calls [call] with [text] as UTF-8 in native memory.
   T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);

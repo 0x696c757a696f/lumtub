@@ -229,6 +229,15 @@ class DownloadManager extends ChangeNotifier {
   int _maxConcurrent;
   DownloadDefaults _defaults = const DownloadDefaults();
   final List<DownloadTask> tasks = [];
+  /// The first task of [tasks] for each video, kept with it.
+  final _byId = <String, DownloadTask>{};
+
+  void _drop(DownloadTask task) {
+    tasks.remove(task);
+    if (!identical(_byId[task.id], task)) return;
+    _byId.remove(task.id);
+    if (tasks.where((t) => t.id == task.id).firstOrNull case final other?) _byId[task.id] = other;
+  }
   final _active = <String>{};
   final _processes = <String, Process>{};
   final _stopping = <String>{};
@@ -279,7 +288,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> load() async {
     try {
       if (!await file.exists()) throw const _NoList();
-      final data = jsonDecode(await file.readAsString());
+      final data = await decodeJsonInBackground(await file.readAsString());
       if (data is Map) {
         final dir = data['directory']?.toString();
         if (dir != null && dir.isNotEmpty) _directory = dir;
@@ -292,6 +301,7 @@ class DownloadManager extends ChangeNotifier {
           // What the last run left half done continues.
           if (task.status == DownloadStatus.downloading) task.status = DownloadStatus.queued;
           tasks.add(task);
+          _byId.putIfAbsent(task.id, () => task);
         }
       }
     } on _NoList {
@@ -337,9 +347,14 @@ class DownloadManager extends ChangeNotifier {
     _saveTimer = Timer(const Duration(seconds: 1), () => unawaited(_save()));
   }
 
+  /// [data] as JSON, encoded away from the UI isolate: a long download
+  /// history is thousands of videos.
+  static Future<String> _encode(Object data) => Isolate.run(() => jsonEncode(data));
+
   Future<void> _write() async {
     try {
-      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
+      final list = {'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()};
+      await writeFileAtomic(file, await _encode(list));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
     }
@@ -367,7 +382,7 @@ class DownloadManager extends ChangeNotifier {
 
   // Queue.
 
-  DownloadTask? taskFor(String id) => tasks.where((t) => t.id == id).firstOrNull;
+  DownloadTask? taskFor(String id) => _byId[id];
 
   /// Queues [item]; null when it is already downloaded or in the queue.
   DownloadTask? add(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
@@ -375,10 +390,11 @@ class DownloadManager extends ChangeNotifier {
     if (existing != null) {
       if (existing.status == DownloadStatus.done && existing.filePath != null && File(existing.filePath!).existsSync()) return null;
       if (existing.active || existing.status == DownloadStatus.paused) return null;
-      tasks.remove(existing);
+      _drop(existing);
     }
     final task = DownloadTask(item: item, quality: quality, directory: _directory, selection: selection);
     tasks.insert(0, task);
+    _byId[task.id] = task;
     _changed();
     return task;
   }
@@ -426,7 +442,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> remove(String id, {bool deleteFiles = false}) async {
     final task = taskFor(id);
     if (task == null) return;
-    tasks.remove(task);
+    _drop(task);
     _stop(id);
     _changed();
     if (deleteFiles) await _wipeAfterStop(task);
@@ -525,7 +541,9 @@ class DownloadManager extends ChangeNotifier {
       if (joins) ...['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s'],
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
-      '--write-info-json',
+      // yt-dlp keeps the cookies it used in the info file, so a signed-in
+      // download prints only the keys the sidecar keeps and writes no file.
+      if (cookies == null) '--write-info-json' else ...['--print', 'video:$_infoPrefix%(.{${_sidecarKeys.join(',')}})j'],
       '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format() ?? task.quality.format(),
       // Files are kept as YouTube sends them, which the core reads; yt-dlp
       // never runs an ffmpeg it may find on PATH.
@@ -677,15 +695,20 @@ class DownloadManager extends ChangeNotifier {
   /// What yt-dlp says when YouTube takes the address for a bot.
   static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
 
+  /// Prefix of the line a signed-in download prints its info on.
+  static const _infoPrefix = 'lumtub-info|';
+
   Future<void> _run(DownloadTask task) async {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
     String? shown;
+    String? info;
     var exitCode = -1;
     Future<int> attempt(String? cookies) async {
       printed.clear();
       errors.clear();
+      info = null;
       try {
         await Directory(task.directory).create(recursive: true);
         final env = {
@@ -708,6 +731,8 @@ class DownloadManager extends ChangeNotifier {
           final path = DownloadProgress.parseFile(text);
           if (path != null) {
             printed.add(path);
+          } else if (text.startsWith(_infoPrefix)) {
+            info ??= text.substring(_infoPrefix.length);
           } else if (text.trim().isNotEmpty) {
             errors.add(text.trim());
             if (errors.length > 20) errors.removeAt(0);
@@ -761,7 +786,7 @@ class DownloadManager extends ChangeNotifier {
     if (_stopping.remove(id)) {
       // Paused, cancelled or removed: the status was set by the caller.
     } else if (exitCode == 0) {
-      await _finish(task, printed);
+      await _finish(task, printed, info);
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
@@ -786,7 +811,7 @@ class DownloadManager extends ChangeNotifier {
     }
   }
 
-  Future<void> _finish(DownloadTask task, List<String> printed) async {
+  Future<void> _finish(DownloadTask task, List<String> printed, [String? info]) async {
     var path = printed.lastOrNull;
     List<SkipSegment>? segments;
     var cut = const <(Duration, Duration)>[];
@@ -870,7 +895,7 @@ class DownloadManager extends ChangeNotifier {
     // The offline info is saved before the task says done, so whoever
     // opens the finished file reads the whole sidecar, not one half written.
     try {
-      await _writeSidecar(task, path, segments ?? await _segments(task), cut);
+      await _writeSidecar(task, path, segments ?? await _segments(task), cut, info);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
@@ -934,11 +959,12 @@ class DownloadManager extends ChangeNotifier {
   /// SponsorBlock segments, so playback can restore both offline. Times
   /// are moved past the stretches [cut] out of the file, and segments
   /// wholly cut are left out.
-  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut) async {
+  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut, [String? info]) async {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
-    if (sidecar.existsSync()) {
-      final data = await decodeJsonInBackground(await sidecar.readAsString());
+    final text = info ?? (await sidecar.exists() ? await sidecar.readAsString() : null);
+    if (text != null) {
+      final data = await decodeJsonInBackground(text);
       if (data is Map<String, dynamic>) full = data;
     }
     final kept = <Map<String, Object>>[];

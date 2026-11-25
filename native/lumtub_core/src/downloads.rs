@@ -444,7 +444,8 @@ struct Answer<'a> {
 /// The download formats of yt-dlp's JSON [info]: `{video, audio}`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_download_formats(info: *const u8, length: usize) -> *mut c_char {
-    let info = serde_json::from_str::<Value>(unsafe { text(info, length) }).unwrap_or(Value::Null);
+    let info = serde_json::from_str::<Value>(unsafe { crate::taste::outside(info, length) })
+        .unwrap_or(Value::Null);
     give_json(&Formats::parse(&info))
 }
 

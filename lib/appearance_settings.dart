@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'app_directories.dart';
 import 'l10n/l10n.dart';
 import 'sun_times.dart';
+import 'system_env.dart';
 
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are Lumtub's own, the rest a wider palette.
@@ -637,7 +638,7 @@ class AppearanceSettings {
 Future<Color?> readWindowsAccent() async {
   if (!Platform.isWindows) return null;
   try {
-    final result = await Process.run('reg', ['query', r'HKCU\Software\Microsoft\Windows\DWM', '/v', 'AccentColor']);
+    final result = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', r'HKCU\Software\Microsoft\Windows\DWM', '/v', 'AccentColor']);
     final match = RegExp(r'AccentColor\s+REG_DWORD\s+0x([0-9a-fA-F]+)').firstMatch('${result.stdout}');
     if (match == null) return null;
     // Stored as 0xAABBGGRR.

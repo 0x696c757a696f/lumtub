@@ -260,9 +260,13 @@ extension LearningActions on AppController {
       final watch = sound.stream.error.listen((message) {
         if (!failed.isCompleted) failed.complete(message);
       });
-      await sound.open(Media(file.uri.toString()));
-      final problem = await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
-      await watch.cancel();
+      final String problem;
+      try {
+        await sound.open(Media(file.uri.toString()));
+        problem = await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
+      } finally {
+        await watch.cancel();
+      }
       logInfo('Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
       if (problem.isNotEmpty) {
         await file.delete();
@@ -292,22 +296,49 @@ extension LearningActions on AppController {
     }
   }
 
+  /// The last of [lines] (in order of start) said around [at], within
+  /// [slack]: found by its start, then it or the line before it, as lines
+  /// overlap at most their neighbour.
+  static SubtitleCue? _lineAround(List<SubtitleCue> lines, Duration at, Duration slack) {
+    final last = cueIndexAt(lines, at + slack);
+    for (var i = last; i >= 0 && i >= last - 1; i--) {
+      if (at <= lines[i].end + slack) return lines[i];
+    }
+    return null;
+  }
+
+  /// Stops waiting for a line played once to end: playback moved on.
+  void _cancelLineOnce() {
+    final once = _lineOnce;
+    _lineOnce = null;
+    if (once != null) unawaited(once.cancel());
+  }
+
   /// Plays the line said at [at] once and pauses as it ends: 听原句 on a
   /// word card. False when no line is there.
   Future<bool> playLineOnce(Duration at) async {
     final player = this.player;
     if (player == null) return false;
     const slack = Duration(milliseconds: 300);
-    final line = learningLines.where((l) => l.start <= at + slack && at <= l.end + slack).lastOrNull;
+    final line = _lineAround(learningLines, at, slack);
     if (line == null) return false;
     await _lineOnce?.cancel();
     await seek(lineStart(line));
     if (this.player != player) return false;
-    _lineOnce = player.stream.position.listen((position) {
+    late final StreamSubscription<Duration> once;
+    // Positions from before the seek landed say nothing about this line.
+    var inLine = false;
+    final from = lineStart(line) - const Duration(seconds: 1);
+    once = _lineOnce = player.stream.position.listen((position) {
+      if (!inLine) {
+        if (position < from || position >= line.end) return;
+        inLine = true;
+      }
       if (position < line.end) return;
-      unawaited(_lineOnce?.cancel());
-      _lineOnce = null;
-      unawaited(player.pause());
+      if (identical(_lineOnce, once)) _lineOnce = null;
+      unawaited(once.cancel());
+      // Moved well past the line by other means: nothing to stop.
+      if (position <= line.end + const Duration(seconds: 2)) unawaited(player.pause());
     });
     await player.play();
     return true;
@@ -541,7 +572,7 @@ extension LearningActions on AppController {
     final book = learning.book;
     if (book == null) return;
     const slack = Duration(milliseconds: 300);
-    final line = learningLines.where((l) => l.start <= at + slack && at <= l.end + slack).lastOrNull;
+    final line = _lineAround(learningLines, at, slack);
     if (line == null) return;
     final sound = book.soundOf(key);
     final whole = File('${sound.path}.part');

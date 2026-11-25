@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart' show md5;
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
@@ -1011,12 +1012,57 @@ class FallbackTranslator implements Translator {
 
   @override
   Future<String> translate(String text, String target) async {
+    final String result;
     try {
-      return await first.translate(text, target);
+      result = await first.translate(text, target);
     } on TranslationException catch (e) {
       _tell(first, e);
-      return then.translate(text, target);
+      if (first is! FallbackTranslator) _note(first, answered: false);
+      final answer = await then.translate(text, target);
+      if (then is! FallbackTranslator) _note(then, answered: true);
+      return answer;
     }
+    if (first is! FallbackTranslator) _note(first, answered: true);
+    return result;
+  }
+
+  /// The free services that refused their last text, such as Google's
+  /// while it says it is busy; another one translates meanwhile. Changes
+  /// only when a service starts or stops refusing.
+  static final refusing = ValueNotifier<Set<Type>>(const {});
+
+  /// The free service that answered last, by [nameOf].
+  static String? lastAnswered;
+
+  /// The name of [service] when it is one of the free ones these chains
+  /// are made of, as 翻译服务 lists it.
+  static String? nameOf(Translator service) => switch (service) {
+        GoogleTranslator() => TranslationService.google.label,
+        MicrosoftTranslator() => TranslationService.microsoft.label,
+        MyMemoryTranslator() => TranslationService.mymemory.label,
+        _ => null,
+      };
+
+  /// The free service [service] stands for when chosen under 翻译服务.
+  static Type? typeOf(TranslationService service) => switch (service) {
+        TranslationService.google => GoogleTranslator,
+        TranslationService.mymemory => MyMemoryTranslator,
+        _ => null,
+      };
+
+  static Type _kind(Translator service) => switch (service) {
+        GoogleTranslator() => GoogleTranslator,
+        MicrosoftTranslator() => MicrosoftTranslator,
+        MyMemoryTranslator() => MyMemoryTranslator,
+        _ => service.runtimeType,
+      };
+
+  static void _note(Translator service, {required bool answered}) {
+    final type = _kind(service);
+    if (answered) lastAnswered = nameOf(service) ?? lastAnswered;
+    final now = refusing.value;
+    if (now.contains(type) != answered) return;
+    refusing.value = answered ? ({...now}..remove(type)) : {...now, type};
   }
 
   /// When each service's refusal was last written down: once a minute is

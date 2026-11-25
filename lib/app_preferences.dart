@@ -329,12 +329,12 @@ class AppPreferences {
   final bool superChatHighlights;
   /// 弹幕: the live chat or its replay flying across the picture.
   final DanmakuSettings danmaku;
-  /// The language 沉浸式翻译 turns text into; empty follows the
-  /// interface's language, whatever [translateLanguage] is.
+  /// The language 沉浸式翻译 turns text into; empty follows
+  /// [translateTarget], the language set for every translation.
   final String immersiveLanguage;
 
-  /// [immersiveLanguage], with the interface's language for empty.
-  String get immersiveTarget => immersiveLanguage.isEmpty ? interfaceTranslationLanguage.code : immersiveLanguage;
+  /// [immersiveLanguage], with [translateTarget] for empty.
+  String get immersiveTarget => immersiveLanguage.isEmpty ? translateTarget : immersiveLanguage;
   /// How the translation under the original looks.
   final TranslationStyle translationStyle;
   /// The translation goes above the original instead of under it.

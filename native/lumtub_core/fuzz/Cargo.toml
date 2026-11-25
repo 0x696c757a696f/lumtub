@@ -103,3 +103,10 @@ path = "fuzz_targets/cast_fragment.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "ytdlp_signature"
+path = "fuzz_targets/ytdlp_signature.rs"
+test = false
+doc = false
+bench = false

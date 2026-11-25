@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/app_directories.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/system_env.dart';
 import 'package:lumtub/tool_manager.dart';
 
@@ -15,6 +16,16 @@ void main() {
     expect(windowsProgram('explorer.exe', environment: {}), r'C:\Windows\explorer.exe');
     expect(windowsProgram(r'System32\reg.exe', environment: {'SystemRoot': r'.\here'}), r'C:\Windows\System32\reg.exe');
   });
+
+  test("yt-dlp's checksums count only with yt-dlp's signature", () {
+    final sums = File('native/lumtub_core/testdata/yt-dlp-SHA2-256SUMS').readAsStringSync();
+    final signature = File('native/lumtub_core/testdata/yt-dlp-SHA2-256SUMS.sig').readAsBytesSync();
+    expect(ToolManager.verifyYtDlpSums(sums, signature, '2026.11.24.232900'), isNull);
+    expect(ToolManager.verifyYtDlpSums(sums.replaceFirst('4', '5'), signature, '2026.11.24.232900'), contains('does not match'));
+    expect(ToolManager.verifyYtDlpSums(sums, signature.sublist(0, 100), '2026.11.24.232900'), isNotNull);
+    // A real signature from November passed off as a later release's.
+    expect(ToolManager.verifyYtDlpSums(sums, signature, '2027.01.05.000000'), isNotNull);
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
   test('takes only a libmpv-2.dll inside the folder out of a 7z listing', () {
     expect(libmpvMember('include/mpv/client.h\r\nlibmpv.dll.a\r\nlibmpv-2.dll\r\n'), 'libmpv-2.dll');

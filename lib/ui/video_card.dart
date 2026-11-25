@@ -948,7 +948,8 @@ class DifficultyBadge extends StatelessWidget {
           final (label, color) = switch (VideoWords.levelFor(known)) {
             VideoLevel.easy => (tr('Easy'), const Color(0xFF2E7D32)),
             VideoLevel.right => (tr('Just right'), const Color(0xFF1565C0)),
-            VideoLevel.hard => (tr('Challenging'), const Color(0xFFE65100)),
+            VideoLevel.challenging => (tr('Challenging'), const Color(0xFFB26A00)),
+            VideoLevel.hard => (tr('Difficult'), const Color(0xFFE65100)),
             VideoLevel.tooHard => (tr('Too hard'), const Color(0xFFB71C1C)),
           };
           return Tooltip(

@@ -183,6 +183,10 @@ extension LifecycleActions on AppController {
         // spoken language (and its channel with it): asked again.
         unawaited(File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json').delete().then((_) {}, onError: (_) {}));
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages_2.json'));
+        unawaited(levelVideos.open(
+          File('${directories.data.path}${Platform.pathSeparator}level-videos.json'),
+          Directory('${directories.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}level-videos'),
+        ));
         ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
         VideoFactsLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
         unawaited(EmojiPictures.configure(File('${directories.cache.path}${Platform.pathSeparator}emoji_pictures.json')));

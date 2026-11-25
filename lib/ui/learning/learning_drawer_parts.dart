@@ -191,7 +191,8 @@ class _DrawerVideoWords extends StatelessWidget {
           final (label, color) = switch (words.level) {
             VideoLevel.easy => (tr('Easy for you'), Colors.green.shade600),
             VideoLevel.right => (tr('Just right for learning'), colors.primary),
-            VideoLevel.hard => (tr('Challenging'), Colors.orange.shade700),
+            VideoLevel.challenging => (tr('Challenging'), Colors.amber.shade800),
+            VideoLevel.hard => (tr('Difficult'), Colors.orange.shade800),
             VideoLevel.tooHard => (tr('Very hard for now'), colors.error),
           };
           return Entrance(

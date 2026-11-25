@@ -554,7 +554,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
         ),
         if (channelRef != null) ...[
           const SizedBox(width: 8),
-          FollowButton(controller: controller, channel: channelRef),
+          FollowButton(controller: controller, channel: channelRef, compact: MediaQuery.sizeOf(context).width < 600),
           ChannelMenuButton(controller: controller, channel: channelRef),
         ],
       ]),

@@ -586,28 +586,43 @@ class ChannelHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: LayoutBuilder(builder: (context, constraints) {
-        // On a phone the browser button moves into the menu and the
-        // picture shrinks, so the name keeps some room beside 关注.
+        // On a phone the browser button moves into the menu, the picture
+        // shrinks and 关注 goes under the name, so the name keeps the row.
         final narrow = constraints.maxWidth < 480;
+        final names = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(name, maxLines: narrow ? 2 : 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
+        ]);
+        final back = onBack == null ? null : IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft));
+        final follow = FollowButton(controller: controller, channel: channel);
+        if (narrow) {
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              if (back != null) back,
+              const SizedBox(width: 4),
+              ChannelAvatar(name: name, radius: 22, image: channel.avatar, channelId: channel.id),
+              const SizedBox(width: 12),
+              Expanded(child: names),
+              ChannelMenuButton(controller: controller, channel: channel, browser: true),
+            ]),
+            const SizedBox(height: 8),
+            Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: follow),
+          ]);
+        }
         return Row(children: [
-          if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft)),
-          SizedBox(width: narrow ? 4 : 8),
-          ChannelAvatar(name: name, radius: narrow ? 22 : 28, image: channel.avatar, channelId: channel.id),
-          SizedBox(width: narrow ? 12 : 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
-          ])),
+          if (back != null) back,
+          const SizedBox(width: 8),
+          ChannelAvatar(name: name, radius: 28, image: channel.avatar, channelId: channel.id),
+          const SizedBox(width: 16),
+          Expanded(child: names),
           const SizedBox(width: 8),
           // A long translation of 关注 is cut short rather than pushing the
           // name out.
-          ConstrainedBox(constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4), child: FollowButton(controller: controller, channel: channel)),
-          if (!narrow) ...[
-            const SizedBox(width: 8),
-            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
-          ],
-          ChannelMenuButton(controller: controller, channel: channel, browser: narrow),
+          ConstrainedBox(constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4), child: follow),
+          const SizedBox(width: 8),
+          IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
+          ChannelMenuButton(controller: controller, channel: channel, browser: false),
         ]);
       }),
     );
@@ -736,9 +751,12 @@ class ChannelMenuButton extends StatelessWidget {
 }
 
 class FollowButton extends StatelessWidget {
-  const FollowButton({super.key, required this.controller, required this.channel});
+  const FollowButton({super.key, required this.controller, required this.channel, this.compact = false});
   final AppController controller;
   final ChannelRef channel;
+  /// Once followed, a tick without the word, for a phone's row where the
+  /// channel's name needs the room.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -756,7 +774,10 @@ class FollowButton extends StatelessWidget {
     final label = Text(following ? tr('Following') : tr('Follow'), maxLines: 1, overflow: TextOverflow.ellipsis);
     if (!following) return FilledButton.icon(onPressed: toggle, icon: icon, label: label);
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Flexible(child: FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label)),
+      if (compact)
+        IconButton.filledTonal(tooltip: tr('Following'), onPressed: toggle, icon: icon)
+      else
+        Flexible(child: FilledButton.tonalIcon(onPressed: toggle, icon: icon, label: label)),
       const SizedBox(width: 4),
       IconButton.filledTonal(
         tooltip: tr('Subscription groups'),

@@ -36,29 +36,30 @@ class YoutubePlaylistPage extends StatelessWidget {
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
-          child: Row(children: [
-            IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
-            const SizedBox(width: 8),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(playlist.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+          child: BackHeading(
+            onBack: controller.goBack,
+            title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(playlist.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
               Text(
                 [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} videos', [playlist.count]), tr('YouTube playlists')].join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
               if (view.length case final length?)
                 Text(length, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
-            ])),
-            PlaylistOrderButton(controller: controller, id: listId, onReversed: controller.loadWholeYoutubePlaylist),
-            const SizedBox(width: 4),
-            FilledButton.icon(
-              onPressed: items.isEmpty || (reversed && loader.hasMore) ? null : () => controller.playList(listId, playlist.title, own),
-              icon: const Icon(AppIcons.playFill),
-              label: Text(tr('Play all')),
-            ),
-            const SizedBox(width: 8),
-            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(playlist.url), icon: Icon(AppIcons.arrowSquareOut)),
-          ]),
+            ]),
+            buttons: [
+              PlaylistOrderButton(controller: controller, id: listId, onReversed: controller.loadWholeYoutubePlaylist),
+              FilledButton.icon(
+                onPressed: items.isEmpty || (reversed && loader.hasMore) ? null : () => controller.playList(listId, playlist.title, own),
+                icon: const Icon(AppIcons.playFill),
+                label: Text(tr('Play all')),
+              ),
+              IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(playlist.url), icon: Icon(AppIcons.arrowSquareOut)),
+            ],
+          ),
         )),
         if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),
         if (reversed && loader.hasMore && loader.error == null)

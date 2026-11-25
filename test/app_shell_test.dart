@@ -44,6 +44,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('on a phone, searching gives the field the whole bar and the arrow gives it back', (tester) async {
+    final controller = await pumpApp(tester, const Size(390, 800));
+    controller
+      ..ready = true
+      ..notifyListeners();
+    await tester.pump();
+    final field = find.byType(TextField).first;
+    final before = tester.getSize(field).width;
+    await tester.tap(field);
+    await tester.pump();
+    expect(find.byTooltip('Settings'), findsNothing);
+    expect(tester.getSize(field).width, greaterThan(before + 80));
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pump();
+    expect(find.byTooltip('Settings'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('renders in the dark theme without layout errors', (tester) async {
     await pumpApp(tester, const Size(1280, 800), platformBrightness: Brightness.dark);
     final context = tester.element(find.byType(NavigationRail));

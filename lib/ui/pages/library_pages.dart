@@ -999,16 +999,16 @@ class PlaylistDetailPage extends StatelessWidget {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
-        child: LayoutBuilder(builder: (context, constraints) {
-          final title = Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+        child: Builder(builder: (context) {
+          final title = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             Text(
               playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
               style: TextStyle(color: context.colors.onSurfaceVariant),
             ),
             if (view.length case final length?)
               Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
-          ]));
+          ]);
           final buttons = <Widget>[
             if (own.length > 1)
               SortMenu<VideoOrder>(
@@ -1033,25 +1033,7 @@ class PlaylistDetailPage extends StatelessWidget {
               IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
             ],
           ];
-          final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft));
-          // A narrow window (a phone) gives the title its own line and puts
-          // the buttons under it.
-          if (constraints.maxWidth < 600) {
-            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [back, const SizedBox(width: 8), title]),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 8),
-                child: Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons),
-              ),
-            ]);
-          }
-          return Row(children: [
-            back,
-            const SizedBox(width: 8),
-            title,
-            for (final (i, button) in buttons.indexed) ...[if (i > 0) const SizedBox(width: 4), button],
-          ]);
+          return BackHeading(onBack: controller.goBack, title: title, buttons: buttons);
         }),
       )),
       if (items.isEmpty)

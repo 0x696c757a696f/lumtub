@@ -110,9 +110,10 @@ void main() {
             listRequests++;
             return http.Response.bytes(utf8.encode(_instances), 200);
           }
+          if (url.contains('/videoplayback')) return http.Response.bytes([1], 206);
           if (url.contains('/api/v1/videos/${InvidiousStreams.probeVideo}')) {
             if (url.startsWith('https://yewtu.be')) return http.Response('{"error": "blocked"}', 500);
-            if (url.startsWith('https://inv.nadeko.net')) return http.Response('{"videoId": "${InvidiousStreams.probeVideo}"}', 200);
+            if (url.startsWith('https://inv.nadeko.net')) return http.Response.bytes(utf8.encode(jsonEncode(_video())), 200);
             return http.Response('', 503);
           }
           if (url.startsWith('https://inv.nadeko.net/api/v1/videos/dQw4w9WgXcQ?local=true')) {

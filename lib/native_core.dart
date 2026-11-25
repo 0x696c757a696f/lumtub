@@ -45,6 +45,11 @@ class NativeCore {
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
         subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
         _captionLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_caption_lines'),
+        _searchSuggestions = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_search_suggestions'),
+        _relayVideo = library.lookupFunction<Pointer<Utf8> Function(Bool, Pointer<Uint8>, Size), Pointer<Utf8> Function(bool, Pointer<Uint8>, int)>('lumtub_relay_video'),
+        _vttPlan = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_plan'),
+        _vttCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_cues'),
+        _vttSplit = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_split'),
         _captionTranslationLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_caption_translation_lines'),
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
@@ -136,6 +141,35 @@ class NativeCore {
   /// the original's lines, as [captionLines] gives.
   String? captionTranslationLines(String original, String translated) =>
       take(withText(original, (o, ol) => withText(translated, (t, tl) => _captionTranslationLines(o, ol, t, tl))));
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) _searchSuggestions;
+
+  /// The suggestions in an answer of YouTube's completion service, as a
+  /// JSON list (native/lumtub_core/src/suggestions.rs).
+  String? searchSuggestions(List<int> body) => take(withBytes(body, _searchSuggestions));
+
+  final Pointer<Utf8> Function(bool invidious, Pointer<Uint8> body, int length) _relayVideo;
+
+  /// The streams in a Piped or ([invidious]) Invidious answer [body], as
+  /// JSON `{"video": [[address, codec, height, bitrate, container, video only]…],
+  /// "audio", "muxed", "live", "proxyUrl"?, "error"?}`; null when it is not
+  /// a JSON object (native/lumtub_core/src/relay_video.rs).
+  String? relayVideo(bool invidious, List<int> body) => take(withBytes(body, (b, l) => _relayVideo(invidious, b, l)));
+
+  final Pointer<Utf8> Function(Pointer<Uint8> vtt, int length) _vttPlan;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _vttCues;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _vttSplit;
+
+  /// What to translate in a track's own cues, as JSON `{"cues": [[timing,
+  /// text]…], "pieces": [[[timing, weight]…]…]}` (native/lumtub_core/src/vtt.rs).
+  String? vttPlan(String vtt) => take(withText(vtt, _vttPlan));
+
+  /// The cues of a track, or the sentences they make, as JSON
+  /// `[[timing, text]…]`, for [json] `{"vtt", "sentences", "time", "width"}`.
+  String? vttCues(String json) => take(withText(json, _vttCues));
+
+  /// Translations cut like the lines they go beside, for [json]
+  /// `[[text, [weight…]]…]`, as JSON `[[piece…]…]`.
+  String? vttSplit(String json) => take(withText(json, _vttSplit));
   final bool Function(Pointer<Uint8> source, int length, Pointer<Uint8> target, int targetLength) _looksLike;
 
   /// Whether [source] looks to be in [target] already, from its script.

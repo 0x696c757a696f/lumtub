@@ -56,6 +56,7 @@ pub mod redirect;
 pub mod relay;
 pub mod relay_hls;
 pub mod relay_live;
+pub mod relay_video;
 pub mod resolved;
 pub mod review;
 pub mod roots;
@@ -65,6 +66,7 @@ pub mod speech;
 pub mod store;
 pub mod store_texts;
 pub mod subtitles;
+pub mod suggestions;
 pub mod system_proxy;
 pub mod taste;
 pub mod tls;
@@ -73,6 +75,7 @@ pub mod tv_browse;
 pub mod tv_history;
 pub mod update;
 pub mod vault;
+pub mod vtt;
 pub mod web_account;
 pub mod words;
 pub mod ytdlp_signature;
@@ -80,5 +83,5 @@ pub mod ytdlp_signature;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    64
+    65
 }

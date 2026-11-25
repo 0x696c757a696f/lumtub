@@ -55,6 +55,23 @@ class Storyboard {
     return candidates.lastWhere((c) => c.width <= target, orElse: () => candidates.first);
   }
 
+  /// The storyboard the core picked (native/lumtub_core/src/resolved.rs):
+  /// times in µs, sheets as [address, length].
+  static Storyboard? fromCore(Map<String, dynamic> board) {
+    try {
+      return Storyboard(
+        width: board['width'] as int,
+        height: board['height'] as int,
+        rows: board['rows'] as int,
+        columns: board['columns'] as int,
+        interval: Duration(microseconds: board['interval'] as int),
+        sheets: [for (final s in board['sheets'] as List) StoryboardSheet(s[0] as String, Duration(microseconds: s[1] as int))],
+      );
+    } on TypeError {
+      return null;
+    }
+  }
+
   static Storyboard? _parse(Map f) {
     final width = f['width'], height = f['height'], rows = f['rows'], columns = f['columns'];
     if (width is! num || height is! num || rows is! num || columns is! num) return null;

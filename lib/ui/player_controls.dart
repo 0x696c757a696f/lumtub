@@ -22,7 +22,6 @@ import '../player_settings.dart';
 import '../right_click.dart';
 import '../shadowing.dart';
 import '../skins/skin.dart';
-import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../system_env.dart';
 import '../translation.dart';
@@ -311,17 +310,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final id = _c.playing?.id;
     if (id == null || _infoId == id || _reading) return;
     _reading = true;
-    Map<String, dynamic>? info;
+    ResolvedVideo? video;
     try {
-      info = await _c.playingInfo();
+      video = await _c.playingVideo();
     } finally {
       _reading = false;
     }
-    if (!mounted || _c.playing?.id != id || info == null) return;
+    if (!mounted || _c.playing?.id != id || video == null) return;
     _infoId = id;
-    final board = Storyboard.from(info);
+    final board = video.storyboard;
+    final heat = video.heatmap;
     setState(() {
-      _heat = Heatmap.from(info!);
+      _heat = heat;
       _preview = board == null ? null : storyboardPreview(board, _c.storyboardSheets);
     });
   }

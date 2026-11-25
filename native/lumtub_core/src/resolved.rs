@@ -177,7 +177,9 @@ const HEATMAP_SAMPLES: usize = 100;
 /// A positive number of [value]: yt-dlp writes these as integers, a few
 /// as floats.
 fn positive(value: Option<&Value>) -> Option<f64> {
-    value.and_then(Value::as_f64).filter(|v| *v > 0.0 && v.is_finite())
+    value
+        .and_then(Value::as_f64)
+        .filter(|v| *v > 0.0 && v.is_finite())
 }
 
 /// µs of [seconds], rounded half away from zero as Dart's `round` does.
@@ -232,7 +234,9 @@ pub fn storyboard(info: &Value) -> Option<Storyboard> {
         .iter()
         .filter(|f| {
             f.get("format_note").and_then(Value::as_str) == Some("storyboard")
-                || f.get("format_id").and_then(Value::as_str).is_some_and(|id| id.starts_with("sb"))
+                || f.get("format_id")
+                    .and_then(Value::as_str)
+                    .is_some_and(|id| id.starts_with("sb"))
         })
         .filter_map(storyboard_of)
         .collect();
@@ -634,6 +638,7 @@ mod tests {
             disabled: vec![Codec::Av1, Codec::Vp9],
             fetched: 0,
             cap: 0,
+            extras: false,
         };
         let s = summary(&info(), &ask);
         assert_eq!(s.heights, [1080]);

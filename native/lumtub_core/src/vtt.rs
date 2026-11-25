@@ -139,7 +139,7 @@ pub fn cues(vtt: &str) -> Vec<Cue> {
                 (!clean.is_empty()).then(|| clean.to_owned())
             })
             .collect();
-        if text.first().is_some() && text.first() == previous.as_ref() {
+        if text.first().is_some_and(|f| Some(f) == previous.as_ref()) {
             text.remove(0);
         }
         let Some(last) = text.last() else {

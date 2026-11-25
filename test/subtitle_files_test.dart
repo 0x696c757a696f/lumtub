@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/subtitle_cues.dart';
 import 'package:lumtub/subtitle_files.dart';
 import 'package:lumtub/translation.dart';
 
@@ -340,6 +341,16 @@ Ok, finita la chicca.
         expect([for (final c in other) c.timing], [for (final c in original) c.timing]);
         expect([for (final c in translated) c.text], [for (final c in original) c.text.toUpperCase()]);
         expect(original.every((c) => c.text.trim().isNotEmpty), isTrue);
+        // The subtitle list: one row per line, each with its translation,
+        // none repeated, also when the first subtitle is YouTube's own track
+        // as mpv reads it.
+        final originalText = await File(await files.pathFor(SubtitleOption(language: lang, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr'))).readAsString();
+        final translatedText = await File(await files.pathFor(SubtitleOption(language: second, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second', kind: SubtitleKind.translated))).readAsString();
+        for (final main in [dartSubtitleCues(originalText), dartSubtitleCues(asr)]) {
+          final rows = pairSubtitleCues(main, dartSubtitleCues(translatedText));
+          expect(rows.every((r) => r.cue.text.trim().isNotEmpty && (r.second?.trim().isNotEmpty ?? false)), isTrue, reason: '$rows');
+          expect([for (final r in rows) r.second], [for (final c in translated) c.text], reason: '$rows');
+        }
         // Every word of the track, in order, each once.
         final joined = original.map((c) => c.text).join(' ').replaceAll(' ', '');
         expect(joined, fragments.join().replaceAll(' ', ''));

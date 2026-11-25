@@ -20,6 +20,9 @@ pub struct Ask {
     pub disabled: Vec<Codec>,
     pub cap: u32,
     pub fetched: i64,
+    /// Whether to read the storyboards and the replay heatmap too: asked
+    /// once per video, not for every setting.
+    pub extras: bool,
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -146,6 +149,132 @@ pub struct Summary {
     pub streams: Option<Vec<Stream>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_agent: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub storyboard: Option<Storyboard>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap: Option<Vec<f64>>,
+}
+
+/// The storyboard the seek bar previews from: sprite sheets of frames
+/// `width` × `height`, `rows` × `columns` to a sheet, `interval` µs apart,
+/// and each sheet's address and length in µs.
+#[derive(Serialize, Debug, PartialEq)]
+pub struct Storyboard {
+    pub width: i64,
+    pub height: i64,
+    pub rows: i64,
+    pub columns: i64,
+    pub interval: i64,
+    pub sheets: Vec<(String, i64)>,
+}
+
+/// How wide a preview frame should be at most: sharp enough for a 160 px
+/// preview, small enough to download quickly.
+const STORYBOARD_TARGET: i64 = 200;
+/// Points the replay heatmap is resampled to.
+const HEATMAP_SAMPLES: usize = 100;
+
+/// A positive number of [value]: yt-dlp writes these as integers, a few
+/// as floats.
+fn positive(value: Option<&Value>) -> Option<f64> {
+    value.and_then(Value::as_f64).filter(|v| *v > 0.0 && v.is_finite())
+}
+
+/// µs of [seconds], rounded half away from zero as Dart's `round` does.
+fn micros(seconds: f64) -> Option<i64> {
+    let us = (seconds * 1e6).round();
+    (us.is_finite() && us.abs() < 9.2e18).then_some(us as i64)
+}
+
+fn storyboard_of(format: &Value) -> Option<Storyboard> {
+    let width = positive(format.get("width"))?;
+    let height = positive(format.get("height"))?;
+    let rows = positive(format.get("rows"))?;
+    let columns = positive(format.get("columns"))?;
+    let sheets: Vec<(String, i64)> = format
+        .get("fragments")?
+        .as_array()?
+        .iter()
+        .filter_map(|f| {
+            let url = f.get("url")?.as_str()?;
+            Some((url.to_owned(), micros(positive(f.get("duration"))?)?))
+        })
+        .collect();
+    let first = sheets.first()?.1;
+    // yt-dlp's fps is frames a second; without it every sheet but the last
+    // holds rows × columns frames.
+    let per_sheet = (rows * columns).trunc();
+    let seconds = match positive(format.get("fps")) {
+        Some(fps) => 1.0 / fps,
+        None if per_sheet >= 1.0 => first as f64 / 1e6 / per_sheet,
+        None => return None,
+    };
+    Some(Storyboard {
+        width: width.trunc() as i64,
+        height: height.trunc() as i64,
+        rows: rows.trunc() as i64,
+        columns: columns.trunc() as i64,
+        interval: micros(seconds)?.max(1),
+        sheets,
+    })
+    // A frame smaller than a pixel, or a sheet of no whole frame, is not one
+    // to draw.
+    .filter(|b| b.width > 0 && b.height > 0 && b.rows > 0 && b.columns > 0)
+}
+
+/// The storyboard among yt-dlp's `formats` (ids sb0…sb3, format_note
+/// "storyboard") whose frames are the widest up to [STORYBOARD_TARGET], else
+/// the narrowest above it.
+pub fn storyboard(info: &Value) -> Option<Storyboard> {
+    let mut boards: Vec<Storyboard> = info
+        .get("formats")?
+        .as_array()?
+        .iter()
+        .filter(|f| {
+            f.get("format_note").and_then(Value::as_str) == Some("storyboard")
+                || f.get("format_id").and_then(Value::as_str).is_some_and(|id| id.starts_with("sb"))
+        })
+        .filter_map(storyboard_of)
+        .collect();
+    boards.sort_by_key(|b| b.width);
+    match boards.iter().rposition(|b| b.width <= STORYBOARD_TARGET) {
+        Some(at) => Some(boards.swap_remove(at)),
+        None if boards.is_empty() => None,
+        None => Some(boards.swap_remove(0)),
+    }
+}
+
+/// yt-dlp's `heatmap` ("most replayed"), resampled to [HEATMAP_SAMPLES]
+/// equally spaced points over the video, each 0..1; none for a video
+/// without one (only popular videos have it). Where two parts overlap, the
+/// one listed first counts. At most [HEATMAP_SAMPLES] × the parts: a
+/// hundred or so each.
+pub fn heatmap(info: &Value) -> Option<Vec<f64>> {
+    let bins: Vec<(f64, f64, f64)> = info
+        .get("heatmap")?
+        .as_array()?
+        .iter()
+        .filter_map(|b| {
+            let start = b.get("start_time")?.as_f64()?;
+            let end = b.get("end_time")?.as_f64()?;
+            let value = b.get("value")?.as_f64()?;
+            (end > start).then_some((start, end, value.clamp(0.0, 1.0)))
+        })
+        .collect();
+    if bins.len() < 2 {
+        return None;
+    }
+    let total = bins.iter().map(|b| b.1).fold(f64::NEG_INFINITY, f64::max);
+    let samples = HEATMAP_SAMPLES as f64;
+    let values = (0..HEATMAP_SAMPLES)
+        .map(|i| {
+            let at = (i as f64 + 0.5) / samples * total;
+            bins.iter()
+                .find(|(start, end, _)| at >= *start && at < *end)
+                .map_or(0.0, |b| b.2)
+        })
+        .collect();
+    Some(values)
 }
 
 /// The formats yt-dlp picked: `requested_formats`, or the answer itself
@@ -327,6 +456,8 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
         audio_tracks: audio_tracks(info),
         streams: streams(info, &tracks),
         user_agent,
+        storyboard: ask.extras.then(|| storyboard(info)).flatten(),
+        heatmap: ask.extras.then(|| heatmap(info)).flatten(),
     }
 }
 

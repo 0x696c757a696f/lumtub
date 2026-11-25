@@ -33,12 +33,12 @@ extension PlaybackControls on AppController {
   /// yt-dlp's result for the playing video, when it was extracted already
   /// (storyboards and the replay heatmap come from it); null otherwise,
   /// for example when Piped or Invidious played it.
-  Future<Map<String, dynamic>?> playingInfo() async {
+  Future<ResolvedVideo?> playingVideo() async {
     final id = playing?.id;
     final cached = id == null ? null : _repository?.streams.cached(id);
     if (cached == null) return null;
     try {
-      return (await cached).info;
+      return await cached;
     } catch (_) {
       return null;
     }

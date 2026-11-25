@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'heatmap.dart';
 import 'blocked_sign_in.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
@@ -16,6 +17,7 @@ import 'playback_failure.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
+import 'storyboard.dart';
 import 'video_codec.dart';
 import 'video_facts_lookup.dart';
 import 'youtube_player_probe.dart';
@@ -63,7 +65,10 @@ class ResolvedVideo {
       // about (three or so): writing a megabyte of it again for each took
       // longer than the core's reading of it.
       final text = _text ??= jsonEncode(info);
-      final answer = core.resolved(text, jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000}));
+      // The storyboard and heatmap come with the plain reading, which
+      // every video asks for, and not again for each setting.
+      final extras = disabled.isEmpty && cap == 0;
+      final answer = core.resolved(text, jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000, 'extras': extras}));
       return answer == null ? null : jsonDecode(answer) as Map<String, dynamic>;
     });
   }
@@ -97,6 +102,20 @@ class ResolvedVideo {
   }
 
   VideoDetails get details => VideoDetails.fromJson(info);
+
+  /// The storyboard the seek bar previews from; null without one.
+  Storyboard? get storyboard {
+    final summary = _summary();
+    if (summary == null) return Storyboard.from(info);
+    return switch (summary['storyboard']) { final Map<String, dynamic> board => Storyboard.fromCore(board), _ => null };
+  }
+
+  /// The "most replayed" curve; null for a video without one.
+  Heatmap? get heatmap {
+    final summary = _summary();
+    if (summary == null) return Heatmap.from(info);
+    return switch (summary['heatmap']) { final List values => Heatmap([for (final v in values) (v as num).toDouble()]), _ => null };
+  }
 
   /// Video heights this video offers, highest first; with [settings], only
   /// those that exist in a codec it allows.

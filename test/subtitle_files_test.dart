@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/subtitle_cues.dart';
 import 'package:lumtub/subtitle_files.dart';
 import 'package:lumtub/translation.dart';
@@ -371,6 +372,32 @@ Ok, finita la chicca.
     final hi = WebVtt.cues(WebVtt.asLines(rolling(samples['hi']!)));
     expect(hi.last.text, 'ठीक है।');
   });
+
+  test('the native core lays out automatic captions as the Dart code does', () {
+    final tracks = [
+      for (final fragments in samples.values) rolling(fragments),
+      // A long track with every kind of end, pause and width.
+      () {
+        const words = ['ciao', 'mondo,', 'questo è', 'un test.', '今天我们', '来聊，', '字幕。', '오늘은', '자막에', 'वाह।', 'حسنا،', 'longer words here and there', 'ok?'];
+        final vtt = StringBuffer('WEBVTT\n\n');
+        var at = 0;
+        for (var i = 0; i < 600; i++) {
+          final length = 300 + (i * 7919) % 2500;
+          final gap = i % 17 == 0 ? 1500 : 0;
+          String stamp(int ms) => '${(ms ~/ 3600000).toString().padLeft(2, '0')}:${(ms ~/ 60000 % 60).toString().padLeft(2, '0')}:${(ms ~/ 1000 % 60).toString().padLeft(2, '0')}.${(ms % 1000).toString().padLeft(3, '0')}';
+          vtt.write('${stamp(at + gap)} --> ${stamp(at + gap + length)}\n${words[(i * 31) % words.length]}\n\n');
+          at += gap + length;
+        }
+        return '$vtt';
+      }(),
+    ];
+    for (final vtt in tracks) {
+      expect(WebVtt.captionLines(vtt), WebVtt.dartCaptionLines(vtt));
+    }
+    final original = rolling(samples['it']!);
+    final translated = rolling(['那张', '设计用来', '比你孩子需要的时间', '学会走路短。', '就这样。']);
+    expect(WebVtt.asLinesOf(original, translated), WebVtt.dartAsLinesOf(original, translated));
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
   test('YouTube\'s own translation, when the service is busy, shows in the original\'s lines', () {
     final original = rolling(samples['it']!);

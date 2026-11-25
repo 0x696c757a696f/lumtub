@@ -8,6 +8,7 @@ pub mod anki;
 pub mod ass;
 pub mod backup;
 pub mod browser_sign_in;
+pub mod caption_lines;
 pub mod cast;
 pub mod cast_lan;
 pub mod cast_mkv;
@@ -78,5 +79,5 @@ pub mod words;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    62
+    64
 }

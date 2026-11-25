@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'native_core.dart';
 import 'translation.dart';
 import 'translation_cache.dart';
 import 'translation_services.dart';
@@ -215,28 +216,27 @@ class SubtitleFiles {
     // A sentence of a track's own cues shown as several of them has its
     // translation cut at the places nearest to where those cues end, each
     // piece at its cue's time. Automatic captions are translated in the
-    // lines they show in ([lineSpans]), each line as itself,
-    // so a line and its translation always say the same thing; AI reads
-    // the lines before for the rest of the sentence.
-    final fragments = WebVtt.cues(vtt);
-    if (fragments.isEmpty) return (text: vtt, rest: null);
-    final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
-    final shown = [
-      for (final span in spans)
-        if (asr) ...[for (final line in WebVtt.lineSpans(fragments, span)) [line]] else [for (var k = span.$1; k < span.$2; k++) (k, k + 1)],
-    ];
-    final allLines = [for (final lines in shown) ...lines];
-    final allTimings = asr ? WebVtt.lineTimings(fragments, allLines) : [for (final (a, _) in allLines) fragments[a].timing];
-    final cues = [
-      for (final (i, lines) in shown.indexed)
-        (
-          timing: asr ? allTimings[i] : '${WebVtt._stamp(WebVtt.startOf(fragments[lines.first.$1].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[lines.last.$2 - 1].timing))}',
-          text: WebVtt.textOf(fragments, lines.first.$1, lines.last.$2),
-        ),
-    ];
-    final pieces = <List<({String timing, int weight})>>[];
-    for (var c = 0, k = 0; c < shown.length; c++) {
-      pieces.add([for (final (a, b) in shown[c]) (timing: allTimings[k++], weight: WebVtt.width(WebVtt.textOf(fragments, a, b)))]);
+    // lines they show in ([captionLines]), each line as itself, so a line
+    // and its translation always say the same thing; the lines of one
+    // sentence go in one request, and AI also reads the lines before.
+    final List<({String timing, String text})> cues;
+    final List<List<({String timing, int weight})>> pieces;
+    // The sentence each cue is part of, for automatic captions.
+    var sentenceOf = const <int>[];
+    if (asr) {
+      final lines = WebVtt.captionLines(vtt);
+      if (lines.isEmpty) return (text: vtt, rest: null);
+      cues = [for (final l in lines) (timing: '${WebVtt._stamp(l.start)} --> ${WebVtt._stamp(l.end)}', text: l.text)];
+      pieces = [for (final c in cues) [(timing: c.timing, weight: 1)]];
+      sentenceOf = [for (final l in lines) l.sentence];
+    } else {
+      final fragments = WebVtt.cues(vtt);
+      if (fragments.isEmpty) return (text: vtt, rest: null);
+      final spans = WebVtt.sentenceSpans(fragments, maxLength: sentenceTime, maxWidth: sentenceWidth);
+      cues = [for (final (from, to) in spans) (timing: '${WebVtt._stamp(WebVtt.startOf(fragments[from].timing))} --> ${WebVtt._stamp(WebVtt.endOf(fragments[to - 1].timing))}', text: WebVtt.textOf(fragments, from, to))];
+      pieces = [
+        for (final (from, to) in spans) [for (var k = from; k < to; k++) (timing: fragments[k].timing, weight: WebVtt.width(fragments[k].text))],
+      ];
     }
     // How many cues before a request AI reads: more of the short lines.
     final context = asr ? 2 * contextSentences : contextSentences;
@@ -248,7 +248,10 @@ class SubtitleFiles {
     for (var start = 0; start < cues.length;) {
       var end = start;
       var length = 0;
-      while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength)) {
+      // The lines of one sentence go in one request, so the translator
+      // reads the sentence whole, up to twice the usual length.
+      bool sameSentence(int k) => sentenceOf.isNotEmpty && sentenceOf[k] == sentenceOf[k - 1] && length + cues[k].text.length < 2 * chunkLength;
+      while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength || sameSentence(end))) {
         length += cues[end++].text.length + 1;
       }
       groups.add((start, end));
@@ -403,6 +406,10 @@ class _Refused implements Exception {
 }
 
 /// Just enough WebVTT to translate a track cue by cue.
+/// One line automatic captions show in: its times, the sentence it is
+/// part of, and its text.
+typedef CaptionLine = ({Duration start, Duration end, int sentence, String text});
+
 class WebVtt {
   static final _timing = RegExp(r'^\s*[\d:.]+\s+-->\s+[\d:.]+');
   static final _tag = RegExp(r'<[^>]*>');
@@ -461,20 +468,23 @@ class WebVtt {
     Duration maxLength = const Duration(seconds: 7),
     int maxWidth = 90,
   }) {
-    int width(String text) => text.length + unspacedScript.allMatches(text).length;
+    // Widths add up as fragments join, and a sentence end is looked for in
+    // the last fragment only: one pass over the track.
     final out = <(int, int)>[];
     for (var i = 0; i < cues.length;) {
       final start = startOf(cues[i].timing);
       var end = endOf(cues[i].timing);
-      var text = cues[i].text;
+      var wide = width(cues[i].text);
+      var last = cues[i].text;
       var j = i + 1;
-      while (j < cues.length && !_sentenceEnd.hasMatch(text)) {
+      while (j < cues.length && !_sentenceEnd.hasMatch(last)) {
         final next = cues[j];
-        final joined = _join(text, next.text);
+        final joined = wide + width(next.text) + (_spaced(last, next.text) ? 1 : 0);
         final nextEnd = endOf(next.timing);
-        if (startOf(next.timing) - end > gap || nextEnd - start > maxLength || width(joined) > maxWidth) break;
-        text = joined;
+        if (startOf(next.timing) - end > gap || nextEnd - start > maxLength || joined > maxWidth) break;
+        wide = joined;
         end = nextEnd;
+        if (next.text.isNotEmpty) last = next.text;
         j++;
       }
       out.add((i, j));
@@ -560,22 +570,24 @@ class WebVtt {
     final out = <(int, int)>[];
     for (var i = from; i < to;) {
       final start = startOf(cues[i].timing);
-      var text = cues[i].text;
+      var wide = width(cues[i].text);
+      var last = cues[i].text;
       var j = i + 1;
       // Where the line could end after a comma, and how wide it is there.
       var comma = -1;
       var commaWidth = 0;
       while (j < to) {
-        final joined = _join(text, cues[j].text);
-        if (width(joined) > lineWidth || endOf(cues[j].timing) - start > lineTime) break;
-        if (_clauseTail.hasMatch(text)) {
+        final joined = wide + width(cues[j].text) + (_spaced(last, cues[j].text) ? 1 : 0);
+        if (joined > lineWidth || endOf(cues[j].timing) - start > lineTime) break;
+        if (_clauseTail.hasMatch(last)) {
           comma = j;
-          commaWidth = width(text);
+          commaWidth = wide;
         }
-        text = joined;
+        wide = joined;
+        if (cues[j].text.isNotEmpty) last = cues[j].text;
         j++;
       }
-      if (j < to && comma > i && commaWidth * 2 >= width(text)) j = comma;
+      if (j < to && comma > i && commaWidth * 2 >= wide) j = comma;
       out.add((i, j));
       i = j;
     }
@@ -598,43 +610,82 @@ class WebVtt {
           }(),
       ];
 
-  /// Automatic captions [vtt] as sentences, in the lines of [lineSpans]:
-  /// the way their translations are shown, so each original line has its
-  /// translation beside it.
-  static String asLines(String vtt) {
-    final cues = WebVtt.cues(vtt);
-    if (cues.isEmpty) return vtt;
-    final lines = [for (final span in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth)) ...lineSpans(cues, span)];
-    final timings = lineTimings(cues, lines);
-    return write([for (final (k, (a, b)) in lines.indexed) (timing: timings[k], text: textOf(cues, a, b))]);
+  /// The lines automatic captions [vtt] show in: fragments joined into
+  /// sentences, a long one cut into [lineSpans]. The native core works
+  /// them out when it is there.
+  static List<CaptionLine> captionLines(String vtt) {
+    final json = NativeCore.instance?.captionLines(vtt);
+    if (json != null) return _linesOf(json);
+    return dartCaptionLines(vtt);
   }
 
+  /// [captionLines] without the native core.
+  static List<CaptionLine> dartCaptionLines(String vtt) {
+    final cues = WebVtt.cues(vtt);
+    final lines = <(int, int)>[];
+    final sentence = <int>[];
+    for (final (s, span) in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth).indexed) {
+      for (final line in lineSpans(cues, span)) {
+        lines.add(line);
+        sentence.add(s);
+      }
+    }
+    final timings = lineTimings(cues, lines);
+    return [for (final (k, (a, b)) in lines.indexed) (start: startOf(timings[k]), end: endOf(timings[k]), sentence: sentence[k], text: textOf(cues, a, b))];
+  }
+
+  static List<CaptionLine> _linesOf(String json) => [
+        for (final line in jsonDecode(json) as List)
+          if (line case [final int start, final int end, final int sentence, final String text]) (start: Duration(milliseconds: start), end: Duration(milliseconds: end), sentence: sentence, text: text),
+      ];
+
+  static String _writeLines(List<CaptionLine> lines) => write([for (final l in lines) (timing: '${_stamp(l.start)} --> ${_stamp(l.end)}', text: l.text)]);
+
+  /// Automatic captions [vtt] in the lines of [captionLines]: the way their
+  /// translations are shown, so each original line has its translation
+  /// beside it.
+  static String asLines(String vtt) {
+    final lines = captionLines(vtt);
+    return lines.isEmpty ? vtt : _writeLines(lines);
+  }
 
   /// YouTube's translation [translated] of automatic captions [original]
   /// in the lines [asLines] shows the original in: each translated cue
   /// goes into the line it starts in, so the two tracks change together.
   static String asLinesOf(String original, String translated) {
-    final cues = WebVtt.cues(original);
+    final json = NativeCore.instance?.captionTranslationLines(original, translated);
+    if (json != null) {
+      final lines = _linesOf(json);
+      return lines.isEmpty ? translated : _writeLines(lines);
+    }
+    return dartAsLinesOf(original, translated);
+  }
+
+  /// [asLinesOf] without the native core.
+  static String dartAsLinesOf(String original, String translated) {
     final pieces = WebVtt.cues(translated);
-    if (cues.isEmpty || pieces.isEmpty) return asLines(translated);
-    final lines = [for (final span in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth)) ...lineSpans(cues, span)];
-    final timings = lineTimings(cues, lines);
+    final lines = dartCaptionLines(original);
+    if (lines.isEmpty || pieces.isEmpty) return asLines(translated);
     final texts = List<String>.filled(lines.length, '');
-    for (final piece in pieces) {
+    // Pieces in time order walk the lines once.
+    final sorted = [...pieces]..sort((a, b) => startOf(a.timing).compareTo(startOf(b.timing)));
+    var k = 0;
+    for (final piece in sorted) {
       final at = startOf(piece.timing);
-      var k = timings.lastIndexWhere((t) => startOf(t) <= at);
-      if (k < 0) k = 0;
+      while (k + 1 < lines.length && lines[k + 1].start <= at) {
+        k++;
+      }
       texts[k] = texts[k].isEmpty ? piece.text : _join(texts[k], piece.text);
     }
-    return write([for (final (k, text) in texts.indexed) if (text.isNotEmpty) (timing: timings[k], text: text)]);
+    return _writeLines([for (final (k, l) in lines.indexed) if (texts[k].isNotEmpty) (start: l.start, end: l.end, sentence: l.sentence, text: texts[k])]);
   }
 
   /// [a] and [b] as one line: with a space, except between letters of
   /// scripts written without spaces (Chinese, Japanese, Thai…).
-  static String _join(String a, String b) {
-    if (a.isEmpty || b.isEmpty) return a + b;
-    return _unspaced(a[a.length - 1], b[0]) ? '$a$b' : '$a $b';
-  }
+  static String _join(String a, String b) => _spaced(a, b) ? '$a $b' : a + b;
+
+  /// Whether [a] and [b] join with a space.
+  static bool _spaced(String a, String b) => a.isNotEmpty && b.isNotEmpty && !_unspaced(a[a.length - 1], b[0]);
 
   static final _hangul = RegExp(r'[ᄀ-ᇿ㄰-㆏가-힯]');
 

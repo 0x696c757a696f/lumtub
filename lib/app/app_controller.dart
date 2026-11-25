@@ -901,7 +901,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     return null;
   }
 
-  DanmakuOverlay? _danmaku;
+  /// The 弹幕 flying over the video, drawn by [DanmakuLayer].
+  final danmakuShown = ValueNotifier<DanmakuOverlay?>(null);
+  DanmakuOverlay? get _danmaku => danmakuShown.value;
+  set _danmaku(DanmakuOverlay? overlay) => danmakuShown.value = overlay;
   String? _danmakuFor;
   /// The timed comments flown on a video without a chat, and its id.
   List<LiveChatMessage> _commentDanmaku = const [];

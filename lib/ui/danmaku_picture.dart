@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:ffi' hide Size;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 
 import 'emoji_text.dart';
@@ -74,27 +71,6 @@ List<DanmakuPart>? danmakuParts(String text, Map<String, String> emojis) {
   addText(text.substring(at));
   flush();
   return any ? parts : null;
-}
-
-/// A message drawn as premultiplied BGRA in native memory, for mpv's
-/// `overlay-add`. [left] is how far the text starts in from the edge.
-class DanmakuBitmap {
-  DanmakuBitmap._(this.pixels, this.width, this.height, this.left, this.scale);
-  final Pointer<Uint8> pixels;
-  final int width;
-  final int height;
-  final double left;
-  /// The OSD height it was drawn for.
-  final double scale;
-  bool _freed = false;
-
-  int get stride => width * 4;
-
-  void free() {
-    if (_freed) return;
-    _freed = true;
-    calloc.free(pixels);
-  }
 }
 
 /// Draws 弹幕 messages the way the ASS ones look: bold, with a thin dark
@@ -178,33 +154,9 @@ class DanmakuPainter {
     return loading;
   }
 
-  /// [parts] drawn for an OSD [osdHeight] pixels high, gold when [paid];
-  /// null when nothing could be drawn.
-  Future<DanmakuBitmap?> draw(List<DanmakuPart> parts, {required double osdHeight, required bool paid}) async {
-    final images = <String, ui.Image?>{};
-    try {
-      for (final part in parts) {
-        if (part case DanmakuEmojiPicture(:final url) when !images.containsKey(url)) {
-          final image = await _picture(url);
-          images[url] = image?.clone();
-        }
-      }
-      return await _drawWith(parts, images, osdHeight: osdHeight, paid: paid);
-    } finally {
-      for (final image in images.values) {
-        image?.dispose();
-      }
-    }
-  }
-
-  static const _redBlueSwapped = ColorFilter.matrix([
-    0, 0, 1, 0, 0, //
-    0, 1, 0, 0, 0, //
-    1, 0, 0, 0, 0, //
-    0, 0, 0, 1, 0, //
-  ]);
-
-  Future<DanmakuBitmap?> _drawWith(List<DanmakuPart> parts, Map<String, ui.Image?> images, {required double osdHeight, required bool paid}) async {
+  /// [parts] recorded for a picture [osdHeight] pixels high: the picture,
+  /// its size and the room left of the text for the outline.
+  (ui.Picture, int, int, double)? _record(List<DanmakuPart> parts, Map<String, ui.Image?> images, {required double osdHeight, required bool paid}) {
     final scale = osdHeight / 1080;
     final border = _border(scale);
     final edge = Color.fromARGB((opacity * 0.6 * 255).round(), 0, 0, 0);
@@ -226,9 +178,6 @@ class DanmakuPainter {
     }
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    // libmpv takes BGRA: red and blue trade places as the bitmap is drawn,
-    // not in a loop over every pixel afterwards.
-    canvas.saveLayer(Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()), Paint()..colorFilter = _redBlueSwapped);
     final offset = Offset(pad, (height - fill.height) / 2);
     outline.paint(canvas, offset);
     fill.paint(canvas, offset);
@@ -255,24 +204,35 @@ class DanmakuPainter {
         case DanmakuText():
       }
     }
-    canvas.restore();
     outline.dispose();
     fill.dispose();
-    final picture = recorder.endRecording();
-    ui.Image? image;
-    ByteData? data;
+    return (recorder.endRecording(), width, height, pad);
+  }
+
+  /// [parts] as an image for a picture [osdHeight] pixels high, gold when
+  /// [paid], with the room left of the text for the outline; null when
+  /// nothing could be drawn.
+  Future<(ui.Image, double)?> image(List<DanmakuPart> parts, {required double osdHeight, required bool paid}) async {
+    final images = <String, ui.Image?>{};
     try {
-      image = await picture.toImage(width, height);
-      data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      for (final part in parts) {
+        if (part case DanmakuEmojiPicture(:final url) when !images.containsKey(url)) {
+          final image = await _picture(url);
+          images[url] = image?.clone();
+        }
+      }
+      final recorded = _record(parts, images, osdHeight: osdHeight, paid: paid);
+      if (recorded == null) return null;
+      final (picture, width, height, pad) = recorded;
+      try {
+        return (await picture.toImage(width, height), pad);
+      } finally {
+        picture.dispose();
+      }
     } finally {
-      image?.dispose();
-      picture.dispose();
+      for (final image in images.values) {
+        image?.dispose();
+      }
     }
-    if (data == null) return null;
-    final rgba = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-    final pixels = calloc<Uint8>(rgba.length);
-    final bgra = pixels.asTypedList(rgba.length);
-    bgra.setAll(0, rgba);
-    return DanmakuBitmap._(pixels, width, height, pad, osdHeight);
   }
 }

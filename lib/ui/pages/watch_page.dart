@@ -799,6 +799,8 @@ class _Player extends StatelessWidget {
                   // they measure the size it is drawn at.
                   controls: (state) => VideoBox(
                     controller: controller,
+                    // PlayerControls' own box draws them, under its controls.
+                    danmakuOver: null,
                     child: WarmLayer(
                       behind: true,
                       child: RepaintBoundary(

@@ -5,12 +5,13 @@ import 'package:flutter/widgets.dart';
 
 import '../app/app_controller.dart';
 import '../device.dart';
+import 'danmaku_layer.dart';
 import 'pages/watch_page.dart' show androidSubtitleScale, smallSubtitleScale;
 
 /// Tells [controller] how large [child], which shows the video, is on
 /// screen, so libmpv draws the picture at that size.
 class VideoBox extends StatefulWidget {
-  const VideoBox({super.key, required this.controller, required this.child, this.smallSubtitles = false, this.subtitlesOff});
+  const VideoBox({super.key, required this.controller, required this.child, this.smallSubtitles = false, this.subtitlesOff, this.danmakuOver = true});
   final AppController controller;
   final Widget child;
 
@@ -21,6 +22,10 @@ class VideoBox extends StatefulWidget {
   /// Whether subtitles are left out of a box this size: libmpv then draws
   /// none either while this box shows the video.
   final bool Function(Size box)? subtitlesOff;
+
+  /// Whether the 弹幕 go over [child], the video, or under it, its
+  /// controls; null draws none here, where a box inside draws them.
+  final bool? danmakuOver;
 
   @override
   State<VideoBox> createState() => _VideoBoxState();
@@ -49,7 +54,10 @@ class _VideoBoxState extends State<VideoBox> {
         widget.controller.subtitleViewChanged(box, textScale, small ? (box.shortestSide / 720).clamp(0.3, 1.0) : 1);
         widget.controller.subtitlesOffIn(this, widget.subtitlesOff?.call(box) ?? false);
       }
-      return widget.child;
+      final over = widget.danmakuOver;
+      if (over == null) return widget.child;
+      final danmaku = DanmakuLayer(overlay: widget.controller.danmakuShown);
+      return Stack(fit: StackFit.expand, children: over ? [widget.child, danmaku] : [danmaku, widget.child]);
     });
   }
 }

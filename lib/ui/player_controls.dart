@@ -749,6 +749,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final line = _c.preferences.progressLine.shows(fullscreen: fullscreen);
     return VideoBox(
       controller: _c,
+      danmakuOver: false,
       child: CallbackShortcuts(
         bindings: _shortcuts(),
         child: Focus(

@@ -165,7 +165,7 @@ class _Buffering extends StatelessWidget {
             if (!((snapshot.data ?? false) || waiting) || c.playbackError != null) return const SizedBox.shrink();
             return Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white)),
+                SizedBox(width: 36, height: 36, child: Semantics(liveRegion: true, label: waiting ? null : tr('Loading…'), child: const CircularProgressIndicator(strokeWidth: 3, color: Colors.white))),
                 if (waiting) ...[
                   const SizedBox(height: 12),
                   Text(tr('Translating subtitles…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4, color: Colors.black)])),
@@ -194,7 +194,9 @@ class _FeedbackBubble extends StatelessWidget {
               ? const SizedBox.shrink(key: ValueKey(false))
               : Center(
                   key: const ValueKey(true),
-                  child: Container(
+                  // Seeks, speed and volume changes reach the screen reader
+                  // as they show.
+                  child: Semantics(container: true, liveRegion: true, child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -202,7 +204,7 @@ class _FeedbackBubble extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(value.text, style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ]),
-                  ),
+                  )),
                 ),
         ),
       );

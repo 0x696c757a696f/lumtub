@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (itt nem érhető el)",
   "Which messages show": "Mely üzenetek jelenjenek meg",
   "Chat mode": "Csevegési mód",
-  "The installation is incomplete, so the chat can't be read": "A telepítés hiányos, ezért a csevegés nem olvasható"
+  "The installation is incomplete, so the chat can't be read": "A telepítés hiányos, ezért a csevegés nem olvasható",
+  "Audio description": "Hangleírás",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Lejátssza a leíró hangsávot, ha a videóhoz tartozik ilyen; ez elmondja, mi történik a képernyőn",
+  "{0} (audio description)": "{0} (hangleírás)",
+  "Read subtitles aloud": "Feliratok felolvasása",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "A futó képernyőolvasó felolvassa az új feliratsorokat; a videóra rajzolt feliratok képek, azokat nem tudja elolvasni",
+  "screen reader accessibility blind": "képernyőolvasó akadálymentesség vak screen reader accessibility blind",
+  "Never hide": "Soha ne tűnjön el",
+  "Play (Space)": "Lejátszás (szóköz)",
+  "Pause (Space)": "Szünet (szóköz)",
+  "Length {0}": "Hossz: {0}",
+  "{0}% watched": "{0}% megtekintve",
+  "Scroll left": "Görgetés balra",
+  "Scroll right": "Görgetés jobbra"
 }

@@ -588,8 +588,11 @@ class ChannelHeader extends StatelessWidget {
       child: LayoutBuilder(builder: (context, constraints) {
         // On a phone the browser button moves into the menu, the picture
         // shrinks and 关注 goes under the name, so the name keeps the row.
-        final narrow = constraints.maxWidth < 480;
-        Widget nameText(String text) => Text(text, maxLines: narrow ? 2 : 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700));
+        final grow = textGrowth(context);
+        final narrow = constraints.maxWidth < 480 * grow;
+        // With large text the name takes a row of its own on a phone.
+        final nameAlone = narrow && grow > 1.3;
+        Widget nameText(String text) => Text(text, maxLines: nameAlone ? 3 : narrow ? 2 : 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700));
         final names = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Never translated in lists; here a tap on 翻译 (or 沉浸式翻译)
           // shows the name in the reader's language.
@@ -609,9 +612,10 @@ class ChannelHeader extends StatelessWidget {
               const SizedBox(width: 4),
               ChannelAvatar(name: name, radius: 22, image: channel.avatar, channelId: channel.id),
               const SizedBox(width: 12),
-              Expanded(child: names),
+              if (nameAlone) const Spacer() else Expanded(child: names),
               ChannelMenuButton(controller: controller, channel: channel, browser: true),
             ]),
+            if (nameAlone) Padding(padding: const EdgeInsetsDirectional.only(start: 8, top: 8), child: names),
             const SizedBox(height: 8),
             Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: follow),
           ]);

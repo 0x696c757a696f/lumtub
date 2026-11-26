@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (hic non praebetur)",
   "Which messages show": "Quae nuntia ostendantur",
   "Chat mode": "Modus colloquii",
-  "The installation is incomplete, so the chat can't be read": "Installatio imperfecta est, itaque colloquium legi non potest"
+  "The installation is incomplete, so the chat can't be read": "Installatio imperfecta est, itaque colloquium legi non potest",
+  "Audio description": "Descriptio sonora",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Vestigium soni descriptivum ludere cum video id habet; narrat quid in ecrano fiat",
+  "{0} (audio description)": "{0} (descriptio sonora)",
+  "Read subtitles aloud": "Subtitula alta voce legere",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Lector ecrani currens omnem novam subtitulorum lineam dicit; subtitula in video picta imagines sunt quas legere non potest",
+  "screen reader accessibility blind": "lector ecrani accessibilitas caecus",
+  "Never hide": "Numquam celare",
+  "Play (Space)": "Ludere (Space)",
+  "Pause (Space)": "Intermittere (Space)",
+  "Length {0}": "Duratio {0}",
+  "{0}% watched": "{0}% visa",
+  "Scroll left": "Ad sinistram volvere",
+  "Scroll right": "Ad dextram volvere"
 }

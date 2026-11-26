@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ui/accessibility.dart';
 import '../apple_chip.dart';
 import '../ai_filter.dart';
 import '../android_subtitle_fonts.dart';
@@ -1233,7 +1234,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   String _formatFor(String? id) => FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
 
   /// The audio language for the video [id], empty for its original sound.
-  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings, pick: id != null && _audioPick?.$1 == id ? _audioPick!.$2 : null);
+  // Described sound, when wanted, before any dub: yt-dlp falls back to the
+  // usual order for a video without it, so nothing is asked twice.
+  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings, pick: id != null && _audioPick?.$1 == id ? _audioPick!.$2 : wantsAudioDescription ? 'desc' : null);
+
+  bool get wantsAudioDescription => preferences.audioDescription || Accessibility.systemAudioDescription;
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
 

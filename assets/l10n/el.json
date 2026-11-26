@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (δεν προσφέρεται εδώ)",
   "Which messages show": "Ποια μηνύματα εμφανίζονται",
   "Chat mode": "Λειτουργία συνομιλίας",
-  "The installation is incomplete, so the chat can't be read": "Η εγκατάσταση είναι ελλιπής, επομένως η συνομιλία δεν μπορεί να διαβαστεί"
+  "The installation is incomplete, so the chat can't be read": "Η εγκατάσταση είναι ελλιπής, επομένως η συνομιλία δεν μπορεί να διαβαστεί",
+  "Audio description": "Ηχητική περιγραφή",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Αναπαραγωγή του περιγραφικού ηχητικού κομματιού όταν το βίντεο διαθέτει, που αφηγείται τι συμβαίνει στην οθόνη",
+  "{0} (audio description)": "{0} (ηχητική περιγραφή)",
+  "Read subtitles aloud": "Ανάγνωση υποτίτλων φωναχτά",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Ένας ενεργός αναγνώστης οθόνης εκφωνεί κάθε νέα γραμμή υποτίτλων· οι υπότιτλοι που είναι ζωγραφισμένοι πάνω στο βίντεο είναι εικόνες και δεν μπορεί να τους διαβάσει",
+  "screen reader accessibility blind": "αναγνώστης οθόνης προσβασιμότητα τυφλός screen reader accessibility blind",
+  "Never hide": "Να μην γίνεται ποτέ απόκρυψη",
+  "Play (Space)": "Αναπαραγωγή (Space)",
+  "Pause (Space)": "Παύση (Space)",
+  "Length {0}": "Διάρκεια {0}",
+  "{0}% watched": "Προβλήθηκε το {0}%",
+  "Scroll left": "Κύλιση αριστερά",
+  "Scroll right": "Κύλιση δεξιά"
 }

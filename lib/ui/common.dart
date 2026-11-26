@@ -169,7 +169,7 @@ class StatusView extends StatelessWidget {
             child: Icon(icon, size: 34, color: error ? colors.onErrorContainer : colors.onSecondaryContainer),
           ),
           const SizedBox(height: 16),
-          Text(title, textAlign: TextAlign.center, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
+          Semantics(header: true, liveRegion: true, child: Text(title, textAlign: TextAlign.center, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600))),
           if (message != null) ...[
             const SizedBox(height: 8),
             Text(message!, textAlign: TextAlign.center, maxLines: 6, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
@@ -192,7 +192,8 @@ class ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Reveal(child: Container(
+    // Said by the screen reader as it appears, wherever focus is.
+    return Reveal(child: Semantics(container: true, liveRegion: true, child: Container(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
@@ -201,7 +202,7 @@ class ErrorBanner extends StatelessWidget {
         Expanded(child: SelectableText(message, minLines: 1, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
-    ));
+    )));
   }
 }
 
@@ -228,7 +229,7 @@ class PageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final heading = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+      Semantics(header: true, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700))),
       // A TV's few hundred pixels of height go to the videos.
       if (subtitle != null && !Device.tv) ...[
         const SizedBox(height: 2),
@@ -241,7 +242,7 @@ class PageHeader extends StatelessWidget {
       child: trailing == null
           ? Row(children: [Expanded(child: heading)])
           : LayoutBuilder(
-              builder: (context, constraints) => constraints.maxWidth < stackBelow
+              builder: (context, constraints) => constraints.maxWidth < stackBelow * textGrowth(context)
                   ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       heading,
                       const SizedBox(height: 4),
@@ -268,10 +269,10 @@ class BackHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft));
-    final heading = Row(children: [back, const SizedBox(width: 8), Expanded(child: title)]);
+    final heading = Row(children: [back, const SizedBox(width: 8), Expanded(child: Semantics(header: true, child: title))]);
     if (buttons.isEmpty) return heading;
     final wrapped = Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons);
-    return LayoutBuilder(builder: (context, constraints) => constraints.maxWidth < stackBelow
+    return LayoutBuilder(builder: (context, constraints) => constraints.maxWidth < stackBelow * textGrowth(context)
         ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             heading,
             const SizedBox(height: 8),
@@ -288,18 +289,28 @@ class HeadingLine extends MultiChildRenderObjectWidget {
   const HeadingLine({super.key, required super.children}) : assert(children.length == 2);
 
   @override
-  RenderObject createRenderObject(BuildContext context) => _RenderHeadingLine(Directionality.of(context));
+  RenderObject createRenderObject(BuildContext context) => _RenderHeadingLine(Directionality.of(context), textGrowth(context));
 
   @override
-  void updateRenderObject(BuildContext context, RenderObject renderObject) => (renderObject as _RenderHeadingLine).direction = Directionality.of(context);
+  void updateRenderObject(BuildContext context, RenderObject renderObject) => (renderObject as _RenderHeadingLine)
+    ..direction = Directionality.of(context)
+    ..growth = textGrowth(context);
 }
 
 class _HeadingParentData extends ContainerBoxParentData<RenderBox> {}
 
 class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<RenderBox, _HeadingParentData>, RenderBoxContainerDefaultsMixin<RenderBox, _HeadingParentData> {
-  _RenderHeadingLine(this._direction);
+  _RenderHeadingLine(this._direction, this._growth);
 
-  static const _minTitle = 160.0;
+  /// The title keeps this much beside the buttons, more with larger text.
+  double get _minTitle => 160.0 * _growth;
+  double _growth;
+  set growth(double value) {
+    if (value == _growth) return;
+    _growth = value;
+    markNeedsLayout();
+  }
+
   static const _gap = 4.0;
 
   TextDirection _direction;
@@ -623,3 +634,7 @@ class PanelDialog extends StatelessWidget {
 bool? debugTouchFirst;
 
 String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;
+
+/// How much larger than usual the reader has made text, from 1 to 2:
+/// layouts that switch at a width switch that much sooner.
+double textGrowth(BuildContext context) => (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 2.0);

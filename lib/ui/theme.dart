@@ -237,7 +237,7 @@ ThemeData buildAppTheme(
   final fallback = [if (skin?.font != null) interFont, ...fontFallback(chosen)];
   TextStyle font(TextStyle style) => style.copyWith(fontFamily: family, fontFamilyFallback: fallback);
   final border = BorderSide(color: scheme.outlineVariant);
-  final focusColor = scheme.onSurface.withValues(alpha: 0.55);
+  final focusColor = focusRingColor(scheme);
   // Every button: a visible ring when reached by keyboard, label in
   // semibold on the type scale.
   final focusRing = WidgetStateProperty.resolveWith<BorderSide?>((states) => states.contains(WidgetState.focused) ? BorderSide(color: focusColor, width: 2) : null);
@@ -629,4 +629,16 @@ extension ThemeShortcuts on BuildContext {
     final w = tones.warmth;
     return w <= 0.001 ? null : WarmLayer.tint(w);
   }
+}
+
+/// The ring round what has the keyboard focus: at least 3:1 against the
+/// page under every palette and skin (WCAG 1.4.11), checked by
+/// skin_theme_contrast_test.
+Color focusRingColor(ColorScheme scheme) {
+  // Soft where that is enough, firmer on the few grounds it is not.
+  for (final alpha in const [0.55, 0.7, 0.85]) {
+    final ring = scheme.onSurface.withValues(alpha: alpha);
+    if (contrastRatio(Color.alphaBlend(ring, scheme.surface), scheme.surface) >= 3.2) return ring;
+  }
+  return scheme.onSurface;
 }

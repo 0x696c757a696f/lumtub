@@ -31,6 +31,7 @@ import 'press_scale.dart';
 import 'app_icons.dart';
 import '../feed_reason.dart';
 import 'frame_pressure.dart';
+import 'accessibility.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
@@ -97,6 +98,66 @@ int thumbnailFileWidth(String name) => switch (name) {
 
 /// [item]'s title, or DeArrow's when that is on.
 String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
+
+/// A video card as the screen reader says it: what the eye takes from the
+/// title, badges, channel line and progress bar, in one sentence.
+String spokenVideo(BuildContext context, VideoItem item, {String? reason, String? watched}) {
+  final progress = VideoActions.of(context)?.library?.progressOf(item.id)?.fraction;
+  return spokenParts([
+    spokenTitle(titleFor(item)),
+    if (item.isLive) tr('Live now') else if (item.isUpcoming) tr('Upcoming live'),
+    if (item.isUpcoming && item.scheduledStart != null) tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
+    if (item.membersOnly) tr('Members only'),
+    item.channel,
+    MetaLine.viewsOf(item),
+    MetaLine.ageOf(item),
+    if (!item.isLive && !item.isUpcoming && item.durationLabel.isNotEmpty) tr('Length {0}', [item.durationLabel]),
+    if (progress != null && progress >= 0.02) tr('{0}% watched', [(progress * 100).round()]),
+    if (watched != null) tr('Watched {0}', [watched]),
+    if (reason != null && reason.isNotEmpty) FeedReason.read(reason).$2,
+  ]);
+}
+
+/// A title as [TitleText] shows it: its translation, or both in the order
+/// the bilingual setting puts them.
+String spokenTitle(String title) {
+  final translation = titleTranslations.lookup(title);
+  if (translation == null) return title;
+  final mode = titleTranslations.mode;
+  if (!mode.bilingual) return translation;
+  return mode == TitleTranslation.translationFirst ? '$translation, $title' : '$title, $translation';
+}
+
+/// Rebuilds a card when its title's translation arrives, so the screen
+/// reader says what [TitleText] shows; only while a screen reader or other
+/// assistive tool reads the app, so it costs nothing otherwise.
+mixin SpokenTitle<T extends StatefulWidget> on State<T> {
+  String get spokenTitleText;
+  String? _heard;
+
+  void _translationCame() {
+    if (mounted) setState(() {});
+  }
+
+  /// Call from build.
+  void followSpokenTitle() {
+    final title = SemanticsBinding.instance.semanticsEnabled ? spokenTitleText : null;
+    if (title == _heard) return;
+    if (_heard case final old?) titleTranslations.unlisten(old, _translationCame);
+    if (title != null) titleTranslations.listen(title, _translationCame);
+    _heard = title;
+  }
+
+  @override
+  void dispose() {
+    if (_heard case final old?) titleTranslations.unlisten(old, _translationCame);
+    super.dispose();
+  }
+}
+
+/// The menu a card opens with a right click or a long press, as an action
+/// the screen reader offers on the card.
+Map<CustomSemanticsAction, VoidCallback> menuAction(VoidCallback open) => {CustomSemanticsAction(label: tr('More')): open};
 
 /// Column count and card height for a grid [width] wide.
 /// The watched line under a history card.
@@ -380,7 +441,10 @@ class VideoRow extends StatelessWidget {
         Haptics.menu();
         _menu(context, _centreOf(context));
       },
-      child: Padding(
+      child: SpokenAs(
+        label: spokenVideo(context, item, reason: reason, watched: watched),
+        actions: menuAction(() => _menu(context, _centreOf(context))),
+        child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (!text) ...[
@@ -434,7 +498,7 @@ class VideoRow extends StatelessWidget {
             if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
           ])),
         ]),
-      ),
+      )),
     ));
   }
 }
@@ -472,7 +536,9 @@ class PlaylistCard extends StatelessWidget {
       child: InkWell(
         borderRadius: AppStyle.cardRadius,
         onTap: onOpen,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: SpokenAs(
+          label: spokenParts([item.title, tr('Playlist'), item.channel, if (item.count != null) tr('{0} videos', [item.count])]),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
@@ -512,7 +578,7 @@ class PlaylistCard extends StatelessWidget {
               Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
-        ]),
+        ])),
       ),
     ));
   }
@@ -561,6 +627,13 @@ class _CardSkeleton extends StatelessWidget {
       ]);
 }
 
+/// The video last opened from a card, so that its card takes the keyboard
+/// focus again when its list comes back: someone moving with keys or a
+/// remote returns where they were, not to the top of the page.
+abstract final class ReturnFocus {
+  static String? video;
+}
+
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
   const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
@@ -579,7 +652,10 @@ class VideoCard extends StatefulWidget {
   State<VideoCard> createState() => _VideoCardState();
 }
 
-class _VideoCardState extends State<VideoCard> {
+class _VideoCardState extends State<VideoCard> with SpokenTitle {
+  @override
+  String get spokenTitleText => titleFor(widget.item);
+
   /// Pointed at or focused. Only what shows it (the picture's zoom, the
   /// quick actions, a skin's lit card) listens, so lighting a card up does
   /// not build the card again: on a slow or throttled processor the light
@@ -686,10 +762,23 @@ class _VideoCardState extends State<VideoCard> {
     return ResizeImage.resizeIfNeeded(320, null, CachedThumbnail(url, dir == null ? null : CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
   }
 
+  final _focusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
     deArrow.addListener(_branded);
+    if (ReturnFocus.video == widget.item.id && FocusManager.instance.highlightMode == FocusHighlightMode.traditional) {
+      ReturnFocus.video = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusNode.requestFocus();
+      });
+    }
+  }
+
+  void _open() {
+    ReturnFocus.video = widget.item.id;
+    widget.onOpen();
   }
 
   /// DeArrow answered for some videos, maybe this one: answers come in
@@ -707,6 +796,7 @@ class _VideoCardState extends State<VideoCard> {
     deArrow.removeListener(_branded);
     _stopHoverWork();
     _lit.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -714,6 +804,7 @@ class _VideoCardState extends State<VideoCard> {
   Widget build(BuildContext context) => WithVideoFacts(widget.item, builder: _build);
 
   Widget _build(BuildContext context, VideoItem item) {
+    followSpokenTitle();
     _branding = _brandingNow();
     final colors = context.colors;
     final metaStyle = TextStyle(fontSize: 12, color: colors.outline);
@@ -734,7 +825,8 @@ class _VideoCardState extends State<VideoCard> {
         // The hover ink is clear: faded in over frames it would only
         // repaint the card for nothing.
         hoverDuration: Duration.zero,
-        onTap: widget.onOpen,
+        focusNode: _focusNode,
+        onTap: _open,
         onHover: _pointerOver,
         onFocusChange: _focus,
         onSecondaryTapUp: (details) => _menu(details.globalPosition),
@@ -742,7 +834,10 @@ class _VideoCardState extends State<VideoCard> {
           Haptics.menu();
           _menu(_centreOf(context));
         },
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: SpokenAs(
+          label: spokenVideo(context, item, reason: widget.reason, watched: widget.watched),
+          actions: menuAction(() => _menu(_centreOf(context))),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
@@ -857,7 +952,7 @@ class _VideoCardState extends State<VideoCard> {
               if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
             ]),
           )),
-        ]),
+        ])),
       ),
     );
     return CallbackShortcuts(
@@ -1121,7 +1216,10 @@ class CompactVideoTile extends StatefulWidget {
   State<CompactVideoTile> createState() => _CompactVideoTileState();
 }
 
-class _CompactVideoTileState extends State<CompactVideoTile> {
+class _CompactVideoTileState extends State<CompactVideoTile> with SpokenTitle {
+  @override
+  String get spokenTitleText => titleFor(widget.item);
+
   VideoItem get item => widget.item;
   VoidCallback get onOpen => widget.onOpen;
   Directory? get thumbnails => widget.thumbnails;
@@ -1150,6 +1248,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
   Widget build(BuildContext context) => WithVideoFacts(widget.item, builder: _build);
 
   Widget _build(BuildContext context, VideoItem item) {
+    followSpokenTitle();
     _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
@@ -1161,7 +1260,10 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
         Haptics.menu();
         unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen));
       },
-      child: Padding(
+      child: SpokenAs(
+        label: spokenVideo(context, item),
+        actions: menuAction(() => unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen))),
+        child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SizedBox(
@@ -1202,7 +1304,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
               Text(facts, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),
-      ),
+      )),
     ));
   }
 }

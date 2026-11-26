@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ikke tilgængelig her)",
   "Which messages show": "Hvilke beskeder der vises",
   "Chat mode": "Chattilstand",
-  "The installation is incomplete, so the chat can't be read": "Installationen er ufuldstændig, så chatten kan ikke læses"
+  "The installation is incomplete, so the chat can't be read": "Installationen er ufuldstændig, så chatten kan ikke læses",
+  "Audio description": "Lydbeskrivelse",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Afspil lydsporet med beskrivelse, når en video har et, så man får at vide, hvad der sker på skærmen",
+  "{0} (audio description)": "{0} (lydbeskrivelse)",
+  "Read subtitles aloud": "Læs undertekster højt",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "En kørende skærmlæser siger hver ny undertekstlinje; undertekster tegnet på videoen er billeder, som den ikke kan læse",
+  "screen reader accessibility blind": "skærmlæser tilgængelighed blind screen reader accessibility",
+  "Never hide": "Skjul aldrig",
+  "Play (Space)": "Afspil (mellemrum)",
+  "Pause (Space)": "Pause (mellemrum)",
+  "Length {0}": "Varighed {0}",
+  "{0}% watched": "{0} % set",
+  "Scroll left": "Rul til venstre",
+  "Scroll right": "Rul til højre"
 }

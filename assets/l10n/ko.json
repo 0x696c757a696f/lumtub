@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "설치가 완전하지 않아 채팅을 읽을 수 없습니다",
   "Translate titles in lists": "목록 제목 번역",
   "Translation replaces the title": "번역이 제목을 대체",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "홈, 탐색, 구독, 기록, 검색, 채널 및 재생목록 페이지의 동영상과 재생목록 제목을 몰입형 번역과 같은 언어로 번역합니다. 화면에 잠시 머문 제목만, 제목 텍스트만 전송합니다. 이미 그 언어이거나 번역하지 않는 언어인 제목은 그대로 둡니다. 번역은 이 컴퓨터에 보관됩니다."
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "홈, 탐색, 구독, 기록, 검색, 채널 및 재생목록 페이지의 동영상과 재생목록 제목을 몰입형 번역과 같은 언어로 번역합니다. 화면에 잠시 머문 제목만, 제목 텍스트만 전송합니다. 이미 그 언어이거나 번역하지 않는 언어인 제목은 그대로 둡니다. 번역은 이 컴퓨터에 보관됩니다.",
+  "Audio description": "화면 해설",
+  "Play the described sound track when a video has one, which tells what happens on screen": "동영상에 화면 해설 음성 트랙이 있으면 재생하여 화면에서 일어나는 일을 알려줍니다",
+  "{0} (audio description)": "{0}(화면 해설)",
+  "Read subtitles aloud": "자막 소리 내어 읽기",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "화면 낭독기가 실행 중이면 새 자막 줄을 읽어 줍니다. 동영상에 그려진 자막은 이미지라서 읽을 수 없습니다",
+  "screen reader accessibility blind": "화면 낭독기 접근성 시각장애 screen reader accessibility blind",
+  "Never hide": "숨기지 않음",
+  "Play (Space)": "재생 (스페이스바)",
+  "Pause (Space)": "일시중지 (스페이스바)",
+  "Length {0}": "길이 {0}",
+  "{0}% watched": "{0}% 시청함",
+  "Scroll left": "왼쪽으로 스크롤",
+  "Scroll right": "오른쪽으로 스크롤"
 }

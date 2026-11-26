@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (මෙහි නොලැබේ)",
   "Which messages show": "පෙන්විය යුතු පණිවුඩ මොනවාද",
   "Chat mode": "චැට් ප්‍රකාරය",
-  "The installation is incomplete, so the chat can't be read": "ස්ථාපනය අසම්පූර්ණයි, එබැවින් චැට් කියවිය නොහැක"
+  "The installation is incomplete, so the chat can't be read": "ස්ථාපනය අසම්පූර්ණයි, එබැවින් චැට් කියවිය නොහැක",
+  "Audio description": "ශ්‍රව්‍ය විස්තරය",
+  "Play the described sound track when a video has one, which tells what happens on screen": "වීඩියෝවක විස්තරාත්මක ශ්‍රව්‍ය පථයක් ඇති විට එය ධාවනය කරයි; එය තිරයේ සිදුවන දේ පවසයි",
+  "{0} (audio description)": "{0} (ශ්‍රව්‍ය විස්තරය)",
+  "Read subtitles aloud": "උපසිරැසි හඬින් කියවන්න",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ක්‍රියාත්මක තිර කියවනයක් නව උපසිරැසි පේළි සෑම එකක්ම කියවයි; වීඩියෝවේ ඇඳ ඇති උපසිරැසි රූප නිසා එයට කියවිය නොහැක",
+  "screen reader accessibility blind": "තිර කියවනය ප්‍රවේශ්‍යතාව අන්ධ screen reader accessibility blind",
+  "Never hide": "කිසිවිටක සඟවන්න එපා",
+  "Play (Space)": "ධාවනය (Space)",
+  "Pause (Space)": "විරාම කරන්න (Space)",
+  "Length {0}": "කාලසීමාව {0}",
+  "{0}% watched": "{0}% නරඹා ඇත",
+  "Scroll left": "වමට අනුචලනය කරන්න",
+  "Scroll right": "දකුණට අනුචලනය කරන්න"
 }

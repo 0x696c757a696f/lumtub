@@ -67,11 +67,13 @@ class SwitchItem extends StatelessWidget {
       trailing: split ? null : _switch(),
       onTap: split ? onTap : () => onChanged(!value),
     );
-    if (!split) return tile;
+    // One stop for the screen reader: the title read with the switch's
+    // state, not an unnamed switch beside it.
+    if (!split) return MergeSemantics(child: tile);
     return Row(children: [
       Expanded(child: tile),
       SizedBox(height: 25, width: 1, child: ColoredBox(color: colors.outline.withValues(alpha: 0.3))),
-      Padding(padding: const EdgeInsets.only(left: 4, right: 24), child: _switch()),
+      Padding(padding: const EdgeInsets.only(left: 4, right: 24), child: Semantics(label: title, child: _switch())),
     ]);
   }
 }

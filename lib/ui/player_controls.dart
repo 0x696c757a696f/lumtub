@@ -42,6 +42,7 @@ import 'format_policy_dialogs.dart';
 import 'haptics.dart';
 import 'lights_off.dart';
 import 'motion.dart';
+import 'accessibility.dart';
 import 'pages/settings_sections.dart' show qualityLabel, trimSpeed;
 import 'pages/settings_subpages.dart' show openPictureSettings;
 import 'player_panel.dart';
@@ -86,12 +87,13 @@ final videoFit = ValueNotifier(VideoFit.contain);
 
 /// The name of an audio language in a menu: `Spanish (US) (original)`.
 String audioLanguageLabel(AudioLanguage language) {
-  final parts = language.code.split('-');
+  final parts = language.code.split('-')..remove('desc');
   final name = TranslationLanguage.ofTag(parts.first)?.label ?? language.code;
   final label = parts.length > 1 ? '$name (${parts.skip(1).join('-')})' : name;
   return switch (language.kind) {
     'original' => tr('{0} (original)', [label]),
     'auto' => tr('{0} (automatic dub)', [label]),
+    'described' => tr('{0} (audio description)', [label]),
     _ => label,
   };
 }
@@ -354,11 +356,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _restartHide() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(Duration(seconds: _c.preferences.controlsHideSeconds), _autoHide);
+    final seconds = _c.preferences.controlsHideSeconds;
+    if (seconds > 0) _hideTimer = Timer(Duration(seconds: seconds), _autoHide);
   }
 
   void _autoHide() {
-    if (!mounted || !_player.state.playing || _menus > 0 || _overBar || _keysInBars) return;
+    // A screen reader finds buttons by moving through them: bars that
+    // slip away under it leave nothing to find.
+    if (!mounted || !_player.state.playing || _menus > 0 || _overBar || _keysInBars || Accessibility.screenReader(context)) return;
     _bars.duration = Motion.of(Ease.fade);
     _bars.reverse();
     _leaveBars();
@@ -775,6 +780,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 onPointerSignal: _onSignal,
                 child: Stack(fit: StackFit.expand, children: [
                   Positioned.fill(child: _surface()),
+                  const PositionedDirectional(start: 0, top: 0, child: SpokenLine()),
                   _Buffering(player: _player, c: _c),
                   IgnorePointer(child: _FeedbackBubble(feedback: _feedback)),
                   if (_c.showStats) _statsOverlay(box, letter, fullscreen, padding),

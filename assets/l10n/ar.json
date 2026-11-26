@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (غير متاح هنا)",
   "Which messages show": "الرسائل المعروضة",
   "Chat mode": "وضع الدردشة",
-  "The installation is incomplete, so the chat can't be read": "التثبيت غير مكتمل، لذا تتعذّر قراءة الدردشة"
+  "The installation is incomplete, so the chat can't be read": "التثبيت غير مكتمل، لذا تتعذّر قراءة الدردشة",
+  "Audio description": "الوصف الصوتي",
+  "Play the described sound track when a video has one, which tells what happens on screen": "تشغيل المسار الصوتي الوصفي عند توفره في الفيديو، ويشرح ما يحدث على الشاشة",
+  "{0} (audio description)": "{0} (الوصف الصوتي)",
+  "Read subtitles aloud": "قراءة الترجمة بصوت عالٍ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "يقرأ قارئ الشاشة كل سطر جديد من الترجمة؛ أما الترجمة المرسومة على الفيديو فهي صور لا يستطيع قراءتها",
+  "screen reader accessibility blind": "قارئ الشاشة قارئة الشاشة إمكانية الوصول مكفوف screen reader accessibility blind",
+  "Never hide": "عدم الإخفاء أبدًا",
+  "Play (Space)": "تشغيل (Space)",
+  "Pause (Space)": "إيقاف مؤقت (Space)",
+  "Length {0}": "المدة {0}",
+  "{0}% watched": "تمت مشاهدة {0}%",
+  "Scroll left": "التمرير لليسار",
+  "Scroll right": "التمرير لليمين"
 }

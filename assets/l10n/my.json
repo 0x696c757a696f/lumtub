@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ဤနေရာတွင် မရနိုင်ပါ)",
   "Which messages show": "ဘယ်မက်ဆေ့ချ်များကို ပြမည်နည်း",
   "Chat mode": "ချက်တင်မုဒ်",
-  "The installation is incomplete, so the chat can't be read": "ထည့်သွင်းမှု မပြည့်စုံသဖြင့် ချက်တင်ကို ဖတ်၍မရပါ"
+  "The installation is incomplete, so the chat can't be read": "ထည့်သွင်းမှု မပြည့်စုံသဖြင့် ချက်တင်ကို ဖတ်၍မရပါ",
+  "Audio description": "အသံဖြင့် ဖော်ပြချက်",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ဗီဒီယိုတွင် ရှိပါက ဖန်သားပြင်ပေါ်၌ ဖြစ်ပျက်နေသည်များကို ပြောပြသည့် ဖော်ပြချက်အသံတြက်ကို ဖွင့်ပေးသည်",
+  "{0} (audio description)": "{0} (အသံဖြင့် ဖော်ပြချက်)",
+  "Read subtitles aloud": "စာတန်းထိုးများကို အသံထွက်ဖတ်ပါ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ဖွင့်ထားသော စကရင်ဖတ်စက်က စာတန်းထိုးစာကြောင်းအသစ်တိုင်းကို ဖတ်ပြသည်။ ဗီဒီယိုပေါ်တွင် ဆွဲထားသော စာတန်းထိုးများသည် ပုံများဖြစ်၍ ၎င်းမဖတ်နိုင်ပါ",
+  "screen reader accessibility blind": "စကရင်ဖတ်စက် အသုံးပြုရလွယ်ကူမှု မျက်မမြင် screen reader accessibility blind",
+  "Never hide": "ဘယ်တော့မှ မဖျောက်ပါနှင့်",
+  "Play (Space)": "ဖွင့်ရန် (Space)",
+  "Pause (Space)": "ခေတ္တရပ်ရန် (Space)",
+  "Length {0}": "ကြာချိန် {0}",
+  "{0}% watched": "{0}% ကြည့်ပြီး",
+  "Scroll left": "ဘယ်ဘက်သို့ လှိမ့်ရန်",
+  "Scroll right": "ညာဘက်သို့ လှိမ့်ရန်"
 }

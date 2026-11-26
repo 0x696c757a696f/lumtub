@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (burada təklif olunmur)",
   "Which messages show": "Hansı mesajlar göstərilsin",
   "Chat mode": "Çat rejimi",
-  "The installation is incomplete, so the chat can't be read": "Quraşdırma natamamdır, ona görə çat oxuna bilmir"
+  "The installation is incomplete, so the chat can't be read": "Quraşdırma natamamdır, ona görə çat oxuna bilmir",
+  "Audio description": "Audio təsvir",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Videoda təsvir səs treki varsa onu oxut; o, ekranda baş verənləri izah edir",
+  "{0} (audio description)": "{0} (audio təsvir)",
+  "Read subtitles aloud": "Subtitrləri səslə oxu",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "İşləyən ekran oxuyucu hər yeni subtitr sətrini səsləndirir; videonun üzərinə çəkilmiş subtitrlər şəkildir, onları oxuya bilmir",
+  "screen reader accessibility blind": "ekran oxuyucu əlçatanlıq gözügörməyən",
+  "Never hide": "Heç vaxt gizlətmə",
+  "Play (Space)": "Oxut (Boşluq)",
+  "Pause (Space)": "Dayandır (Boşluq)",
+  "Length {0}": "Müddət {0}",
+  "{0}% watched": "{0}% izlənilib",
+  "Scroll left": "Sola sürüşdür",
+  "Scroll right": "Sağa sürüşdür"
 }

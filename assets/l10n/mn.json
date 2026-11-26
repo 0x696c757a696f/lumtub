@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (энд байхгүй)",
   "Which messages show": "Аль мессежийг харуулах",
   "Chat mode": "Чатын горим",
-  "The installation is incomplete, so the chat can't be read": "Суулгалт дутуу тул чатыг уншиж боломжгүй"
+  "The installation is incomplete, so the chat can't be read": "Суулгалт дутуу тул чатыг уншиж боломжгүй",
+  "Audio description": "Дууны тайлбар",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Видеонд тайлбартай дууны хөтөч байвал тоглуулж, дэлгэц дээр юу болж байгааг ярина",
+  "{0} (audio description)": "{0} (дууны тайлбар)",
+  "Read subtitles aloud": "Хадмалыг чангаар унших",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Ажиллаж буй дэлгэц уншигч хадмалын шинэ мөр бүрийг уншина; видео дээр зурагдсан хадмал нь зураг тул түүнийг уншиж чадахгүй",
+  "screen reader accessibility blind": "дэлгэц уншигч хүртээмж сохор screen reader accessibility blind",
+  "Never hide": "Хэзээ ч нуухгүй",
+  "Play (Space)": "Тоглуулах (Зай)",
+  "Pause (Space)": "Түр зогсоох (Зай)",
+  "Length {0}": "Үргэлжлэх хугацаа {0}",
+  "{0}% watched": "{0}% үзсэн",
+  "Scroll left": "Зүүн тийш гүйлгэх",
+  "Scroll right": "Баруун тийш гүйлгэх"
 }

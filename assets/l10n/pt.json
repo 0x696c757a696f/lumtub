@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "A instalação está incompleta, por isso não é possível ler o chat",
   "Translate titles in lists": "Traduzir títulos nas listas",
   "Translation replaces the title": "A tradução substitui o título",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "Os títulos de vídeos e playlists em Início, Explorar, Inscrições, Histórico, pesquisa e páginas de canais e playlists são traduzidos para o mesmo idioma da tradução imersiva. Só são enviados os títulos que ficam um momento na tela, e só o texto deles; títulos já nesse idioma, ou num que nunca é traduzido, ficam como estão. As traduções ficam guardadas neste computador."
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "Os títulos de vídeos e playlists em Início, Explorar, Inscrições, Histórico, pesquisa e páginas de canais e playlists são traduzidos para o mesmo idioma da tradução imersiva. Só são enviados os títulos que ficam um momento na tela, e só o texto deles; títulos já nesse idioma, ou num que nunca é traduzido, ficam como estão. As traduções ficam guardadas neste computador.",
+  "Audio description": "Audiodescrição",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Reproduzir a faixa de áudio descritiva quando o vídeo tiver uma, que conta o que acontece na tela",
+  "{0} (audio description)": "{0} (audiodescrição)",
+  "Read subtitles aloud": "Ler legendas em voz alta",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Um leitor de tela em execução diz cada nova linha de legenda; legendas desenhadas no vídeo são imagens que ele não consegue ler",
+  "screen reader accessibility blind": "leitor de tela acessibilidade cego",
+  "Never hide": "Nunca ocultar",
+  "Play (Space)": "Reproduzir (Espaço)",
+  "Pause (Space)": "Pausar (Espaço)",
+  "Length {0}": "Duração {0}",
+  "{0}% watched": "{0}% assistido",
+  "Scroll left": "Rolar para a esquerda",
+  "Scroll right": "Rolar para a direita"
 }

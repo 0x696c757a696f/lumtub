@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ບໍ່ມີໃຫ້ໃນນີ້)",
   "Which messages show": "ສະແດງຂໍ້ຄວາມໃດແດ່",
   "Chat mode": "ໂໝດແຊັດ",
-  "The installation is incomplete, so the chat can't be read": "ການຕິດຕັ້ງບໍ່ສົມບູນ ດັ່ງນັ້ນຈຶ່ງອ່ານແຊັດບໍ່ໄດ້"
+  "The installation is incomplete, so the chat can't be read": "ການຕິດຕັ້ງບໍ່ສົມບູນ ດັ່ງນັ້ນຈຶ່ງອ່ານແຊັດບໍ່ໄດ້",
+  "Audio description": "ການບັນຍາຍສຽງ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ຫຼິ້ນແທຣັກສຽງບັນຍາຍເມື່ອວິດີໂອມີ ເຊິ່ງບອກວ່າມີຫຍັງເກີດຂຶ້ນໃນໜ້າຈໍ",
+  "{0} (audio description)": "{0} (ການບັນຍາຍສຽງ)",
+  "Read subtitles aloud": "ອ່ານຄຳບັນຍາຍອອກສຽງ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ຕົວອ່ານໜ້າຈໍທີ່ເປີດຢູ່ຈະອ່ານແຕ່ລະແຖວຄຳບັນຍາຍໃໝ່; ຄຳບັນຍາຍທີ່ແຕ້ມໃສ່ວິດີໂອເປັນຮູບພາບ ມັນຈຶ່ງອ່ານບໍ່ໄດ້",
+  "screen reader accessibility blind": "ຕົວອ່ານໜ້າຈໍ ການເຂົ້າເຖິງ ຄົນຕາບອດ screen reader accessibility blind",
+  "Never hide": "ບໍ່ເຊື່ອງ",
+  "Play (Space)": "ຫຼິ້ນ (Space)",
+  "Pause (Space)": "ຢຸດຊົ່ວຄາວ (Space)",
+  "Length {0}": "ຄວາມຍາວ {0}",
+  "{0}% watched": "ເບິ່ງແລ້ວ {0}%",
+  "Scroll left": "ເລື່ອນໄປຊ້າຍ",
+  "Scroll right": "ເລື່ອນໄປຂວາ"
 }

@@ -156,6 +156,7 @@ Combined with two subtitles at once and Explore by spoken language, this turns a
 ### 💬 Subtitles and translation
 - **Bilingual subtitles** with styles you can tune live, and one-click translation of chapter names.
 - **AI translation** through machine translation services (🆕 MyMemory included, free and without a key) or any OpenAI-compatible model you choose.
+- 🆕 **Titles in your language:** video and playlist titles on Home, Explore, Subscriptions, History, search and channel pages are translated into the language you read; hover one for the original. Settings › Translation turns it off or shows both.
 - **Speech-to-text subtitles** (Groq, OpenAI or your own endpoint) and **AI summaries** of a video from its subtitles. These need a service or API key that you provide, and some providers charge.
 
 ### 🔴 Live
@@ -163,6 +164,13 @@ Combined with two subtitles at once and Explore by spoken language, this turns a
 - 🆕 Choose YouTube's Top chat or every message; slow mode, subscribers-only and members-only are shown, and messages removed by moderators disappear.
 - Live markers on your subscriptions.
 - Super Chat and channel memberships open YouTube's payment pages in your browser.
+
+### ♿ Accessibility
+- 🆕 **Screen readers** (Narrator, NVDA, JAWS, VoiceOver, TalkBack, Orca) read each video card as one item: title, live or members only, channel, views, age, length, how much you watched and why it is recommended. Headings, errors, loading and seek, speed and volume changes are announced.
+- 🆕 Player controls stay on screen while a screen reader runs or the keyboard is in them, or always if you choose **Never hide**. **Read subtitles aloud** has the screen reader say each new line.
+- 🆕 **Audio description:** described sound tracks are listed in the audio menu and can play first, by Lumtub's setting or Android's and iOS's own.
+- 🆕 **Text up to 200 %** on top of the system's size, with layouts that rearrange in time on phones, tablets, TVs and desktops. Every control works with the keyboard or a TV remote, the focus ring stays clearly visible in every skin, and animations follow your reduced-motion setting.
+- Rules for contributors and the manual test matrix: [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
 
 ### 🔐 Accounts only if you want them
 - 🆕 **One sign-in**: sign in once in a browser window, and your home feed, history, Watch Later, playlists, likes, comments, subscriptions, community posts, polls and **members-only videos** you have access to all work. Google sign-in with your own client stays optional.
@@ -177,6 +185,8 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **82 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
 - **Skins** that change the whole look, 36 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, clay and neo-brutalism, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
+- 🆕 **Three app icons:** Classic, Light of Tabor and Gold ground (Settings › Appearance › App icon).
+- 🆕 **Smooth wheel scrolling** at an even pace, also in low resource mode. When frames run late, effects step back until Lumtub keeps time again.
 - 🆕 **Window transparency**: see the desktop through the window like glass, under any skin, with an optional blur.
 - Block any channel, or just stop it being recommended.
 - **Block lists** for controversial religious groups and state propaganda media, off until you turn them on. They are public files in [lists/](lists/), updated daily with signatures, and anyone can suggest a channel or report a mistake. See [lists/README.md](lists/README.md).

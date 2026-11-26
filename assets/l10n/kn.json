@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ಇಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ)",
   "Which messages show": "ಯಾವ ಸಂದೇಶಗಳು ತೋರಿಸಬೇಕು",
   "Chat mode": "ಚಾಟ್ ಮೋಡ್",
-  "The installation is incomplete, so the chat can't be read": "ಸ್ಥಾಪನೆ ಅಪೂರ್ಣವಾಗಿದೆ, ಆದ್ದರಿಂದ ಚಾಟ್ ಓದಲು ಸಾಧ್ಯವಿಲ್ಲ"
+  "The installation is incomplete, so the chat can't be read": "ಸ್ಥಾಪನೆ ಅಪೂರ್ಣವಾಗಿದೆ, ಆದ್ದರಿಂದ ಚಾಟ್ ಓದಲು ಸಾಧ್ಯವಿಲ್ಲ",
+  "Audio description": "ಆಡಿಯೊ ವಿವರಣೆ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ವೀಡಿಯೊದಲ್ಲಿ ವಿವರಣೆಯ ಧ್ವನಿ ಟ್ರ್ಯಾಕ್ ಇದ್ದರೆ ಅದನ್ನು ಪ್ಲೇ ಮಾಡಿ; ಅದು ಪರದೆಯ ಮೇಲೆ ಏನಾಗುತ್ತಿದೆ ಎಂದು ಹೇಳುತ್ತದೆ",
+  "{0} (audio description)": "{0} (ಆಡಿಯೊ ವಿವರಣೆ)",
+  "Read subtitles aloud": "ಉಪಶೀರ್ಷಿಕೆಗಳನ್ನು ಗಟ್ಟಿಯಾಗಿ ಓದಿ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ಚಾಲನೆಯಲ್ಲಿರುವ ಸ್ಕ್ರೀನ್ ರೀಡರ್ ಪ್ರತಿ ಹೊಸ ಉಪಶೀರ್ಷಿಕೆ ಸಾಲನ್ನು ಹೇಳುತ್ತದೆ; ವೀಡಿಯೊ ಮೇಲೆ ಚಿತ್ರಿಸಿದ ಉಪಶೀರ್ಷಿಕೆಗಳು ಚಿತ್ರಗಳಾಗಿರುವುದರಿಂದ ಅದಕ್ಕೆ ಓದಲಾಗುವುದಿಲ್ಲ",
+  "screen reader accessibility blind": "ಸ್ಕ್ರೀನ್ ರೀಡರ್ ಪ್ರವೇಶಿಸುವಿಕೆ ಅಂಧ screen reader accessibility blind",
+  "Never hide": "ಎಂದಿಗೂ ಮರೆಮಾಡಬೇಡಿ",
+  "Play (Space)": "ಪ್ಲೇ (Space)",
+  "Pause (Space)": "ವಿರಾಮ (Space)",
+  "Length {0}": "ಅವಧಿ {0}",
+  "{0}% watched": "{0}% ವೀಕ್ಷಿಸಲಾಗಿದೆ",
+  "Scroll left": "ಎಡಕ್ಕೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ",
+  "Scroll right": "ಬಲಕ್ಕೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ"
 }

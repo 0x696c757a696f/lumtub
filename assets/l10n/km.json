@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (មិនមាននៅទីនេះទេ)",
   "Which messages show": "សារណាខ្លះត្រូវបង្ហាញ",
   "Chat mode": "របៀបជជែក",
-  "The installation is incomplete, so the chat can't be read": "ការដំឡើងមិនពេញលេញ ដូច្នេះមិនអាចអានការជជែកបានទេ"
+  "The installation is incomplete, so the chat can't be read": "ការដំឡើងមិនពេញលេញ ដូច្នេះមិនអាចអានការជជែកបានទេ",
+  "Audio description": "ការពិពណ៌នាជាសំឡេង",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ចាក់បទសំឡេងពិពណ៌នា នៅពេលវីដេអូមាន ដែលប្រាប់អំពីអ្វីដែលកើតឡើងលើអេក្រង់",
+  "{0} (audio description)": "{0} (ការពិពណ៌នាជាសំឡេង)",
+  "Read subtitles aloud": "អានចំណងជើងរងឮៗ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "កម្មវិធីអានអេក្រង់ដែលកំពុងដំណើរការ អានបន្ទាត់ចំណងជើងរងថ្មីនីមួយៗ; ចំណងជើងរងដែលគូរលើវីដេអូជារូបភាព ដែលវាមិនអាចអានបាន",
+  "screen reader accessibility blind": "កម្មវិធីអានអេក្រង់ ភាពងាយស្រួលប្រើ ពិការភ្នែក",
+  "Never hide": "កុំលាក់ជានិច្ច",
+  "Play (Space)": "ចាក់ (Space)",
+  "Pause (Space)": "ផ្អាក (Space)",
+  "Length {0}": "រយៈពេល {0}",
+  "{0}% watched": "បានមើល {0}%",
+  "Scroll left": "រមូរទៅឆ្វេង",
+  "Scroll right": "រមូរទៅស្តាំ"
 }

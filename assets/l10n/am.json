@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (እዚህ አይቀርብም)",
   "Which messages show": "የትኞቹ መልዕክቶች ይታያሉ",
   "Chat mode": "የውይይት ሁነታ",
-  "The installation is incomplete, so the chat can't be read": "መጫኑ ያልተሟላ ነው፣ ስለዚህ ውይይቱ ሊነበብ አይችልም"
+  "The installation is incomplete, so the chat can't be read": "መጫኑ ያልተሟላ ነው፣ ስለዚህ ውይይቱ ሊነበብ አይችልም",
+  "Audio description": "የድምፅ መግለጫ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ቪዲዮው የድምፅ መግለጫ ትራክ ካለው ያጫውቱ፤ በማያ ገጹ ላይ የሚሆነውን ይነግራል",
+  "{0} (audio description)": "{0} (የድምፅ መግለጫ)",
+  "Read subtitles aloud": "የትርጉም ጽሑፎችን ጮክ ብለህ አንብብ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "የማያ ገጽ አንባቢ እያሄደ ሳለ እያንዳንዱን አዲስ የትርጉም ጽሑፍ መስመር ይናገራል፤ በቪዲዮው ላይ የተሳሉ የትርጉም ጽሑፎች ምስሎች ስለሆኑ ሊያነባቸው አይችልም",
+  "screen reader accessibility blind": "ማያ ገጽ አንባቢ ተደራሽነት ዓይነ ስውር screen reader accessibility blind",
+  "Never hide": "በፍጹም አትደብቅ",
+  "Play (Space)": "አጫውት (Space)",
+  "Pause (Space)": "ባለበት አቁም (Space)",
+  "Length {0}": "ርዝመት {0}",
+  "{0}% watched": "{0}% ታይቷል",
+  "Scroll left": "ወደ ግራ ሸብልል",
+  "Scroll right": "ወደ ቀኝ ሸብልል"
 }

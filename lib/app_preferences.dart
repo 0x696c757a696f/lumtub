@@ -113,6 +113,9 @@ class AppPreferences {
     this.pipOnLeave = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.speakSubtitles = false,
+    this.audioDescription = false,
+    this.systemCaptionsSeen = false,
     this.learningMode = true,
     this.softwareQualityTold = false,
     this.batteryAsked = false,
@@ -273,6 +276,18 @@ class AppPreferences {
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
 
+  /// A running screen reader says each new subtitle line, for those who
+  /// cannot see the ones drawn on the video.
+  final bool speakSubtitles;
+
+  /// Plays a video's described sound (audio description) when it has
+  /// one; Android's own setting for it turns it on too.
+  final bool audioDescription;
+
+  /// The system's captions setting has turned subtitles on once already: a
+  /// later choice in Lumtub is left alone.
+  final bool systemCaptionsSeen;
+
   /// The language-learning features: off, none of them shows and nothing
   /// of them loads or runs. Playback's own learning aids stay.
   final bool learningMode;
@@ -300,6 +315,8 @@ class AppPreferences {
   final RightClick rightClick;
   /// What the mouse wheel does over the video; off lets the page scroll.
   final WheelGesture wheelGesture;
+  /// 0 keeps them shown while playing, for screen readers and switch
+  /// access that cannot hover the player.
   final int controlsHideSeconds;
   /// The 最多重放 curve above the progress bar.
   final bool showHeatmap;
@@ -540,6 +557,9 @@ class AppPreferences {
     bool? pipOnLeave,
     bool? closeToTray,
     bool? minimizeToTray,
+    bool? speakSubtitles,
+    bool? audioDescription,
+    bool? systemCaptionsSeen,
     bool? learningMode,
     bool? softwareQualityTold,
     bool? batteryAsked,
@@ -638,6 +658,9 @@ class AppPreferences {
         pipOnLeave: pipOnLeave ?? this.pipOnLeave,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        speakSubtitles: speakSubtitles ?? this.speakSubtitles,
+        audioDescription: audioDescription ?? this.audioDescription,
+        systemCaptionsSeen: systemCaptionsSeen ?? this.systemCaptionsSeen,
         learningMode: learningMode ?? this.learningMode,
         softwareQualityTold: softwareQualityTold ?? this.softwareQualityTold,
         batteryAsked: batteryAsked ?? this.batteryAsked,
@@ -737,6 +760,9 @@ class AppPreferences {
         'pipOnLeave': pipOnLeave,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'speakSubtitles': speakSubtitles,
+        'audioDescription': audioDescription,
+        'systemCaptionsSeen': systemCaptionsSeen,
         'learningMode': learningMode,
         'softwareQualityTold': softwareQualityTold,
         'batteryAsked': batteryAsked,
@@ -880,6 +906,9 @@ class AppPreferences {
       pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      speakSubtitles: flag('speakSubtitles', d.speakSubtitles),
+      audioDescription: flag('audioDescription', d.audioDescription),
+      systemCaptionsSeen: flag('systemCaptionsSeen', d.systemCaptionsSeen),
       learningMode: flag('learningMode', d.learningMode),
       softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
       batteryAsked: flag('batteryAsked', d.batteryAsked),
@@ -892,7 +921,7 @@ class AppPreferences {
       shortcutKeys: keyLists('shortcutKeys'),
       rightClick: RightClick.parse(raw['rightClick'], raw['rightClickBack']),
       wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
-      controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
+      controlsHideSeconds: number('controlsHideSeconds', 3, 0, 30),
       showHeatmap: flag('showHeatmap', d.showHeatmap),
       progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),
       showRelated: flag('showRelated', d.showRelated),

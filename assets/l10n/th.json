@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ไม่มีให้เลือกที่นี่)",
   "Which messages show": "ข้อความที่จะแสดง",
   "Chat mode": "โหมดแชท",
-  "The installation is incomplete, so the chat can't be read": "การติดตั้งไม่สมบูรณ์ จึงอ่านแชทไม่ได้"
+  "The installation is incomplete, so the chat can't be read": "การติดตั้งไม่สมบูรณ์ จึงอ่านแชทไม่ได้",
+  "Audio description": "เสียงบรรยายภาพ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "เล่นแทร็กเสียงบรรยายภาพเมื่อวิดีโอมี เพื่อบอกว่ามีอะไรเกิดขึ้นบนหน้าจอ",
+  "{0} (audio description)": "{0} (เสียงบรรยายภาพ)",
+  "Read subtitles aloud": "อ่านคำบรรยายออกเสียง",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "โปรแกรมอ่านหน้าจอที่เปิดอยู่จะอ่านคำบรรยายบรรทัดใหม่ทุกบรรทัด ส่วนคำบรรยายที่วาดบนวิดีโอเป็นรูปภาพ จึงอ่านไม่ได้",
+  "screen reader accessibility blind": "โปรแกรมอ่านหน้าจอ การช่วยการเข้าถึง ตาบอด screen reader accessibility blind",
+  "Never hide": "ไม่ซ่อนเลย",
+  "Play (Space)": "เล่น (Space)",
+  "Pause (Space)": "หยุดชั่วคราว (Space)",
+  "Length {0}": "ความยาว {0}",
+  "{0}% watched": "ดูแล้ว {0}%",
+  "Scroll left": "เลื่อนไปทางซ้าย",
+  "Scroll right": "เลื่อนไปทางขวา"
 }

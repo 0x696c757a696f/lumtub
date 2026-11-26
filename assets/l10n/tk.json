@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (bu ýerde elýeterli däl)",
   "Which messages show": "Haýsy habarlar görkezilýär",
   "Chat mode": "Çat tertibi",
-  "The installation is incomplete, so the chat can't be read": "Gurnama doly däl, şonuň üçin çaty okap bolmaýar"
+  "The installation is incomplete, so the chat can't be read": "Gurnama doly däl, şonuň üçin çaty okap bolmaýar",
+  "Audio description": "Sesli düşündiriş",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Wideoda düşündirişli ses ýoly bar bolsa, ony oýnat; ol ekranda näme bolup geçýändigini aýdýar",
+  "{0} (audio description)": "{0} (sesli düşündiriş)",
+  "Read subtitles aloud": "Subtitrleri sesli oka",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Işleýän ekran okaýjy her täze subtitr setirini aýdýar; wideonyň üstünde çekilen subtitrler surat bolup, ony okap bilmeýär",
+  "screen reader accessibility blind": "ekran okaýjy elýeterlilik kör",
+  "Never hide": "Hiç haçan gizleme",
+  "Play (Space)": "Oýnat (Probel)",
+  "Pause (Space)": "Togtat (Probel)",
+  "Length {0}": "Uzynlygy {0}",
+  "{0}% watched": "{0}% seredildi",
+  "Scroll left": "Çepe aýla",
+  "Scroll right": "Saga aýla"
 }

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (тут недаступна)",
   "Which messages show": "Якія паведамленні паказваць",
   "Chat mode": "Рэжым чата",
-  "The installation is incomplete, so the chat can't be read": "Усталёўка няпоўная, таму чат прачытаць немагчыма"
+  "The installation is incomplete, so the chat can't be read": "Усталёўка няпоўная, таму чат прачытаць немагчыма",
+  "Audio description": "Аўдыяапісанне",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Прайграваць апісальную гукавую дарожку, калі яна ёсць у відэа: яна расказвае, што адбываецца на экране",
+  "{0} (audio description)": "{0} (аўдыяапісанне)",
+  "Read subtitles aloud": "Чытаць субцітры ўголас",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Запушчаны чытальнік экрана вымаўляе кожны новы радок субцітраў; субцітры, намаляваныя на відэа, з'яўляюцца малюнкамі, і ён іх прачытаць не можа",
+  "screen reader accessibility blind": "чытальнік экрана спецыяльныя магчымасці даступнасць сляпы незрачы screen reader accessibility blind",
+  "Never hide": "Ніколі не хаваць",
+  "Play (Space)": "Прайграць (прагал)",
+  "Pause (Space)": "Паўза (прагал)",
+  "Length {0}": "Працягласць {0}",
+  "{0}% watched": "Прагледжана {0}%",
+  "Scroll left": "Пракруціць улева",
+  "Scroll right": "Пракруціць управа"
 }

@@ -25,6 +25,15 @@ extension LifecycleActions on AppController {
     return last == null || DateTime.now().difference(last) > const Duration(seconds: 30);
   }
 
+  /// Closed captions turned on in the system (Android, iOS) turn subtitles
+  /// on the first time Lumtub sees it; a later choice here is left alone.
+  Future<void> _followSystemCaptions() async {
+    await Accessibility.reading;
+    if (!Accessibility.systemCaptions || preferences.systemCaptionsSeen) return;
+    await savePreferences(preferences.copyWith(systemCaptionsSeen: true));
+    if (settings.subtitleMode == SubtitleMode.off) await saveSettings(settings.copyWith(subtitleMode: SubtitleMode.always));
+  }
+
   /// Starts Lumtub up: once at a time, and not again once it is ready.
   Future<void> initialize() {
     if (ready || _disposed) return Future.value();
@@ -241,6 +250,7 @@ extension LifecycleActions on AppController {
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       unawaited(checkHistoryLive());
+      unawaited(_followSystemCaptions());
       if (mode == PageMode.subscriptions && preferences.feedAutoRefresh) {
         unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
       }

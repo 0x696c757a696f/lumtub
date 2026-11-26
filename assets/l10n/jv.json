@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ora kasedhiya ing kene)",
   "Which messages show": "Pesen endi sing ditampilake",
   "Chat mode": "Mode chat",
-  "The installation is incomplete, so the chat can't be read": "Instalasi ora lengkap, mula chat ora bisa diwaca"
+  "The installation is incomplete, so the chat can't be read": "Instalasi ora lengkap, mula chat ora bisa diwaca",
+  "Audio description": "Katrangan audio",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Puter trek swara katrangan yen video nduwe, sing nerangake apa sing kedadeyan ing layar",
+  "{0} (audio description)": "{0} (katrangan audio)",
+  "Read subtitles aloud": "Wacakna subtitel kanthi seru",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Pamaca layar sing lagi mlaku maca saben baris subtitel anyar; subtitel sing digambar ing video iku gambar, mula ora bisa diwaca",
+  "screen reader accessibility blind": "pamaca layar aksesibilitas tunanetra wuta screen reader accessibility blind",
+  "Never hide": "Aja nate delikaké",
+  "Play (Space)": "Puter (Spasi)",
+  "Pause (Space)": "Mandheg (Spasi)",
+  "Length {0}": "Dawa {0}",
+  "{0}% watched": "{0}% wis ditonton",
+  "Scroll left": "Gulung ngiwa",
+  "Scroll right": "Gulung nengen"
 }

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0}（此聊天室不提供）",
   "Which messages show": "顯示哪些訊息",
   "Chat mode": "聊天模式",
-  "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天內容"
+  "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天內容",
+  "Audio description": "口述影像",
+  "Play the described sound track when a video has one, which tells what happens on screen": "影片設有口述影像音軌時優先播放，講解畫面上發生的事",
+  "{0} (audio description)": "{0}（口述影像）",
+  "Read subtitles aloud": "朗讀字幕",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "螢幕閱讀器運作時會朗讀每一句新字幕；畫在影片上的字幕屬圖像，螢幕閱讀器讀不到",
+  "screen reader accessibility blind": "螢幕閱讀器 無障礙 視障 失明 accessibility",
+  "Never hide": "永不隱藏",
+  "Play (Space)": "播放 (空格)",
+  "Pause (Space)": "暫停 (空格)",
+  "Length {0}": "時長 {0}",
+  "{0}% watched": "已觀看 {0}%",
+  "Scroll left": "向左捲動",
+  "Scroll right": "向右捲動"
 }

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ayiboniswa lapha)",
   "Which messages show": "Yimiphi imilayezo evezwayo",
   "Chat mode": "Imodi yengxoxo",
-  "The installation is incomplete, so the chat can't be read": "Ukufakwa akuphelele, ngakho ingxoxo ayikwazi ukufundwa"
+  "The installation is incomplete, so the chat can't be read": "Ukufakwa akuphelele, ngakho ingxoxo ayikwazi ukufundwa",
+  "Audio description": "Incazelo yomsindo",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Dlala umzila womsindo ochazayo uma ividiyo inawo; ubonisa okwenzeka esikrinini",
+  "{0} (audio description)": "{0} (incazelo yomsindo)",
+  "Read subtitles aloud": "Funda amagama-ngezansi ngokuzwakalayo",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Isifundi sesikrini esisebenzayo sisho umugqa ngamunye omusha wamagama-ngezansi; amagama-ngezansi adwetshwe kuvidiyo yizithombe ezingeke zizifunde",
+  "screen reader accessibility blind": "isifundi sesikrini ukufinyeleleka oyimpumputhe",
+  "Never hide": "Ungafihli neze",
+  "Play (Space)": "Dlala (Isikhala)",
+  "Pause (Space)": "Misa (Isikhala)",
+  "Length {0}": "Ubude {0}",
+  "{0}% watched": "{0}% ebukiwe",
+  "Scroll left": "Skrola ngakwesokunxele",
+  "Scroll right": "Skrola ngakwesokudla"
 }

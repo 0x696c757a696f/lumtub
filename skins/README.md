@@ -203,6 +203,44 @@ editors and checkers.
 
    **致敬年代风格，不要照抄。** 不要复制别的产品的图片、标志或商标外观，画你自己的版本。
 
+9. **Surface patterns may be left out.** A pattern on a surface (`lines`,
+   `scanlines`, `grid`, `dots`, `checker`) is drawn as one small tile
+   repeated, and each surface is recorded once per look and size, so they
+   cost little. But in low resource mode, and while frames keep running
+   late, surfaces are drawn plain: their patterns are left out until frames
+   keep time again. Text and icons must stay readable on the surface's own
+   colours without the pattern, and nothing the user needs may live only in
+   a pattern.
+
+   **表面花纹可能被省掉。** 表面上的花纹（`lines`、`scanlines`、`grid`、`dots`、`checker`）
+   是一小块图案平铺出来的，每个表面按样式和尺寸只录制一次，开销很小。但在低占用模式下，
+   以及画面持续掉帧时，表面会画成纯色，花纹先省掉，等帧率稳住再画回来。所以文字和图标
+   在没有花纹的底色上也要清楚，需要用户看到的信息不要只放在花纹里。
+
+10. **Focus must be seen.** Keyboard and TV remote users only know where they
+    are by the focus. The focus ring is drawn from `colors.accent`, made
+    stronger until it has 3:1 against the page; a card's focused border is
+    the accent itself, so the accent needs 3:1 against `colors.page` on each
+    side. A `focused` look you write (a border or a glow) needs the same 3:1
+    against what lies around it, must differ from `hover` by more than
+    colour, and must keep `colors.text` at 4.5:1 on the card. Every built-in
+    skin is tested for this in both modes (`test/skin_theme_contrast_test.dart`).
+    More in [docs/ACCESSIBILITY.md](../docs/ACCESSIBILITY.md).
+
+    **焦点必须看得见。** 用键盘或电视遥控器的人，只靠焦点知道自己在哪。焦点框取自
+    `colors.accent`，会自动加深直到与页面对比度达到 3:1；卡片获焦时的边框就是强调色本身，
+    所以浅色、深色两边的强调色与 `colors.page` 都要有 3:1。你自己写的 `focused` 样式
+    （边框或光晕）也要和周围有 3:1，和 `hover` 的区别不能只是颜色，卡片上 `colors.text`
+    仍要保持 4.5:1。所有内置皮肤的两种模式都会在测试里检查（`test/skin_theme_contrast_test.dart`）。
+    详见 [docs/ACCESSIBILITY.md](../docs/ACCESSIBILITY.md)。
+
+11. **Large text.** People may set text to 200 %. Don't rely on a label
+    fitting a fixed shape: chips, tabs and buttons grow with the text, and
+    pictures behind them should still look right when they do.
+
+    **大字号。** 用户可能把字号调到 200%。不要指望文字刚好塞进固定形状：
+    标签、页签、按钮会随文字变大，背后的图案在变大后也要好看。
+
 ## Check a skin 检查皮肤
 
 The Skins page lists every warning. From a copy of the source code you can

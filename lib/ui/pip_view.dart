@@ -13,6 +13,7 @@ import '../widgets/video_progress_bar.dart';
 import 'app_icons.dart';
 import 'common.dart';
 import 'motion.dart';
+import 'accessibility.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'player_shortcuts.dart';
 import 'video_box.dart';
@@ -71,6 +72,7 @@ class _PipViewState extends State<PipView> {
 
   void _hideNow() {
     _hide?.cancel();
+    if (mounted && Accessibility.screenReader(context)) return;
     if (mounted && _controlsShown) setState(() => _controlsShown = false);
   }
 
@@ -79,6 +81,7 @@ class _PipViewState extends State<PipView> {
     final player = _controller.player!;
     final settings = _controller.settings;
     final window = MediaQuery.sizeOf(context);
+    if (!_controlsShown && Accessibility.screenReader(context)) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _show() : null);
     final video = VideoBox(
       controller: _controller,
       smallSubtitles: true,
@@ -203,7 +206,7 @@ class _PipControlsState extends State<PipControls> {
               initialData: player.state.playing,
               builder: (context, snapshot) => IconButton(
                 style: style,
-                tooltip: tr('Play/Pause (Space)'),
+                tooltip: snapshot.data == true ? tr('Pause (Space)') : tr('Play (Space)'),
                 iconSize: 38 * scale,
                 icon: Icon(snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill),
                 onPressed: () => unawaited(player.playOrPause()),

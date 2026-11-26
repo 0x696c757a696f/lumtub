@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (այստեղ հասանելի չէ)",
   "Which messages show": "Որ հաղորդագրությունները ցուցադրել",
   "Chat mode": "Զրույցի ռեժիմ",
-  "The installation is incomplete, so the chat can't be read": "Տեղադրումը թերի է, ուստի զրույցը հնարավոր չէ կարդալ"
+  "The installation is incomplete, so the chat can't be read": "Տեղադրումը թերի է, ուստի զրույցը հնարավոր չէ կարդալ",
+  "Audio description": "Աուդիոնկարագրություն",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Նվագարկել նկարագրող ձայնային ուղին, երբ տեսանյութն ունի այն. այն պատմում է, թե ինչ է կատարվում էկրանին",
+  "{0} (audio description)": "{0} (աուդիոնկարագրություն)",
+  "Read subtitles aloud": "Բարձրաձայն կարդալ ենթագրերը",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Աշխատող էկրանի ընթերցիչն ասում է ենթագրի յուրաքանչյուր նոր տողը. տեսանյութի վրա նկարված ենթագրերը պատկերներ են, որոնք այն չի կարող կարդալ",
+  "screen reader accessibility blind": "էկրանի ընթերցիչ մատչելիություն կույր",
+  "Never hide": "Երբեք չթաքցնել",
+  "Play (Space)": "Նվագարկել (Space)",
+  "Pause (Space)": "Դադար (Space)",
+  "Length {0}": "Տևողություն {0}",
+  "{0}% watched": "{0}% դիտված",
+  "Scroll left": "Ոլորել ձախ",
+  "Scroll right": "Ոլորել աջ"
 }

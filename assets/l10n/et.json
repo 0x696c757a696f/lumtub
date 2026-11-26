@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (siin pole saadaval)",
   "Which messages show": "Millised sõnumid kuvatakse",
   "Chat mode": "Vestlusrežiim",
-  "The installation is incomplete, so the chat can't be read": "Installimine on poolik, seega ei saa vestlust lugeda"
+  "The installation is incomplete, so the chat can't be read": "Installimine on poolik, seega ei saa vestlust lugeda",
+  "Audio description": "Audiokirjeldus",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Esita kirjeldav helirada, kui videol see on; see räägib, mis ekraanil toimub",
+  "{0} (audio description)": "{0} (audiokirjeldus)",
+  "Read subtitles aloud": "Loe subtiitrid ette",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Töötav ekraanilugeja loeb ette iga uue subtiitririda; videosse joonistatud subtiitrid on pildid, mida see lugeda ei saa",
+  "screen reader accessibility blind": "ekraanilugeja juurdepääsetavus pime",
+  "Never hide": "Ära kunagi peida",
+  "Play (Space)": "Esita (tühik)",
+  "Pause (Space)": "Peata (tühik)",
+  "Length {0}": "Pikkus {0}",
+  "{0}% watched": "{0}% vaadatud",
+  "Scroll left": "Keri vasakule",
+  "Scroll right": "Keri paremale"
 }

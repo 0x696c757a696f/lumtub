@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ne havebla ĉi tie)",
   "Which messages show": "Kiuj mesaĝoj montriĝas",
   "Chat mode": "Babilreĝimo",
-  "The installation is incomplete, so the chat can't be read": "La instalo estas nekompleta, do la babilo ne povas esti legata"
+  "The installation is incomplete, so the chat can't be read": "La instalo estas nekompleta, do la babilo ne povas esti legata",
+  "Audio description": "Sonpriskribo",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Ludi la priskriban sonvojon, se la video havas ĝin; ĝi rakontas kio okazas sur la ekrano",
+  "{0} (audio description)": "{0} (sonpriskribo)",
+  "Read subtitles aloud": "Voĉlegi subtekstojn",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Funkcianta ekranlegilo diras ĉiun novan linion de subtekstoj; subtekstoj desegnitaj sur la video estas bildoj, kiujn ĝi ne povas legi",
+  "screen reader accessibility blind": "ekranlegilo alirebleco blinda screen reader accessibility blind",
+  "Never hide": "Neniam kaŝi",
+  "Play (Space)": "Ludi (Spaco)",
+  "Pause (Space)": "Paŭzi (Spaco)",
+  "Length {0}": "Daŭro {0}",
+  "{0}% watched": "{0}% spektita",
+  "Scroll left": "Rulumi maldekstren",
+  "Scroll right": "Rulumi dekstren"
 }

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (tu nie je k dispozícii)",
   "Which messages show": "Ktoré správy sa zobrazujú",
   "Chat mode": "Režim chatu",
-  "The installation is incomplete, so the chat can't be read": "Inštalácia je neúplná, preto sa chat nedá prečítať"
+  "The installation is incomplete, so the chat can't be read": "Inštalácia je neúplná, preto sa chat nedá prečítať",
+  "Audio description": "Zvukový popis",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Prehrať popisnú zvukovú stopu, ak ju video má; hovorí o tom, čo sa deje na obrazovke",
+  "{0} (audio description)": "{0} (zvukový popis)",
+  "Read subtitles aloud": "Čítať titulky nahlas",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Spustená čítačka obrazovky prečíta každý nový riadok titulkov; titulky nakreslené vo videu sú obrázky, ktoré nevie prečítať",
+  "screen reader accessibility blind": "čítačka obrazovky prístupnosť nevidiaci",
+  "Never hide": "Nikdy neskrývať",
+  "Play (Space)": "Prehrať (medzerník)",
+  "Pause (Space)": "Pozastaviť (medzerník)",
+  "Length {0}": "Dĺžka {0}",
+  "{0}% watched": "{0} % pozreté",
+  "Scroll left": "Posunúť doľava",
+  "Scroll right": "Posunúť doprava"
 }

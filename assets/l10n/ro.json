@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (indisponibil aici)",
   "Which messages show": "Ce mesaje se afișează",
   "Chat mode": "Mod chat",
-  "The installation is incomplete, so the chat can't be read": "Instalarea este incompletă, deci chatul nu poate fi citit"
+  "The installation is incomplete, so the chat can't be read": "Instalarea este incompletă, deci chatul nu poate fi citit",
+  "Audio description": "Audiodescriere",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Redă pista audio descriptivă când videoclipul are una, care spune ce se întâmplă pe ecran",
+  "{0} (audio description)": "{0} (audiodescriere)",
+  "Read subtitles aloud": "Citește subtitrările cu voce tare",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Un cititor de ecran activ rostește fiecare linie nouă de subtitrare; subtitrările desenate pe video sunt imagini pe care nu le poate citi",
+  "screen reader accessibility blind": "cititor de ecran accesibilitate nevăzător orb screen reader accessibility blind",
+  "Never hide": "Nu ascunde niciodată",
+  "Play (Space)": "Redă (Spațiu)",
+  "Pause (Space)": "Pauză (Spațiu)",
+  "Length {0}": "Durată {0}",
+  "{0}% watched": "{0}% vizionat",
+  "Scroll left": "Derulează la stânga",
+  "Scroll right": "Derulează la dreapta"
 }

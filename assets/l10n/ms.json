@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (tidak ditawarkan di sini)",
   "Which messages show": "Mesej yang dipaparkan",
   "Chat mode": "Mod sembang",
-  "The installation is incomplete, so the chat can't be read": "Pemasangan tidak lengkap, jadi sembang tidak dapat dibaca"
+  "The installation is incomplete, so the chat can't be read": "Pemasangan tidak lengkap, jadi sembang tidak dapat dibaca",
+  "Audio description": "Perihalan audio",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Mainkan trek bunyi berperihalan apabila video mempunyainya; ia menerangkan apa yang berlaku pada skrin",
+  "{0} (audio description)": "{0} (perihalan audio)",
+  "Read subtitles aloud": "Bacakan sari kata dengan kuat",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Pembaca skrin yang sedang berjalan menyebut setiap baris sari kata baharu; sari kata yang dilukis pada video ialah gambar yang tidak dapat dibacanya",
+  "screen reader accessibility blind": "pembaca skrin kebolehcapaian buta",
+  "Never hide": "Jangan sekali-kali sembunyikan",
+  "Play (Space)": "Main (Space)",
+  "Pause (Space)": "Jeda (Space)",
+  "Length {0}": "Tempoh {0}",
+  "{0}% watched": "{0}% telah ditonton",
+  "Scroll left": "Tatal ke kiri",
+  "Scroll right": "Tatal ke kanan"
 }

@@ -1341,6 +1341,23 @@ mod tests {
             let guess = spoken_language(&answer(title)).unwrap();
             assert!(guess.alike.contains(&language), "{title}");
         }
+        // A sign of the language guessed that another does not share
+        // keeps that other out, in every script.
+        for (title, guessed) in [
+            ("Kochen mit Thomas", Language::De),
+            ("Noticias Telemundo", Language::Es),
+            ("أخبار اليوم", Language::Ar),
+        ] {
+            let guess = spoken_language(&answer(title)).unwrap();
+            assert_eq!(guess.alike, vec![guessed], "{title}");
+        }
+        let russian = spoken_language(&answer("Новости дня")).unwrap();
+        assert_eq!(russian.alike, vec![Language::Ru, Language::Bg]);
+        // Umlauts are not German's alone.
+        let turkish = spoken_language(&answer("Haber bülteni")).unwrap();
+        assert_eq!(turkish.source, "guess");
+        assert!(turkish.alike.contains(&Language::Tr));
+        assert!(!turkish.alike.contains(&Language::It));
         let polish = spoken_language(&answer("Wiadomości z kraju")).unwrap();
         assert!(!polish.alike.contains(&Language::Jv) || polish.source == "text");
         let icelandic = spoken_language(&answer("Fréttir kvöldsins í þættinum")).unwrap();

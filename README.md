@@ -159,7 +159,8 @@ Combined with two subtitles at once and Explore by spoken language, this turns a
 - **Speech-to-text subtitles** (Groq, OpenAI or your own endpoint) and **AI summaries** of a video from its subtitles. These need a service or API key that you provide, and some providers charge.
 
 ### 🔴 Live
-- Danmaku for live chat and replays, or a chat that keeps up: newest at the bottom, translate any message, write in chat after signing in.
+- Danmaku for live chat and replays that glides at your screen's refresh rate, or a chat that keeps up: newest at the bottom, translate any message, write in chat after signing in.
+- 🆕 Choose YouTube's Top chat or every message; slow mode, subscribers-only and members-only are shown, and messages removed by moderators disappear.
 - Live markers on your subscriptions.
 - Super Chat and channel memberships open YouTube's payment pages in your browser.
 
@@ -321,9 +322,9 @@ Lumtub is an independent project. It is not affiliated with, endorsed by or spon
 
 ### Building
 
-Every push and pull request to `main` builds on GitHub Actions (`.github/workflows/build.yml`): a verified libmpv per CPU, the Rust core in `native/lumtub_core` (fat LTO), `flutter analyze`, the unit tests, a portable ZIP and an Inno Setup installer for x64, x64-v3 and arm64. Releases are made by the Create release workflow and carry signed packages. Which platforms a change builds, and how to build one alone: [docs/CI.md](docs/CI.md).
+Every push and pull request to `main` builds on GitHub Actions (`.github/workflows/build.yml`): the Rust core in `native/lumtub_core` (fat LTO), `flutter analyze` and the unit tests, then the packages: for Windows a verified libmpv per CPU, a portable ZIP and an Inno Setup installer for x64, x64-v3 and arm64; AppImages for Linux x64 and arm64; DMGs for macOS; an APK for Android and an IPA for iPhone and iPad. Releases are made by the Create release workflow and carry signed packages. Which platforms a change builds, and how to build one alone: [docs/CI.md](docs/CI.md).
 
-Locally you need Flutter 3.47, Visual Studio with the C++ desktop workload, and Rust:
+Locally you need Flutter 3.50.1 (the version CI uses is pinned in `.flutter-version`), the current stable Rust (CI always builds with the newest stable), and for Windows Visual Studio with the C++ desktop workload:
 
 ```powershell
 flutter pub get

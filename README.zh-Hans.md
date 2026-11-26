@@ -10,8 +10,8 @@
 
 [English](README.md) · **简体中文**
 
-[![版本](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=%E7%89%88%E6%9C%AC&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![下载量](https://img.shields.io/github/downloads/0x696c757a696f/lumtub/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F&color=2DD4BF)](https://github.com/0x696c757a696f/lumtub/releases)
+[![版本](https://raw.githubusercontent.com/0x696c757a696f/lumtub/badges/release-zh.svg)](https://github.com/0x696c757a696f/lumtub/releases/latest)
+[![下载量](https://raw.githubusercontent.com/0x696c757a696f/lumtub/badges/downloads-zh.svg)](https://github.com/0x696c757a696f/lumtub/releases)
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)

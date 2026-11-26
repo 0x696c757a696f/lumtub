@@ -1,0 +1,38 @@
+name: README badges
+
+# Draws the release and download count badges and force-pushes them to the
+# badges branch, which the READMEs link to. shields.io keeps failing to
+# fetch these two numbers from GitHub.
+on:
+  schedule:
+    - cron: '41 */3 * * *'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: badges
+
+jobs:
+  badges:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: true  # zizmor: ignore[artipacked] this job pushes with git
+      - name: Draw
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/badges.py "$RUNNER_TEMP/badges"
+      - name: Push
+        run: |
+          git switch -q --orphan badges
+          cp "$RUNNER_TEMP"/badges/*.svg .
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ./*.svg
+          git commit -qm 'README badges'
+          git push -qf origin badges

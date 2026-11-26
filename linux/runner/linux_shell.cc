@@ -60,7 +60,7 @@ struct Shell {
   IndicatorSetMenu indicator_set_menu = nullptr;
   IndicatorSetTitle indicator_set_title = nullptr;
   IndicatorSetIcon indicator_set_icon = nullptr;
-  // The icon file in data/ without .png: lumtub, or lumtub-sunlight.
+  // The icon file in data/ without .png: lumtub, lumtub-tabor or lumtub-gold.
   std::string icon_name = "lumtub";
   void* indicator = nullptr;
   GtkWidget* menu = nullptr;
@@ -1097,9 +1097,8 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     // With either tray option on, the icon stays while the window is open too.
     if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
   } else if (method == "setAppIcon") {
-    const std::string name = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING && std::string(fl_value_get_string(args)) == "sunlight"
-                                 ? "lumtub-sunlight"
-                                 : "lumtub";
+    const std::string chosen = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING ? fl_value_get_string(args) : "";
+    const std::string name = chosen == "tabor" || chosen == "gold" ? "lumtub-" + chosen : "lumtub";
     if (name != shell.icon_name) {
       shell.icon_name = name;
       if (shell.window != nullptr) gtk_window_set_icon_from_file(shell.window, IconPath().c_str(), nullptr);

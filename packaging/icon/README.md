@@ -1,18 +1,25 @@
-# Sunlight app icon
+# App icons
 
-The optional icon under Settings › Appearance › App icon. The installed program, its shortcuts and package metadata keep the classic icon.
+`make_icons.py` draws the three icons in code and writes them as `lumtub-classic.svg`, `lumtub-tabor.svg` and `lumtub-gold.svg`. Change the drawing there, not in the SVGs, then run
 
-- `lumtub-sunlight.svg`: used at 64 px and larger.
-- `lumtub-sunlight-small.svg`: simpler version for 48 px and smaller (fewer rays, bigger play button with a light rim, no bubbles or sparkles).
+    python3 packaging/icon/make_icons.py --export
 
-Exported files:
+to render every file below with Chromium (Playwright for Node and Pillow are needed).
 
-| Platform | File |
-| --- | --- |
-| Windows | `windows/runner/resources/app_icon_sunlight.ico` (resource `IDI_APP_ICON_SUNLIGHT`; 16–48 px from the small version, 64–256 px from the full one) |
-| Linux | `linux/runner/resources/lumtub-sunlight.png` (256 px, installed to `data/`) |
-| macOS | `assets/app_icons/sunlight-mac.png` (512 px, 824/1024 body with a soft shadow, set as the Dock icon at run time) |
-| Android | `android/app/src/main/res/mipmap-*/ic_launcher_sunlight.png` (mdpi from the small version), `drawable-xhdpi/banner_sunlight.png` (TV banner) |
-| Settings preview | `assets/app_icons/sunlight.png`, `assets/app_icons/classic.png` (128 px) |
+- **Classic** (default): mint tile with a dark play button.
+- **Light of Tabor**: the mandorla of Transfiguration icons, darker toward the centre, with three rays from the play button.
+- **Gold ground**: the gold ground of Byzantine icons with a lapis nimbus and a gold play button.
 
-The SVGs use filters and masks; render them with a browser (Chromium) rather than librsvg, which draws the blurs differently.
+Classic is the program's own icon everywhere. The other two are chosen under Settings › Appearance › App icon (`AppearanceSettings.appIcon`).
+
+| Platform | Classic | Light of Tabor / Gold ground |
+| --- | --- | --- |
+| Windows | `windows/runner/resources/app_icon.ico` (`IDI_APP_ICON`) | `app_icon_tabor.ico`, `app_icon_gold.ico` (`IDI_APP_ICON_TABOR`, `IDI_APP_ICON_GOLD`), set on the window and tray at run time |
+| Linux | `linux/runner/resources/lumtub.png`, `packaging/aur/lumtub.png` | `lumtub-tabor.png`, `lumtub-gold.png` (256 px, installed to `data/`) |
+| macOS | `macos/Runner/Assets.xcassets/AppIcon.appiconset` (824/1024 body with a soft shadow) | `assets/app_icons/tabor-mac.png`, `gold-mac.png`, set as the Dock icon at run time |
+| iOS | `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png` (square, no alpha) | – |
+| Android | `mipmap-*/ic_launcher.png`, `drawable-xhdpi/banner.png` | `ic_launcher_tabor.png`, `ic_launcher_gold.png`, `banner_tabor.png`, `banner_gold.png` (launcher aliases `.TaborIcon`, `.GoldIcon`) |
+| Settings preview | `assets/app_icons/classic.png` | `tabor.png`, `gold.png` (128 px) |
+| Website, cards | `website/public/icon.png`, `favicon.png`, `docs/cards/icon.png` | – |
+
+The Android alias `.SunlightIcon` is left over from an earlier optional icon. It now shows the classic icon and is turned off at start, so installs that had it chosen keep a launcher entry through the update.

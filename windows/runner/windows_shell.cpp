@@ -254,7 +254,8 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       // With either tray option on, the icon stays while the window is open too.
       if (close_to_tray_ || minimize_to_tray_) AddTrayIcon();
     } else if (method == "setAppIcon") {
-      SetAppIcon(args && std::get<std::string>(*args) == "sunlight" ? IDI_APP_ICON_SUNLIGHT : IDI_APP_ICON);
+      const std::string name = args ? std::get<std::string>(*args) : std::string();
+      SetAppIcon(name == "tabor" ? IDI_APP_ICON_TABOR : name == "gold" ? IDI_APP_ICON_GOLD : IDI_APP_ICON);
     } else if (media_ && method == "setMetadata") {
       media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"), StringArg(args, "thumbnail"));
     } else if (media_ && method == "setStatus") {

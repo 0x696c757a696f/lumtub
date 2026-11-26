@@ -62,8 +62,8 @@ void main() {
 
   test('the app icon is saved and an unknown one falls back to the classic icon', () async {
     final store = AppearanceSettingsStore(directories);
-    await store.save(const AppearanceSettings(appIcon: AppIcon.sunlight));
-    expect((await store.load()).appIcon, AppIcon.sunlight);
+    await store.save(const AppearanceSettings(appIcon: AppIcon.gold));
+    expect((await store.load()).appIcon, AppIcon.gold);
     expect(const AppearanceSettings().appIcon, AppIcon.classic);
     expect(AppearanceSettings.fromJson({'appIcon': 'neon'}).appIcon, AppIcon.classic);
   });

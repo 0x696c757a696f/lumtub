@@ -4249,5 +4249,8 @@
   "{0} (not offered here)": "{0}（此聊天不提供）",
   "Which messages show": "顯示哪些訊息",
   "Chat mode": "聊天模式",
-  "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天"
+  "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天",
+  "Translate titles in lists": "清單標題翻譯",
+  "Translation replaces the title": "譯文取代標題",
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "首頁、探索、訂閱、觀看記錄、搜尋、頻道和播放清單頁裡的影片與播放清單標題，會翻譯成與沉浸式翻譯相同的語言。只有在畫面上停留片刻的標題才會送出，且只送出標題文字；已是該語言或屬於「不翻譯的語言」的標題維持原樣。譯文保存在本機。"
 }

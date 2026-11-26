@@ -127,6 +127,7 @@ import '../subtitle_translation.dart';
 import '../danmaku.dart';
 import '../comment_danmaku.dart';
 import '../language_guess.dart' show readsAs;
+import '../title_translation.dart';
 import '../translation.dart';
 import '../translation_cache.dart';
 import '../translation_services.dart';
@@ -630,6 +631,41 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Microsoft's first, keeping Google's allowance for what is shown.
   late final _microsoftFirst = FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
 
+  /// Titles in lists translated (列表标题翻译), kept apart so they do not
+  /// push subtitles and comments out of [_translationCache].
+  TranslationCache _titleCache = TranslationCache(maxEntries: 6000);
+  Translator? _titleTranslator;
+  Translator? _titleTranslatorFrom;
+
+  /// Hands [titleTranslations] the service, target and languages left
+  /// alone of 沉浸式翻译, so list titles follow the same settings.
+  void _configureTitles() {
+    // Nothing is sent before Lumtub has started (its proxy and cache are
+    // not set up yet), nor by tests that never start it.
+    if (directories == null) return;
+    final p = preferences;
+    final text = textTranslator;
+    if (!identical(text, _titleTranslatorFrom) || _titleTranslator == null) {
+      _titleTranslatorFrom = text;
+      // With Google's free endpoint chosen, titles go to it and then
+      // Microsoft's, never MyMemory, whose small daily allowance is kept
+      // for what is asked for by hand.
+      final inner = p.translation.service == TranslationService.google ? _googleFirst : text is CachingTranslator ? text.inner : text;
+      _titleTranslator = CachingTranslator(inner, _titleCache, p.translation.cacheScope, batch: inner is! AiTranslator);
+    }
+    final target = p.immersiveTarget;
+    final known = {target, ...p.neverTranslate};
+    final chineseAsOne = p.chineseAsOne;
+    final letters = RegExp(r'\p{L}{2,}', unicode: true);
+    titleTranslations.configure(
+      mode: p.titleTranslation,
+      translator: _titleTranslator!,
+      target: target,
+      needs: (title) => letters.hasMatch(title) && !known.any((language) => readsAs(title, language, chineseAsOne: chineseAsOne)),
+      setup: translationSetup.value,
+    );
+  }
+
   Translator _textTranslatorOf(Translator translator) => switch (preferences.translation.service) {
         TranslationService.google => CachingTranslator(_googleThenOthers, _translationCache, preferences.translation.cacheScope, batch: true),
         TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _googleFirst), _translationCache, preferences.translation.cacheScope, batch: true),
@@ -856,6 +892,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (value == incognito) return;
     _update(() => incognito = value);
     _translationCache.persist = !value;
+    _titleCache.persist = !value;
     _notice(value ? tr('Incognito mode is on: nothing you watch or search now will be remembered') : tr('Incognito mode is off'));
     logInfo(value ? 'Incognito on' : 'Incognito off');
   }

@@ -4249,5 +4249,8 @@
   "{0} (not offered here)": "{0}(이 채팅에서는 제공되지 않음)",
   "Which messages show": "표시할 메시지",
   "Chat mode": "채팅 모드",
-  "The installation is incomplete, so the chat can't be read": "설치가 완전하지 않아 채팅을 읽을 수 없습니다"
+  "The installation is incomplete, so the chat can't be read": "설치가 완전하지 않아 채팅을 읽을 수 없습니다",
+  "Translate titles in lists": "목록 제목 번역",
+  "Translation replaces the title": "번역이 제목을 대체",
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "홈, 탐색, 구독, 기록, 검색, 채널 및 재생목록 페이지의 동영상과 재생목록 제목을 몰입형 번역과 같은 언어로 번역합니다. 화면에 잠시 머문 제목만, 제목 텍스트만 전송합니다. 이미 그 언어이거나 번역하지 않는 언어인 제목은 그대로 둡니다. 번역은 이 컴퓨터에 보관됩니다."
 }

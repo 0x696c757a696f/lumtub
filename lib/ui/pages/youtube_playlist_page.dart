@@ -39,7 +39,7 @@ class YoutubePlaylistPage extends StatelessWidget {
           child: BackHeading(
             onBack: controller.goBack,
             title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(playlist.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+              TitleText(playlist.title, maxLines: 2, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700) ?? const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
               Text(
                 [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} videos', [playlist.count]), tr('YouTube playlists')].join(' · '),

@@ -4249,5 +4249,8 @@
   "{0} (not offered here)": "{0} (non disponibile qui)",
   "Which messages show": "Quali messaggi mostrare",
   "Chat mode": "Modalità chat",
-  "The installation is incomplete, so the chat can't be read": "L'installazione è incompleta, quindi la chat non può essere letta"
+  "The installation is incomplete, so the chat can't be read": "L'installazione è incompleta, quindi la chat non può essere letta",
+  "Translate titles in lists": "Traduci i titoli negli elenchi",
+  "Translation replaces the title": "La traduzione sostituisce il titolo",
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "I titoli di video e playlist in Home, Esplora, Iscrizioni, Cronologia, ricerca, pagine dei canali e delle playlist vengono tradotti nella stessa lingua della traduzione immersiva. Vengono inviati solo i titoli che restano sullo schermo per un momento, e solo il loro testo; i titoli già in quella lingua, o in una mai tradotta, restano invariati. Le traduzioni sono conservate su questo computer."
 }

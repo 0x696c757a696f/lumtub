@@ -4249,5 +4249,8 @@
   "{0} (not offered here)": "{0} (здесь недоступно)",
   "Which messages show": "Какие сообщения показывать",
   "Chat mode": "Режим чата",
-  "The installation is incomplete, so the chat can't be read": "Установка неполная, поэтому чат невозможно прочитать"
+  "The installation is incomplete, so the chat can't be read": "Установка неполная, поэтому чат невозможно прочитать",
+  "Translate titles in lists": "Переводить названия в списках",
+  "Translation replaces the title": "Перевод вместо названия",
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "Названия видео и плейлистов на главной, в обзоре, подписках, истории, поиске и на страницах каналов и плейлистов переводятся на тот же язык, что и иммерсивный перевод. Отправляются только названия, которые задержались на экране, и только их текст; названия, уже написанные на этом языке или на языке из списка непереводимых, не трогаются. Переводы хранятся на этом компьютере."
 }

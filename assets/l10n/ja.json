@@ -4249,5 +4249,8 @@
   "{0} (not offered here)": "{0}（このチャットでは選べません）",
   "Which messages show": "表示するメッセージ",
   "Chat mode": "チャットモード",
-  "The installation is incomplete, so the chat can't be read": "インストールが不完全なため、チャットを読み取れません"
+  "The installation is incomplete, so the chat can't be read": "インストールが不完全なため、チャットを読み取れません",
+  "Translate titles in lists": "リストのタイトルを翻訳",
+  "Translation replaces the title": "訳文でタイトルを置き換え",
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "ホーム、探索、登録チャンネル、履歴、検索、チャンネル、再生リストのページにある動画と再生リストのタイトルを、没入型翻訳と同じ言語に翻訳します。画面にしばらく表示されたタイトルだけを、タイトルの文字だけ送信します。すでにその言語のタイトルや、翻訳しない言語のタイトルはそのままです。訳文はこのコンピューターに保存されます。"
 }

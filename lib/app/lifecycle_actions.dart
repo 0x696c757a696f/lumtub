@@ -261,6 +261,9 @@ extension LifecycleActions on AppController {
       unawaited(downloads?.load());
       unawaited(account?.load());
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
+      _titleCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}title_translations.json'), maxEntries: 6000);
+      _titleTranslator = null;
+      _translationCache.persist = _titleCache.persist = !incognito;
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
@@ -367,7 +370,7 @@ extension LifecycleActions on AppController {
     await _history?.flush();
     await downloads?.shutdown();
     await downloads?.flush();
-    await _translationCache.save();
+    await (_translationCache.save(), _titleCache.save()).wait;
     await _flushAppearance();
     if (_brightnessSave?.isActive ?? false) {
       _brightnessSave!.cancel();

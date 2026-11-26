@@ -14,6 +14,10 @@ from pathlib import Path
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "0x696c757a696f/lumtub")
 
+# Only installers and app packages count as downloads; signatures, checksums,
+# block lists and other files the app fetches by itself do not.
+PACKAGES = (".exe", ".zip", ".AppImage", ".dmg", ".apk", ".ipa", ".tipa")
+
 # Verdana 11 px advance widths, as shields.io measures text.
 WIDTHS = {
     " ": 3.87, "-": 4.58, ".": 3.5, "0": 7.0, "1": 7.0, "2": 7.0, "3": 7.0,
@@ -96,7 +100,12 @@ def main():
     published = [r for r in releases() if not r["draft"]]
     newest = max(published, key=lambda r: r["published_at"] or "")
     version = newest["tag_name"].split("-")[0]
-    total = sum(a["download_count"] for r in published for a in r["assets"])
+    total = sum(
+        a["download_count"]
+        for r in published
+        for a in r["assets"]
+        if a["name"].endswith(PACKAGES)
+    )
     downloads = metric(total)
     for name, label, value, color in (
         ("release-en", "release", version, "E53935"),

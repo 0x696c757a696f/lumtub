@@ -107,6 +107,10 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
 
   void _updateThemes(AppearanceSettings appearance, Color accent) {
     Motion.update(appearance.effectiveMotion);
+    // The wheel's glide is how scrolling feels, not an ornament: 低占用模式
+    // and the system's reduced animations keep it; only 减少动画 chosen in
+    // Lumtub itself turns it off.
+    SmoothWheel.enabled = appearance.motion != MotionPreference.reduced;
     // Decoded thumbnails and avatars; pages rebuild them from the disk
     // cache quickly, so few are kept, fewer on phones and in 低占用模式.
     // A phone with 3 GB or less keeps as few as 低占用模式.

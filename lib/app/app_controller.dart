@@ -640,6 +640,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Hands [titleTranslations] the service, target and languages left
   /// alone of 沉浸式翻译, so list titles follow the same settings.
   void _configureTitles() {
+    // Nothing is sent before Lumtub has started (its proxy and cache are
+    // not set up yet), nor by tests that never start it.
+    if (directories == null) return;
     final p = preferences;
     final text = textTranslator;
     if (!identical(text, _titleTranslatorFrom) || _titleTranslator == null) {

@@ -143,6 +143,10 @@ class TitleTranslations {
     if (callbacks.isNotEmpty) return;
     _listeners.remove(text);
     _queue.remove(text);
+    if (_queue.isEmpty) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   void _admit(String text) {

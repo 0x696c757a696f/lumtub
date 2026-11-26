@@ -56,7 +56,16 @@ words, or whatlang at 0.8 or more over four words or more. Otherwise it is
 a *guess* (source `guess`, with `alike`: the languages of its script), and
 passes for any of them, still only when the title is not a translation:
 short titles such as Norwegian or Icelandic news were read as English or
-Portuguese and left out.
+Portuguese and left out. A guess of English whose text has words only
+English writes (`it`, `worth`, `review`, `unboxing`… in `ENGLISH_HINTS`,
+and the English small words no other list has) and no letter outside
+ASCII passes only for English and for a language with a letter or small
+word of its own in it: Indian tech videos titled `Smart Watch | Is It
+Worth.?` and `LED Projector Unboxing & Review` were shown for German
+(2026-11-26), while `Dagsrevyen 21` is still a guess Norwegian may have
+written. A guess is never left to the first app alone: the other apps are
+asked whether they tell by captions or audio, as that English video's
+first answer came without captions.
 Small words are listed for English, Spanish, French, German, Portuguese,
 Italian, Romanian, Dutch, Afrikaans, Filipino, Basque, Finnish, Albanian,
 Javanese, Sundanese and Swahili; a word of two lists marks neither.

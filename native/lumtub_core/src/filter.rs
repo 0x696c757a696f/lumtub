@@ -360,17 +360,121 @@ pub fn alike(title: &str, guessed: Language) -> Vec<Language> {
     // told by their own small words, never by a guess: a Polish title
     // read loosely was let in as Javanese.
     use Language::*;
+    let lower = title.to_lowercase();
+    let english = guessed == En && reads_english(&lower);
     let mut languages = match letters_allow(title) {
         Some(allowed) if !allowed.is_empty() => allowed,
         _ => same_script(guessed)
             .into_iter()
             .filter(|l| !matches!(l, En | Af | Jv | Su | Ms))
+            .filter(|l| !english || own_word(&lower, *l))
             .collect(),
     };
     if !languages.contains(&guessed) {
         languages.insert(0, guessed);
     }
     languages
+}
+
+/// Words of English titles that no other Latin language of explore
+/// writes as a word of its own; with [LATIN_WORDS]' English ones only
+/// English writes, they tell a guess of English from a title in another
+/// language that is read as English only by default ("Dagsrevyen 21").
+/// Words other languages borrow in titles of their own ("budget", "tips",
+/// "smart", "official", "live") are left out.
+const ENGLISH_HINTS: [&str; 52] = [
+    "it",
+    "it's",
+    "i'm",
+    "don't",
+    "isn't",
+    "can't",
+    "you're",
+    "they",
+    "their",
+    "there",
+    "here",
+    "who",
+    "when",
+    "about",
+    "into",
+    "every",
+    "never",
+    "ever",
+    "which",
+    "should",
+    "really",
+    "better",
+    "before",
+    "after",
+    "years",
+    "days",
+    "month",
+    "first",
+    "look",
+    "hands",
+    "new",
+    "worst",
+    "cheapest",
+    "make",
+    "made",
+    "get",
+    "got",
+    "buy",
+    "price",
+    "worth",
+    "review",
+    "unboxing",
+    "cheap",
+    "honest",
+    "explained",
+    "features",
+    "watch",
+    "life",
+    "world",
+    "people",
+    "things",
+    "way",
+];
+
+/// Whether a Latin text read as English without being sure has words
+/// only English writes and no letter English does not: an Indian tech
+/// title of brand names, "Is It Worth" and "Unboxing & Review" was let in
+/// for German as a guess any Latin language may have written (2026-11-26).
+fn reads_english(lower: &str) -> bool {
+    if lower.chars().any(|c| c.is_alphabetic() && !c.is_ascii()) {
+        return false;
+    }
+    let english = LATIN_WORDS
+        .iter()
+        .position(|(l, _)| *l == Language::En)
+        .map_or(0, |at| 1u32 << at);
+    words_of(lower).any(|w| small_word_languages(w) == english || ENGLISH_HINTS.contains(&w))
+}
+
+/// Whether [lower] has a letter or small word of [language]'s own, one
+/// English does not share.
+fn own_word(lower: &str, language: Language) -> bool {
+    if latin_letters(language, lower) {
+        return true;
+    }
+    let bit = |of: Language| {
+        LATIN_WORDS
+            .iter()
+            .position(|(l, _)| *l == of)
+            .map_or(0, |at| 1u32 << at)
+    };
+    let (own, english) = (bit(language), bit(Language::En));
+    own != 0
+        && words_of(lower)
+            .map(small_word_languages)
+            .any(|langs| langs & own != 0 && langs & english == 0)
+}
+
+fn words_of(lower: &str) -> impl Iterator<Item = &str> {
+    lower
+        .split(|c: char| !(c.is_alphabetic() || c == '\''))
+        .filter(|w| !w.is_empty())
 }
 
 /// The languages explore offers that write [language]'s script, itself

@@ -252,8 +252,10 @@ class VideoLanguages {
       // The first app answered whole, and asking the others has not told
       // more for a while: most videos in Chinese and many other languages
       // have no automatic captions in any app. One video in
-      // [_othersGiveUp] still asks them, in case that changed.
-      if (best != null && _rank(best) == 3 && _othersTold <= -_othersGiveUp && --_othersTold % _othersGiveUp != 0) break;
+      // [_othersGiveUp] still asks them, in case that changed. A title
+      // only guessed at is never left to: an English video the first app
+      // answered without captions was let in for German by it.
+      if (best != null && _rank(best) == 3 && best.spoken.source != 'guess' && _othersTold <= -_othersGiveUp && --_othersTold % _othersGiveUp != 0) break;
       final read = await _fetch(id, hl, client);
       if (read == null) continue;
       withVideo = true;

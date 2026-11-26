@@ -267,7 +267,8 @@ enum VideoLayout {
 /// classic one.
 enum AppIcon {
   classic('Classic', 'assets/app_icons/classic.png'),
-  sunlight('Sunlight', 'assets/app_icons/sunlight.png');
+  tabor('Light of Tabor', 'assets/app_icons/tabor.png'),
+  gold('Gold ground', 'assets/app_icons/gold.png');
 
   const AppIcon(this._label, this.preview);
   final String _label;

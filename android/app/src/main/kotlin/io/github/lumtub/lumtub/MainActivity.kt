@@ -196,13 +196,17 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * Shows the sunlight or the classic icon on the home screen by turning
-     * on one launcher alias and off the other; the launcher may take a
-     * moment to redraw it.
+     * Shows the chosen icon (classic, tabor or gold) on the home screen by
+     * turning on its launcher alias and off the others; the launcher may
+     * take a moment to redraw it.
      */
-    private fun setAppIcon(sunlight: Boolean) {
-        val want = if (sunlight) "SunlightIcon" else "ClassicIcon"
-        for (name in listOf("ClassicIcon", "SunlightIcon")) {
+    private fun setAppIcon(icon: String?) {
+        val want = when (icon) {
+            "tabor" -> "TaborIcon"
+            "gold" -> "GoldIcon"
+            else -> "ClassicIcon"
+        }
+        for (name in listOf("ClassicIcon", "TaborIcon", "GoldIcon", "SunlightIcon")) {
             val component = ComponentName(this, "${MainActivity::class.java.name.substringBeforeLast('.')}.$name")
             val state = if (name == want) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             val current = packageManager.getComponentEnabledSetting(component)
@@ -311,7 +315,7 @@ class MainActivity : FlutterActivity() {
                 startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
             "moveToBack" -> moveTaskToBack(true)
-            "setAppIcon" -> setAppIcon(call.arguments == "sunlight")
+            "setAppIcon" -> setAppIcon(call.arguments as? String)
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
             // The caption size set in Android's accessibility settings, as
             // ExoPlayer reads it: only while captions are turned on there.

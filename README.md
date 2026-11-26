@@ -10,8 +10,8 @@ No account needed to watch.
 
 **English** · [简体中文](README.zh-Hans.md)
 
-[![Release](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=release&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/0x696c757a696f/lumtub/total?color=2DD4BF)](https://github.com/0x696c757a696f/lumtub/releases)
+[![Release](https://raw.githubusercontent.com/0x696c757a696f/lumtub/badges/release-en.svg)](https://github.com/0x696c757a696f/lumtub/releases/latest)
+[![Downloads](https://raw.githubusercontent.com/0x696c757a696f/lumtub/badges/downloads-en.svg)](https://github.com/0x696c757a696f/lumtub/releases)
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)

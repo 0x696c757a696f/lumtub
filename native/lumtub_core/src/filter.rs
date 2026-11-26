@@ -217,6 +217,16 @@ const LATIN_WORDS: [(Language, &[&str]); 17] = [
     ),
 ];
 
+/// [latin_letters] that only [language] writes: ä, ö and ü are German's
+/// but Turkish, Hungarian, Swedish and Estonian write them too ("Haber
+/// bülteni" was read surely as German), so for German only ß is sure.
+fn sure_letters(language: Language, lower: &str) -> bool {
+    match language {
+        Language::De => lower.contains('ß'),
+        _ => latin_letters(language, lower),
+    }
+}
+
 /// Letters only one Latin-script language uses, lower case.
 fn latin_letters(language: Language, lower: &str) -> bool {
     match language {
@@ -305,7 +315,7 @@ pub fn reading(title: &str) -> (Language, bool) {
 /// Letters only a few Latin-script languages write, lower case, and
 /// those languages: a title with ø is Norwegian or Danish whatever its
 /// small words say.
-const LETTER_FAMILIES: [(&[char], &[Language]); 11] = {
+const LETTER_FAMILIES: [(&[char], &[Language]); 14] = {
     use Language::*;
     [
         (&['ø'], &[No, Da]),
@@ -319,6 +329,9 @@ const LETTER_FAMILIES: [(&[char], &[Language]); 11] = {
         (&['ő', 'ű'], &[Hu]),
         (&['ā', 'ē', 'ī', 'ķ', 'ļ', 'ņ', 'ģ'], &[Lv]),
         (&['ė', 'į', 'ų'], &[Lt]),
+        (&['ä'], &[De, Sv, Fi, Et, Sk, Tk]),
+        (&['ö'], &[De, Tr, Hu, Sv, Fi, Et, Az, Tk, Is]),
+        (&['ü'], &[De, Tr, Hu, Et, Az, Tk]),
     ]
 };
 
@@ -343,34 +356,154 @@ fn letters_allow(title: &str) -> Option<Vec<Language>> {
 
 /// For a guess: the languages that may have written [title], read as
 /// [guessed] without being sure. Those of its script, narrowed by its
-/// rarer letters; English only when guessed, as English titles are read
-/// surely by their small words. Measured on 1590 videos in 70 languages
+/// letters; English only when guessed, as English titles are read surely
+/// by their small words. Measured on 1590 videos in 70 languages
 /// (2026-11-20): every guess let in wrongly was between such neighbours.
+/// A text with a sign of [guessed] that another language does not share
+/// (a small word, a letter, an English word) passes for that one only
+/// when it has a sign of its own too: Indian English tech titles were
+/// let in for German, as any Latin language might have written them
+/// (2026-11-26). A text with no sign of anything ("Dagsrevyen 21") stays
+/// open to its whole script.
 pub fn alike(title: &str, guessed: Language) -> Vec<Language> {
+    use Language::*;
+    let lower = title.to_lowercase();
     if !is_latin(guessed) {
-        // Russian read by default may be Ukrainian or Belarusian only
-        // when their own letters say so, which makes the reading sure.
         return same_script(guessed)
             .into_iter()
-            .filter(|l| guessed != Language::Ru || !matches!(l, Language::Be | Language::Uk))
+            .filter(|l| *l == guessed || script_allows(&lower, *l))
             .collect();
     }
     // Languages that share nearly all their words with a bigger one
     // (Afrikaans with Dutch, Javanese and Sundanese with Indonesian) are
     // told by their own small words, never by a guess: a Polish title
     // read loosely was let in as Javanese.
-    use Language::*;
     let mut languages = match letters_allow(title) {
         Some(allowed) if !allowed.is_empty() => allowed,
         _ => same_script(guessed)
             .into_iter()
             .filter(|l| !matches!(l, En | Af | Jv | Su | Ms))
+            .filter(|l| sign_of(&lower, *l, guessed) || !sign_of(&lower, guessed, *l))
             .collect(),
     };
     if !languages.contains(&guessed) {
         languages.insert(0, guessed);
     }
     languages
+}
+
+/// Whether a text in a script several languages write, read as
+/// another language without being sure, may be [language]'s by its
+/// letters.
+/// Russian read by default may be Ukrainian or Belarusian only when their
+/// own letters say so, which makes the reading sure; Mongolian and
+/// Uzbek likewise (ө, ү; қ, ғ, ҳ). Bulgarian writes no ы, э or ё,
+/// Macedonian none of й, щ, ъ, ы, э, ю, я, ё. Persian and Urdu write
+/// letters Arabic does not (ی, ے…), which make the reading theirs.
+fn script_allows(lower: &str, language: Language) -> bool {
+    use Language::*;
+    match language {
+        Uk | Be | Mn | Uz | Fa | Ur => false,
+        Bg => !lower.contains(['ы', 'э', 'ё']),
+        Mk => !lower.contains(['й', 'щ', 'ъ', 'ы', 'э', 'ю', 'я', 'ё']),
+        _ => true,
+    }
+}
+
+/// Words of English titles that no other Latin language of explore
+/// writes as a word of its own; with [LATIN_WORDS]' English ones only
+/// English writes, they tell a guess of English from a title in another
+/// language that is read as English only by default ("Dagsrevyen 21").
+/// Words other languages borrow in titles of their own ("budget", "tips",
+/// "smart", "official", "live") are left out.
+const ENGLISH_HINTS: [&str; 52] = [
+    "it",
+    "it's",
+    "i'm",
+    "don't",
+    "isn't",
+    "can't",
+    "you're",
+    "they",
+    "their",
+    "there",
+    "here",
+    "who",
+    "when",
+    "about",
+    "into",
+    "every",
+    "never",
+    "ever",
+    "which",
+    "should",
+    "really",
+    "better",
+    "before",
+    "after",
+    "years",
+    "days",
+    "month",
+    "first",
+    "look",
+    "hands",
+    "new",
+    "worst",
+    "cheapest",
+    "make",
+    "made",
+    "get",
+    "got",
+    "buy",
+    "price",
+    "worth",
+    "review",
+    "unboxing",
+    "cheap",
+    "honest",
+    "explained",
+    "features",
+    "watch",
+    "life",
+    "world",
+    "people",
+    "things",
+    "way",
+];
+
+/// Whether [lower] has a sign of [language] that [other] does not
+/// share: a letter only it writes, one of its small words of three
+/// letters or more that is not [other]'s too ("es", "la", "do" are words
+/// of many languages), or for English one of [ENGLISH_HINTS] in a text with no
+/// letter English does not write.
+fn sign_of(lower: &str, language: Language, other: Language) -> bool {
+    if sure_letters(language, lower) {
+        return true;
+    }
+    let bit = |of: Language| {
+        LATIN_WORDS
+            .iter()
+            .position(|(l, _)| *l == of)
+            .map_or(0, |at| 1u32 << at)
+    };
+    let (own, theirs) = (bit(language), bit(other));
+    if own != 0
+        && words_of(lower)
+            .filter(|w| w.chars().count() > 2)
+            .map(small_word_languages)
+            .any(|langs| langs & own != 0 && langs & theirs == 0)
+    {
+        return true;
+    }
+    language == Language::En
+        && !lower.chars().any(|c| c.is_alphabetic() && !c.is_ascii())
+        && words_of(lower).any(|w| ENGLISH_HINTS.contains(&w))
+}
+
+fn words_of(lower: &str) -> impl Iterator<Item = &str> {
+    lower
+        .split(|c: char| !(c.is_alphabetic() || c == '\''))
+        .filter(|w| !w.is_empty())
 }
 
 /// The languages explore offers that write [language]'s script, itself
@@ -460,7 +593,7 @@ fn small_word_languages(word: &str) -> u32 {
 /// four words or more.
 fn latin_sure(title: &str, language: Language) -> bool {
     let lower = title.to_lowercase();
-    if latin_letters(language, &lower) {
+    if sure_letters(language, &lower) {
         return true;
     }
     let words: Vec<&str> = lower

@@ -56,7 +56,24 @@ words, or whatlang at 0.8 or more over four words or more. Otherwise it is
 a *guess* (source `guess`, with `alike`: the languages of its script), and
 passes for any of them, still only when the title is not a translation:
 short titles such as Norwegian or Icelandic news were read as English or
-Portuguese and left out.
+Portuguese and left out. A guess passes for another language of its script only when the text
+has no sign of the language guessed that the other does not share, or
+has a sign of the other too. Signs are a letter only that language
+writes, one of its small words of three letters or more (`es`, `la`,
+`do` are words of many), and for English one of `ENGLISH_HINTS` (`it`,
+`worth`, `review`, `unboxing`…) in a text with no letter outside ASCII.
+Indian tech videos titled `Smart Watch | Is It Worth.?` and `LED
+Projector Unboxing & Review` were shown for German (2026-11-26); a German
+`Kochen mit Thomas` is no longer let in for Italian, nor an Arabic title
+for Persian or Urdu. A text with no sign of anything (`Dagsrevyen 21`)
+stays open to its whole script. In Cyrillic, Bulgarian writes no ы, э or
+ё and Macedonian none of й, щ, ъ, ы, э, ю, я, ё. ä, ö and ü are not
+German's alone (Turkish, Hungarian, Swedish, Finnish, Estonian,
+Icelandic write them): they narrow a guess to those languages, and only
+ß reads surely as German (`Haber bülteni` was read surely as German).
+A guess is never left to the first app alone: the other apps are
+asked whether they tell by captions or audio, as that English video's
+first answer came without captions.
 Small words are listed for English, Spanish, French, German, Portuguese,
 Italian, Romanian, Dutch, Afrikaans, Filipino, Basque, Finnish, Albanian,
 Javanese, Sundanese and Swahili; a word of two lists marks neither.

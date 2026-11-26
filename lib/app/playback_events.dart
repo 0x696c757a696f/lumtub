@@ -211,6 +211,7 @@ extension PlaybackEvents on AppController {
         _placeSecondary(player, lines);
         _secondLineChanged(lines);
         _sendPipSubtitles(lines);
+        if (preferences.speakSubtitles) Accessibility.speak(lines.join('\n'));
       }),
       player.stream.playing.listen((_) {
         _updateEfficiency();

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (இங்கே வழங்கப்படவில்லை)",
   "Which messages show": "எந்தச் செய்திகள் காட்டப்படும்",
   "Chat mode": "அரட்டை பயன்முறை",
-  "The installation is incomplete, so the chat can't be read": "நிறுவல் முழுமையடையவில்லை, எனவே அரட்டையைப் படிக்க முடியாது"
+  "The installation is incomplete, so the chat can't be read": "நிறுவல் முழுமையடையவில்லை, எனவே அரட்டையைப் படிக்க முடியாது",
+  "Audio description": "ஒலி விவரணை",
+  "Play the described sound track when a video has one, which tells what happens on screen": "வீடியோவில் விவரிப்பு ஒலிப்பாதை இருந்தால் அதை இயக்கு; இது திரையில் நடப்பதைச் சொல்லும்",
+  "{0} (audio description)": "{0} (ஒலி விவரணை)",
+  "Read subtitles aloud": "வசனங்களை உரக்கப் படி",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "இயங்கும் திரை வாசிப்பான் ஒவ்வொரு புதிய வசன வரியையும் சொல்லும்; வீடியோவில் வரையப்பட்ட வசனங்கள் படங்கள், அவற்றை அதனால் படிக்க முடியாது",
+  "screen reader accessibility blind": "திரை வாசிப்பான் அணுகல்தன்மை பார்வையற்றோர்",
+  "Never hide": "ஒருபோதும் மறைக்காதே",
+  "Play (Space)": "இயக்கு (Space)",
+  "Pause (Space)": "இடைநிறுத்து (Space)",
+  "Length {0}": "நீளம் {0}",
+  "{0}% watched": "{0}% பார்த்தது",
+  "Scroll left": "இடப்பக்கம் உருட்டு",
+  "Scroll right": "வலப்பக்கம் உருட்டு"
 }

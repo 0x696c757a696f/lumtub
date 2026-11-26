@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (یہاں دستیاب نہیں)",
   "Which messages show": "کون سے پیغامات دکھائے جائیں",
   "Chat mode": "چیٹ موڈ",
-  "The installation is incomplete, so the chat can't be read": "انسٹالیشن نامکمل ہے، اس لیے چیٹ نہیں پڑھی جا سکتی"
+  "The installation is incomplete, so the chat can't be read": "انسٹالیشن نامکمل ہے، اس لیے چیٹ نہیں پڑھی جا سکتی",
+  "Audio description": "آڈیو تفصیل",
+  "Play the described sound track when a video has one, which tells what happens on screen": "جب ویڈیو میں تفصیلی آڈیو ٹریک ہو تو اسے چلائیں، جو بتاتا ہے کہ اسکرین پر کیا ہو رہا ہے",
+  "{0} (audio description)": "{0} (آڈیو تفصیل)",
+  "Read subtitles aloud": "سب ٹائٹلز بلند آواز سے پڑھیں",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "چلتا ہوا اسکرین ریڈر ہر نئی سب ٹائٹل لائن بولتا ہے؛ ویڈیو پر بنے سب ٹائٹلز تصاویر ہیں جنہیں وہ پڑھ نہیں سکتا",
+  "screen reader accessibility blind": "اسکرین ریڈر رسائی نابینا screen reader accessibility blind",
+  "Never hide": "کبھی نہ چھپائیں",
+  "Play (Space)": "چلائیں (اسپیس)",
+  "Pause (Space)": "روکیں (اسپیس)",
+  "Length {0}": "دورانیہ {0}",
+  "{0}% watched": "{0}% دیکھا گیا",
+  "Scroll left": "بائیں اسکرول کریں",
+  "Scroll right": "دائیں اسکرول کریں"
 }

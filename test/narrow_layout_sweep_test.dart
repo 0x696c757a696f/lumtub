@@ -17,6 +17,8 @@ import 'package:lumtub/ui/pages/library_pages.dart';
 import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/video_pages.dart';
 import 'package:lumtub/ui/pages/youtube_playlist_page.dart';
+import 'package:lumtub/device.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
@@ -112,6 +114,55 @@ void main() {
           await tester.pumpWidget(MaterialApp(
             theme: buildAppTheme(Colors.red, Brightness.light),
             builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
+            home: Scaffold(body: VideoActions(controller: controller, child: page(controller))),
+          ));
+          await tester.pump(const Duration(milliseconds: 600));
+          final error = tester.takeException();
+          if (error != null) problems.add('$name: $error');
+          problems.addAll([for (final text in squeezedTexts(tester)) '$name: $text']);
+          await tester.pumpWidget(const SizedBox());
+          await tester.runAsync(() async {
+            await library.flush();
+            dir.deleteSync(recursive: true);
+          });
+        }
+        expect(problems.toSet().toList(), isEmpty);
+      });
+    }
+  }
+
+  // Twice the text, the most the font size setting offers, on every kind
+  // of screen the app runs on: phones and tablets by touch, a TV by remote,
+  // desktop windows from small to full HD.
+  final screens = <(String, Size, {bool touch, bool tv})>[
+    ('phone', const Size(360, 780), touch: true, tv: false),
+    ('tablet', const Size(800, 1280), touch: true, tv: false),
+    ('tablet sideways', const Size(1280, 800), touch: true, tv: false),
+    ('TV', const Size(960, 540), touch: false, tv: true),
+    ('small window', const Size(800, 600), touch: false, tv: false),
+    ('desktop', const Size(1920, 1080), touch: false, tv: false),
+  ];
+  for (final language in ['en', 'de', 'ru', 'ar', 'ja', 'zh-Hans']) {
+    for (final (kind, size, :touch, :tv) in screens) {
+      testWidgets('pages fit a $kind at text ×2.0 in $language', (tester) async {
+        setLanguage(AppLanguage(language));
+        debugTouchFirst = touch;
+        Device.tv = tv;
+        addTearDown(() {
+          debugTouchFirst = null;
+          Device.tv = false;
+        });
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final problems = <String>[];
+        for (final MapEntry(key: name, value: page) in pages.entries) {
+          final dir = Directory.systemTemp.createTempSync('lumtub_sweep');
+          final library = LibraryController(LibraryStore(File('${dir.path}/library.json')));
+          final controller = AppController()..library = library;
+          await tester.pumpWidget(MaterialApp(
+            theme: buildAppTheme(Colors.red, Brightness.light),
+            builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2)), child: child!),
             home: Scaffold(body: VideoActions(controller: controller, child: page(controller))),
           ));
           await tester.pump(const Duration(milliseconds: 600));

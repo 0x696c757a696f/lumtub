@@ -596,7 +596,7 @@ class AppearanceSettings {
           : font == null || font.trim().isEmpty || (font == bundledFont && raw['fontVersion'] != 2)
               ? autoFont
               : font,
-      textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
+      textScale: scale is num ? scale.toDouble().clamp(0.8, 2.0) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
       motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),

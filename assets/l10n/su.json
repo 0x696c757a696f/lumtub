@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (teu sayogi di dieu)",
   "Which messages show": "Pesen mana anu dipidangkeun",
   "Chat mode": "Mode obrolan",
-  "The installation is incomplete, so the chat can't be read": "Instalasina henteu lengkep, ku kituna obrolan teu tiasa dibaca"
+  "The installation is incomplete, so the chat can't be read": "Instalasina henteu lengkep, ku kituna obrolan teu tiasa dibaca",
+  "Audio description": "Pedaran audio",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Puter lagu pedaran lamun video boga, nu nerangkeun naon anu kajadian dina layar",
+  "{0} (audio description)": "{0} (pedaran audio)",
+  "Read subtitles aloud": "Bacakeun subtitel",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Pamaca layar anu keur hurung maca unggal baris subtitel anyar; subtitel anu digambar dina video téh gambar, jadi teu bisa dibacana",
+  "screen reader accessibility blind": "pamaca layar aksésibilitas tunanetra buta screen reader accessibility blind",
+  "Never hide": "Ulah pernah disumputkeun",
+  "Play (Space)": "Puter (Spasi)",
+  "Pause (Space)": "Eureun samentara (Spasi)",
+  "Length {0}": "Lilana {0}",
+  "{0}% watched": "{0}% geus ditonton",
+  "Scroll left": "Gulung ka kenca",
+  "Scroll right": "Gulung ka katuhu"
 }

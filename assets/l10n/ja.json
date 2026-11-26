@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "インストールが不完全なため、チャットを読み取れません",
   "Translate titles in lists": "リストのタイトルを翻訳",
   "Translation replaces the title": "訳文でタイトルを置き換え",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "ホーム、探索、登録チャンネル、履歴、検索、チャンネル、再生リストのページにある動画と再生リストのタイトルを、没入型翻訳と同じ言語に翻訳します。画面にしばらく表示されたタイトルだけを、タイトルの文字だけ送信します。すでにその言語のタイトルや、翻訳しない言語のタイトルはそのままです。訳文はこのコンピューターに保存されます。"
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "ホーム、探索、登録チャンネル、履歴、検索、チャンネル、再生リストのページにある動画と再生リストのタイトルを、没入型翻訳と同じ言語に翻訳します。画面にしばらく表示されたタイトルだけを、タイトルの文字だけ送信します。すでにその言語のタイトルや、翻訳しない言語のタイトルはそのままです。訳文はこのコンピューターに保存されます。",
+  "Audio description": "音声解説",
+  "Play the described sound track when a video has one, which tells what happens on screen": "解説音声トラックがある動画では、画面で起きていることを伝えるその音声を再生します",
+  "{0} (audio description)": "{0} (音声解説)",
+  "Read subtitles aloud": "字幕を読み上げる",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "スクリーンリーダーの実行中、新しい字幕を1行ずつ読み上げます。動画に描き込まれた字幕は画像のため読み上げられません",
+  "screen reader accessibility blind": "スクリーンリーダー アクセシビリティ 視覚障害 盲目 screen reader",
+  "Never hide": "常に表示",
+  "Play (Space)": "再生 (スペース)",
+  "Pause (Space)": "一時停止 (スペース)",
+  "Length {0}": "長さ {0}",
+  "{0}% watched": "{0}% 視聴済み",
+  "Scroll left": "左にスクロール",
+  "Scroll right": "右にスクロール"
 }

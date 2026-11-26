@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (nuk ofrohet këtu)",
   "Which messages show": "Cilat mesazhe shfaqen",
   "Chat mode": "Modaliteti i bisedës",
-  "The installation is incomplete, so the chat can't be read": "Instalimi është i paplotë, prandaj biseda nuk mund të lexohet"
+  "The installation is incomplete, so the chat can't be read": "Instalimi është i paplotë, prandaj biseda nuk mund të lexohet",
+  "Audio description": "Përshkrim audio",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Luan pistën audio përshkruese kur videoja ka një të tillë dhe tregon çfarë ndodh në ekran",
+  "{0} (audio description)": "{0} (përshkrim audio)",
+  "Read subtitles aloud": "Lexo titrat me zë",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Një lexues ekrani në punë thotë çdo rresht të ri titrash; titrat e vizatuara mbi video janë imazhe që ai nuk i lexon dot",
+  "screen reader accessibility blind": "lexues ekrani qasshmëri i verbër screen reader accessibility blind",
+  "Never hide": "Mos fshih kurrë",
+  "Play (Space)": "Luaj (Hapësirë)",
+  "Pause (Space)": "Pezullo (Hapësirë)",
+  "Length {0}": "Kohëzgjatja {0}",
+  "{0}% watched": "{0}% e parë",
+  "Scroll left": "Rrëshqit majtas",
+  "Scroll right": "Rrëshqit djathtas"
 }

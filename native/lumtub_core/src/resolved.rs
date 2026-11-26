@@ -45,8 +45,9 @@ pub struct Lost {
 pub struct AudioTrack {
     /// As yt-dlp's `language` has it: `en`, `es-US`.
     pub language: String,
-    /// `original`, `dub` (by the creator), `auto` (an automatic dub), or
-    /// empty when the format does not say.
+    /// `original`, `dub` (by the creator), `auto` (an automatic dub),
+    /// `described` (audio description, for blind and low-vision viewers),
+    /// or empty when the format does not say.
     pub kind: &'static str,
 }
 
@@ -55,7 +56,8 @@ fn kind_rank(kind: &str) -> u8 {
         "original" => 0,
         "dub" => 1,
         "auto" => 2,
-        _ => 3,
+        "described" => 3,
+        _ => 4,
     }
 }
 
@@ -63,7 +65,8 @@ fn kind_rank(kind: &str) -> u8 {
 /// original first, then creators' dubs, automatic dubs and the rest; empty
 /// unless the video has sound in more than one. The kind comes from the
 /// `audio_content` the core's own answers carry (YouTube's `acont`), else
-/// from yt-dlp's `format_note`. Descriptive tracks are left out.
+/// from yt-dlp's `format_note`. Described tracks come under a language of
+/// their own (`en-desc`), so choosing one never picks a dub.
 pub fn audio_tracks(info: &Value) -> Vec<AudioTrack> {
     let mut found: Vec<AudioTrack> = Vec::new();
     for format in info
@@ -94,10 +97,17 @@ pub fn audio_tracks(info: &Value) -> Vec<AudioTrack> {
             .get("audio_content")
             .and_then(Value::as_str)
             .unwrap_or_default();
-        if content == "descriptive" || note.contains("descriptive") || language.contains("desc") {
-            continue;
-        }
+        let described =
+            content == "descriptive" || note.contains("descriptive") || language.contains("desc");
+        // yt-dlp writes `en-desc`; answers that name it like the plain
+        // language get the same code of their own, keeping the two apart.
+        let language = if described && !language.contains("desc") {
+            format!("{language}-desc")
+        } else {
+            language.to_owned()
+        };
         let kind = match content {
+            _ if described => "described",
             "original" => "original",
             "dubbed-auto" => "auto",
             "dubbed" => "dub",
@@ -109,10 +119,7 @@ pub fn audio_tracks(info: &Value) -> Vec<AudioTrack> {
         match found.iter_mut().find(|t| t.language == language) {
             Some(known) if kind_rank(kind) < kind_rank(known.kind) => known.kind = kind,
             Some(_) => {}
-            None => found.push(AudioTrack {
-                language: language.to_owned(),
-                kind,
-            }),
+            None => found.push(AudioTrack { language, kind }),
         }
     }
     if found.len() < 2 {
@@ -589,7 +596,24 @@ mod tests {
                 ("en-US", "original"),
                 ("de", "dub"),
                 ("fr", "dub"),
-                ("it", "auto")
+                ("it", "auto"),
+                ("en-desc", "described")
+            ]
+        );
+        // Described sound named like the plain language gets a code of its own.
+        let described = formats(json!([
+            sound("en", "English original", None),
+            sound("en", "English descriptive", Some("descriptive")),
+        ]));
+        let list: Vec<(String, &str)> = audio_tracks(&described)
+            .into_iter()
+            .map(|t| (t.language, t.kind))
+            .collect();
+        assert_eq!(
+            list,
+            [
+                ("en".to_owned(), "original"),
+                ("en-desc".to_owned(), "described")
             ]
         );
         let one = formats(json!([sound("en", "English original", None)]));

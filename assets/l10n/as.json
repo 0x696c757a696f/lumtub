@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ইয়াত উপলব্ধ নহয়)",
   "Which messages show": "কোনবোৰ বাৰ্তা দেখুৱাব",
   "Chat mode": "চেট মোড",
-  "The installation is incomplete, so the chat can't be read": "ইনস্টলেচন অসম্পূৰ্ণ, সেয়েহে চেট পঢ়িব নোৱাৰি"
+  "The installation is incomplete, so the chat can't be read": "ইনস্টলেচন অসম্পূৰ্ণ, সেয়েহে চেট পঢ়িব নোৱাৰি",
+  "Audio description": "অডিঅ' বিৱৰণ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ভিডিঅ'ত বিৱৰণযুক্ত অডিঅ' ট্ৰেক থাকিলে সেয়া প্লে কৰক, যিয়ে পৰ্দাত কি ঘটিছে তাক কয়",
+  "{0} (audio description)": "{0} (অডিঅ' বিৱৰণ)",
+  "Read subtitles aloud": "ছাবটাইটেল পঢ়ি শুনাওক",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "চলি থকা স্ক্ৰীন ৰিডাৰে প্ৰতিটো নতুন ছাবটাইটেল শাৰী কয়; ভিডিঅ'ত অঁকা ছাবটাইটেল ছবি, সেয়া ই পঢ়িব নোৱাৰে",
+  "screen reader accessibility blind": "স্ক্ৰীন ৰিডাৰ সুলভতা অন্ধ screen reader accessibility blind",
+  "Never hide": "কেতিয়াও নুলুকাব",
+  "Play (Space)": "প্লে কৰক (স্পেচ)",
+  "Pause (Space)": "বিৰতি (স্পেচ)",
+  "Length {0}": "সময়কাল {0}",
+  "{0}% watched": "{0}% চোৱা হৈছে",
+  "Scroll left": "বাওঁফালে স্ক্ৰ'ল কৰক",
+  "Scroll right": "সোঁফালে স্ক্ৰ'ল কৰক"
 }

@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (burada sunulmuyor)",
   "Which messages show": "Hangi mesajlar gösterilsin",
   "Chat mode": "Sohbet modu",
-  "The installation is incomplete, so the chat can't be read": "Kurulum eksik olduğundan sohbet okunamıyor"
+  "The installation is incomplete, so the chat can't be read": "Kurulum eksik olduğundan sohbet okunamıyor",
+  "Audio description": "Sesli betimleme",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Videoda varsa, ekranda olanları anlatan betimleme ses parçasını oynat",
+  "{0} (audio description)": "{0} (sesli betimleme)",
+  "Read subtitles aloud": "Altyazıları sesli oku",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Çalışan bir ekran okuyucu her yeni altyazı satırını okur; videonun üzerine çizilmiş altyazılar görüntü olduğu için okuyamaz",
+  "screen reader accessibility blind": "ekran okuyucu erişilebilirlik görme engelli kör screen reader accessibility blind",
+  "Never hide": "Asla gizleme",
+  "Play (Space)": "Oynat (Boşluk)",
+  "Pause (Space)": "Duraklat (Boşluk)",
+  "Length {0}": "Süre {0}",
+  "{0}% watched": "%{0} izlendi",
+  "Scroll left": "Sola kaydır",
+  "Scroll right": "Sağa kaydır"
 }

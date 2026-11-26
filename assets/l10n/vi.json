@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (không có ở đây)",
   "Which messages show": "Những tin nhắn được hiển thị",
   "Chat mode": "Chế độ trò chuyện",
-  "The installation is incomplete, so the chat can't be read": "Bản cài đặt chưa đầy đủ nên không thể đọc cuộc trò chuyện"
+  "The installation is incomplete, so the chat can't be read": "Bản cài đặt chưa đầy đủ nên không thể đọc cuộc trò chuyện",
+  "Audio description": "Mô tả âm thanh",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Phát rãnh âm thanh mô tả khi video có, cho biết những gì diễn ra trên màn hình",
+  "{0} (audio description)": "{0} (mô tả âm thanh)",
+  "Read subtitles aloud": "Đọc to phụ đề",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Trình đọc màn hình đang chạy sẽ đọc từng dòng phụ đề mới; phụ đề vẽ trên video là hình ảnh nên trình đọc không đọc được",
+  "screen reader accessibility blind": "trình đọc màn hình hỗ trợ tiếp cận khiếm thị người mù screen reader accessibility blind",
+  "Never hide": "Không bao giờ ẩn",
+  "Play (Space)": "Phát (Dấu cách)",
+  "Pause (Space)": "Tạm dừng (Dấu cách)",
+  "Length {0}": "Thời lượng {0}",
+  "{0}% watched": "Đã xem {0}%",
+  "Scroll left": "Cuộn sang trái",
+  "Scroll right": "Cuộn sang phải"
 }

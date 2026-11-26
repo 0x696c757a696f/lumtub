@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (бул жерде жеткиликтүү эмес)",
   "Which messages show": "Кайсы билдирүүлөр көрсөтүлөт",
   "Chat mode": "Чат режими",
-  "The installation is incomplete, so the chat can't be read": "Орнотуу толук эмес, ошондуктан чатты окуу мүмкүн эмес"
+  "The installation is incomplete, so the chat can't be read": "Орнотуу толук эмес, ошондуктан чатты окуу мүмкүн эмес",
+  "Audio description": "Аудиосүрөттөмө",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Видеодо сүрөттөмөсү бар үн жолчосу болсо, аны ойнотот, ал экранда эмне болуп жатканын айтып берет",
+  "{0} (audio description)": "{0} (аудиосүрөттөмө)",
+  "Read subtitles aloud": "Субтитрлерди үн чыгарып окуу",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Иштеп турган экрандан окугуч ар бир жаңы субтитр сабын айтат; видеого тартылган субтитрлер сүрөт болгондуктан, аны окуй албайт",
+  "screen reader accessibility blind": "экрандан окугуч жеткиликтүүлүк сокур screen reader accessibility blind",
+  "Never hide": "Эч качан жашырбоо",
+  "Play (Space)": "Ойнотуу (Боштук)",
+  "Pause (Space)": "Тындыруу (Боштук)",
+  "Length {0}": "Узактыгы {0}",
+  "{0}% watched": "{0}% көрүлдү",
+  "Scroll left": "Солго жылдыруу",
+  "Scroll right": "Оңго жылдыруу"
 }

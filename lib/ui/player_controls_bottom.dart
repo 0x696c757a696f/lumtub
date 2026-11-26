@@ -337,11 +337,14 @@ class _PlayButton extends StatefulWidget {
 class _PlayButtonState extends State<_PlayButton> with SingleTickerProviderStateMixin {
   late final AnimationController _icon = AnimationController(vsync: this, duration: Motion.of(Ease.fade), value: widget.host._player.state.playing ? 1 : 0);
   StreamSubscription<bool>? _subscription;
+  late bool _playing = widget.host._player.state.playing;
 
   @override
   void initState() {
     super.initState();
     _subscription = widget.host._player.stream.playing.listen((playing) {
+      // The name says what a press does now, for the screen reader.
+      if (playing != _playing && mounted) setState(() => _playing = playing);
       if (playing) {
         unawaited(_icon.forward());
       } else {
@@ -361,7 +364,7 @@ class _PlayButtonState extends State<_PlayButton> with SingleTickerProviderState
   Widget build(BuildContext context) {
     final touch = touchFirst;
     return _Pressable(
-      tooltip: tr('Play/Pause (Space)'),
+      tooltip: _playing ? tr('Pause (Space)') : tr('Play (Space)'),
       width: touch ? 48 : 42,
       height: touch ? 40 : 34,
       onTap: () {

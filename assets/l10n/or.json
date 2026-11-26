@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ଏଠାରେ ଉପଲବ୍ଧ ନୁହେଁ)",
   "Which messages show": "କେଉଁ ବାର୍ତ୍ତା ଦେଖାଇବେ",
   "Chat mode": "ଚାଟ୍ ମୋଡ୍",
-  "The installation is incomplete, so the chat can't be read": "ଇନଷ୍ଟଲେସନ୍ ଅସମ୍ପୂର୍ଣ୍ଣ, ତେଣୁ ଚାଟ୍ ପଢ଼ାଯାଇପାରିବ ନାହିଁ"
+  "The installation is incomplete, so the chat can't be read": "ଇନଷ୍ଟଲେସନ୍ ଅସମ୍ପୂର୍ଣ୍ଣ, ତେଣୁ ଚାଟ୍ ପଢ଼ାଯାଇପାରିବ ନାହିଁ",
+  "Audio description": "ଅଡିଓ ବର୍ଣ୍ଣନା",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ଭିଡିଓରେ ବର୍ଣ୍ଣନାତ୍ମକ ସାଉଣ୍ଡ ଟ୍ରାକ ଥିଲେ ତାହା ଚଳାନ୍ତୁ, ଯାହା ସ୍କ୍ରିନରେ କଣ ଘଟୁଛି ତାହା କହେ",
+  "{0} (audio description)": "{0} (ଅଡିଓ ବର୍ଣ୍ଣନା)",
+  "Read subtitles aloud": "ସବ୍ଟାଇଟଲ ଜୋରରେ ପଢ଼ନ୍ତୁ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ଚାଲୁଥିବା ସ୍କ୍ରିନ ରିଡର ପ୍ରତ୍ୟେକ ନୂଆ ସବ୍ଟାଇଟଲ ଧାଡ଼ି କହେ; ଭିଡିଓ ଉପରେ ଆଙ୍କାଯାଇଥିବା ସବ୍ଟାଇଟଲ ଛବି ହୋଇଥିବାରୁ ତାହା ପଢ଼ିପାରେ ନାହିଁ",
+  "screen reader accessibility blind": "ସ୍କ୍ରିନ ରିଡର ସୁଗମତା ଅନ୍ଧ screen reader accessibility blind",
+  "Never hide": "କେବେ ଲୁଚାନ୍ତୁ ନାହିଁ",
+  "Play (Space)": "ଚଳାନ୍ତୁ (Space)",
+  "Pause (Space)": "ବିରତ (Space)",
+  "Length {0}": "ଅବଧି {0}",
+  "{0}% watched": "{0}% ଦେଖାଯାଇଛି",
+  "Scroll left": "ବାମକୁ ସ୍କ୍ରୋଲ କରନ୍ତୁ",
+  "Scroll right": "ଡାହାଣକୁ ସ୍କ୍ରୋଲ କରନ୍ତୁ"
 }

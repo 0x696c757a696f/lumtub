@@ -379,7 +379,8 @@ class _CommentTile extends StatelessWidget {
                 cursor: canOpen ? SystemMouseCursors.click : MouseCursor.defer,
                 child: GestureDetector(
                   onTap: canOpen ? openAuthor : null,
-                  child: Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
+                  excludeFromSemantics: true,
+                  child: Semantics(link: canOpen, onTap: canOpen ? openAuthor : null, child: Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null))),
                 ),
               ),
               Text(comment.published, style: small),

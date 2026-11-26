@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "Установка неполная, поэтому чат невозможно прочитать",
   "Translate titles in lists": "Переводить названия в списках",
   "Translation replaces the title": "Перевод вместо названия",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "Названия видео и плейлистов на главной, в обзоре, подписках, истории, поиске и на страницах каналов и плейлистов переводятся на тот же язык, что и иммерсивный перевод. Отправляются только названия, которые задержались на экране, и только их текст; названия, уже написанные на этом языке или на языке из списка непереводимых, не трогаются. Переводы хранятся на этом компьютере."
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "Названия видео и плейлистов на главной, в обзоре, подписках, истории, поиске и на страницах каналов и плейлистов переводятся на тот же язык, что и иммерсивный перевод. Отправляются только названия, которые задержались на экране, и только их текст; названия, уже написанные на этом языке или на языке из списка непереводимых, не трогаются. Переводы хранятся на этом компьютере.",
+  "Audio description": "Аудиодескрипция",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Воспроизводит звуковую дорожку с описанием, если она есть у видео, и рассказывает, что происходит на экране",
+  "{0} (audio description)": "{0} (аудиодескрипция)",
+  "Read subtitles aloud": "Читать субтитры вслух",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Работающая программа экранного доступа произносит каждую новую строку субтитров; субтитры, нарисованные на видео, — это изображения, и прочитать их она не может",
+  "screen reader accessibility blind": "программа экранного доступа скринридер доступность незрячие screen reader accessibility blind",
+  "Never hide": "Никогда не скрывать",
+  "Play (Space)": "Воспроизвести (пробел)",
+  "Pause (Space)": "Пауза (пробел)",
+  "Length {0}": "Длительность {0}",
+  "{0}% watched": "Просмотрено {0}%",
+  "Scroll left": "Прокрутить влево",
+  "Scroll right": "Прокрутить вправо"
 }

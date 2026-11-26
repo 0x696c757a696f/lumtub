@@ -131,7 +131,7 @@ List<(AiFilterMode, String)> get _aiFilterModes => [
     ];
 List<(FeedLevel, String)> get _feedLevels => [(FeedLevel.off, tr('Any')), (FeedLevel.reduce, tr('Fewer')), (FeedLevel.drop, tr("Don't recommend"))];
 List<(int, String)> get _feedIntervals => [(5, tr('5 minutes')), (10, tr('10 minutes')), (30, tr('30 minutes')), (60, tr('1 hour')), (180, tr('3 hours'))];
-List<(int, String)> get _hideTimes => [(2, tr('2 seconds')), (3, tr('3 seconds (default)')), (5, tr('5 seconds')), (10, tr('10 seconds')), (30, tr('30 seconds (for screen readers)'))];
+List<(int, String)> get _hideTimes => [(2, tr('2 seconds')), (3, tr('3 seconds (default)')), (5, tr('5 seconds')), (10, tr('10 seconds')), (30, tr('30 seconds (for screen readers)')), (0, tr('Never hide'))];
 List<(int, String)> get _volumeMaxes => [(100, tr('100% (no boost)')), (130, '130%'), (150, '150%'), (200, '200%')];
 
 String labelOf<T>(List<(T, String)> values, T value) {
@@ -657,6 +657,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.subtitles),
               onTap: () => openSubtitleSettings(context, controller),
             ), subtitle: tr('Turn on subtitles automatically, subtitle language, subtitle size')),
+        SettingEntry(tr('Read subtitles aloud'), (context) => SwitchItem(
+              title: tr('Read subtitles aloud'),
+              subtitle: tr('A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read'),
+              leading: _icon(AppIcons.speakerHigh),
+              value: prefs.speakSubtitles,
+              onChanged: (v) => savePrefs(prefs.copyWith(speakSubtitles: v)),
+            ), subtitle: tr('screen reader accessibility blind')),
+        SettingEntry(tr('Audio description'), (context) => SwitchItem(
+              title: tr('Audio description'),
+              subtitle: tr('Play the described sound track when a video has one, which tells what happens on screen'),
+              leading: _icon(AppIcons.ear),
+              value: prefs.audioDescription,
+              onChanged: (v) => savePrefs(prefs.copyWith(audioDescription: v)),
+            ), subtitle: tr('screen reader accessibility blind')),
         SettingEntry(tr('Translation & AI'), (context) => NormalItem(
               title: tr('Translation & AI'),
               subtitle: tr('Translation: {0} · AI: {1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('Not set')]),
@@ -706,7 +720,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
     SettingsCategory.controls => [
         SettingEntry(tr('Show playback controls longer'), (context) => NormalItem(
               title: tr('Playback controls display time'),
-              subtitle: tr('Hide after {0} without mouse movement', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
+              subtitle: prefs.controlsHideSeconds == 0 ? tr('Never hide') : tr('Hide after {0} without mouse movement', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
               leading: _icon(AppIcons.handTap),
               onTap: () => pickFromDialog<int>(context, title: tr('Playback controls display time'), value: prefs.controlsHideSeconds, values: _hideTimes, onSelected: (v) => savePrefs(prefs.copyWith(controlsHideSeconds: v))),
             ), subtitle: tr('Controls hide')),

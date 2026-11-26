@@ -561,7 +561,9 @@ class _AppShellState extends State<AppShell> {
               final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
               final railAside = theater || (_controller.onWatchPage && !_controller.mini && _controller.appearance.watchHidesRail);
               final peekTopBar = theater && !touchFirst;
-              Widget topBar() => _region(
+              // Tab walks the top bar, the rail and the page each to its
+              // end before the next, not across them by position.
+              Widget topBar() => FocusTraversalGroup(child: _region(
                     () => _TopBar.shownOf(_controller),
                     (context) => _TopBar(
                       wide: wide,
@@ -570,7 +572,7 @@ class _AppShellState extends State<AppShell> {
                       searchFocus: _searchFocus,
                       onSubmit: _submitSearch,
                     ),
-                  );
+                  ));
               final skinRail = skin != null && skin.drawsRail;
               _tvRail = Device.tv && rail && !skinRail;
               // The bar to show at the bottom, also while it slides away.
@@ -590,7 +592,7 @@ class _AppShellState extends State<AppShell> {
                     Row(children: [
                       AnimatedVisibility.rail(
                         visible: rail && !watchingOnPhone && !railAside,
-                        child: _region(
+                        child: FocusTraversalGroup(child: _region(
                           () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
                           (context) => skinRail ? SkinRail(
                             skin: skin,
@@ -598,9 +600,9 @@ class _AppShellState extends State<AppShell> {
                             selected: _selectedIndex,
                             onSelected: _select,
                           ) : _navigationRail(context),
-                        ),
+                        )),
                       ),
-                      Expanded(child: KeyedSubtree(key: KeyScroll.area, child: _region(
+                      Expanded(child: FocusTraversalGroup(child: KeyedSubtree(key: KeyScroll.area, child: _region(
                         () => (_pageKey, _slideIndex),
                         (context) => PageSwitcher(
                           // Keyed per page so each page's list keeps its scroll position
@@ -616,7 +618,7 @@ class _AppShellState extends State<AppShell> {
                             builder: (context) => VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content()))),
                           ),
                         ),
-                      ))),
+                      )))),
                     ]),
                     // The video keeps playing over the pages; the watch page
                     // is not mounted meanwhile, so the card has the only Video.

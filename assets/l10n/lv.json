@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (šeit nav pieejams)",
   "Which messages show": "Kuri ziņojumi tiek rādīti",
   "Chat mode": "Čata režīms",
-  "The installation is incomplete, so the chat can't be read": "Instalēšana ir nepilnīga, tāpēc čatu nevar nolasīt"
+  "The installation is incomplete, so the chat can't be read": "Instalēšana ir nepilnīga, tāpēc čatu nevar nolasīt",
+  "Audio description": "Audioapraksts",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Atskaņo aprakstošo audio celiņu, ja videoklipam tāds ir; tas pastāsta, kas notiek ekrānā",
+  "{0} (audio description)": "{0} (audioapraksts)",
+  "Read subtitles aloud": "Lasīt subtitrus skaļi",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Darbojošs ekrāna lasītājs izrunā katru jauno subtitru rindiņu; uz video uzzīmēti subtitri ir attēli, kurus tas nevar nolasīt",
+  "screen reader accessibility blind": "ekrāna lasītājs pieejamība neredzīgs screen reader accessibility blind",
+  "Never hide": "Nekad neslēpt",
+  "Play (Space)": "Atskaņot (atstarpe)",
+  "Pause (Space)": "Apturēt (atstarpe)",
+  "Length {0}": "Ilgums {0}",
+  "{0}% watched": "Noskatīti {0}%",
+  "Scroll left": "Ritināt pa kreisi",
+  "Scroll right": "Ritināt pa labi"
 }

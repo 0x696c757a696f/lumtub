@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (tukaj ni na voljo)",
   "Which messages show": "Katera sporočila se prikažejo",
   "Chat mode": "Način klepeta",
-  "The installation is incomplete, so the chat can't be read": "Namestitev je nepopolna, zato klepeta ni mogoče prebrati"
+  "The installation is incomplete, so the chat can't be read": "Namestitev je nepopolna, zato klepeta ni mogoče prebrati",
+  "Audio description": "Zvočni opis",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Predvajaj opisno zvočno sled, če jo ima videoposnetek; pove, kaj se dogaja na zaslonu",
+  "{0} (audio description)": "{0} (zvočni opis)",
+  "Read subtitles aloud": "Preberi podnapise na glas",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Delujoči bralnik zaslona prebere vsako novo vrstico podnapisov; podnapisi, narisani na videoposnetku, so slike, ki jih ne more prebrati",
+  "screen reader accessibility blind": "bralnik zaslona dostopnost slep slepi screen reader accessibility blind",
+  "Never hide": "Nikoli ne skrij",
+  "Play (Space)": "Predvajaj (preslednica)",
+  "Pause (Space)": "Zaustavi (preslednica)",
+  "Length {0}": "Trajanje {0}",
+  "{0}% watched": "Ogledano {0} %",
+  "Scroll left": "Pomakni levo",
+  "Scroll right": "Pomakni desno"
 }

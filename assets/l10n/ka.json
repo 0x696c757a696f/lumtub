@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (აქ ხელმისაწვდომი არ არის)",
   "Which messages show": "რომელი შეტყობინებები გამოჩნდეს",
   "Chat mode": "ჩატის რეჟიმი",
-  "The installation is incomplete, so the chat can't be read": "ინსტალაცია არასრულია, ამიტომ ჩატის წაკითხვა შეუძლებელია"
+  "The installation is incomplete, so the chat can't be read": "ინსტალაცია არასრულია, ამიტომ ჩატის წაკითხვა შეუძლებელია",
+  "Audio description": "აუდიოაღწერა",
+  "Play the described sound track when a video has one, which tells what happens on screen": "უკრავს აღწერილობით ხმოვან ტრეკს, თუ ვიდეოს აქვს, და მოგვითხრობს, რა ხდება ეკრანზე",
+  "{0} (audio description)": "{0} (აუდიოაღწერა)",
+  "Read subtitles aloud": "სუბტიტრების ხმამაღლა წაკითხვა",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ჩართული ეკრანის წამკითხველი კითხულობს სუბტიტრის ყოველ ახალ ხაზს; ვიდეოზე დახატული სუბტიტრები სურათებია და მათ ვერ კითხულობს",
+  "screen reader accessibility blind": "ეკრანის წამკითხველი ხელმისაწვდომობა უსინათლო screen reader accessibility blind",
+  "Never hide": "არასოდეს დამალვა",
+  "Play (Space)": "დაკვრა (Space)",
+  "Pause (Space)": "პაუზა (Space)",
+  "Length {0}": "ხანგრძლივობა {0}",
+  "{0}% watched": "ნანახია {0}%",
+  "Scroll left": "გადაადგილება მარცხნივ",
+  "Scroll right": "გადაადგილება მარჯვნივ"
 }

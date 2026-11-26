@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (در اینجا ارائه نمی‌شود)",
   "Which messages show": "کدام پیام‌ها نمایش داده شوند",
   "Chat mode": "حالت گفتگو",
-  "The installation is incomplete, so the chat can't be read": "نصب ناقص است، بنابراین گفتگو خوانده نمی‌شود"
+  "The installation is incomplete, so the chat can't be read": "نصب ناقص است، بنابراین گفتگو خوانده نمی‌شود",
+  "Audio description": "توصیف صوتی",
+  "Play the described sound track when a video has one, which tells what happens on screen": "در صورت وجود، شاخه صدای توصیفی ویدیو را که توضیح می‌دهد روی صفحه چه می‌گذرد پخش می‌کند",
+  "{0} (audio description)": "{0} (توصیف صوتی)",
+  "Read subtitles aloud": "خواندن بلند زیرنویس",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "صفحه‌خوان فعال هر خط جدید زیرنویس را می‌خواند؛ زیرنویس‌های ترسیم‌شده روی ویدیو تصویر هستند و صفحه‌خوان نمی‌تواند آن‌ها را بخواند",
+  "screen reader accessibility blind": "صفحه‌خوان دسترس‌پذیری نابینا screen reader accessibility blind",
+  "Never hide": "هرگز پنهان نشود",
+  "Play (Space)": "پخش (Space)",
+  "Pause (Space)": "توقف (Space)",
+  "Length {0}": "مدت {0}",
+  "{0}% watched": "{0}% دیده‌شده",
+  "Scroll left": "پیمایش به چپ",
+  "Scroll right": "پیمایش به راست"
 }

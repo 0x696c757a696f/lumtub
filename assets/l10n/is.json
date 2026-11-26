@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ekki í boði hér)",
   "Which messages show": "Hvaða skilaboð birtast",
   "Chat mode": "Spjallhamur",
-  "The installation is incomplete, so the chat can't be read": "Uppsetningin er ófullkomin og því er ekki hægt að lesa spjallið"
+  "The installation is incomplete, so the chat can't be read": "Uppsetningin er ófullkomin og því er ekki hægt að lesa spjallið",
+  "Audio description": "Hljóðlýsing",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Spilar hljóðrás með lýsingu ef myndskeiðið er með slíka og segir frá því sem gerist á skjánum",
+  "{0} (audio description)": "{0} (hljóðlýsing)",
+  "Read subtitles aloud": "Lesa skjátexta upphátt",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Skjálesari sem er í gangi les hverja nýja skjátextalínu; skjátextar sem eru teiknaðir á myndskeiðið eru myndir sem hann getur ekki lesið",
+  "screen reader accessibility blind": "skjálesari aðgengi blindir screen reader accessibility blind",
+  "Never hide": "Aldrei fela",
+  "Play (Space)": "Spila (bil)",
+  "Pause (Space)": "Bið (bil)",
+  "Length {0}": "Lengd {0}",
+  "{0}% watched": "{0}% skoðað",
+  "Scroll left": "Fletta til vinstri",
+  "Scroll right": "Fletta til hægri"
 }

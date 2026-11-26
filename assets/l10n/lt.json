@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (čia nepasiūloma)",
   "Which messages show": "Kurie pranešimai rodomi",
   "Chat mode": "Pokalbio režimas",
-  "The installation is incomplete, so the chat can't be read": "Diegimas neišsamus, todėl pokalbio perskaityti negalima"
+  "The installation is incomplete, so the chat can't be read": "Diegimas neišsamus, todėl pokalbio perskaityti negalima",
+  "Audio description": "Garso aprašymas",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Groja aprašomąjį garso takelį, jei vaizdo įrašas jį turi; jis pasakoja, kas vyksta ekrane",
+  "{0} (audio description)": "{0} (garso aprašymas)",
+  "Read subtitles aloud": "Skaityti subtitrus balsu",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Veikiantis ekrano skaitytuvas perskaito kiekvieną naują subtitrų eilutę; ant vaizdo įrašo nupiešti subtitrai yra paveikslėliai, kurių jis perskaityti negali",
+  "screen reader accessibility blind": "ekrano skaitytuvas pritaikymas neįgaliesiems aklieji screen reader accessibility blind",
+  "Never hide": "Niekada neslėpti",
+  "Play (Space)": "Groti (tarpas)",
+  "Pause (Space)": "Pristabdyti (tarpas)",
+  "Length {0}": "Trukmė {0}",
+  "{0}% watched": "Peržiūrėta {0} %",
+  "Scroll left": "Slinkti kairėn",
+  "Scroll right": "Slinkti dešinėn"
 }

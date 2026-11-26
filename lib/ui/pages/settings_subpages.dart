@@ -36,7 +36,7 @@ const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
 Widget _header(BuildContext context, String text) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: context.colors.primary)),
+      child: Semantics(header: true, child: Text(text, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: context.colors.primary))),
     );
 
 Widget _tip(BuildContext context, String text) => Padding(
@@ -751,15 +751,18 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
 
       Future<void> toggleSystemAccent() => controller.saveAppearance(appearance.copyWith(systemAccent: !appearance.systemAccent, skin: '', palette: ''));
 
-      Widget swatch(String label, Color seed, bool selected, VoidCallback onTap) => GestureDetector(
-            behavior: HitTestBehavior.opaque,
+      Widget swatch(String label, Color seed, bool selected, VoidCallback onTap) => Semantics(
+            selected: selected,
+            inMutuallyExclusiveGroup: true,
+            child: InkWell(
+            borderRadius: AppStyle.controlRadius,
             onTap: onTap,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               ColorPalette(colorScheme: schemeOf(seed), selected: selected),
               const SizedBox(height: 4),
               Text(label, style: TextStyle(fontSize: 12, color: selected ? context.colors.onSurface : context.colors.outline)),
             ]),
-          );
+          ));
 
       return [
         _header(context, tr('Custom')),
@@ -934,10 +937,12 @@ class _FontPageState extends State<_FontPage> {
               child: Row(children: [
                 Expanded(
                   child: Slider(
-                    value: appearance.textScale.clamp(0.8, 1.4),
+                    value: appearance.textScale.clamp(0.8, 2.0),
                     min: 0.8,
-                    max: 1.4,
-                    divisions: 12,
+                    // Twice the size is what low vision asks of an app
+                    // (WCAG 1.4.4); macOS passes no system size to add to.
+                    max: 2.0,
+                    divisions: 24,
                     label: '$percent%',
                     onChanged: (v) => widget.controller.saveAppearance(widget.controller.appearance.copyWith(textScale: double.parse(v.toStringAsFixed(2)))),
                   ),

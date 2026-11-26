@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (tidak tersedia di sini)",
   "Which messages show": "Pesan yang ditampilkan",
   "Chat mode": "Mode chat",
-  "The installation is incomplete, so the chat can't be read": "Penginstalan tidak lengkap, sehingga chat tidak dapat dibaca"
+  "The installation is incomplete, so the chat can't be read": "Penginstalan tidak lengkap, sehingga chat tidak dapat dibaca",
+  "Audio description": "Deskripsi audio",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Putar trek suara deskriptif jika video memilikinya, yang menjelaskan apa yang terjadi di layar",
+  "{0} (audio description)": "{0} (deskripsi audio)",
+  "Read subtitles aloud": "Bacakan subtitel",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Pembaca layar yang aktif membacakan setiap baris subtitel baru; subtitel yang tergambar pada video berupa gambar sehingga tidak dapat dibacanya",
+  "screen reader accessibility blind": "pembaca layar aksesibilitas tunanetra buta screen reader accessibility blind",
+  "Never hide": "Jangan pernah sembunyikan",
+  "Play (Space)": "Putar (Spasi)",
+  "Pause (Space)": "Jeda (Spasi)",
+  "Length {0}": "Durasi {0}",
+  "{0}% watched": "{0}% ditonton",
+  "Scroll left": "Gulir ke kiri",
+  "Scroll right": "Gulir ke kanan"
 }

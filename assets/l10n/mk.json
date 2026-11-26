@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (не е достапно овде)",
   "Which messages show": "Кои пораки се прикажуваат",
   "Chat mode": "Режим на разговор",
-  "The installation is incomplete, so the chat can't be read": "Инсталацијата е нецелосна, па разговорот не може да се прочита"
+  "The installation is incomplete, so the chat can't be read": "Инсталацијата е нецелосна, па разговорот не може да се прочита",
+  "Audio description": "Аудиоопис",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Пушти ја опишувачката звучна патека кога видеото има таква; таа раскажува што се случува на екранот",
+  "{0} (audio description)": "{0} (аудиоопис)",
+  "Read subtitles aloud": "Читај ги титловите наглас",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Активен читач на екран ја изговара секоја нова линија од титлот; титловите нацртани на видеото се слики што не може да ги прочита",
+  "screen reader accessibility blind": "читач на екран пристапност слеп",
+  "Never hide": "Никогаш не криј",
+  "Play (Space)": "Пушти (Space)",
+  "Pause (Space)": "Паузирај (Space)",
+  "Length {0}": "Траење {0}",
+  "{0}% watched": "{0}% изгледано",
+  "Scroll left": "Лизгај налево",
+  "Scroll right": "Лизгај надесно"
 }

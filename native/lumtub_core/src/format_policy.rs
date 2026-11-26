@@ -250,12 +250,21 @@ impl Settings {
 
     /// [Settings::audio_language] as a filter on yt-dlp's `language` of an
     /// audio format, none for the original audio. Descriptive tracks
-    /// (`en-desc`) are never a dub.
+    /// (`en-desc`, with audio description for blind viewers) are played
+    /// only when asked for by that code, never in place of a dub.
     fn language_filter(&self) -> String {
         let code = self.audio_language.trim();
         let plain = code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
         if code.is_empty() || !plain {
             return String::new();
+        }
+        // yt-dlp marks described sound in the language: `en-desc`.
+        // `desc` alone is any the video has, as the setting asks for.
+        if code == "desc" {
+            return "[language*=desc]".to_owned();
+        }
+        if let Some(base) = code.strip_suffix("-desc") {
+            return format!("[language^={base}][language*=desc]");
         }
         format!("[language^={code}][language!*=desc]")
     }
@@ -494,6 +503,14 @@ mod tests {
         assert_eq!(
             settings(r#"{"audioLanguage":"it]x"}"#).expression(),
             original
+        );
+        assert_eq!(
+            settings(r#"{"audioLanguage":"en-desc"}"#).expression(),
+            "bestvideo+bestaudio[language^=en][language*=desc]/bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/best/best"
+        );
+        assert_eq!(
+            settings(r#"{"audioLanguage":"desc"}"#).expression(),
+            "bestvideo+bestaudio[language*=desc]/bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/best/best"
         );
     }
 

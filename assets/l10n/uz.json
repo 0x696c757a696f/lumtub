@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (bu yerda mavjud emas)",
   "Which messages show": "Qaysi xabarlar ko'rsatiladi",
   "Chat mode": "Chat rejimi",
-  "The installation is incomplete, so the chat can't be read": "O'rnatish to'liq emas, shuning uchun chatni o'qib bo'lmaydi"
+  "The installation is incomplete, so the chat can't be read": "O'rnatish to'liq emas, shuning uchun chatni o'qib bo'lmaydi",
+  "Audio description": "Audio tavsif",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Videoda tavsif beruvchi audio trek bo‘lsa, uni ijro etish; u ekranda nima bo‘layotganini aytib beradi",
+  "{0} (audio description)": "{0} (audio tavsif)",
+  "Read subtitles aloud": "Taglavhalarni ovoz chiqarib o‘qish",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Ishlayotgan ekran o‘quvchi har bir yangi taglavha qatorini o‘qiydi; video ustiga chizilgan taglavhalar rasm bo‘lgani uchun uni o‘qiy olmaydi",
+  "screen reader accessibility blind": "ekran o‘quvchi qulaylik ko‘zi ojiz",
+  "Never hide": "Hech qachon yashirmaslik",
+  "Play (Space)": "Ijro (probel)",
+  "Pause (Space)": "Pauza (probel)",
+  "Length {0}": "Davomiyligi {0}",
+  "{0}% watched": "{0}% ko‘rilgan",
+  "Scroll left": "Chapga surish",
+  "Scroll right": "O‘ngga surish"
 }

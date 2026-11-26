@@ -226,7 +226,7 @@ void _say(BuildContext context, String text) => ScaffoldMessenger.of(context).sh
 
 Widget _header(BuildContext context, String text) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: context.colors.primary)),
+      child: Semantics(header: true, child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: context.colors.primary))),
     );
 
 Widget _tip(BuildContext context, String text) => Padding(

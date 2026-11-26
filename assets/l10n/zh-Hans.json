@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "安装不完整，无法读取聊天",
   "Translate titles in lists": "列表标题翻译",
   "Translation replaces the title": "译文替换标题",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "首页、探索、订阅、历史记录、搜索、频道和播放列表页里的视频与播放列表标题，会翻译成与沉浸式翻译相同的语言。只有在屏幕上停留片刻的标题才会发送，且只发送标题文字；已是该语言或属于“不翻译的语言”的标题保持原样。译文保存在本机。"
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "首页、探索、订阅、历史记录、搜索、频道和播放列表页里的视频与播放列表标题，会翻译成与沉浸式翻译相同的语言。只有在屏幕上停留片刻的标题才会发送，且只发送标题文字；已是该语言或属于“不翻译的语言”的标题保持原样。译文保存在本机。",
+  "Audio description": "口述影像",
+  "Play the described sound track when a video has one, which tells what happens on screen": "视频有口述影像音轨时优先播放，讲解画面上发生的事",
+  "{0} (audio description)": "{0}（口述影像）",
+  "Read subtitles aloud": "朗读字幕",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "屏幕阅读器开着时朗读每一句新字幕；画在视频上的字幕是图像，读屏读不到",
+  "screen reader accessibility blind": "屏幕阅读器 读屏 无障碍 视障 盲人 accessibility",
+  "Never hide": "一直显示",
+  "Play (Space)": "播放 (空格)",
+  "Pause (Space)": "暂停 (空格)",
+  "Length {0}": "时长 {0}",
+  "{0}% watched": "已看 {0}%",
+  "Scroll left": "向左滚动",
+  "Scroll right": "向右滚动"
 }

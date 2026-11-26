@@ -86,7 +86,7 @@ class ChineseRubyLine extends StatelessWidget {
       if (onWord != null) {
         block = MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => onWord!(token), child: block),
+          child: GestureDetector(behavior: HitTestBehavior.opaque, excludeFromSemantics: true, onTap: () => onWord!(token), child: Semantics(button: true, onTap: () => onWord!(token), child: block)),
         );
       }
       // The outline reaches past the letters; the room keeps the space between words.

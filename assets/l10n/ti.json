@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ኣብዚ ኣይቀርብን እዩ)",
   "Which messages show": "እንታይ መልእኽቲታት ይርአዩ",
   "Chat mode": "ኩነት ዕላል",
-  "The installation is incomplete, so the chat can't be read": "ምትካል ኣይተማልአን፣ ስለዚ ዕላል ክንበብ ኣይከኣልን"
+  "The installation is incomplete, so the chat can't be read": "ምትካል ኣይተማልአን፣ ስለዚ ዕላል ክንበብ ኣይከኣልን",
+  "Audio description": "ድምጺ መግለጺ",
+  "Play the described sound track when a video has one, which tells what happens on screen": "ቪድዮ ድምጺ መግለጺ ዘለዎ ምስ ዝኸውን እቲ ኣብ ስክሪን እንታይ ከም ዝካየድ ዝነግር ትራክ ጸውት",
+  "{0} (audio description)": "{0} (ድምጺ መግለጺ)",
+  "Read subtitles aloud": "ትርጉም ጽሑፍ ብድምጺ ኣንብብ",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "ዝሰርሕ ናይ ስክሪን ኣንባቢ ነፍሲ ወከፍ ሓዳስ መስመር ትርጉም ጽሑፍ ይብል፤ ኣብ ቪድዮ ዝተሳእሉ ትርጉም ጽሑፋት ስእልታት ስለዝኾኑ ከንብቦም ኣይክእልን",
+  "screen reader accessibility blind": "ስክሪን ኣንባቢ ተበፃሕነት ዓዋር screen reader accessibility blind",
+  "Never hide": "ፈጺምካ ኣይተሕብእ",
+  "Play (Space)": "ጸውት (Space)",
+  "Pause (Space)": "ደው በል (Space)",
+  "Length {0}": "ንውሓት {0}",
+  "{0}% watched": "{0}% ዝተራእየ",
+  "Scroll left": "ናብ ጸጋም ሸብልል",
+  "Scroll right": "ናብ የማን ሸብልል"
 }

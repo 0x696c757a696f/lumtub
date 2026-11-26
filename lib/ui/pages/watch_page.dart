@@ -1312,7 +1312,7 @@ class _UpNext extends StatelessWidget {
         // than pushing it out of the panel.
         child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Row(mainAxisSize: MainAxisSize.min, children: [
-            Flexible(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+            Flexible(child: Semantics(header: true, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)))),
             if (note != null) ...[const SizedBox(width: 8), Flexible(child: Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)))],
           ]),
           if (trailing != null) trailing,

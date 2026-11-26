@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ei saatavilla täällä)",
   "Which messages show": "Mitkä viestit näytetään",
   "Chat mode": "Chat-tila",
-  "The installation is incomplete, so the chat can't be read": "Asennus on epätäydellinen, joten chattia ei voi lukea"
+  "The installation is incomplete, so the chat can't be read": "Asennus on epätäydellinen, joten chattia ei voi lukea",
+  "Audio description": "Äänikuvailu",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Toista kuvailuääniraita, jos videolla on sellainen. Se kertoo, mitä ruudulla tapahtuu",
+  "{0} (audio description)": "{0} (äänikuvailu)",
+  "Read subtitles aloud": "Lue tekstitys ääneen",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Käynnissä oleva ruudunlukija lukee jokaisen uuden tekstitysrivin; videoon piirretty tekstitys on kuvaa, jota se ei voi lukea",
+  "screen reader accessibility blind": "ruudunlukija saavutettavuus sokea screen reader accessibility blind",
+  "Never hide": "Älä koskaan piilota",
+  "Play (Space)": "Toista (välilyönti)",
+  "Pause (Space)": "Keskeytä (välilyönti)",
+  "Length {0}": "Kesto {0}",
+  "{0}% watched": "{0} % katsottu",
+  "Scroll left": "Vieritä vasemmalle",
+  "Scroll right": "Vieritä oikealle"
 }

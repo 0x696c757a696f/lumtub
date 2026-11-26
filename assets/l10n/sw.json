@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (haipatikani hapa)",
   "Which messages show": "Ujumbe upi uonyeshwe",
   "Chat mode": "Hali ya gumzo",
-  "The installation is incomplete, so the chat can't be read": "Usakinishaji haujakamilika, kwa hivyo gumzo haliwezi kusomwa"
+  "The installation is incomplete, so the chat can't be read": "Usakinishaji haujakamilika, kwa hivyo gumzo haliwezi kusomwa",
+  "Audio description": "Maelezo ya sauti",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Cheza wimbo wa sauti wenye maelezo video ikiwa nao, unaosimulia kinachotokea kwenye skrini",
+  "{0} (audio description)": "{0} (maelezo ya sauti)",
+  "Read subtitles aloud": "Soma manukuu kwa sauti",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Kisomaji cha skrini kinachofanya kazi husema kila mstari mpya wa manukuu; manukuu yaliyochorwa kwenye video ni picha ambazo hakiwezi kuzisoma",
+  "screen reader accessibility blind": "kisomaji cha skrini ufikivu kipofu screen reader accessibility blind",
+  "Never hide": "Usifiche kamwe",
+  "Play (Space)": "Cheza (Nafasi)",
+  "Pause (Space)": "Sitisha (Nafasi)",
+  "Length {0}": "Muda {0}",
+  "{0}% watched": "Umetazamwa {0}%",
+  "Scroll left": "Sogeza kushoto",
+  "Scroll right": "Sogeza kulia"
 }

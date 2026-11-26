@@ -77,6 +77,16 @@ class MainActivity : FlutterActivity() {
         }
         channel.setMethodCallHandler { call, result ->
             if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
+            if (call.method == "audioDescriptionRequested") {
+                // Android 13's accessibility setting for described sound.
+                val manager = getSystemService(ACCESSIBILITY_SERVICE) as? android.view.accessibility.AccessibilityManager
+                return@setMethodCallHandler result.success(Build.VERSION.SDK_INT >= 33 && manager?.isAudioDescriptionRequested == true)
+            }
+            if (call.method == "captionsRequested") {
+                // Settings › Accessibility › Caption preferences.
+                val captions = getSystemService(CAPTIONING_SERVICE) as? android.view.accessibility.CaptioningManager
+                return@setMethodCallHandler result.success(captions?.isEnabled == true)
+            }
             if (call.method == "microphone") return@setMethodCallHandler askMicrophone((call.arguments as? Map<*, *>)?.get("on") == true, result)
             if (call.method == "relaunch") {
                 // The new task outlives this process, which Dart ends next.

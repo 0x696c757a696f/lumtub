@@ -1,6 +1,7 @@
 import AVFoundation
 import AuthenticationServices
 import Flutter
+import MediaAccessibility
 import MediaPlayer
 import UIKit
 import WebKit
@@ -80,6 +81,13 @@ final class LumtubShell: NSObject, FlutterPlugin, UIDocumentPickerDelegate, ASWe
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
+    case "audioDescriptionRequested":
+      // Settings › Accessibility › Audio Descriptions.
+      let wanted = MAAudibleMediaCopyPreferredCharacteristics().takeRetainedValue() as? [String] ?? []
+      result(wanted.contains(AVMediaCharacteristic.describesVideoForAccessibility.rawValue))
+    case "captionsRequested":
+      // Settings › Accessibility › Subtitles & Captioning.
+      result(UIAccessibility.isClosedCaptioningEnabled)
     case "openUrl":
       guard let text = call.arguments as? String, let url = URL(string: text) else {
         result(FlutterError(code: "bad_url", message: "Not an address", details: nil))

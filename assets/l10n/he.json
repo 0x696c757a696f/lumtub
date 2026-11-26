@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (לא זמין כאן)",
   "Which messages show": "אילו הודעות להציג",
   "Chat mode": "מצב צ'אט",
-  "The installation is incomplete, so the chat can't be read": "ההתקנה לא הושלמה, ולכן אי אפשר לקרוא את הצ'אט"
+  "The installation is incomplete, so the chat can't be read": "ההתקנה לא הושלמה, ולכן אי אפשר לקרוא את הצ'אט",
+  "Audio description": "תיאור קולי",
+  "Play the described sound track when a video has one, which tells what happens on screen": "הפעלת רצועת השמע המתארת כשלסרטון יש כזו; היא מספרת מה קורה על המסך",
+  "{0} (audio description)": "{0} (תיאור קולי)",
+  "Read subtitles aloud": "הקראת כתוביות",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "קורא מסך פעיל מקריא כל שורת כתוביות חדשה; כתוביות שמצוירות על הסרטון הן תמונות שהוא לא יכול לקרוא",
+  "screen reader accessibility blind": "קורא מסך נגישות עיוור screen reader",
+  "Never hide": "לעולם לא להסתיר",
+  "Play (Space)": "הפעלה (רווח)",
+  "Pause (Space)": "השהיה (רווח)",
+  "Length {0}": "משך {0}",
+  "{0}% watched": "{0}% נצפו",
+  "Scroll left": "גלילה שמאלה",
+  "Scroll right": "גלילה ימינה"
 }

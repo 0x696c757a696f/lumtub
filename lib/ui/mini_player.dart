@@ -13,6 +13,7 @@ import '../widgets/video_progress_bar.dart';
 import 'app_icons.dart';
 import 'common.dart';
 import 'motion.dart';
+import 'accessibility.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'video_box.dart';
 import 'warm_layer.dart';
@@ -132,6 +133,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
 
   void _hideControls() {
     _hide?.cancel();
+    // Nothing to hover with a screen reader: its buttons stay.
+    if (mounted && Accessibility.screenReader(context)) return;
     if (mounted && _controlsShown) setState(() => _controlsShown = false);
   }
 
@@ -228,7 +231,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                 initialData: player.state.playing,
                 builder: (context, snapshot) => IconButton(
                   style: style(),
-                  tooltip: tr('Play/Pause (Space)'),
+                  tooltip: snapshot.data == true ? tr('Pause (Space)') : tr('Play (Space)'),
                   iconSize: 40,
                   icon: Icon(snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill),
                   onPressed: () => unawaited(player.playOrPause()),
@@ -333,16 +336,20 @@ class _MiniPlayerState extends State<MiniPlayer> {
                     SizedBox(width: size.width, height: size.height, child: ColoredBox(color: Colors.black, child: _picture(context, size))),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      child: Semantics(
+                        button: true,
+                        hint: tr('Back to the watch page'),
+                        onTap: _controller.expandMini,
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                         if (_channel.isNotEmpty) Text(_channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                      ]),
+                      ])),
                     ),
                     StreamBuilder<bool>(
                       stream: player.stream.playing,
                       initialData: player.state.playing,
                       builder: (context, snapshot) => IconButton(
-                        tooltip: tr('Play/Pause (Space)'),
+                        tooltip: snapshot.data == true ? tr('Pause (Space)') : tr('Play (Space)'),
                         iconSize: 28,
                         icon: Icon(snapshot.data == true ? AppIcons.pauseFill : AppIcons.playFill),
                         onPressed: () => unawaited(player.playOrPause()),
@@ -366,6 +373,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
     if (player == null) return const SizedBox.shrink();
     _watch(player);
     if (isPhone(context)) return _bar(context, player);
+    if (!_controlsShown && Accessibility.screenReader(context)) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _showControls() : null);
     return LayoutBuilder(builder: (context, constraints) => Stack(children: [_card(context, player, constraints.biggest)]));
   }
 }

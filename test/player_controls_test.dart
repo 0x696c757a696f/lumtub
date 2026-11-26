@@ -213,7 +213,7 @@ void main() {
     expect(find.text('测试视频标题'), findsOneWidget);
     expect(byTooltip('Leave picture in picture'), findsOneWidget);
     expect(byTooltip('Home'), findsNothing);
-    await tester.tap(byTooltip('Play/Pause (Space)'));
+    await tester.tap(byTooltip('Play (Space)'));
     await tester.pump();
     expect(player.state.playing, isTrue);
     await tester.tap(find.byIcon(AppIcons.pauseCircle));
@@ -326,8 +326,8 @@ void main() {
   testWidgets('a control reached with the keyboard has focus and a name, Enter activates it and Space still plays or pauses', (tester) async {
     final semantics = tester.ensureSemantics();
     await pump(tester);
-    expect(find.bySemanticsLabel('Play/Pause (Space)'), findsWidgets);
-    final ring = find.descendant(of: byTooltip('Play/Pause (Space)'), matching: find.byType(AnimatedContainer));
+    expect(find.bySemanticsLabel('Play (Space)'), findsWidgets);
+    final ring = find.descendant(of: byTooltip('Play (Space)'), matching: find.byType(AnimatedContainer));
     expect(ring, findsOneWidget);
     var focused = false;
     for (var i = 0; i < 40 && !focused; i++) {

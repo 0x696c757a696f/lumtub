@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (ez dago hemen eskuragarri)",
   "Which messages show": "Zein mezu erakutsi",
   "Chat mode": "Txat modua",
-  "The installation is incomplete, so the chat can't be read": "Instalazioa osatu gabe dago, beraz txata ezin da irakurri"
+  "The installation is incomplete, so the chat can't be read": "Instalazioa osatu gabe dago, beraz txata ezin da irakurri",
+  "Audio description": "Audiodeskribapena",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Erreproduzitu deskribapen-audio pista bideoak badu; pantailan gertatzen dena kontatzen du",
+  "{0} (audio description)": "{0} (audiodeskribapena)",
+  "Read subtitles aloud": "Irakurri azpitituluak ozen",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Pantaila-irakurgailu batek abian denean azpitituluen lerro berri bakoitza esaten du; bideoan marraztutako azpitituluak irudiak dira eta ezin ditu irakurri",
+  "screen reader accessibility blind": "pantaila-irakurgailua irisgarritasuna itsua screen reader accessibility blind",
+  "Never hide": "Ez ezkutatu inoiz",
+  "Play (Space)": "Erreproduzitu (Zuriunea)",
+  "Pause (Space)": "Pausatu (Zuriunea)",
+  "Length {0}": "Iraupena {0}",
+  "{0}% watched": "%{0} ikusita",
+  "Scroll left": "Joan ezkerrera",
+  "Scroll right": "Joan eskuinera"
 }

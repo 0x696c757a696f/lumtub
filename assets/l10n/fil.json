@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (hindi iniaalok dito)",
   "Which messages show": "Aling mga mensahe ang ipapakita",
   "Chat mode": "Chat mode",
-  "The installation is incomplete, so the chat can't be read": "Hindi kumpleto ang pag-install, kaya hindi mabasa ang chat"
+  "The installation is incomplete, so the chat can't be read": "Hindi kumpleto ang pag-install, kaya hindi mabasa ang chat",
+  "Audio description": "Audio description",
+  "Play the described sound track when a video has one, which tells what happens on screen": "I-play ang described sound track kapag mayroon ang video, na nagsasabi ng nangyayari sa screen",
+  "{0} (audio description)": "{0} (audio description)",
+  "Read subtitles aloud": "Basahin nang malakas ang mga subtitle",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Binabasa ng gumaganang screen reader ang bawat bagong linya ng subtitle; ang mga subtitle na iginuhit sa video ay mga larawang hindi nito mabasa",
+  "screen reader accessibility blind": "screen reader accessibility bulag",
+  "Never hide": "Huwag kailanman itago",
+  "Play (Space)": "I-play (Space)",
+  "Pause (Space)": "I-pause (Space)",
+  "Length {0}": "Haba {0}",
+  "{0}% watched": "{0}% napanood na",
+  "Scroll left": "I-scroll pakaliwa",
+  "Scroll right": "I-scroll pakanan"
 }

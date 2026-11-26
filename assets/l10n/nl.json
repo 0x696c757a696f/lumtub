@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (hier niet beschikbaar)",
   "Which messages show": "Welke berichten worden getoond",
   "Chat mode": "Chatmodus",
-  "The installation is incomplete, so the chat can't be read": "De installatie is onvolledig, dus de chat kan niet worden gelezen"
+  "The installation is incomplete, so the chat can't be read": "De installatie is onvolledig, dus de chat kan niet worden gelezen",
+  "Audio description": "Audiodescriptie",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Speel het beschrijvende geluidsspoor af als een video er een heeft; dit vertelt wat er op het scherm gebeurt",
+  "{0} (audio description)": "{0} (audiodescriptie)",
+  "Read subtitles aloud": "Ondertitels voorlezen",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Een actieve schermlezer zegt elke nieuwe ondertitelregel; ondertitels die in de video zijn getekend, zijn afbeeldingen die hij niet kan lezen",
+  "screen reader accessibility blind": "schermlezer toegankelijkheid blind",
+  "Never hide": "Nooit verbergen",
+  "Play (Space)": "Afspelen (spatie)",
+  "Pause (Space)": "Pauzeren (spatie)",
+  "Length {0}": "Duur {0}",
+  "{0}% watched": "{0}% bekeken",
+  "Scroll left": "Naar links scrollen",
+  "Scroll right": "Naar rechts scrollen"
 }

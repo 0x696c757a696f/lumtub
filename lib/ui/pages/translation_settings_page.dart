@@ -36,7 +36,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
 
   Widget header(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary)),
+        child: Semantics(header: true, child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary))),
       );
   Widget tip(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),

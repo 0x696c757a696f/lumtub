@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (niedostępne tutaj)",
   "Which messages show": "Które wiadomości są wyświetlane",
   "Chat mode": "Tryb czatu",
-  "The installation is incomplete, so the chat can't be read": "Instalacja jest niekompletna, więc nie można odczytać czatu"
+  "The installation is incomplete, so the chat can't be read": "Instalacja jest niekompletna, więc nie można odczytać czatu",
+  "Audio description": "Audiodeskrypcja",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Odtwarza ścieżkę z audiodeskrypcją, jeśli film ją ma; opowiada ona, co dzieje się na ekranie",
+  "{0} (audio description)": "{0} (audiodeskrypcja)",
+  "Read subtitles aloud": "Czytaj napisy na głos",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Działający czytnik ekranu odczytuje każdy nowy wiersz napisów; napisy wyświetlone na filmie są obrazem, którego nie może przeczytać",
+  "screen reader accessibility blind": "czytnik ekranu dostępność niewidomi screen reader accessibility blind",
+  "Never hide": "Nigdy nie ukrywaj",
+  "Play (Space)": "Odtwórz (Spacja)",
+  "Pause (Space)": "Wstrzymaj (Spacja)",
+  "Length {0}": "Czas trwania {0}",
+  "{0}% watched": "Obejrzano {0}%",
+  "Scroll left": "Przewiń w lewo",
+  "Scroll right": "Przewiń w prawo"
 }

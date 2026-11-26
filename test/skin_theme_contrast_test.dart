@@ -53,6 +53,9 @@ void main() {
           'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
           // Tooltips (whole titles of cut ones among them) follow the side.
           'tooltip': (theme.tooltipTheme.textStyle!.color!, solid((theme.tooltipTheme.decoration! as BoxDecoration).color!, page), 4.5),
+          // What has the keyboard focus must stand out (WCAG 1.4.11).
+          'focus ring': (solid(focusRingColor(scheme), page), page, 3),
+          'focused card border': (scheme.primary, page, 3),
           'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
         };
         // Every control's words on the control as drawn over the page,

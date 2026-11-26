@@ -14,6 +14,7 @@ import '../haptics.dart';
 import '../reveal.dart';
 import '../../search_options.dart';
 import '../theme.dart';
+import '../linked_text.dart';
 import '../video_card.dart';
 import '../../widgets/settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
@@ -588,7 +589,8 @@ class TopicStrip extends StatefulWidget {
 }
 
 class _TopicStripState extends State<TopicStrip> {
-  static const _tileWidth = 84.0;
+  /// Wider with larger text, so names are not cut to a few letters.
+  double get _tileWidth => 84.0 * cardTextScale(context).clamp(1.0, 2.0);
   final _scroll = ScrollController();
 
   @override
@@ -677,10 +679,10 @@ class _TopicStripState extends State<TopicStrip> {
 
   @override
   Widget build(BuildContext context) => widget.vertical ? _rail(context) : SizedBox(
-        height: 84,
+        height: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1),
         child: Row(children: [
           const SizedBox(width: AppStyle.pagePadding - 12),
-          _Arrow(icon: AppIcons.caretLeft, onTap: _extent((p) => p.pixels > p.minScrollExtent) ? () => _by(-_tileWidth * 4) : null),
+          _Arrow(icon: AppIcons.caretLeft, tooltip: tr('Scroll left'), onTap: _extent((p) => p.pixels > p.minScrollExtent) ? () => _by(-_tileWidth * 4) : null),
           Expanded(child: Listener(
             // A vertical wheel turn scrolls the row.
             onPointerSignal: (event) {
@@ -724,7 +726,7 @@ class _TopicStripState extends State<TopicStrip> {
               ),
             ),
           )),
-          _Arrow(icon: AppIcons.caretRight, onTap: _extent((p) => p.pixels < p.maxScrollExtent) ? () => _by(_tileWidth * 4) : null),
+          _Arrow(icon: AppIcons.caretRight, tooltip: tr('Scroll right'), onTap: _extent((p) => p.pixels < p.maxScrollExtent) ? () => _by(_tileWidth * 4) : null),
           const SizedBox(width: AppStyle.pagePadding - 12),
         ]),
       );
@@ -743,7 +745,9 @@ class _RailTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final color = selected ? colors.primary : quiet ? colors.onSurfaceVariant : colors.onSurface;
+    // The accent where it reads on the page, else the text colour: the bar
+    // and the tint mark the chosen one either way.
+    final color = selected ? linkColor(Theme.of(context)) : quiet ? colors.onSurfaceVariant : colors.onSurface;
     return Tooltip(
       message: onRemove == null ? topic.label : tr('{0} (right-click or long-press to delete)', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
@@ -783,14 +787,15 @@ class _RailTile extends StatelessWidget {
 }
 
 class _Arrow extends StatelessWidget {
-  const _Arrow({required this.icon, this.onTap});
+  const _Arrow({required this.icon, required this.tooltip, this.onTap});
   final IconData icon;
+  final String tooltip;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => SizedBox(
         width: 32,
-        child: onTap == null ? null : IconButton(padding: EdgeInsets.zero, iconSize: 22, onPressed: onTap, icon: Icon(icon)),
+        child: onTap == null ? null : IconButton(tooltip: tooltip, padding: EdgeInsets.zero, iconSize: 22, onPressed: onTap, icon: Icon(icon)),
       );
 }
 
@@ -810,7 +815,7 @@ class _TopicGrid extends StatelessWidget {
         ),
         Flexible(child: GridView(
           shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 88, mainAxisExtent: 84),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 88 * cardTextScale(context).clamp(1.0, 2.0), mainAxisExtent: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1)),
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
           children: [
             for (final (i, topic) in topics.indexed) _TopicTile(topic: topic, selected: i == selected, onTap: () => Navigator.pop(context, i)),
@@ -859,9 +864,11 @@ class _TopicTile extends StatelessWidget {
               topic.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : null, color: selected ? colors.primary : null),
+              // The filled box and bold type mark the chosen one; the accent can be
+              // too light for small text on the page.
+              style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : null),
             )),
-            if (opens) Icon(AppIcons.caretDown, size: 12, color: selected ? colors.primary : colors.onSurfaceVariant),
+            if (opens) Icon(AppIcons.caretDown, size: 12, color: colors.onSurfaceVariant),
           ]),
         ]),
       ),

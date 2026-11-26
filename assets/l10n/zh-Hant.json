@@ -4252,5 +4252,18 @@
   "The installation is incomplete, so the chat can't be read": "安裝不完整，無法讀取聊天",
   "Translate titles in lists": "清單標題翻譯",
   "Translation replaces the title": "譯文取代標題",
-  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "首頁、探索、訂閱、觀看記錄、搜尋、頻道和播放清單頁裡的影片與播放清單標題，會翻譯成與沉浸式翻譯相同的語言。只有在畫面上停留片刻的標題才會送出，且只送出標題文字；已是該語言或屬於「不翻譯的語言」的標題維持原樣。譯文保存在本機。"
+  "Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.": "首頁、探索、訂閱、觀看記錄、搜尋、頻道和播放清單頁裡的影片與播放清單標題，會翻譯成與沉浸式翻譯相同的語言。只有在畫面上停留片刻的標題才會送出，且只送出標題文字；已是該語言或屬於「不翻譯的語言」的標題維持原樣。譯文保存在本機。",
+  "Audio description": "口述影像",
+  "Play the described sound track when a video has one, which tells what happens on screen": "影片有口述影像音軌時優先播放，講解畫面上發生的事",
+  "{0} (audio description)": "{0}（口述影像）",
+  "Read subtitles aloud": "朗讀字幕",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "螢幕閱讀器開啟時朗讀每一句新字幕；畫在影片上的字幕是圖像，螢幕閱讀器讀不到",
+  "screen reader accessibility blind": "螢幕閱讀器 讀屏 無障礙 視障 盲人 accessibility",
+  "Never hide": "一律顯示",
+  "Play (Space)": "播放 (空格)",
+  "Pause (Space)": "暫停 (空格)",
+  "Length {0}": "時長 {0}",
+  "{0}% watched": "已觀看 {0}%",
+  "Scroll left": "向左捲動",
+  "Scroll right": "向右捲動"
 }

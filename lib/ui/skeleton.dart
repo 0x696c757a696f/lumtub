@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../l10n/l10n.dart';
 import 'motion.dart';
 
 /// Gives [child], a placeholder made of [SkeletonBox]es, a highlight that
@@ -38,7 +39,8 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
     final glow = surface.withAlpha(60);
     final clear = surface.withAlpha(0);
     final controller = _controller;
-    final child = RepaintBoundary(child: widget.child);
+    // One word for the screen reader in place of grey boxes.
+    final child = Semantics(label: tr('Loading…'), excludeSemantics: true, child: RepaintBoundary(child: widget.child));
     Widget shine(double t) => ShaderMask(
           blendMode: BlendMode.srcATop,
           shaderCallback: (bounds) => ui.Gradient.linear(

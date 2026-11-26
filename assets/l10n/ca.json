@@ -4249,5 +4249,18 @@
   "{0} (not offered here)": "{0} (no disponible aquí)",
   "Which messages show": "Quins missatges es mostren",
   "Chat mode": "Mode de xat",
-  "The installation is incomplete, so the chat can't be read": "La instal·lació és incompleta, per això no es pot llegir el xat"
+  "The installation is incomplete, so the chat can't be read": "La instal·lació és incompleta, per això no es pot llegir el xat",
+  "Audio description": "Audiodescripció",
+  "Play the described sound track when a video has one, which tells what happens on screen": "Reprodueix la pista d'àudio descriptiva quan el vídeo en té, que explica què passa a la pantalla",
+  "{0} (audio description)": "{0} (audiodescripció)",
+  "Read subtitles aloud": "Llegeix els subtítols en veu alta",
+  "A running screen reader says each new subtitle line; subtitles drawn on the video are pictures it cannot read": "Un lector de pantalla en execució diu cada nova línia de subtítols; els subtítols dibuixats sobre el vídeo són imatges i no els pot llegir",
+  "screen reader accessibility blind": "lector de pantalla accessibilitat cec screen reader accessibility blind",
+  "Never hide": "No amaguis mai",
+  "Play (Space)": "Reprodueix (Espai)",
+  "Pause (Space)": "Pausa (Espai)",
+  "Length {0}": "Durada {0}",
+  "{0}% watched": "{0}% vist",
+  "Scroll left": "Desplaça a l'esquerra",
+  "Scroll right": "Desplaça a la dreta"
 }

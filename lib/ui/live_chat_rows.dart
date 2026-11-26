@@ -185,7 +185,8 @@ class ChatMessageRow extends StatelessWidget {
               cursor: openAuthor == null ? MouseCursor.defer : SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: openAuthor,
-                child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                excludeFromSemantics: true,
+                child: Semantics(link: openAuthor != null, onTap: openAuthor, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
               ),
             ),
           ),

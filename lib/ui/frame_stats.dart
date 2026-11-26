@@ -4,6 +4,7 @@ import 'dart:ui' show FramePhase;
 import 'package:flutter/scheduler.dart';
 
 import '../app_log.dart';
+import 'frame_pressure.dart';
 
 /// Counts the frames that took too long to build or draw and writes a line
 /// to the log once a minute when there were any, with the page that was
@@ -37,6 +38,7 @@ class FrameStats {
   /// Starts counting; [page] names what is shown, [causes] counts what
   /// asked for the window to be rebuilt, and is cleared once logged.
   static FrameStats start(String Function() page, {Map<String, int> Function()? causes}) {
+    FramePressure.watch();
     final stats = _instance ??= FrameStats._(page, causes);
     SchedulerBinding.instance.addTimingsCallback(stats._timings);
     return stats;

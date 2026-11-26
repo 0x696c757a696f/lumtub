@@ -30,6 +30,7 @@ import 'motion.dart';
 import 'press_scale.dart';
 import 'app_icons.dart';
 import '../feed_reason.dart';
+import 'frame_pressure.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
@@ -579,7 +580,12 @@ class VideoCard extends StatefulWidget {
 }
 
 class _VideoCardState extends State<VideoCard> {
-  bool _hovered = false;
+  /// Pointed at or focused. Only what shows it (the picture's zoom, the
+  /// quick actions, a skin's lit card) listens, so lighting a card up does
+  /// not build the card again: on a slow or throttled processor the light
+  /// follows the pointer at once.
+  final _lit = ValueNotifier(false);
+  bool get _hovered => _lit.value;
   /// Reached with the keyboard: it shows its actions as a pointer resting
   /// on it would, with an outline to show where focus is, but does not
   /// prefetch or preview.
@@ -596,10 +602,8 @@ class _VideoCardState extends State<VideoCard> {
   /// keeps frames from a quarter, half and three quarters of the way in.
   void _hover(bool value) {
     if (value == _hovered) return;
-    setState(() {
-      _hovered = value;
-      _frame = 0;
-    });
+    _lit.value = value;
+    if (_frame != 0) setState(() => _frame = 0);
     _stopHoverWork();
     // 低占用模式 loads nothing until a video is opened.
     if (!value || !_pointer || lowResourceMode) return;
@@ -644,7 +648,8 @@ class _VideoCardState extends State<VideoCard> {
       return;
     }
     if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
-    if (widget.item.isLive || widget.item.isUpcoming) return;
+    // Previews are frames to decode and draw: none while frames run late.
+    if (widget.item.isLive || widget.item.isUpcoming || FramePressure.on) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
       // With reduced motion the preview holds on its middle frame.
@@ -662,7 +667,7 @@ class _VideoCardState extends State<VideoCard> {
   }
 
   void _focus(bool value) {
-    setState(() => _focused = value);
+    if (value != _focused) setState(() => _focused = value);
     _hover(_pointer || _focused);
     if (!_pointer) _stopHoverWork();
   }
@@ -701,6 +706,7 @@ class _VideoCardState extends State<VideoCard> {
   void dispose() {
     deArrow.removeListener(_branded);
     _stopHoverWork();
+    _lit.dispose();
     super.dispose();
   }
 
@@ -725,6 +731,9 @@ class _VideoCardState extends State<VideoCard> {
       child: InkWell(
         borderRadius: AppStyle.cardRadius,
         hoverColor: Colors.transparent,
+        // The hover ink is clear: faded in over frames it would only
+        // repaint the card for nothing.
+        hoverDuration: Duration.zero,
         onTap: widget.onOpen,
         onHover: _pointerOver,
         onFocusChange: _focus,
@@ -740,10 +749,14 @@ class _VideoCardState extends State<VideoCard> {
               borderRadius: compact ? BorderRadius.zero : context.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 // Its own layer: zooming on hover repaints only the picture.
-                RepaintBoundary(child: AnimatedScale(
-                  scale: _hovered ? 1.04 : 1,
-                  duration: Motion.of(Ease.fade),
-                  curve: Ease.curve,
+                RepaintBoundary(child: ValueListenableBuilder(
+                  valueListenable: _lit,
+                  builder: (context, lit, picture) => AnimatedScale(
+                    scale: lit ? 1.04 : 1,
+                    duration: Motion.of(Ease.fade),
+                    curve: Ease.curve,
+                    child: picture,
+                  ),
                   child: LayoutBuilder(
                     builder: (context, box) => Image(
                       color: context.pictureWarmth,
@@ -807,7 +820,10 @@ class _VideoCardState extends State<VideoCard> {
                 if (item.membersOnly) const PositionedDirectional(start: 8, top: 8, child: MembersOnlyBadge()),
                 PositionedDirectional(start: 8, top: item.membersOnly ? 34 : 8, child: DifficultyBadge(item.id)),
                 _ProgressBar(item: item),
-                if (_hovered) PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item)),
+                ValueListenableBuilder(
+                  valueListenable: _lit,
+                  builder: (context, lit, _) => lit ? PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item)) : const SizedBox.shrink(),
+                ),
               ]),
             ),
           ),
@@ -825,15 +841,17 @@ class _VideoCardState extends State<VideoCard> {
                 height: 24,
                 child: Row(children: [
                   Expanded(child: MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle)),
-                  Builder(builder: (context) => IconButton(
-                    tooltip: tr('More (Menu key)'),
-                    onPressed: () => _menu(_centreOf(context)),
-                    icon: Icon(AppIcons.dotsThreeVertical, size: touchFirst ? 18 : 16, color: colors.outline),
-                    padding: EdgeInsets.zero,
-                    // Wider for a finger; the row's height stays.
-                    constraints: BoxConstraints.tightFor(width: touchFirst ? 40 : 24, height: 24),
-                    visualDensity: VisualDensity.compact,
-                  )),
+                  Builder(builder: (context) => touchFirst || Device.tv
+                      ? IconButton(
+                          tooltip: tr('More (Menu key)'),
+                          onPressed: () => _menu(_centreOf(context)),
+                          icon: Icon(AppIcons.dotsThreeVertical, size: touchFirst ? 18 : 16, color: colors.outline),
+                          padding: EdgeInsets.zero,
+                          // Wider for a finger; the row's height stays.
+                          constraints: BoxConstraints.tightFor(width: touchFirst ? 40 : 24, height: 24),
+                          visualDensity: VisualDensity.compact,
+                        )
+                      : CardMenuDots(onPressed: () => _menu(_centreOf(context)), color: colors.outline)),
                 ]),
               ),
               if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
@@ -849,10 +867,14 @@ class _VideoCardState extends State<VideoCard> {
       },
       child: PressScale(child: Stack(children: [
         if (skin?.videoCard case final surface?)
-          SkinBox(
-            surface: surface.forState(hovered: _hovered, focused: _focused),
-            radius: context.cardRadius.topLeft.x,
-            padding: EdgeInsets.all(skin!.videoCardPadding),
+          ValueListenableBuilder(
+            valueListenable: _lit,
+            builder: (context, lit, card) => SkinBox(
+              surface: surface.forState(hovered: lit, focused: _focused),
+              radius: context.cardRadius.topLeft.x,
+              padding: EdgeInsets.all(skin!.videoCardPadding),
+              child: card!,
+            ),
             child: card,
           )
         else
@@ -865,6 +887,50 @@ class _VideoCardState extends State<VideoCard> {
       ])),
     );
   }
+}
+
+/// The ⋮ that opens a card's menu with the mouse: an icon, a tooltip and
+/// a light circle under the pointer. A full [IconButton] in every card
+/// cost about a sixth of building one, paid again for each row that
+/// scrolls in. The card itself takes the keyboard (Menu key, Shift+F10),
+/// so this one stays out of the focus order; touch and TV keep the button.
+class CardMenuDots extends StatefulWidget {
+  const CardMenuDots({super.key, required this.onPressed, required this.color});
+  final VoidCallback onPressed;
+  final Color color;
+
+  @override
+  State<CardMenuDots> createState() => _CardMenuDotsState();
+}
+
+class _CardMenuDotsState extends State<CardMenuDots> {
+  bool _over = false;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: tr('More (Menu key)'),
+        child: Tooltip(
+          message: tr('More (Menu key)'),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _over = true),
+            onExit: (_) => setState(() => _over = false),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onPressed,
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: _over ? widget.color.withValues(alpha: 0.16) : null),
+                  child: Icon(AppIcons.dotsThreeVertical, size: 16, color: widget.color),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 }
 
 /// 稍后观看, 加入播放队列 and the menu over a card's thumbnail while it is
@@ -915,17 +981,43 @@ class _QuickActionsState extends State<_QuickActions> {
 }
 
 /// [builder] given [item] with what its listing left out filled in by
-/// [VideoFactsLookup], built again as answers come.
-class WithVideoFacts extends StatelessWidget {
+/// [VideoFactsLookup], built again when this video's facts come.
+class WithVideoFacts extends StatefulWidget {
   const WithVideoFacts(this.item, {super.key, required this.builder});
   final VideoItem item;
   final Widget Function(BuildContext context, VideoItem item) builder;
 
   @override
-  Widget build(BuildContext context) {
+  State<WithVideoFacts> createState() => _WithVideoFactsState();
+}
+
+class _WithVideoFactsState extends State<WithVideoFacts> {
+  String? _watched;
+
+  void _watch() {
     final lookup = VideoFactsLookup.instance;
-    if (!lookup.needs(item)) return builder(context, item);
-    return ListenableBuilder(listenable: lookup, builder: (context, _) => builder(context, lookup.of(item)));
+    final id = lookup.needs(widget.item) ? widget.item.id : null;
+    if (id == _watched) return;
+    if (_watched case final old?) lookup.unwatch(old, _came);
+    if (id != null) lookup.watch(id, _came);
+    _watched = id;
+  }
+
+  void _came() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    if (_watched case final id?) VideoFactsLookup.instance.unwatch(id, _came);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _watch();
+    final lookup = VideoFactsLookup.instance;
+    return widget.builder(context, _watched == null ? widget.item : lookup.of(widget.item));
   }
 }
 
@@ -1354,18 +1446,27 @@ class MetaLine extends StatelessWidget {
   final String tail;
   final TextStyle style;
 
+  /// How wide each channel name is drawn, by name and look: the same few
+  /// channels fill a feed, and measuring a name again for every card that
+  /// scrolls in doubled the cost of the line.
+  static final _widths = <(String, TextStyle, TextScaler, TextDirection), double>{};
+
   /// What the channel keeps of a line [width] wide: all it needs, up to a
   /// third, however long the rest.
   double _leadRoom(BuildContext context, double width) {
     if (lead.isEmpty) return 0;
-    final painter = TextPainter(
-      text: TextSpan(text: lead, style: DefaultTextStyle.of(context).style.merge(style)),
-      maxLines: 1,
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-    )..layout();
-    final needed = painter.width.ceilToDouble();
-    painter.dispose();
+    final full = DefaultTextStyle.of(context).style.merge(style);
+    final direction = Directionality.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    final key = (lead, full, scaler, direction);
+    var needed = _widths.remove(key);
+    if (needed == null) {
+      final painter = TextPainter(text: TextSpan(text: lead, style: full), maxLines: 1, textDirection: direction, textScaler: scaler)..layout();
+      needed = painter.width.ceilToDouble();
+      painter.dispose();
+      if (_widths.length >= 512) _widths.remove(_widths.keys.first);
+    }
+    _widths[key] = needed;
     return needed < width / 3 ? needed : width / 3;
   }
 

@@ -117,4 +117,24 @@ void main() {
     expect(VideoFactsLookup.factsOfNext(const <String, Object?>{}, asked), isNull);
     expect(VideoFactsLookup.factsOfNext(null, asked), isNull);
   });
+
+  test('facts that come wake only the cards showing that video', () async {
+    final answers = <String, Completer<VideoFacts?>>{};
+    lookup.use((id) => (answers[id] = Completer()).future, null);
+    final woken = <String>[];
+    void a() => woken.add('a');
+    void b() => woken.add('b');
+    lookup.watch('aaaaaaaaaaa', a);
+    lookup.watch('bbbbbbbbbbb', b);
+    lookup.of(feedItem('aaaaaaaaaaa'));
+    lookup.of(feedItem('bbbbbbbbbbb'));
+    await Future<void>.delayed(Duration.zero);
+    answers['aaaaaaaaaaa']!.complete(VideoFacts(length: 60, views: 1, asked: DateTime.now()));
+    await Future<void>.delayed(Duration.zero);
+    expect(woken, ['a']);
+    lookup.unwatch('bbbbbbbbbbb', b);
+    answers['bbbbbbbbbbb']!.complete(VideoFacts(length: 61, views: 2, asked: DateTime.now()));
+    await Future<void>.delayed(Duration.zero);
+    expect(woken, ['a']);
+  });
 }

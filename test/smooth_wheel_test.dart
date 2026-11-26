@@ -78,18 +78,66 @@ void main() {
     expect(controller.offset, 0);
   });
 
-  testWidgets('touchpads and reduced motion move at once', (tester) async {
+  testWidgets('touchpads, and 减少动画 chosen in Lumtub, move at once', (tester) async {
     final controller = ScrollController();
     await tester.pumpWidget(list(controller));
     await wheel(tester, const Offset(0, 120), kind: PointerDeviceKind.trackpad);
     await tester.pump();
     expect(controller.offset, 120);
 
-    Motion.update(MotionPreference.reduced);
-    addTearDown(() => Motion.update(MotionPreference.full));
+    SmoothWheel.enabled = false;
+    addTearDown(() => SmoothWheel.enabled = true);
     await wheel(tester, const Offset(0, 120));
     await tester.pump();
     expect(controller.offset, 240);
+  });
+
+  testWidgets("glides in 低占用模式 and with the system's reduced animations", (tester) async {
+    final controller = ScrollController();
+    Motion.update(MotionPreference.reduced);
+    addTearDown(() => Motion.update(MotionPreference.full));
+    await tester.pumpWidget(list(controller));
+    await wheel(tester, const Offset(0, 120));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(controller.offset, inExclusiveRange(0, 120));
+    await tester.pumpAndSettle();
+    expect(controller.offset, 120);
+  });
+
+  testWidgets('a late frame shows the list where it should be by then', (tester) async {
+    final controller = ScrollController();
+    await tester.pumpWidget(list(controller));
+    await wheel(tester, const Offset(0, 120));
+    await tester.pump(const Duration(milliseconds: 16));
+    // One frame 300 ms late: the glide is over by then.
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.offset, 120);
+    await tester.pumpAndSettle();
+    expect(controller.offset, 120);
+  });
+
+  testWidgets('a quick spin keeps its pace: no step jumps far ahead of the last', (tester) async {
+    final controller = ScrollController();
+    await tester.pumpWidget(list(controller, count: 400));
+    final steps = <double>[];
+    var last = 0.0;
+    for (var notch = 0; notch < 8; notch++) {
+      await wheel(tester, const Offset(0, 100));
+      for (var f = 0; f < 3; f++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        steps.add(controller.offset - last);
+        last = controller.offset;
+      }
+    }
+    await tester.pumpAndSettle();
+    expect(controller.offset, 800);
+    // After the first notch, a notch carries on at the speed the list has
+    // rather than surging: each frame's step stays near the one before.
+    for (var i = 4; i < steps.length; i++) {
+      expect(steps[i], lessThan(steps[i - 1] * 1.6 + 2), reason: 'steps $steps');
+      expect(steps[i], greaterThan(0));
+    }
   });
 
   testWidgets('a sideways row inside the page eases on its own', (tester) async {

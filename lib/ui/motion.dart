@@ -6,6 +6,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 
 import '../appearance_settings.dart';
+import 'frame_pressure.dart';
 
 /// Motion that settles into place: one curve, a short time for colour and
 /// opacity, a longer one for size and position.
@@ -73,8 +74,9 @@ abstract final class Motion {
     };
   }
 
-  /// [duration], or none when animations are reduced.
-  static Duration of(Duration duration) => reduced ? Duration.zero : duration;
+  /// [duration], or none when animations are reduced, or for now while
+  /// frames keep running late ([FramePressure]).
+  static Duration of(Duration duration) => reduced || FramePressure.on ? Duration.zero : duration;
 
   /// Scrolls [controller] to [offset], with a short animation unless
   /// animations are reduced.

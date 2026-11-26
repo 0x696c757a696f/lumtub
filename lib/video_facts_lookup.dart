@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -98,6 +99,19 @@ class VideoFactsLookup extends ChangeNotifier {
   final _waiting = <String>[];
   var _running = 0;
   Timer? _save;
+  /// The cards showing each video, woken when its facts come; only they
+  /// build again, not every card waiting for facts of its own.
+  final _watchers = HashMap<String, List<VoidCallback>>();
+
+  /// [onFacts] is called when facts of [id] come.
+  void watch(String id, VoidCallback onFacts) => (_watchers[id] ??= []).add(onFacts);
+
+  void unwatch(String id, VoidCallback onFacts) {
+    final watchers = _watchers[id];
+    if (watchers == null) return;
+    watchers.remove(onFacts);
+    if (watchers.isEmpty) _watchers.remove(id);
+  }
   @visibleForTesting
   DateTime Function() now = DateTime.now;
 
@@ -154,6 +168,9 @@ class VideoFactsLookup extends ChangeNotifier {
       source(id).then((facts) {
         if (facts != null) {
           _put(id, facts);
+          for (final watcher in [...?_watchers[id]]) {
+            watcher();
+          }
           notifyListeners();
         }
         // Still without a length: may be asked again once lengthlessFor has passed.
@@ -350,6 +367,7 @@ class VideoFactsLookup extends ChangeNotifier {
     _tried.clear();
     _waiting.clear();
     _running = 0;
+    _watchers.clear();
     _save?.cancel();
     _playerRefused = null;
     now = DateTime.now;

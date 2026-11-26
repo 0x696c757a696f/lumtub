@@ -1,15 +1,17 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui show Codec, ImmutableBuffer, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
+import 'dart:ui' as ui show Codec, Image, ImmutableBuffer, Picture, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../appearance_settings.dart';
 import '../skins/skin.dart';
 import 'skin_scenes.dart';
 import 'glass_look.dart';
 import 'theme.dart';
+import 'frame_pressure.dart';
 
 /// Paints one [SkinPaint] layer (not pictures, which [SkinLayers] shows as
 /// widgets) into [rect].
@@ -31,13 +33,34 @@ void paintSkinLayer(Canvas canvas, Rect rect, SkinPaint layer) {
 }
 
 void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
+  // A skin file may ask for a spacing too fine to draw: under a pixel the
+  // loops below would never end, or draw millions of marks.
+  final step = p.spacing.isFinite ? math.max(p.spacing, 1.0) : 4.0;
+  // Regular patterns are one small tile drawn once and repeated, so a
+  // card or bar costs a single rectangle however fine the pattern: drawn
+  // mark by mark, a dotted card cost thousands of points on every frame.
+  if (fade == null) {
+    final tile = _patternTile(p, step);
+    if (tile != null) {
+      final scale = tile.extent / tile.image.width;
+      final matrix = Matrix4.identity();
+      if (p.angle != 0) {
+        matrix
+          ..translateByDouble(rect.center.dx, rect.center.dy, 0, 1)
+          ..rotateZ(p.angle * math.pi / 180)
+          ..translateByDouble(-rect.center.dx, -rect.center.dy, 0, 1);
+      }
+      matrix
+        ..translateByDouble(rect.left, rect.top, 0, 1)
+        ..scaleByDouble(scale, scale, 1, 1);
+      canvas.drawRect(rect, Paint()..shader = ImageShader(tile.image, TileMode.repeated, TileMode.repeated, matrix.storage, filterQuality: FilterQuality.medium));
+      return;
+    }
+  }
   final paint = Paint()
     ..color = p.color
     ..isAntiAlias = false;
   if (fade != null) paint.shader = fade;
-  // A skin file may ask for a spacing too fine to draw: under a pixel the
-  // loops below would never end, or draw millions of marks.
-  final step = p.spacing.isFinite ? math.max(p.spacing, 1.0) : 4.0;
   final size = p.size;
   canvas.save();
   canvas.clipRect(rect);
@@ -104,6 +127,77 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
   canvas.restore();
 }
 
+/// Pattern tiles drawn so far, by what they look like.
+final _patternTiles = <(String, Color, double, double), ({ui.Image image, double extent})>{};
+
+/// How many device pixels a tile has for each logical one, so marks stay
+/// crisp on high-density screens.
+const _tileScale = 2.0;
+
+/// One repeating tile of [p] with marks [step] apart, a whole number of
+/// periods wide and high ([extent] logical pixels); null for patterns that
+/// do not repeat (stitch, grain) or are drawn their own way (noise).
+({ui.Image image, double extent})? _patternTile(PatternPaint p, double step) {
+  final period = switch (p.type) {
+    'lines' || 'scanlines' || 'grid' || 'dots' => step,
+    'checker' => step * 2,
+    _ => null,
+  };
+  if (period == null) return null;
+  final key = (p.type, p.color, step, p.size);
+  final cached = _patternTiles[key];
+  if (cached != null) return cached;
+  // At least 32 pixels across, so the tile is not repeated too often,
+  // and at most 256; a spacing wider than that has few marks to draw.
+  const most = 256.0;
+  if (period > most) return null;
+  final extent = period * math.min(math.max(1, (32 / period).ceil()), (most / period).floor());
+  final pixels = (extent * _tileScale).round();
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, pixels.toDouble(), pixels.toDouble()))..scale(pixels / extent);
+  final paint = Paint()
+    ..color = p.color
+    ..isAntiAlias = false;
+  final size = p.size;
+  switch (p.type) {
+    case 'lines' || 'scanlines':
+      for (var y = 0.0; y < extent; y += step) {
+        canvas.drawRect(Rect.fromLTWH(0, y, extent, size), paint);
+      }
+    case 'grid':
+      for (var y = 0.0; y < extent; y += step) {
+        canvas.drawRect(Rect.fromLTWH(0, y, extent, size), paint);
+      }
+      for (var x = 0.0; x < extent; x += step) {
+        canvas.drawRect(Rect.fromLTWH(x, 0, size, extent), paint);
+      }
+    case 'dots':
+      // A dot is centred on its point, so the ones on the tile's far edges
+      // are drawn too: each holds the half the near edge cuts off.
+      final points = <double>[];
+      for (var y = 0.0; y <= extent + 0.001; y += step) {
+        for (var x = 0.0; x <= extent + 0.001; x += step) {
+          points..add(x)..add(y);
+        }
+      }
+      canvas.drawRawPoints(PointMode.points, Float32List.fromList(points), paint..strokeWidth = size);
+    case 'checker':
+      final path = Path();
+      var row = 0;
+      for (var y = 0.0; y < extent; y += step, row++) {
+        for (var x = row.isOdd ? step : 0.0; x < extent; x += step * 2) {
+          path.addRect(Rect.fromLTWH(x, y, step, step));
+        }
+      }
+      canvas.drawPath(path, paint);
+  }
+  final picture = recorder.endRecording();
+  final image = picture.toImageSync(pixels, pixels);
+  picture.dispose();
+  if (_patternTiles.length >= 24) _patternTiles.remove(_patternTiles.keys.first);
+  return _patternTiles[key] = (image: image, extent: extent);
+}
+
 final _noiseTiles = <(Color, double, double), ImageShader>{};
 
 /// A repeating tile of grains of [color], about [spacing] apart and [size]
@@ -153,20 +247,23 @@ abstract final class SkinGlass {
 }
 
 class SurfaceDecoration extends Decoration {
-  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1});
+  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1, this.plain = false});
   final SkinSurface surface;
   final double radius;
   /// 护眼暖色's tint, multiplied into everything drawn.
   final Color? warmth;
   /// How much of the fill is drawn: below 1 the backdrop shows through.
   final double clarity;
+  /// 低占用模式, or frames running late ([FramePressure]): the fill's
+  /// patterns and grain are left out, its colours kept.
+  final bool plain;
 
   /// [surface] in [context]'s 护眼暖色.
   /// Seeing the desktop, the bars round the pages are drawn at the
   /// glass's alpha ([GlassLook]) instead of a glass skin's own clarity.
   factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) {
     final glass = surface.frame ? context.glass : null;
-    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1));
+    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1), plain: lowResourceMode || FramePressure.on);
   }
 
   double get _radius => surface.radius ?? radius;
@@ -184,33 +281,57 @@ class SurfaceDecoration extends Decoration {
   BoxPainter createBoxPainter([VoidCallback? onChanged]) => _SurfacePainter(this);
 
   @override
-  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth && other.clarity == clarity;
+  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth && other.clarity == clarity && other.plain == plain;
 
   @override
-  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth, clarity);
+  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth, clarity, plain);
 }
 
 class _SurfacePainter extends BoxPainter {
   _SurfacePainter(this.decoration);
   final SurfaceDecoration decoration;
 
+  /// Surfaces drawn so far, by look and size, most recent last. A page
+  /// shows many boxes alike (a grid of cards, a row of buttons): each is
+  /// recorded once and then placed as a whole, instead of its shadows,
+  /// gradients and edges being recorded again for every card on every
+  /// paint, which cost a card half a millisecond.
+  static final _drawn = <(SurfaceDecoration, Size), ui.Picture>{};
+  static const _kept = 48;
+
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
     final size = configuration.size;
     if (size == null || size.isEmpty) return;
-    final rect = offset & size;
+    final key = (decoration, size);
+    var picture = _drawn.remove(key);
+    if (picture == null) {
+      final recorder = ui.PictureRecorder();
+      _paint(Canvas(recorder), Offset.zero & size);
+      picture = recorder.endRecording();
+      if (_drawn.length >= _kept) _drawn.remove(_drawn.keys.first);
+    }
+    _drawn[key] = picture;
+    canvas.save();
+    canvas.translate(offset.dx, offset.dy);
+    canvas.drawPicture(picture);
+    canvas.restore();
+  }
+
+  void _paint(Canvas canvas, Rect rect) {
     if (decoration.warmth case final tint?) {
       canvas.saveLayer(rect.inflate(24), Paint()..colorFilter = ColorFilter.mode(tint, BlendMode.modulate));
-      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity, plain: decoration.plain);
       canvas.restore();
     } else {
-      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity, plain: decoration.plain);
     }
   }
 }
 
-/// Paints [s] into [rect] with corners of [radius].
-void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {double clarity = 1}) {
+/// Paints [s] into [rect] with corners of [radius]; [plain] leaves out
+/// the fill's patterns and grain.
+void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {double clarity = 1, bool plain = false}) {
   final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
   for (final shadow in s.shadows) {
     canvas.drawRRect(rrect.shift(shadow.offset).inflate(shadow.spreadRadius), shadow.toPaint());
@@ -229,6 +350,7 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {doubl
   }
   if (radius > 0) canvas.clipRRect(rrect);
   for (final layer in s.fill) {
+    if (plain && layer is PatternPaint) continue;
     paintSkinLayer(canvas, rect, layer);
   }
   if (s.gloss > 0) {

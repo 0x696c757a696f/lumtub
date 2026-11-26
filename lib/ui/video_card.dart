@@ -15,6 +15,7 @@ import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
 import '../dearrow.dart';
+import '../title_translation.dart';
 import '../thumbnail_cache.dart';
 import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
@@ -249,6 +250,10 @@ class _WatchedLabels extends UnmodifiableMapBase<String, String> {
 /// a title that did not fit gets one. Nothing is measured until the pointer
 /// comes in; then the paragraph already laid out says whether it was cut.
 /// Touch never opens it, so a long press still reaches the card.
+///
+/// With 列表标题翻译 on, a title in another language shows its translation
+/// as set, once it has been on screen a moment; the tooltip then holds the
+/// original. Only this widget rebuilds when its translation comes.
 class TitleText extends StatefulWidget {
   const TitleText(this.text, {super.key, required this.maxLines, required this.style});
 
@@ -264,9 +269,30 @@ class _TitleTextState extends State<TitleText> {
   bool _cut = false;
 
   @override
+  void initState() {
+    super.initState();
+    titleTranslations.listen(widget.text, _translated);
+  }
+
+  @override
   void didUpdateWidget(TitleText old) {
     super.didUpdateWidget(old);
+    if (old.text != widget.text) {
+      titleTranslations.unlisten(old.text, _translated);
+      titleTranslations.listen(widget.text, _translated);
+    }
     if (old.text != widget.text || old.maxLines != widget.maxLines) _cut = false;
+  }
+
+  @override
+  void dispose() {
+    titleTranslations.unlisten(widget.text, _translated);
+    super.dispose();
+  }
+
+  void _translated() {
+    if (!mounted) return;
+    setState(() => _cut = false);
   }
 
   void _check(PointerEnterEvent _) {
@@ -285,15 +311,36 @@ class _TitleTextState extends State<TitleText> {
   }
 
   @override
-  Widget build(BuildContext context) => MouseRegion(
-        onEnter: _check,
-        child: Tooltip(
-          message: _cut ? widget.text : '',
-          triggerMode: TooltipTriggerMode.manual,
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Text(widget.text, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final translation = titleTranslations.lookup(widget.text);
+    final mode = titleTranslations.mode;
+    final Widget child;
+    final String message;
+    if (translation == null) {
+      child = Text(widget.text, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
+      message = _cut ? widget.text : '';
+    } else if (mode.bilingual && widget.maxLines >= 2) {
+      final second = widget.style.copyWith(fontWeight: FontWeight.w400, color: widget.style.color?.withValues(alpha: 0.62));
+      final first = mode == TitleTranslation.translationFirst;
+      child = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(first ? translation : widget.text, maxLines: widget.maxLines - 1, overflow: TextOverflow.ellipsis, style: widget.style),
+        Text(first ? widget.text : translation, maxLines: 1, overflow: TextOverflow.ellipsis, style: second),
+      ]);
+      message = '$translation\n${widget.text}';
+    } else {
+      child = Text(translation, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
+      message = widget.text;
+    }
+    return MouseRegion(
+      onEnter: _check,
+      child: Tooltip(
+        message: message,
+        triggerMode: TooltipTriggerMode.manual,
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: child,
+      ),
+    );
+  }
 }
 
 /// A video as one row of a list: a small thumbnail or none, the title, the

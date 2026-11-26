@@ -15,6 +15,7 @@ extension SettingsActions on AppController {
     }
     if (service) _useTranslator();
     translationSetup.value = _translationSetupNow();
+    _configureTitles();
     unawaited(_aiFilter?.setMode(next.aiFilter));
     if (gpu) await _writeGpuPreference(next.gpuPreference);
     try {
@@ -84,6 +85,7 @@ extension SettingsActions on AppController {
     translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope, batch: inner is! AiTranslator);
     textTranslator = _textTranslatorOf(translator);
     translationSetup.value = _translationSetupNow();
+    _configureTitles();
     logInfo('Translating with ${preferences.translation.service.name}');
   }
 
@@ -418,7 +420,7 @@ extension SettingsActions on AppController {
     if (manager == null) return;
     if (!ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
     try {
-      await _translationCache.clear();
+      await (_translationCache.clear(), _titleCache.clear()).wait;
       final (:freed, :skipped, :keptForDownloads) = await _clearCacheFolders(manager);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
@@ -467,7 +469,7 @@ extension SettingsActions on AppController {
             await homeFeed?.notInterested.clear();
             await homeFeed?.forgetSaved();
           case LocalData.cache:
-            await _translationCache.clear();
+            await (_translationCache.clear(), _titleCache.clear()).wait;
             final manager = _cacheManager;
             if (manager != null) {
               await _clearCacheFolders(manager);

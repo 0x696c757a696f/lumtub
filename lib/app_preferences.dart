@@ -14,6 +14,7 @@ import 'models.dart';
 import 'player_settings.dart' show interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'right_click.dart';
+import 'title_translation.dart';
 import 'translation.dart';
 import 'wheel_gesture.dart';
 import 'translation_services.dart';
@@ -136,6 +137,7 @@ class AppPreferences {
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
     this.immersiveTranslation = false,
+    this.titleTranslation = TitleTranslation.replace,
     this.superChatHighlights = true,
     this.chatView = ChatView.top,
     this.danmaku = const DanmakuSettings(),
@@ -326,6 +328,9 @@ class AppPreferences {
   /// 沉浸式翻译: comments, posts and live chat in another language show
   /// their translation under them without asking.
   final bool immersiveTranslation;
+  /// Whether titles in video and playlist lists show their translation,
+  /// and how.
+  final TitleTranslation titleTranslation;
   /// Super Chats in their amount's colour, and the strip of recent ones
   /// over the live chat.
   final bool superChatHighlights;
@@ -559,6 +564,7 @@ class AppPreferences {
     bool? subtitlesByService,
     bool? bilingualTranslation,
     bool? immersiveTranslation,
+    TitleTranslation? titleTranslation,
     bool? superChatHighlights,
     ChatView? chatView,
     DanmakuSettings? danmaku,
@@ -656,6 +662,7 @@ class AppPreferences {
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
+        titleTranslation: titleTranslation ?? this.titleTranslation,
         superChatHighlights: superChatHighlights ?? this.superChatHighlights,
         chatView: chatView ?? this.chatView,
         danmaku: danmaku ?? this.danmaku,
@@ -754,6 +761,7 @@ class AppPreferences {
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
         'immersiveTranslation': immersiveTranslation,
+        'titleTranslation': titleTranslation.name,
         'superChatHighlights': superChatHighlights,
         'chatView': chatView.name,
         'danmaku': danmaku.toJson(),
@@ -902,6 +910,7 @@ class AppPreferences {
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      titleTranslation: TitleTranslation.values.where((v) => v.name == raw['titleTranslation']).firstOrNull ?? d.titleTranslation,
       superChatHighlights: flag('superChatHighlights', d.superChatHighlights),
       chatView: ChatView.values.where((v) => v.name == raw['chatView']).firstOrNull ?? d.chatView,
       danmaku: DanmakuSettings.fromJson(raw['danmaku']),

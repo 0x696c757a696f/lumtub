@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../player_settings.dart' show interfaceTranslationLanguage;
+import '../../title_translation.dart';
 import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/settings_tiles.dart';
@@ -284,6 +285,19 @@ List<Widget> _items(BuildContext context, AppController controller) {
           : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),
     ),
     tip(tr('When on, comments, posts and live chat in other languages are translated as you set under Translation layout; text already in the target language, or in one listed under Languages never translated, is left alone.')),
+    PopupItem<TitleTranslation>(
+      title: tr('Translate titles in lists'),
+      leading: Icon(AppIcons.listNumbers),
+      value: prefs.titleTranslation,
+      values: [
+        (TitleTranslation.off, tr('Close')),
+        (TitleTranslation.replace, tr('Translation replaces the title')),
+        (TitleTranslation.translationFirst, tr('Translation above, original below')),
+        (TitleTranslation.originalFirst, tr('Original above, translation below')),
+      ],
+      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(titleTranslation: v)),
+    ),
+    tip(tr('Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.')),
     NormalItem(
       title: tr('Languages never translated'),
       subtitle: prefs.neverTranslate.isEmpty

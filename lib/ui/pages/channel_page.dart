@@ -589,8 +589,14 @@ class ChannelHeader extends StatelessWidget {
         // On a phone the browser button moves into the menu, the picture
         // shrinks and 关注 goes under the name, so the name keeps the row.
         final narrow = constraints.maxWidth < 480;
+        Widget nameText(String text) => Text(text, maxLines: narrow ? 2 : 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700));
         final names = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(name, maxLines: narrow ? 2 : 1, overflow: TextOverflow.ellipsis, style: (narrow ? context.text.titleLarge : context.text.headlineSmall)?.copyWith(fontWeight: FontWeight.w700)),
+          // Never translated in lists; here a tap on 翻译 (or 沉浸式翻译)
+          // shows the name in the reader's language.
+          if (channel.name.isEmpty)
+            nameText(name)
+          else
+            Translatable(controller: controller, text: name, builder: (context, text) => nameText(text)),
           const SizedBox(height: 2),
           Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
         ]);

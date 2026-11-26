@@ -116,7 +116,7 @@ pub static DE: Text = Text {
         Feature { icon: "skip-forward", title: "SponsorBlock und mehr", body: "SponsorBlock, DeArrow und Return YouTube Dislike, alles aus, bis du es einschaltest. Blende Shorts, Videos nur für Mitglieder oder Kanäle auf KI-Spam-Listen aus." },
         Feature { icon: "export", title: "Deine Bibliothek, gesichert", body: "Exportiere abonnierte Kanäle, Gruppen, Favoriten, Später ansehen und Playlists samt Einstellungen. Abos lassen sich auch als NewPipe-Datei exportieren." },
         Feature { icon: "lock-key", title: "Konto nur, wenn du willst", body: "Melde dich für Likes, Kommentare, Playlists und Videos nur für Mitglieder an. Die Zugangsdaten werden mit TPM, Windows Hello oder dem System-Schlüsselbund verschlüsselt." },
-        Feature { icon: "globe-hemisphere-west", title: "82 Oberflächensprachen", body: "Auch von rechts nach links, passend zur Systemsprache. Die Übersetzungen sind offen auf Weblate." },
+        Feature { icon: "globe-hemisphere-west", title: "82 Sprachen, für alle gemacht", body: "Auch von rechts nach links, passend zur Systemsprache. Screenreader lesen jede Karte vor, Text wächst bis 200 %, und Audiodeskription läuft, wenn ein Video sie hat. Die Übersetzungen sind offen auf Weblate." },
         Feature { icon: "shield-check", title: "Proxy und Post-Quanten-TLS", body: "System-, HTTP- oder SOCKS5-Proxys, sodass auch Tor funktioniert. Verschlüsseltes DNS und Verbindungen, die zuerst X25519MLKEM768 anbieten." },
         Feature { icon: "arrows-clockwise", title: "Signierte Updates", body: "App, yt-dlp und libmpv aktualisieren sich selbst mit Signaturen und werden zurückgesetzt, wenn eine neue Komponente Probleme macht." },
     ],

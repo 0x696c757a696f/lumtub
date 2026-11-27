@@ -226,7 +226,7 @@ class SliverVideoGrid extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: shown != VideoLayout.grid
             ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(shown) + (watched == null ? 0 : _reasonHeight),
+                itemExtent: VideoRow.heightFor(shown, MediaQuery.textScalerOf(context)) + (watched == null ? 0 : _reasonHeight),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => VideoRow(
                     key: ValueKey(items[i].id),
@@ -439,7 +439,11 @@ class VideoRow extends StatelessWidget {
 
   static const _thumbWidth = 168.0;
 
-  static double heightFor(VideoLayout layout) => layout == VideoLayout.text ? 60.0 : _thumbWidth * 9 / 16 + Space.s * 2;
+  /// The row's height: the picture's, or with larger text that of the
+  /// title's two lines, the channel and the views.
+  static double heightFor(VideoLayout layout, [TextScaler scaler = TextScaler.noScaling]) => layout == VideoLayout.text
+      ? 60.0
+      : max(_thumbWidth * 9 / 16, scaler.scale(14 * 1.38) * 2 + Space.xs + scaler.scale(12 * 1.4) * 2) + Space.s * 2;
 
   void _menu(BuildContext context, Offset position) => unawaited(showVideoMenu(context, item, position, onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
 
@@ -504,6 +508,10 @@ class VideoRow extends StatelessWidget {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             TitleText(titleFor(item), about: aboutOf(item), maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: Space.xs),
+            // Beside a picture the channel has a line of its own and the
+            // views and age the next, so neither is cut to a few letters
+            // in a phone-wide row.
+            if (!text && meta.lead.isNotEmpty) Text(meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style),
             Row(children: [
               if (text && status != null) ...[
                 Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: item.isLive ? const Color(0xFFCC0000) : colors.primary)),
@@ -517,7 +525,7 @@ class VideoRow extends StatelessWidget {
                 ReasonTag(reason),
                 const SizedBox(width: 6),
               ],
-              Expanded(child: meta),
+              Expanded(child: text ? meta : Text(meta.tail, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style)),
             ]),
             if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
           ])),

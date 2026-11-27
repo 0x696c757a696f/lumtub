@@ -19,10 +19,8 @@ for it in items:
     if not m: continue
     vid = m.get('contentId')
     title = m['metadata']['lockupMetadataViewModel']['title']['content']
-    p = call('player', {'videoId': vid})
-    mf = p.get('microformat', {}).get('playerMicroformatRenderer', {})
-    countries = mf.get('availableCountries')
-    print(vid, '|', title, '| status', p.get('playabilityStatus', {}).get('status'), '| IT' , None if countries is None else ('IT' in countries), '| CN', None if countries is None else ('CN' in countries), '| countries', None if countries is None else len(countries), '| family safe', mf.get('isFamilySafe'), '| unlisted', mf.get('isUnlisted'))
+    rows = m['metadata']['lockupMetadataViewModel'].get('metadata', {}).get('contentMetadataViewModel', {}).get('metadataRows', [])
+    print('VIDEO', vid, '|', title, '|', [p.get('text', {}).get('content') for r in rows for p in r.get('metadataParts', [])])
 for gl in ['IT', 'CN', 'HK', 'TW', 'DE']:
     r2 = call('browse', {'browseId': 'VL' + pid}, gl=gl)
     n = json.dumps(r2).count('"lockupViewModel"')

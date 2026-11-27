@@ -52,8 +52,11 @@ void main() {
     await tester.pump();
     final field = find.byType(TextField).first;
     final before = tester.getSize(field).width;
+    final editable = tester.state(find.byType(EditableText).first);
     await tester.tap(field);
     await tester.pump();
+    // The same field, so its list of recent searches is built on focus.
+    expect(tester.state(find.byType(EditableText).first), same(editable));
     expect(find.byTooltip('Settings'), findsNothing);
     expect(tester.getSize(field).width, greaterThan(before + 80));
     await tester.tap(find.byTooltip('Back'));

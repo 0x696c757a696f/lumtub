@@ -282,6 +282,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The reading behind a Longest or Shortest order (最长, 最短), for its
   /// progress.
   ChannelLengths? channelLengths;
+  /// When the system last said it is short of memory.
+  DateTime? _lastMemoryPressure;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 
@@ -904,6 +906,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     return switch (cause) {
       'home feed' => page(PageMode.home),
       'channel' => page(PageMode.channel),
+      'youtube playlist' => page(PageMode.youtubePlaylist),
       'related' => onWatchPage,
       'search' || 'explore' => page(PageMode.explore),
       'youtube history' => page(PageMode.history),

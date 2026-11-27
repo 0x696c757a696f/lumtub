@@ -11,7 +11,7 @@ extension VolumeBalanceActions on AppController {
     final strength = settings.volumeBalance;
     final item = playing;
     // Setting `af` replaces the chain, so the filter is put in again.
-    await platform.command(['af', 'remove', '@${VolumeBalance.label}']).catchError((_) {});
+    await _removeAudioFilter(platform, VolumeBalance.label);
     if (strength <= 0 || item == null) return;
     final loudness = _repository?.streams.loudnessOf(item.id);
     final live = item.isLive;

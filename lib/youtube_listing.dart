@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
@@ -72,7 +74,11 @@ class YoutubeListing {
     // not read: the next may still have videos. A few such pages in a row
     // end it.
     var empty = 0;
+    // A playlist logs each page it reads, as one opened on a phone stayed
+    // loading with nothing in the log (2026-11-27).
+    final traced = '${first['browseId'] ?? ''}'.startsWith('VL') ? first['browseId'] : null;
     for (var page = 0; page < 50; page++) {
+      final asked = Stopwatch()..start();
       final response = await _client
           .post(
             Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
@@ -95,6 +101,9 @@ class YoutubeListing {
       if (response.statusCode != 200) throw StateError('YouTube $endpoint returned HTTP ${response.statusCode}');
       final read = await _readInBackground(response.bodyBytes, chips: sort != null && page == 0);
       if (read is! Map<String, dynamic>) throw const FormatException('Unexpected YouTube response');
+      if (traced != null) {
+        logInfo('YouTube $traced page ${page + 1}: ${(read['entries'] as List).length} entries, ${response.bodyBytes.length} bytes in ${asked.elapsedMilliseconds} ms${read['continuation'] is String ? ', more to read' : ''}');
+      }
       if (sort != null && page == 0) {
         // The sorted list is the chip's own; the default page is shown only
         // when YouTube offers no such chip.
@@ -105,6 +114,7 @@ class YoutubeListing {
           continue;
         }
       }
+      if (page == 0 && (read['entries'] as List).isEmpty) _logEmpty(endpoint, first, response.bodyBytes);
       var added = 0;
       for (final entry in (read['entries'] as List).cast<Map<String, dynamic>>()) {
         final id = entry['id'];
@@ -131,6 +141,27 @@ class YoutubeListing {
         // The row's first items are already listed.
         logWarn('YouTube listing row failed: $e');
       }
+    }
+  }
+
+  /// Says what an answer without entries held instead, so a list that
+  /// comes up empty on one network but not another can be told apart:
+  /// YouTube's notices ("This playlist does not exist"), or no list at all.
+  static void _logEmpty(String endpoint, Map<String, Object> asked, List<int> body) {
+    final text = utf8.decode(body, allowMalformed: true);
+    final notices = {
+      for (final match in RegExp(r'"(?:alertRenderer|alertWithButtonRenderer)":\{[^{}]*?"text":\{(?:"simpleText":"([^"]{1,200})"|"runs":\[\{"text":"([^"]{1,200})")').allMatches(text)) match[1] ?? match[2],
+    }.whereType<String>();
+    final what = asked['browseId'] ?? (asked['query'] == null ? endpoint : 'search');
+    logInfo('YouTube $what: first page has no entries (${body.length} bytes, '
+        '${text.contains('"twoColumnBrowseResultsRenderer"') || text.contains('"twoColumnSearchResultsRenderer"') ? 'with' : 'without'} a list'
+        '${notices.isEmpty ? '' : '; ${notices.join(' / ')}'})');
+    // The answer itself, beside the log, for whoever reads it: it was
+    // asked signed out, so it holds nothing of the user's. Only the latest
+    // is kept.
+    final log = AppLog.current;
+    if (log != null) {
+      unawaited(File('${log.file.parent.path}${Platform.pathSeparator}empty-listing.json').writeAsBytes(body).then((_) {}, onError: (_) {}));
     }
   }
 

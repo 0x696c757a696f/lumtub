@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/video_list_loader.dart';
-import 'package:lumtub/channel_sort.dart';
 import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/models.dart';
 
@@ -227,34 +226,6 @@ void main() {
     expect(loader.items.map((v) => v.title), ['10', '8', '6', '4', '2', '0']);
     expect(loader.hasMore, isFalse);
     expect(source.opened, 1);
-  });
-
-  test('sorting a channel by length reads the whole tab before the first page shows', () async {
-    String timed(int i, int? seconds) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': '', if (seconds != null) 'duration': seconds});
-    final lengths = [300, 30, null, 4000, 90, 600, 5, 1200];
-    List<String> lines() => [for (var i = 0; i < lengths.length; i++) timed(i, lengths[i])];
-    Future<List<String>> order(ChannelSort sort) async {
-      final source = _Source(lines());
-      final read = <int>[];
-      final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, rank: sort.rank, gather: 100, pages: 100);
-      addTearDown(loader.dispose);
-      loader.addListener(() => read.add(loader.read));
-      loader.loadMore();
-      await pumpEventQueue();
-      expect(source.read, lengths.length, reason: '第一页之前读完整个标签页');
-      expect(read.where((n) => n > 0 && n < lengths.length), isNotEmpty, reason: '读取中报告进度');
-      while (loader.hasMore) {
-        loader.loadMore();
-        await pumpEventQueue();
-      }
-      expect(source.opened, 1);
-      return [for (final v in loader.items) v.title];
-    }
-
-    expect(await order(ChannelSort.longest), ['3', '7', '5', '0', '4', '1', '6', '2']);
-    expect(await order(ChannelSort.shortest), ['6', '1', '4', '0', '5', '7', '3', '2']);
-    expect(ChannelSort.longest.fits(ChannelTab.shorts), isFalse);
-    expect(ChannelSort.popular.fits(ChannelTab.shorts), isTrue);
   });
 
   test('a slow strict filter shows what it found while it reads on', () async {

@@ -783,6 +783,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.handTap),
               onTap: () => pickFromDialog<RightClick>(context, title: tr('Right click on the video'), value: prefs.rightClick, values: [for (final v in RightClick.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(rightClick: v))),
             ), subtitle: '${tr('mouse back')} ${tr('Fill the window')}'),
+        SettingEntry(tr('Middle click on the video'), (context) => NormalItem(
+              title: tr('Middle click on the video'),
+              subtitle: prefs.middleClick.label,
+              leading: _icon(AppIcons.handTap),
+              onTap: () => pickFromDialog<MiddleClick>(context, title: tr('Middle click on the video'), value: prefs.middleClick, values: [for (final v in MiddleClick.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(middleClick: v))),
+            ), subtitle: '${tr('Play or pause')} ${tr('Mute or unmute')} ${tr('Picture in picture')}'),
         SettingEntry(tr('Keyboard shortcuts help'), (context) => NormalItem(
               title: tr('Keyboard shortcuts help'),
               subtitle: tr('View all player shortcuts'),

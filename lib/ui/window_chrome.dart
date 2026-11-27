@@ -92,7 +92,10 @@ class _WindowChromeState extends State<WindowChrome> {
             // colour, which the glass takes.
             content = Stack(fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: appearance.lowResource), content]);
           }
-          if (ownTitleBar && !bare) content = ResizeEdges(child: content);
+          // Filling the window still leaves it a window: its edges size it.
+          // (Windows and macOS keep their own sizing borders; ResizeEdges
+          // only draws them where the desktop takes them away.)
+          if ((ownTitleBar && !bare) || (filling && !WindowChrome.fullscreen.value)) content = ResizeEdges(child: content);
           // Above the navigator there is no page yet: the bars get the text
           // style and ink a page would give them, and an overlay of their
           // own for their menus and tooltips.

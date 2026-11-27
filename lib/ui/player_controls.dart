@@ -482,6 +482,32 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     }
   }
 
+  /// A middle click: what 鼠标中键 is set to.
+  void _onTertiaryTapUp(TapUpDetails details) {
+    if (_locked) return;
+    switch (_c.preferences.middleClick) {
+      case MiddleClick.off:
+        break;
+      case MiddleClick.playPause:
+        unawaited(_player.playOrPause());
+        _showBars();
+      case MiddleClick.mute:
+        unawaited(_c.toggleMute().then((_) {
+          if (!mounted) return;
+          final muted = _player.state.volume == 0;
+          _showFeedback(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${_player.state.volume.round()}%');
+        }));
+      case MiddleClick.fillWindow:
+        unawaited(toggleFillWindow(widget.state));
+      case MiddleClick.pip:
+        unawaited(() async {
+          if (_c.pip) return _c.setPip(false);
+          if (isFullscreen(context)) await widget.state?.exitFullscreen();
+          _c.setPip(true);
+        }());
+    }
+  }
+
   void _holdStart() {
     if (_locked || _heldRate != null || !_player.state.playing) return;
     final rate = _player.state.rate;
@@ -863,7 +889,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             TapGestureRecognizer.new,
             (recognizer) => recognizer
               ..onTapUp = _onTapUp
-              ..onSecondaryTap = _onSecondaryTap,
+              ..onSecondaryTap = _onSecondaryTap
+              ..onTertiaryTapUp = _onTertiaryTapUp,
           ),
           DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
             DoubleTapGestureRecognizer.new,

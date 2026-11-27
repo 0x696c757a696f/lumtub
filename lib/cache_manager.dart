@@ -8,7 +8,10 @@ import 'player_settings.dart';
 /// Manages only folders created by Lumtub. A selected parent folder is never
 /// deleted or scanned as if it belonged to the application.
 class CacheManager {
-  static const managedFolders = {'thumbnails', 'temp', 'yt-dlp', 'mpv'};
+  static const managedFolders = {'thumbnails', 'temp', 'yt-dlp', 'mpv', channelsFolder};
+
+  /// Channel tabs read for 最长 and 最短 (channel_lengths.dart).
+  static const channelsFolder = 'channels';
 
   /// The folders yt-dlp downloads and recordings use while they run.
   static const downloadFolders = {'temp', 'yt-dlp'};

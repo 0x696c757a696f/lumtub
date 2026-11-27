@@ -40,6 +40,16 @@ enum SearchDuration {
   final String _label;
   String get label => tr(_label);
   final int code;
+
+  /// Whether a video of [seconds] falls in this range, as YouTube's
+  /// search filter draws them; a video of unknown length, such as a
+  /// stream, only in [any].
+  bool admits(int? seconds) => switch (this) {
+        any => true,
+        short => seconds != null && seconds < 240,
+        medium => seconds != null && seconds >= 240 && seconds <= 1200,
+        long => seconds != null && seconds > 1200,
+      };
 }
 
 /// Picture features a video must have.

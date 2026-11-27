@@ -4268,5 +4268,7 @@
   "Scroll right": "向右滚动",
   "Longest": "最长",
   "Shortest": "最短",
-  "Reading all videos to sort them by length: {0} so far": "正在读取全部视频以按时长排序，已读取 {0} 个"
+  "Reading all videos to sort them by length: {0} so far": "正在读取全部视频以按时长排序，已读取 {0} 个",
+  "Middle click on the video": "在视频上按鼠标中键",
+  "Mute or unmute": "静音或取消静音"
 }

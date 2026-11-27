@@ -390,6 +390,186 @@
       "c": "圣母蒙召升天节",
       "cat": "church",
       "rite": "latin"
+    },
+    {
+      "p": "大天使",
+      "c": "总领天使",
+      "cat": "church",
+      "note": "archangel"
+    },
+    {
+      "p": "天使拉斐尔",
+      "c": "天使辣法耳",
+      "cat": "name",
+      "note": "Raphael the archangel (Tobit), not the painter"
+    },
+    {
+      "p": "总领天使拉斐尔",
+      "c": "总领天使辣法耳",
+      "cat": "name"
+    },
+    {
+      "p": "大天使拉斐尔",
+      "c": "总领天使辣法耳",
+      "cat": "name"
+    },
+    {
+      "p": "天使长拉斐尔",
+      "c": "总领天使辣法耳",
+      "cat": "name"
+    },
+    {
+      "p": "圣拉斐尔",
+      "c": "圣辣法耳",
+      "cat": "name"
+    },
+    {
+      "p": "拉斐尔天使",
+      "c": "辣法耳天使",
+      "cat": "name"
+    },
+    {
+      "p": "拉斐尔总领天使",
+      "c": "辣法耳总领天使",
+      "cat": "name"
+    },
+    {
+      "p": "炽天使",
+      "c": "色辣芬",
+      "cat": "name",
+      "note": "seraph"
+    },
+    {
+      "p": "六翼天使",
+      "c": "色辣芬",
+      "cat": "name",
+      "note": "seraph"
+    },
+    {
+      "p": "智天使",
+      "c": "革鲁宾",
+      "cat": "name",
+      "note": "cherub"
+    },
+    {
+      "p": "守护天使",
+      "c": "护守天使",
+      "cat": "church",
+      "note": "guardian angel"
+    },
+    {
+      "p": "好星期五",
+      "c": "圣周五",
+      "cat": "church",
+      "note": "Good Friday, word for word"
+    },
+    {
+      "p": "灰烬星期三",
+      "c": "圣灰礼仪日",
+      "cat": "church",
+      "note": "Ash Wednesday"
+    },
+    {
+      "p": "灰星期三",
+      "c": "圣灰礼仪日",
+      "cat": "church",
+      "note": "Ash Wednesday"
+    },
+    {
+      "p": "圣灰星期三",
+      "c": "圣灰礼仪日",
+      "cat": "church",
+      "note": "Ash Wednesday"
+    },
+    {
+      "p": "西斯廷教堂",
+      "c": "西斯汀小堂",
+      "cat": "church",
+      "note": "Sistine Chapel"
+    },
+    {
+      "p": "西斯汀教堂",
+      "c": "西斯汀小堂",
+      "cat": "church",
+      "note": "Sistine Chapel"
+    },
+    {
+      "p": "西斯廷礼拜堂",
+      "c": "西斯汀小堂",
+      "cat": "church",
+      "note": "Sistine Chapel"
+    },
+    {
+      "p": "西斯汀礼拜堂",
+      "c": "西斯汀小堂",
+      "cat": "church",
+      "note": "Sistine Chapel"
+    },
+    {
+      "p": "圣彼得大教堂",
+      "c": "圣伯多禄大殿",
+      "cat": "church",
+      "note": "St Peter's Basilica"
+    },
+    {
+      "p": "圣伯多禄大教堂",
+      "c": "圣伯多禄大殿",
+      "cat": "church",
+      "note": "St Peter's Basilica"
+    },
+    {
+      "p": "三一主日",
+      "c": "天主圣三节",
+      "cat": "church",
+      "note": "Trinity Sunday"
+    },
+    {
+      "p": "圣三一主日",
+      "c": "天主圣三节",
+      "cat": "church",
+      "note": "Trinity Sunday"
+    },
+    {
+      "p": "棕榈主日",
+      "c": "圣枝主日",
+      "cat": "church",
+      "note": "Palm Sunday"
+    },
+    {
+      "p": "棕榈星期日",
+      "c": "圣枝主日",
+      "cat": "church",
+      "note": "Palm Sunday"
+    },
+    {
+      "p": "使徒劝勉",
+      "c": "宗座劝谕",
+      "cat": "church",
+      "note": "apostolic exhortation"
+    },
+    {
+      "p": "使徒劝告",
+      "c": "宗座劝谕",
+      "cat": "church",
+      "note": "apostolic exhortation"
+    },
+    {
+      "p": "冰雹玛丽",
+      "c": "圣母经",
+      "cat": "church",
+      "note": "Hail Mary, word for word"
+    },
+    {
+      "p": "冰雹玛利亚",
+      "c": "圣母经",
+      "cat": "church",
+      "note": "Hail Mary, word for word"
+    },
+    {
+      "p": "冰雹玛丽亚",
+      "c": "圣母经",
+      "cat": "church",
+      "note": "Hail Mary, word for word"
     }
   ]
 }

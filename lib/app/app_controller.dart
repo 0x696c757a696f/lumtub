@@ -467,17 +467,22 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The rite of the open channel when it is a Catholic one: its name says
   /// so, or at least two of the videos loaded from it are Catholic and they
-  /// make up a quarter of them, Byzantine when most of those are. Each title
-  /// is looked at once ([ChurchWording]).
+  /// make up a quarter of them, Byzantine when most of those are, or it was
+  /// found Catholic before. A channel found Catholic is remembered, so its
+  /// videos are Catholic wherever they show. Each title is looked at once
+  /// ([ChurchWording]).
   ChurchRite? get channelRite {
     final open = channel;
     if (open == null) return null;
-    if (ChurchWording.riteOf(open.name) case final rite?) return rite;
+    if (ChurchWording.riteOf(open.name) case final rite?) {
+      ChurchWording.noteChannel(open.id, rite);
+      return rite;
+    }
     final items = channelVideos?.items ?? const <VideoItem>[];
     var latin = 0;
     var byzantine = 0;
     for (final item in items) {
-      switch (ChurchWording.riteOfVideo(item)) {
+      switch (ChurchWording.riteOfVideo(item, byChannel: false)) {
         case ChurchRite.latin:
           latin++;
         case ChurchRite.byzantine:
@@ -486,8 +491,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       }
     }
     final catholic = latin + byzantine;
-    if (catholic < 2 || catholic * 4 < items.length) return null;
-    return byzantine > latin ? ChurchRite.byzantine : ChurchRite.latin;
+    if (catholic < 2 || catholic * 4 < items.length) return ChurchWording.riteOfChannel(open.id);
+    final rite = byzantine > latin ? ChurchRite.byzantine : ChurchRite.latin;
+    ChurchWording.noteChannel(open.id, rite);
+    return rite;
   }
   List<LiveChatMessage> replayChat = const [];
   /// Recent Super Chats of the live chat, newest first, with when each

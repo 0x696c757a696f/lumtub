@@ -264,9 +264,11 @@ class PackManager extends ChangeNotifier {
           error = '$e';
           logWarn('Could not refresh the pack catalog: $e');
         } finally {
+          // Removed before refresh() completes, so nothing else deletes or
+          // reuses the folder while this is still at it (Windows refuses).
+          await _removeQuietly(temp);
           refreshing = false;
           _changed();
-          unawaited(_removeQuietly(temp));
         }
       });
 

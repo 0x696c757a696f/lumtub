@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
+import '../church_wording.dart';
 import '../app/comments_loader.dart';
 import '../app_preferences.dart' show AppPreferences;
 import '../models.dart';
@@ -199,14 +200,25 @@ class _CommentsSectionState extends State<CommentsSection> {
     return posted;
   }
 
+  /// Whether the video or post commented on is Catholic, so translated
+  /// comments use the Church's wording.
+  bool get _catholic {
+    final c = widget.controller;
+    final creator = widget.creator?.name ?? '';
+    if (widget.videoId != null) return widget.videoId == c.playing?.id && c.playingCatholic || ChurchWording.isCatholicText(creator);
+    return ChurchWording.isCatholicText(creator) || c.channel?.id == widget.creator?.id && c.channelCatholic;
+  }
+
   /// [comment] and, once loaded, its replies.
   List<Widget> _thread(BuildContext context, YoutubeComment comment) {
     final loader = _loader;
     final thread = loader.replies[comment.id];
+    final catholic = _catholic;
     Widget tile(YoutubeComment c, {bool reply = false}) => _CommentTile(
           comment: c,
           loader: loader,
           controller: widget.controller,
+          catholic: catholic,
           onSeek: widget.onSeek,
           creator: widget.creator,
           reply: reply,
@@ -335,11 +347,12 @@ class _CommentsSectionState extends State<CommentsSection> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, required this.loader, required this.controller, this.onSeek, this.creator, this.reply = false, this.onReply});
+  const _CommentTile({required this.comment, required this.loader, required this.controller, this.catholic = false, this.onSeek, this.creator, this.reply = false, this.onReply});
   final ChannelRef? creator;
   final YoutubeComment comment;
   final CommentsLoader loader;
   final AppController controller;
+  final bool catholic;
   final void Function(Duration position)? onSeek;
   final bool reply;
   final VoidCallback? onReply;
@@ -389,6 +402,7 @@ class _CommentTile extends StatelessWidget {
           const SizedBox(height: 4),
           Translatable(
             controller: controller,
+            catholic: catholic,
             text: comment.text,
             builder: (context, text) => SelectionArea(child: LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal)),
           ),

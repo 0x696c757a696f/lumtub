@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../church_wording.dart';
 import '../ui/accessibility.dart';
 import '../apple_chip.dart';
 import '../ai_filter.dart';
@@ -447,6 +448,26 @@ class AppController extends ChangeNotifier with _ExploreState {
   final playQueue = PlayQueue();
   VideoDetails? details;
   bool loadingDetails = false;
+
+  /// Whether the video playing is a Catholic one, so its subtitles,
+  /// comments, chapters and chat translated into Chinese use the Church's
+  /// wording ([ChurchWording]).
+  bool get playingCatholic {
+    final item = playing;
+    return item != null && ChurchWording.isCatholicVideo(item, description: details?.description);
+  }
+
+  /// Whether the open channel is a Catholic one: its name says so, or at
+  /// least two of the videos loaded from it are Catholic and they make up
+  /// a quarter of them. Each title is looked at once ([ChurchWording]).
+  bool get channelCatholic {
+    final open = channel;
+    if (open == null) return false;
+    if (ChurchWording.isCatholicText(open.name)) return true;
+    final items = channelVideos?.items ?? const <VideoItem>[];
+    final catholic = items.where((item) => ChurchWording.isCatholicVideo(item)).length;
+    return catholic >= 2 && catholic * 4 >= items.length;
+  }
   List<LiveChatMessage> replayChat = const [];
   /// Recent Super Chats of the live chat, newest first, with when each
   /// leaves the strip over the chat.
@@ -996,6 +1017,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     playing: () => playing?.id,
+    wording: (text, target) => ChurchWording.apply(text, target, catholic: playingCatholic),
     onUpdated: _subtitleFileUpdated,
   );
 

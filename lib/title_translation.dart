@@ -78,6 +78,9 @@ class TitleTranslations {
   Timer? _timer;
 
   TitleTranslation get mode => _mode;
+
+  /// The language titles are translated into.
+  String get target => _target;
   bool get on => _mode != TitleTranslation.off;
 
   /// Titles queued or being translated, for tests.

@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../device.dart';
 import '../app/app_controller.dart';
+import '../church_wording.dart';
 import '../learning/video_difficulty.dart';
 import '../learning/video_words.dart' show VideoLevel, VideoWords;
 import '../appearance_settings.dart';
@@ -307,6 +308,9 @@ class _WatchedLabels extends UnmodifiableMapBase<String, String> {
   Iterable<String> get keys => _times.keys;
 }
 
+/// The channel and description of [item], for [TitleText.about].
+String aboutOf(VideoItem item) => '${item.channel}\n${item.description ?? ''}';
+
 /// A title cut to [maxLines] lines that shows itself whole in a tooltip
 /// when the pointer rests on it, as a web page's title attribute does. Only
 /// a title that did not fit gets one. Nothing is measured until the pointer
@@ -317,9 +321,13 @@ class _WatchedLabels extends UnmodifiableMapBase<String, String> {
 /// as set, once it has been on screen a moment; the tooltip then holds the
 /// original. Only this widget rebuilds when its translation comes.
 class TitleText extends StatefulWidget {
-  const TitleText(this.text, {super.key, required this.maxLines, required this.style});
+  const TitleText(this.text, {super.key, required this.maxLines, required this.style, this.about = ''});
 
   final String text;
+  /// What else is known of what the title names (its channel, its
+  /// description), so a Catholic one is translated into Chinese in the
+  /// Church's wording ([ChurchWording]).
+  final String about;
   final int maxLines;
   final TextStyle style;
 
@@ -374,7 +382,8 @@ class _TitleTextState extends State<TitleText> {
 
   @override
   Widget build(BuildContext context) {
-    final translation = titleTranslations.lookup(widget.text);
+    final found = titleTranslations.lookup(widget.text);
+    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, catholic: ChurchWording.isCatholicText('${widget.text}\n${widget.about}'));
     final mode = titleTranslations.mode;
     final Widget child;
     final String message;
@@ -478,7 +487,7 @@ class VideoRow extends StatelessWidget {
             const SizedBox(width: Space.m),
           ],
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), about: aboutOf(item), maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: Space.xs),
             Row(children: [
               if (text && status != null) ...[
@@ -573,7 +582,7 @@ class PlaylistCard extends StatelessWidget {
           Expanded(child: Padding(
             padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Flexible(child: TitleText(item.title, maxLines: 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Flexible(child: TitleText(item.title, about: item.channel, maxLines: 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
               Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
@@ -927,7 +936,7 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
             // The channel line keeps to the card's foot, however long the
             // title, so a row of cards lines up.
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
+              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), about: aboutOf(item), maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
               // Why it is here, on a line of its own so it reads whole.
               if (widget.reason case final reason? when reason.isNotEmpty)
                 SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
@@ -1294,7 +1303,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> with SpokenTitle {
           ),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), about: aboutOf(item), maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),

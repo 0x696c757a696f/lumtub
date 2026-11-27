@@ -469,6 +469,20 @@ class NativeCore {
 
   int Function()? _processCpu;
 
+  /// Chinese [text] ([traditional] or simplified characters) in the Catholic
+  /// Church's wording (思高本 names and terms, native/lumtub_core/src/church_words.rs);
+  /// null when nothing changes or without a core that has it.
+  String? churchWords(String text, {required bool traditional}) {
+    try {
+      final call = _churchWords ??= library.lookupFunction<Pointer<Utf8> Function(Bool, Pointer<Uint8>, Size), Pointer<Utf8> Function(bool, Pointer<Uint8>, int)>('lumtub_church_words');
+      return take(withText(text, (bytes, length) => call(traditional, bytes, length)));
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  Pointer<Utf8> Function(bool, Pointer<Uint8>, int)? _churchWords;
+
   /// Joins a downloaded picture and sound without ffmpeg, as [request]
   /// (`{video, audio, out, container, subtitles, title, cover, cut}`, see
   /// JoinRequest) asks; the path written and the stretches left out, or

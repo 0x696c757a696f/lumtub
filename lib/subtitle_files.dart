@@ -29,13 +29,17 @@ import 'scripts.dart';
 /// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
   SubtitleFiles(this._client, this._folder, this._translator,
-      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.wording, this.onUpdated, this.poll = const Duration(seconds: 5)})
       : _position = position ?? _start,
         _playing = playing ?? _nothing;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
   final Translator Function() _translator;
+
+  /// Last words on a translation into [target] before it is shown: the
+  /// Church's wording for a Catholic video ([ChurchWording]).
+  final String Function(String text, String target)? wording;
   final List<Duration> pauses;
 
   /// Pauses before asking a translation service again that answered it
@@ -115,9 +119,11 @@ class SubtitleFiles {
     final handedOut = Completer<DateTime>();
     // More of a translation following playback: written, and the track
     // reloaded; false once it is no longer shown.
+    final target = source?.target;
+    String worded(String text) => target == null || wording == null ? text : wording!(text, target);
     Future<bool> save(String text) async {
       final since = await handedOut.future;
-      await file.writeAsString(text);
+      await file.writeAsString(worded(text));
       final shown = await (onUpdated?.call(file.path) ?? Future.value(true));
       return shown || _whole.contains(key) || DateTime.now().difference(since) < _grace;
     }
@@ -151,7 +157,7 @@ class SubtitleFiles {
         result = await _translate(await _get(source.url), source.target, _translator(), key, save, asr: _isAsr(source.url));
       }
     }
-    final text = result.text;
+    final text = worded(result.text);
     // Files of earlier launches: their addresses have expired anyway. Every
     // fetch waits for this, so a file written meanwhile is not deleted.
     await (_cleared ??= () async {
@@ -172,7 +178,7 @@ class SubtitleFiles {
           _paths.remove(key);
           return;
         }
-        await file.writeAsString(whole);
+        await file.writeAsString(worded(whole));
         await onUpdated?.call(file.path);
       }).catchError((Object e) {
         // The lines translated so far stay; the track is asked again next time.

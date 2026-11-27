@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../app/app_controller.dart';
+import '../church_wording.dart';
 import '../app_preferences.dart' show SubtitleListMode;
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleOption;
@@ -100,7 +101,7 @@ class _SubtitleListState extends State<SubtitleList> {
         if (done(sentence)) return null;
         try {
           final result = (await translateForeignLines(widget.controller.translator, sentence, target, done)).trim();
-          return result.isEmpty || result == sentence.trim() ? null : result;
+          return result.isEmpty || result == sentence.trim() ? null : ChurchWording.apply(result, target, catholic: widget.controller.playingCatholic);
         } catch (_) {
           return null;
         }

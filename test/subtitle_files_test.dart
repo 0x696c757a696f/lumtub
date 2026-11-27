@@ -132,6 +132,21 @@ void main() {
     expect(WebVtt.startOf(cues.last.timing), const Duration(milliseconds: 2010));
   });
 
+  test('hands translations, and only translations, to the last words', () async {
+    final client = MockClient((request) async => http.Response(request.url.queryParameters.containsKey('tlang') ? 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nyoutube\n' : _auto, 200));
+    final seen = <String>[];
+    final files = SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero], wording: (text, target) {
+      seen.add(target);
+      return text.replaceAll('youtube', 'worded');
+    });
+    final own = await files.pathFor(const SubtitleOption(language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en'));
+    expect(await File(own).readAsString(), isNot(contains('worded')));
+    expect(seen, isEmpty);
+    final translated = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=fr&tlang=zh-Hans', kind: SubtitleKind.translated));
+    expect(await File(translated).readAsString(), contains('worded'));
+    expect(seen, ['zh-Hans']);
+  });
+
   test('asks again in halves when a translation joins lines', () async {
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 5; i++) {

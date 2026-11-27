@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
+import '../church_wording.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart';
 import '../translation.dart';
@@ -17,12 +18,16 @@ import 'app_icons.dart';
 /// translation under the original (双语对照), or in its place when that is
 /// turned off. Nothing is sent until the button is tapped.
 class Translatable extends StatefulWidget {
-  const Translatable({super.key, required this.controller, required this.text, required this.builder, this.padding = EdgeInsets.zero});
+  const Translatable({super.key, required this.controller, required this.text, required this.builder, this.padding = EdgeInsets.zero, this.catholic = false});
   final AppController controller;
   final String text;
   /// Draws the text it is given: the original or the translation.
   final Widget Function(BuildContext context, String text) builder;
   final EdgeInsetsGeometry padding;
+  /// Whether [text] belongs to something Catholic (the video playing, the
+  /// channel), so its Chinese translation uses the Church's wording; text
+  /// that says so itself does anyway.
+  final bool catholic;
 
   @override
   State<Translatable> createState() => _TranslatableState();
@@ -124,10 +129,11 @@ class _TranslatableState extends State<Translatable> {
     });
     final round = _round;
     try {
-      final result = await translateForeignLines(widget.controller.textTranslator, text, language, (line) => reads(line) || !_hasLetters(line));
+      final translated = await translateForeignLines(widget.controller.textTranslator, text, language, (line) => reads(line) || !_hasLetters(line));
+      final result = ChurchWording.apply(translated, language, catholic: widget.catholic || ChurchWording.isCatholicText(text));
       if (!mounted || text != widget.text || round != _round) return;
       // The service gave the text back as it was: it is in that language.
-      if (_same(result, text)) {
+      if (_same(translated, text)) {
         if (quiet) return setState(() => _loading = false);
         return setState(() {
           _loading = false;

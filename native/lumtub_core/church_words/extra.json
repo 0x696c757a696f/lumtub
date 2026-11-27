@@ -1,0 +1,6 @@
+{
+  "$comment": "Lumtub's own rules, added after terms.json (a word here replaces its rule there). Same fields as terms.json, simplified Chinese.",
+  "terms": [
+    { "p": "牧师", "c": "神父", "cat": "church", "note": "priest in a Catholic video, which services often write as a Protestant pastor" }
+  ]
+}

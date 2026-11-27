@@ -481,6 +481,7 @@ extension SettingsActions on AppController {
             if (account?.signedIn ?? false) await account?.signOut();
             if (directories case final folders?) _forgetTvSignIn(folders.data.path);
             await airPlayPairings.clear();
+            await scrobbler.disconnect();
           case LocalData.keys:
             translationKeys = const {};
             _useTranslator();

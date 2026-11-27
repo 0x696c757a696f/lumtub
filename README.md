@@ -179,7 +179,7 @@ Combined with two subtitles at once and Explore by spoken language, this turns a
 
 ### Also built in
 These are also found in other YouTube clients, and all are opt-in here:
-- **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
+- **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, **ListenBrainz** scrobbling of the songs you listen to, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback. 🆕 When YouTube shows a bot check, Lumtub switches between IPv4 and IPv6 by itself.
 - 🆕 YouTube's JavaScript challenges are solved inside Lumtub with its built-in QuickJS on computers, with Deno as a fallback.
 - **82 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
@@ -264,6 +264,7 @@ Leaves your computer, because the feature needs it:
 - **A Piped or Invidious server** sees which video you watch, only if you pick one or YouTube refuses and Lumtub falls back to it.
 - **Translation, speech-to-text and AI summaries** send the text or audio involved to the service you configure. All are optional and off until you set them up.
 - **SponsorBlock, DeArrow and Return YouTube Dislike** contact their own servers when enabled, using a short hash prefix of the video id where the service supports it.
+- **ListenBrainz**, only after you paste your token in Settings › Account, receives the artist, title and YouTube link of songs you listen to. Other videos are never sent, and nothing is sent in incognito mode.
 - **Updates** download from GitHub.
 
 Everything is open source under the AGPL, so none of this has to be taken on trust.

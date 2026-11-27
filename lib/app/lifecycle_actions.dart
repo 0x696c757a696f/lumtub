@@ -277,6 +277,10 @@ extension LifecycleActions on AppController {
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
+      scrobbler
+        ..accountFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}scrobble-account.bin'), SecretProtector.forThisSystem())
+        ..queueFile = File('${directories.data.path}${Platform.pathSeparator}scrobble-queue.json');
+      unawaited(scrobbler.load().then((_) => scrobbler.retryWaiting()));
       airPlayPairings.file = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'), SecretProtector.forThisSystem());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {

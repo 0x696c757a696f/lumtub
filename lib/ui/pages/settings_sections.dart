@@ -45,6 +45,7 @@ import 'skins_page.dart';
 import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
+import 'scrobble_settings.dart';
 import 'settings_subpages.dart';
 import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
@@ -1558,6 +1559,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.syncHistoryToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),
             )),
+        SettingEntry(tr('Scrobble songs to ListenBrainz'), (context) => ScrobbleSettings(scrobbler: controller.scrobbler), subtitle: tr('Listening history, scrobbling, music')),
     ],
     SettingsCategory.about => aboutEntries(controller),
   };

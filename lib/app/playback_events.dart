@@ -26,6 +26,7 @@ extension PlaybackEvents on AppController {
       _remember();
       _finishWatching();
       _watching = item;
+      scrobbler.begin(item.id);
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
@@ -261,6 +262,7 @@ extension PlaybackEvents on AppController {
         if (_segments.isNotEmpty && settings.sponsorBlock) _skipSegments(position);
         _pauseAtLineEnd(player, position);
         _countWatchTime();
+        _observeScrobble(player, position);
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
           _lastProgressSave = now;
@@ -554,6 +556,19 @@ extension PlaybackEvents on AppController {
     } catch (e) {
       logWarn('Could not make the video decoder again: $e');
     }
+  }
+
+  /// Tells 听歌记录 how far the song playing has got. Nothing in 无痕模式.
+  void _observeScrobble(Player player, Duration position) {
+    final item = _tracking;
+    if (item == null || incognito || !scrobbler.connected) return;
+    final known = playing?.id == item.id ? details : null;
+    final length = player.state.duration;
+    var cached = _scrobbleFor;
+    if (cached == null || cached.$1 != item.id || !identical(cached.$2, known) || cached.$3 != length) {
+      cached = _scrobbleFor = (item.id, known, length, scrobbleTrackOf(item, known, length: length > Duration.zero ? length : null));
+    }
+    scrobbler.observe(cached.$4, position: position, playing: player.state.playing && !player.state.buffering);
   }
 
   /// Counts the time played up to now into 观看统计, before it is shown.

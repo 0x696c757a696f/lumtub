@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
@@ -147,6 +149,13 @@ class YoutubeListing {
     logInfo('YouTube $what: first page has no entries (${body.length} bytes, '
         '${text.contains('"twoColumnBrowseResultsRenderer"') || text.contains('"twoColumnSearchResultsRenderer"') ? 'with' : 'without'} a list'
         '${notices.isEmpty ? '' : '; ${notices.join(' / ')}'})');
+    // The answer itself, beside the log, for whoever reads it: it was
+    // asked signed out, so it holds nothing of the user's. Only the latest
+    // is kept.
+    final log = AppLog.current;
+    if (log != null) {
+      unawaited(File('${log.file.parent.path}${Platform.pathSeparator}empty-listing.json').writeAsBytes(body).then((_) {}, onError: (_) {}));
+    }
   }
 
   /// The lines of [web], or of [fallback] when [web] fails or finds nothing

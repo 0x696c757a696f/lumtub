@@ -112,7 +112,10 @@ impl Table {
                 }
             };
         }
-        let first = from.chars().next().unwrap() as usize;
+        let first = from
+            .chars()
+            .next()
+            .expect("empty words are skipped in parse") as usize;
         if first < PLANE {
             self.starts[first / 64] |= 1 << (first % 64);
         }
@@ -541,7 +544,10 @@ pub unsafe extern "C" fn lumtub_church_words(
     original: *const u8,
     original_length: usize,
 ) -> *mut std::ffi::c_char {
+    // SAFETY: the caller passes `length` bytes at `text`, as `# Safety` asks.
     let text = unsafe { crate::taste::text(text, length) };
+    // SAFETY: the caller passes `original_length` bytes at `original`, as
+    // `# Safety` asks.
     let original = unsafe { crate::taste::text(original, original_length) };
     match church_words(text, original, Variant::of(variant)) {
         Some(out) => crate::taste::give(out.replace('\0', "")),

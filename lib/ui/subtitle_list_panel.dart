@@ -10,6 +10,7 @@ import 'package:media_kit/media_kit.dart';
 import '../app/app_controller.dart';
 import '../app_log.dart';
 import '../app_preferences.dart' show SubtitleListMode;
+import '../church_wording.dart';
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart' show readsAs;
@@ -100,7 +101,7 @@ class _SubtitleListState extends State<SubtitleList> {
         if (done(sentence)) return null;
         try {
           final result = (await translateForeignLines(widget.controller.translator, sentence, target, done)).trim();
-          return result.isEmpty || result == sentence.trim() ? null : result;
+          return result.isEmpty || result == sentence.trim() ? null : ChurchWording.apply(result, target, rite: widget.controller.playingRite, original: sentence);
         } catch (_) {
           return null;
         }

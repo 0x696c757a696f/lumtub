@@ -12,6 +12,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show AppPreferences, rateText;
+import '../app_window.dart';
 import '../device.dart';
 import '../format_policy.dart';
 import '../heatmap.dart';
@@ -58,6 +59,7 @@ import 'theater_mode.dart';
 import 'theme.dart';
 import 'video_aspect.dart';
 import 'video_box.dart';
+import 'window_chrome.dart';
 
 part 'player_controls_bottom.dart';
 part 'player_controls_panel.dart';
@@ -480,6 +482,32 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     }
   }
 
+  /// A middle click: what the middle-click setting (鼠标中键) asks for.
+  void _onTertiaryTapUp(TapUpDetails details) {
+    if (_locked) return;
+    switch (_c.preferences.middleClick) {
+      case MiddleClick.off:
+        break;
+      case MiddleClick.playPause:
+        unawaited(_player.playOrPause());
+        _showBars();
+      case MiddleClick.mute:
+        unawaited(_c.toggleMute().then((_) {
+          if (!mounted) return;
+          final muted = _player.state.volume == 0;
+          _showFeedback(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${_player.state.volume.round()}%');
+        }));
+      case MiddleClick.fillWindow:
+        unawaited(toggleFillWindow(widget.state));
+      case MiddleClick.pip:
+        unawaited(() async {
+          if (_c.pip) return _c.setPip(false);
+          if (isFullscreen(context)) await widget.state?.exitFullscreen();
+          _c.setPip(true);
+        }());
+    }
+  }
+
   void _holdStart() {
     if (_locked || _heldRate != null || !_player.state.playing) return;
     final rate = _player.state.rate;
@@ -850,6 +878,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
+  /// Whether a mouse drag on the picture moves the window: only while the
+  /// video fills the window, not in fullscreen.
+  bool get _movesWindow => WindowFrame.supported && fillingWindow.value && !WindowChrome.fullscreen.value && !_c.pip;
+
   Widget _surface() => RawGestureDetector(
         behavior: HitTestBehavior.opaque,
         gestures: {
@@ -857,7 +889,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             TapGestureRecognizer.new,
             (recognizer) => recognizer
               ..onTapUp = _onTapUp
-              ..onSecondaryTap = _onSecondaryTap,
+              ..onSecondaryTap = _onSecondaryTap
+              ..onTertiaryTapUp = _onTertiaryTapUp,
           ),
           DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
             DoubleTapGestureRecognizer.new,
@@ -870,6 +903,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ..onLongPressEnd = ((_) => _releaseHold())
               ..onLongPressCancel = _releaseHold,
           ),
+          // With the video filling the window there is no title bar to
+          // hold, so the picture itself moves the window.
+          if (_movesWindow)
+            PanGestureRecognizer: GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+              () => PanGestureRecognizer(supportedDevices: const {PointerDeviceKind.mouse}, allowedButtonsFilter: (buttons) => buttons == kPrimaryButton),
+              (recognizer) => recognizer.onStart = (_) {
+                if (_movesWindow) AppWindow.startDrag();
+              },
+            ),
           if (!_locked) ...{
             VerticalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
               () => VerticalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),

@@ -6,6 +6,7 @@ import 'app_directories.dart';
 import 'app_log.dart';
 import 'block_list_renames.dart';
 import 'blocked_groups.dart';
+import 'channel_sort.dart';
 import 'danmaku.dart' show DanmakuSettings;
 import 'explore_filters.dart';
 import 'explore_topics.dart';
@@ -17,6 +18,7 @@ import 'models.dart';
 import 'player_settings.dart' show interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'right_click.dart';
+import 'search_options.dart' show SearchDuration;
 import 'title_translation.dart';
 import 'translation.dart';
 import 'translation_services.dart';
@@ -104,6 +106,12 @@ class AppPreferences {
           for (final MapEntry(:key, :value) in orders.entries)
             if (VideoOrder.values.where((v) => v.name == value).firstOrNull case final order? when order != VideoOrder.added) key: order,
       },
+      channelSorts: {
+        if (raw['channelSorts'] case final Map<String, dynamic> sorts)
+          for (final MapEntry(:key, :value) in sorts.entries.take(AppPreferences.channelSortsKept))
+            if (ChannelSort.values.where((v) => v.name == value).firstOrNull case final sort? when sort != ChannelSort.latest) key: sort,
+      },
+      feedLength: SearchDuration.values.where((v) => v.name == raw['feedLength']).firstOrNull ?? SearchDuration.any,
       castMaxHeight: const {720, 1080, 1440, 2160, 4320}.contains(raw['castMaxHeight']) ? raw['castMaxHeight'] as int : d.castMaxHeight,
       castFormats: {
         if (raw['castFormats'] case final Map<String, dynamic> formats)
@@ -171,6 +179,7 @@ class AppPreferences {
       volumeStep: number('volumeStep', 5, 1, 25),
       shortcutKeys: keyLists('shortcutKeys'),
       rightClick: RightClick.parse(raw['rightClick'], raw['rightClickBack']),
+      middleClick: MiddleClick.parse(raw['middleClick']),
       wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
       controlsHideSeconds: number('controlsHideSeconds', 3, 0, 30),
       showHeatmap: flag('showHeatmap', d.showHeatmap),
@@ -237,6 +246,8 @@ class AppPreferences {
     this.channelOrder = ChannelOrder.recent,
     this.playlistOrder = PlaylistOrder.manual,
     this.videoOrders = const {},
+    this.channelSorts = const {},
+    this.feedLength = SearchDuration.any,
     this.castMaxHeight = 1080,
     this.castFormats = const {},
     this.enabledGroups = const [],
@@ -284,6 +295,7 @@ class AppPreferences {
     this.volumeStep = 5,
     this.shortcutKeys = const {},
     this.rightClick = RightClick.fillWindow,
+    this.middleClick = MiddleClick.off,
     this.wheelGesture = WheelGesture.off,
     this.controlsHideSeconds = 3,
     this.showHeatmap = true,
@@ -367,6 +379,12 @@ class AppPreferences {
   /// The order chosen for a playlist's videos, by playlist id; one not here
   /// keeps the order videos were added in.
   final Map<String, VideoOrder> videoOrders;
+  /// The order last picked on each channel, by channel id; one not here
+  /// opens newest first. At most [channelSortsKept], the latest picked.
+  final Map<String, ChannelSort> channelSorts;
+  static const channelSortsKept = 500;
+  /// The length of video the subscriptions page shows.
+  final SearchDuration feedLength;
   /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
   /// 1080 the picture is VP9 or AV1 at up to 60 fps, which only newer TVs
   /// decode.
@@ -470,6 +488,8 @@ class AppPreferences {
   final Map<String, List<String>> shortcutKeys;
   /// What a right click on the video does.
   final RightClick rightClick;
+  /// What a middle click on the video does.
+  final MiddleClick middleClick;
   /// What the mouse wheel does over the video; off lets the page scroll.
   final WheelGesture wheelGesture;
   /// 0 keeps them shown while playing, for screen readers and switch
@@ -681,6 +701,8 @@ class AppPreferences {
     ChannelOrder? channelOrder,
     PlaylistOrder? playlistOrder,
     Map<String, VideoOrder>? videoOrders,
+    Map<String, ChannelSort>? channelSorts,
+    SearchDuration? feedLength,
     int? castMaxHeight,
     Map<String, String>? castFormats,
     List<String>? enabledGroups,
@@ -728,6 +750,7 @@ class AppPreferences {
     int? volumeStep,
     Map<String, List<String>>? shortcutKeys,
     RightClick? rightClick,
+    MiddleClick? middleClick,
     WheelGesture? wheelGesture,
     int? controlsHideSeconds,
     bool? showHeatmap,
@@ -782,6 +805,8 @@ class AppPreferences {
         channelOrder: channelOrder ?? this.channelOrder,
         playlistOrder: playlistOrder ?? this.playlistOrder,
         videoOrders: videoOrders ?? this.videoOrders,
+        channelSorts: channelSorts ?? this.channelSorts,
+        feedLength: feedLength ?? this.feedLength,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         castFormats: castFormats ?? this.castFormats,
         enabledGroups: enabledGroups ?? this.enabledGroups,
@@ -829,6 +854,7 @@ class AppPreferences {
         volumeStep: volumeStep ?? this.volumeStep,
         shortcutKeys: shortcutKeys ?? this.shortcutKeys,
         rightClick: rightClick ?? this.rightClick,
+        middleClick: middleClick ?? this.middleClick,
         wheelGesture: wheelGesture ?? this.wheelGesture,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
         showHeatmap: showHeatmap ?? this.showHeatmap,
@@ -884,6 +910,8 @@ class AppPreferences {
         'channelOrder': channelOrder.name,
         'playlistOrder': playlistOrder.name,
         'videoOrders': {for (final MapEntry(:key, :value) in videoOrders.entries) key: value.name},
+        'channelSorts': {for (final MapEntry(:key, :value) in channelSorts.entries) key: value.name},
+        'feedLength': feedLength.name,
         'castMaxHeight': castMaxHeight,
         'castFormats': castFormats,
         'enabledGroups': enabledGroups,
@@ -931,6 +959,7 @@ class AppPreferences {
         'volumeStep': volumeStep,
         'shortcutKeys': shortcutKeys,
         'rightClick': rightClick.name,
+        'middleClick': middleClick.name,
         'wheelGesture': wheelGesture.name,
         'controlsHideSeconds': controlsHideSeconds,
         'showHeatmap': showHeatmap,

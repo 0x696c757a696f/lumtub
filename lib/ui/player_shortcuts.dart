@@ -88,6 +88,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.fullscreen), tr('Fullscreen')),
     (of(PlayerAction.exitFullscreen), tr('Exit fullscreen')),
     if (prefs.rightClick != RightClick.off) (tr('Right click on the video'), prefs.rightClick.label),
+    if (prefs.middleClick != MiddleClick.off) (tr('Middle click on the video'), prefs.middleClick.label),
     (of(PlayerAction.next), tr('Next video')),
     (of(PlayerAction.previous), tr('Previous video')),
     (pair(PlayerAction.frameBack, PlayerAction.frameForward), tr('Step back or forward one frame while paused')),

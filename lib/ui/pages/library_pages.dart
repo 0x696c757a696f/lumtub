@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../library_store.dart';
 import '../../list_order.dart';
 import '../../models.dart';
+import '../../search_options.dart' show SearchDuration;
 import '../../thumbnail_cache.dart';
 import '../../widgets/settings_tiles.dart' show DialogTextFields;
 import '../../youtube_account_feed.dart';
@@ -81,14 +82,17 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
   static Set<String> _idsOf(List<ChannelRef> channels) => _channelIds[channels] ??= {for (final c in channels) c.id};
   static final _channelIds = Expando<Set<String>>();
 
-  List<VideoItem> _feedFor(List<VideoItem> all, ChannelRef? selected, ChannelGroup? group, int revision) {
-    final key = (all, selected?.id, group, group == null ? null : revision);
+  List<VideoItem> _feedFor(List<VideoItem> all, ChannelRef? selected, ChannelGroup? group, int revision, SearchDuration length) {
+    final key = (all, selected?.id, group, group == null ? null : revision, length);
     if (key == _feedKey) return _feedKept;
-    final chosen = selected != null
-        ? [for (final item in all) if (item.channelId == selected.id) item]
-        : group != null
-            ? [for (final item in all) if (group.channels.contains(item.channelId)) item]
-            : all;
+    // One pass over the feed, whatever is picked.
+    final any = length == SearchDuration.any;
+    final chosen = selected == null && group == null && any
+        ? all
+        : [
+            for (final item in all)
+              if ((selected != null ? item.channelId == selected.id : group == null || group.channels.contains(item.channelId)) && (any || length.admits(item.duration))) item,
+          ];
     _feedKey = key;
     // Streams that are on now come first.
     return _feedKept = [for (final item in chosen) if (item.isLive) item, for (final item in chosen) if (!item.isLive) item];
@@ -118,7 +122,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     final inGroup = controller.orderedChannels(_groupChannels(channels, group, library.revision), key: group);
     final picked = _selected;
     final selected = picked != null && _idsOf(inGroup).contains(picked.id) ? picked : null;
-    final feed = _feedFor(controller.visible(library.feed, subscriptions: true), selected, group, library.revision);
+    final feed = _feedFor(controller.visible(library.feed, subscriptions: true), selected, group, library.revision, controller.preferences.feedLength);
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
           itemWidth: vertical ? _railWidth - 12 : 72,
@@ -162,6 +166,10 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       SliverToBoxAdapter(child: _GroupChips(
         groups: controller.orderedGroups,
         channelOrder: _ChannelOrderMenu(controller: controller),
+        length: LengthMenu(
+          value: controller.preferences.feedLength,
+          onSelected: (length) => unawaited(controller.savePreferences(controller.preferences.copyWith(feedLength: length))),
+        ),
         selected: group,
         onSelect: (g) => setState(() {
           _group = g;
@@ -227,10 +235,12 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
 
 /// 全部 and each 订阅分组 as chips, with the button that edits them.
 class _GroupChips extends StatelessWidget {
-  const _GroupChips({required this.groups, required this.channelOrder, required this.selected, required this.onSelect, required this.onManage});
+  const _GroupChips({required this.groups, required this.channelOrder, required this.length, required this.selected, required this.onSelect, required this.onManage});
   final List<ChannelGroup> groups;
   /// The menu that orders the channels below.
   final Widget channelOrder;
+  /// The menu that picks the length of the videos shown.
+  final Widget length;
   final ChannelGroup? selected;
   final ValueChanged<ChannelGroup?> onSelect;
   final VoidCallback onManage;
@@ -255,6 +265,7 @@ class _GroupChips extends StatelessWidget {
             label: Text(groups.isEmpty ? tr('New group') : tr('Manage groups')),
           ),
           channelOrder,
+          length,
         ]),
       );
 }

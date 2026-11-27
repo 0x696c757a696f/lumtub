@@ -34,9 +34,11 @@ import '../cast/cast_subtitles.dart';
 import '../cast/dlna.dart';
 import '../channel_avatar_lookup.dart';
 import '../channel_handle.dart';
+import '../channel_lengths.dart';
 import '../channel_playback.dart';
 import '../channel_sort.dart';
 import '../chunked_relay.dart';
+import '../church_wording.dart';
 import '../cjk_font_packs.dart';
 import '../comment_danmaku.dart';
 import '../community_posts.dart';
@@ -280,6 +282,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
   ChannelSort channelSort = ChannelSort.latest;
+  /// The length of video the open channel tab shows.
+  SearchDuration channelLength = SearchDuration.any;
+  /// The reading behind a Longest or Shortest order (最长, 最短), for its
+  /// progress.
+  ChannelLengths? channelLengths;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 
@@ -452,6 +459,39 @@ class AppController extends ChangeNotifier with _ExploreState {
   final playQueue = PlayQueue();
   VideoDetails? details;
   bool loadingDetails = false;
+
+  /// The rite of the video playing when it is a Catholic one, so its
+  /// subtitles, comments, chapters and chat translated into Chinese use the
+  /// Church's wording ([ChurchWording]); null otherwise.
+  ChurchRite? get playingRite {
+    final item = playing;
+    return item == null ? null : ChurchWording.riteOfVideo(item, description: details?.description);
+  }
+
+  /// The rite of the open channel when it is a Catholic one: its name says
+  /// so, or at least two of the videos loaded from it are Catholic and they
+  /// make up a quarter of them, Byzantine when most of those are. Each title
+  /// is looked at once ([ChurchWording]).
+  ChurchRite? get channelRite {
+    final open = channel;
+    if (open == null) return null;
+    if (ChurchWording.riteOf(open.name) case final rite?) return rite;
+    final items = channelVideos?.items ?? const <VideoItem>[];
+    var latin = 0;
+    var byzantine = 0;
+    for (final item in items) {
+      switch (ChurchWording.riteOfVideo(item)) {
+        case ChurchRite.latin:
+          latin++;
+        case ChurchRite.byzantine:
+          byzantine++;
+        case null:
+      }
+    }
+    final catholic = latin + byzantine;
+    if (catholic < 2 || catholic * 4 < items.length) return null;
+    return byzantine > latin ? ChurchRite.byzantine : ChurchRite.latin;
+  }
   List<LiveChatMessage> replayChat = const [];
   /// Recent Super Chats of the live chat, newest first, with when each
   /// leaves the strip over the chat.
@@ -997,6 +1037,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     playing: () => playing?.id,
+    wording: (text, target, original) => ChurchWording.apply(text, target, rite: playingRite, original: original),
     onUpdated: _subtitleFileUpdated,
   );
 

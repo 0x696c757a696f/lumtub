@@ -54,6 +54,7 @@ class NativeCore {
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
         _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
+        _channelLengths = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_lengths'),
         _playlistMoves = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_playlist_moves'),
         _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
         _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
@@ -178,6 +179,11 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> info, int length, Pointer<Uint8> ask, int askLength) _resolved;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _edl;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _playlistMoves;
+
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _channelLengths;
+
+  /// One ask of native/lumtub_core/src/channel_lengths.rs, as JSON.
+  String? channelLengths(String ask) => take(withText(ask, _channelLengths));
 
   /// What yt-dlp's answer [info] offers for the rules in [ask], as JSON
   /// (native/lumtub_core/src/resolved.rs).
@@ -468,6 +474,21 @@ class NativeCore {
   }
 
   int Function()? _processCpu;
+
+  /// Chinese [text], translated from [original] (empty when unknown), in
+  /// the Catholic Church's wording (native/lumtub_core/src/church_words.rs):
+  /// [variant] 0 simplified, 1 Taiwan, 2 Hong Kong, plus 4 for the Byzantine
+  /// rite. Null when nothing changes or without a core that has it.
+  String? churchWords(String text, {required int variant, String original = ''}) {
+    try {
+      final call = _churchWords ??= library.lookupFunction<Pointer<Utf8> Function(Uint32, Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_church_words');
+      return take(withText(text, (t, tl) => withText(original, (o, ol) => call(variant, t, tl, o, ol))));
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  Pointer<Utf8> Function(int, Pointer<Uint8>, int, Pointer<Uint8>, int)? _churchWords;
 
   /// Joins a downloaded picture and sound without ffmpeg, as [request]
   /// (`{video, audio, out, container, subtitles, title, cover, cut}`, see

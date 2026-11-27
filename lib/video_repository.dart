@@ -447,9 +447,18 @@ class VideoRepository {
     try {
       // Reading pauses while the page is full, which pauses yt-dlp through
       // the pipe until the next page is asked for.
-      yield* process.stdout.transform(utf8.decoder).transform(const LineSplitter());
+      var lines = 0;
+      await for (final line in process.stdout.transform(utf8.decoder).transform(const LineSplitter())) {
+        lines++;
+        yield line;
+      }
       final exitCode = await process.exitCode;
       await errors.cancel();
+      if (lines == 0 && exitCode == 0) {
+        // An empty list says nothing on the page; the warnings may say why.
+        final err = stderr.toString().trim();
+        logInfo('yt-dlp listed nothing for ${arguments.isEmpty ? '?' : arguments.last}${err.isEmpty ? '' : ': ${err.length > 500 ? err.substring(err.length - 500) : err}'}');
+      }
       if (exitCode != 0) {
         final err = stderr.toString().trim();
         // A channel without that tab (no videos, no Shorts) has nothing to

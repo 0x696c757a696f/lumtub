@@ -105,6 +105,7 @@ class YoutubeListing {
           continue;
         }
       }
+      if (page == 0 && (read['entries'] as List).isEmpty) _logEmpty(endpoint, first, response.bodyBytes);
       var added = 0;
       for (final entry in (read['entries'] as List).cast<Map<String, dynamic>>()) {
         final id = entry['id'];
@@ -132,6 +133,20 @@ class YoutubeListing {
         logWarn('YouTube listing row failed: $e');
       }
     }
+  }
+
+  /// Says what an answer without entries held instead, so a list that
+  /// comes up empty on one network but not another can be told apart:
+  /// YouTube's notices ("This playlist does not exist"), or no list at all.
+  static void _logEmpty(String endpoint, Map<String, Object> asked, List<int> body) {
+    final text = utf8.decode(body, allowMalformed: true);
+    final notices = {
+      for (final match in RegExp(r'"(?:alertRenderer|alertWithButtonRenderer)":\{[^{}]*?"text":\{(?:"simpleText":"([^"]{1,200})"|"runs":\[\{"text":"([^"]{1,200})")').allMatches(text)) match[1] ?? match[2],
+    }.whereType<String>();
+    final what = asked['browseId'] ?? (asked['query'] == null ? endpoint : 'search');
+    logInfo('YouTube $what: first page has no entries (${body.length} bytes, '
+        '${text.contains('"twoColumnBrowseResultsRenderer"') || text.contains('"twoColumnSearchResultsRenderer"') ? 'with' : 'without'} a list'
+        '${notices.isEmpty ? '' : '; ${notices.join(' / ')}'})');
   }
 
   /// The lines of [web], or of [fallback] when [web] fails or finds nothing

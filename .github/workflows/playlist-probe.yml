@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - run: python3 .github/scripts/playlist_probe.py PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI
+      - run: python3 .github/scripts/playlist_probe.py PLuqpGDexlvGyhwQ4ZpHD17jrcOOWSXSpA
       - name: Parse with the core
         run: |
           cat >> native/lumtub_core/src/listing.rs <<'RS'

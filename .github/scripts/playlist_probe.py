@@ -42,4 +42,5 @@ for pid in ids:
         json.dump(r, f)
     sec = r['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents']
     items = sec[0]['itemSectionRenderer']['contents']
+    print('ALL', json.dumps(r)[:60000])
     print('TAB', {k: v for k, v in r['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer'].items() if k != 'content'})

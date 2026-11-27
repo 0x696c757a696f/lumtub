@@ -4262,5 +4262,21 @@
   "Length {0}": "Varighed {0}",
   "{0}% watched": "{0} % set",
   "Scroll left": "Rul til venstre",
-  "Scroll right": "Rul til højre"
+  "Scroll right": "Rul til højre",
+  "Connect": "Tilslut",
+  "Connect ListenBrainz": "Tilslut ListenBrainz",
+  "Connected as {0}": "Tilsluttet som {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Tilsluttet som {0} · {1} afspilninger venter på at blive sendt",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Tilsluttet som {0}. Et nummer tæller, når du har lyttet til halvdelen af det eller fire minutter, alt efter hvad der sker først. Der sendes intet i inkognitotilstand.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopiér dit brugertoken fra indstillingssiden på ListenBrainz, og indsæt det her. Det gemmes krypteret på denne enhed.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Kunne ikke få forbindelse til ListenBrainz. Tjek dit netværk, og prøv igen",
+  "Couldn't save the token": "Kunne ikke gemme tokenet",
+  "Disconnect": "Afbryd",
+  "ListenBrainz did not accept this token": "ListenBrainz accepterede ikke dette token",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz accepterer ikke længere tokenet. Tryk for at indtaste et nyt",
+  "Listening history, scrobbling, music": "Lyttehistorik, scrobbling, musik",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Fra. Numre, du lytter til, kan føjes til din lyttehistorik på ListenBrainz; andre videoer sendes aldrig",
+  "Open ListenBrainz settings": "Åbn ListenBrainz-indstillinger",
+  "Scrobble songs to ListenBrainz": "Scrobble numre til ListenBrainz",
+  "User token": "Brugertoken"
 }

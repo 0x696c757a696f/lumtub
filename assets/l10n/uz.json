@@ -4262,5 +4262,21 @@
   "Length {0}": "Davomiyligi {0}",
   "{0}% watched": "{0}% ko‘rilgan",
   "Scroll left": "Chapga surish",
-  "Scroll right": "O‘ngga surish"
+  "Scroll right": "O‘ngga surish",
+  "Connect": "Ulash",
+  "Connect ListenBrainz": "ListenBrainz ni ulash",
+  "Connected as {0}": "{0} sifatida ulangan",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} sifatida ulangan · yuborilishini kutayotgan {1} tinglash",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} sifatida ulangan. Qo‘shiq yarmi yoki to‘rt daqiqasi (qaysi biri oldin bo‘lsa) tinglanganda hisoblanadi. Inkognito rejimida hech narsa yuborilmaydi.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Foydalanuvchi tokeningizni ListenBrainz sozlamalari sahifasidan nusxalab, bu yerga joylang. U shu qurilmada shifrlangan holda saqlanadi.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ga ulanib bo‘lmadi. Tarmoqni tekshirib, qayta urinib ko‘ring",
+  "Couldn't save the token": "Tokenni saqlab bo‘lmadi",
+  "Disconnect": "Uzish",
+  "ListenBrainz did not accept this token": "ListenBrainz bu tokenni qabul qilmadi",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz endi tokenni qabul qilmaydi. Yangisini kiritish uchun bosing",
+  "Listening history, scrobbling, music": "Tinglash tarixi, scrobbling, musiqa",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "O‘chiq. Tinglagan qo‘shiqlaringiz ListenBrainz tinglash tarixingizga qo‘shilishi mumkin; boshqa videolar hech qachon yuborilmaydi",
+  "Open ListenBrainz settings": "ListenBrainz sozlamalarini ochish",
+  "Scrobble songs to ListenBrainz": "Qo‘shiqlarni ListenBrainz ga scrobble qilish",
+  "User token": "Foydalanuvchi tokeni"
 }

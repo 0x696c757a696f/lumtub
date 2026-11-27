@@ -4262,5 +4262,21 @@
   "Length {0}": "ਮਿਆਦ {0}",
   "{0}% watched": "{0}% ਦੇਖਿਆ ਗਿਆ",
   "Scroll left": "ਖੱਬੇ ਸਕ੍ਰੋਲ ਕਰੋ",
-  "Scroll right": "ਸੱਜੇ ਸਕ੍ਰੋਲ ਕਰੋ"
+  "Scroll right": "ਸੱਜੇ ਸਕ੍ਰੋਲ ਕਰੋ",
+  "Connect": "ਕਨੈਕਟ ਕਰੋ",
+  "Connect ListenBrainz": "ListenBrainz ਕਨੈਕਟ ਕਰੋ",
+  "Connected as {0}": "{0} ਵਜੋਂ ਕਨੈਕਟ ਹੈ",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ਵਜੋਂ ਕਨੈਕਟ ਹੈ · {1} ਸੁਣਨ ਭੇਜੇ ਜਾਣ ਦੀ ਉਡੀਕ ਵਿੱਚ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ਵਜੋਂ ਕਨੈਕਟ ਹੈ। ਗੀਤ ਦਾ ਅੱਧਾ ਹਿੱਸਾ ਜਾਂ ਚਾਰ ਮਿੰਟ, ਜੋ ਪਹਿਲਾਂ ਹੋਵੇ, ਸੁਣਨ 'ਤੇ ਉਹ ਗਿਣਿਆ ਜਾਂਦਾ ਹੈ। ਇਨਕੌਗਨਿਟੋ ਮੋਡ ਵਿੱਚ ਕੁਝ ਵੀ ਨਹੀਂ ਭੇਜਿਆ ਜਾਂਦਾ।",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ਆਪਣੇ ListenBrainz ਸੈਟਿੰਗਾਂ ਪੰਨੇ ਤੋਂ ਯੂਜ਼ਰ ਟੋਕਨ ਕਾਪੀ ਕਰੋ ਅਤੇ ਇੱਥੇ ਪੇਸਟ ਕਰੋ। ਇਹ ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਐਨਕ੍ਰਿਪਟ ਕਰਕੇ ਸਟੋਰ ਕੀਤਾ ਜਾਂਦਾ ਹੈ।",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ਤੱਕ ਪਹੁੰਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਆਪਣਾ ਨੈੱਟਵਰਕ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
+  "Couldn't save the token": "ਟੋਕਨ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ",
+  "Disconnect": "ਡਿਸਕਨੈਕਟ ਕਰੋ",
+  "ListenBrainz did not accept this token": "ListenBrainz ਨੇ ਇਹ ਟੋਕਨ ਸਵੀਕਾਰ ਨਹੀਂ ਕੀਤਾ",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ਹੁਣ ਇਹ ਟੋਕਨ ਸਵੀਕਾਰ ਨਹੀਂ ਕਰਦਾ। ਨਵਾਂ ਦਾਖਲ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ",
+  "Listening history, scrobbling, music": "ਸੁਣਨ ਦਾ ਇਤਿਹਾਸ, scrobbling, ਸੰਗੀਤ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ਬੰਦ। ਤੁਹਾਡੇ ਸੁਣੇ ਗੀਤ ਤੁਹਾਡੇ ListenBrainz ਸੁਣਨ ਦੇ ਇਤਿਹਾਸ ਵਿੱਚ ਜੋੜੇ ਜਾ ਸਕਦੇ ਹਨ; ਹੋਰ ਵੀਡੀਓ ਕਦੇ ਨਹੀਂ ਭੇਜੇ ਜਾਂਦੇ",
+  "Open ListenBrainz settings": "ListenBrainz ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ",
+  "Scrobble songs to ListenBrainz": "ਗੀਤਾਂ ਨੂੰ ListenBrainz 'ਤੇ scrobble ਕਰੋ",
+  "User token": "ਯੂਜ਼ਰ ਟੋਕਨ"
 }

@@ -4262,5 +4262,21 @@
   "Length {0}": "Tempoh {0}",
   "{0}% watched": "{0}% telah ditonton",
   "Scroll left": "Tatal ke kiri",
-  "Scroll right": "Tatal ke kanan"
+  "Scroll right": "Tatal ke kanan",
+  "Connect": "Sambung",
+  "Connect ListenBrainz": "Sambung ListenBrainz",
+  "Connected as {0}": "Disambungkan sebagai {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Disambungkan sebagai {0} · {1} dengaran menunggu untuk dihantar",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Disambungkan sebagai {0}. Sesebuah lagu dikira apabila anda mendengar separuhnya atau empat minit, mana-mana yang lebih awal. Tiada apa-apa dihantar dalam mod inkognito.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Salin token pengguna anda daripada halaman tetapan ListenBrainz dan tampalkan di sini. Ia disimpan dalam bentuk disulitkan pada peranti ini.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Tidak dapat menghubungi ListenBrainz. Semak rangkaian anda dan cuba lagi",
+  "Couldn't save the token": "Tidak dapat menyimpan token",
+  "Disconnect": "Putuskan sambungan",
+  "ListenBrainz did not accept this token": "ListenBrainz tidak menerima token ini",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz tidak lagi menerima token ini. Ketik untuk memasukkan yang baharu",
+  "Listening history, scrobbling, music": "Sejarah mendengar, scrobbling, muzik",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Mati. Lagu yang anda dengar boleh ditambahkan ke sejarah mendengar ListenBrainz anda; video lain tidak pernah dihantar",
+  "Open ListenBrainz settings": "Buka tetapan ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble lagu ke ListenBrainz",
+  "User token": "Token pengguna"
 }

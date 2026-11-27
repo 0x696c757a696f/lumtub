@@ -4262,5 +4262,21 @@
   "Length {0}": "Lengd {0}",
   "{0}% watched": "{0}% skoðað",
   "Scroll left": "Fletta til vinstri",
-  "Scroll right": "Fletta til hægri"
+  "Scroll right": "Fletta til hægri",
+  "Connect": "Tengja",
+  "Connect ListenBrainz": "Tengja ListenBrainz",
+  "Connected as {0}": "Tengt sem {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Tengt sem {0} · {1} hlustanir bíða sendingar",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Tengt sem {0}. Lag telst með þegar þú hefur hlustað á helminginn eða fjórar mínútur, hvort sem gerist fyrr. Ekkert er sent í huliðsstillingu.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Afritaðu notandalykilinn þinn af stillingasíðu ListenBrainz og límdu hann hér. Hann er geymdur dulkóðaður á þessu tæki.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Ekki náðist samband við ListenBrainz. Athugaðu netið og reyndu aftur",
+  "Couldn't save the token": "Ekki tókst að vista lykilinn",
+  "Disconnect": "Aftengja",
+  "ListenBrainz did not accept this token": "ListenBrainz samþykkti ekki þennan lykil",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz samþykkir lykilinn ekki lengur. Ýttu til að slá inn nýjan",
+  "Listening history, scrobbling, music": "Hlustunarferill, scrobbling, tónlist",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Slökkt. Lög sem þú hlustar á má bæta við hlustunarferilinn þinn á ListenBrainz; önnur myndbönd eru aldrei send",
+  "Open ListenBrainz settings": "Opna stillingar ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobbla lög á ListenBrainz",
+  "User token": "Notandalykill"
 }

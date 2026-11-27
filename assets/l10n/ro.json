@@ -4262,5 +4262,21 @@
   "Length {0}": "Durată {0}",
   "{0}% watched": "{0}% vizionat",
   "Scroll left": "Derulează la stânga",
-  "Scroll right": "Derulează la dreapta"
+  "Scroll right": "Derulează la dreapta",
+  "Connect": "Conectează",
+  "Connect ListenBrainz": "Conectează ListenBrainz",
+  "Connected as {0}": "Conectat ca {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Conectat ca {0} · {1} ascultări în așteptarea trimiterii",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Conectat ca {0}. O melodie se numără după ce ai ascultat jumătate din ea sau patru minute, oricare survine primul. În modul incognito nu se trimite nimic.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Copiază tokenul de utilizator din pagina de setări ListenBrainz și lipește-l aici. Este stocat criptat pe acest dispozitiv.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Nu s-a putut contacta ListenBrainz. Verifică rețeaua și încearcă din nou",
+  "Couldn't save the token": "Nu s-a putut salva tokenul",
+  "Disconnect": "Deconectează",
+  "ListenBrainz did not accept this token": "ListenBrainz nu a acceptat acest token",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz nu mai acceptă tokenul. Atinge pentru a introduce unul nou",
+  "Listening history, scrobbling, music": "Istoric de ascultare, scrobbling, muzică",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Dezactivat. Melodiile pe care le asculți pot fi adăugate în istoricul tău de ascultare ListenBrainz; alte videoclipuri nu sunt niciodată trimise",
+  "Open ListenBrainz settings": "Deschide setările ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble melodii în ListenBrainz",
+  "User token": "Token de utilizator"
 }

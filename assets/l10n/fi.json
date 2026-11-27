@@ -4262,5 +4262,21 @@
   "Length {0}": "Kesto {0}",
   "{0}% watched": "{0} % katsottu",
   "Scroll left": "Vieritä vasemmalle",
-  "Scroll right": "Vieritä oikealle"
+  "Scroll right": "Vieritä oikealle",
+  "Connect": "Yhdistä",
+  "Connect ListenBrainz": "Yhdistä ListenBrainz",
+  "Connected as {0}": "Yhdistetty käyttäjänä {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Yhdistetty käyttäjänä {0} · {1} kuuntelua odottaa lähetystä",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Yhdistetty käyttäjänä {0}. Kappale lasketaan, kun olet kuunnellut puolet siitä tai neljä minuuttia sen mukaan, kumpi täyttyy ensin. Incognito-tilassa mitään ei lähetetä.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopioi käyttäjätunnuksesi (token) ListenBrainzin asetussivulta ja liitä se tähän. Se tallennetaan salattuna tälle laitteelle.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainziin ei saatu yhteyttä. Tarkista verkko ja yritä uudelleen",
+  "Couldn't save the token": "Tunnuksen tallennus epäonnistui",
+  "Disconnect": "Katkaise yhteys",
+  "ListenBrainz did not accept this token": "ListenBrainz ei hyväksynyt tätä tunnusta",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ei enää hyväksy tunnusta. Anna uusi napauttamalla",
+  "Listening history, scrobbling, music": "Kuunteluhistoria, scrobblaus, musiikki",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Pois. Kuuntelemasi kappaleet voidaan lisätä ListenBrainzin kuunteluhistoriaan; muita videoita ei koskaan lähetetä",
+  "Open ListenBrainz settings": "Avaa ListenBrainzin asetukset",
+  "Scrobble songs to ListenBrainz": "Scrobblaa kappaleet ListenBrainziin",
+  "User token": "Käyttäjätunnus (token)"
 }

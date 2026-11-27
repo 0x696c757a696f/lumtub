@@ -4262,5 +4262,21 @@
   "Length {0}": "Dĺžka {0}",
   "{0}% watched": "{0} % pozreté",
   "Scroll left": "Posunúť doľava",
-  "Scroll right": "Posunúť doprava"
+  "Scroll right": "Posunúť doprava",
+  "Connect": "Pripojiť",
+  "Connect ListenBrainz": "Pripojiť ListenBrainz",
+  "Connected as {0}": "Pripojené ako {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Pripojené ako {0} · {1} počúvaní čaká na odoslanie",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Pripojené ako {0}. Skladba sa započíta, keď si vypočujete polovicu alebo štyri minúty, podľa toho, čo nastane skôr. V anonymnom režime sa nič neodosiela.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Skopírujte svoj používateľský token zo stránky nastavení ListenBrainz a vložte ho sem. Je uložený na tomto zariadení v zašifrovanej podobe.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz sa nepodarilo kontaktovať. Skontrolujte sieť a skúste to znova",
+  "Couldn't save the token": "Token sa nepodarilo uložiť",
+  "Disconnect": "Odpojiť",
+  "ListenBrainz did not accept this token": "ListenBrainz tento token neprijal",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz už token neprijíma. Klepnutím zadáte nový",
+  "Listening history, scrobbling, music": "História počúvania, scrobblovanie, hudba",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Vypnuté. Skladby, ktoré počúvate, sa môžu pridávať do histórie počúvania ListenBrainz; iné videá sa nikdy neodosielajú",
+  "Open ListenBrainz settings": "Otvoriť nastavenia ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobblovať skladby do ListenBrainz",
+  "User token": "Používateľský token"
 }

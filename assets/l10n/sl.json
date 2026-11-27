@@ -4262,5 +4262,21 @@
   "Length {0}": "Trajanje {0}",
   "{0}% watched": "Ogledano {0} %",
   "Scroll left": "Pomakni levo",
-  "Scroll right": "Pomakni desno"
+  "Scroll right": "Pomakni desno",
+  "Connect": "Poveži",
+  "Connect ListenBrainz": "Poveži ListenBrainz",
+  "Connected as {0}": "Povezano kot {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Povezano kot {0} · {1} poslušanj čaka na pošiljanje",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Povezano kot {0}. Skladba se šteje, ko poslušate polovico ali štiri minute, kar nastopi prej. V anonimnem načinu se ne pošlje nič.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopirajte svoj uporabniški žeton s strani z nastavitvami ListenBrainz in ga prilepite sem. Na tej napravi je shranjen šifriran.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Povezava z ListenBrainz ni uspela. Preverite omrežje in poskusite znova",
+  "Couldn't save the token": "Žetona ni bilo mogoče shraniti",
+  "Disconnect": "Prekini povezavo",
+  "ListenBrainz did not accept this token": "ListenBrainz tega žetona ni sprejel",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz žetona ne sprejema več. Tapnite za vnos novega",
+  "Listening history, scrobbling, music": "Zgodovina poslušanja, scrobblanje, glasba",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Izklopljeno. Skladbe, ki jih poslušate, se lahko dodajo v vašo zgodovino poslušanja na ListenBrainz; drugi videoposnetki se nikoli ne pošiljajo",
+  "Open ListenBrainz settings": "Odpri nastavitve ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobblaj skladbe v ListenBrainz",
+  "User token": "Uporabniški žeton"
 }

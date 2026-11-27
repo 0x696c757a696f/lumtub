@@ -4262,5 +4262,21 @@
   "Length {0}": "Kohëzgjatja {0}",
   "{0}% watched": "{0}% e parë",
   "Scroll left": "Rrëshqit majtas",
-  "Scroll right": "Rrëshqit djathtas"
+  "Scroll right": "Rrëshqit djathtas",
+  "Connect": "Lidh",
+  "Connect ListenBrainz": "Lidh ListenBrainz",
+  "Connected as {0}": "I lidhur si {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "I lidhur si {0} · {1} dëgjime po presin të dërgohen",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "I lidhur si {0}. Një këngë llogaritet kur dëgjoni gjysmën e saj ose katër minuta, cilado ndodh e para. Në modalitetin inkognito nuk dërgohet asgjë.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopjoni tokenin tuaj të përdoruesit nga faqja e cilësimeve të ListenBrainz dhe ngjitni këtu. Ruhet i enkriptuar në këtë pajisje.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Nuk u arrit ListenBrainz. Kontrolloni rrjetin dhe provoni përsëri",
+  "Couldn't save the token": "Tokeni nuk u ruajt dot",
+  "Disconnect": "Shkëput",
+  "ListenBrainz did not accept this token": "ListenBrainz nuk e pranoi këtë token",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz nuk e pranon më tokenin. Prekni për të futur një të ri",
+  "Listening history, scrobbling, music": "Historiku i dëgjimit, scrobbling, muzikë",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Joaktiv. Këngët që dëgjoni mund të shtohen në historikun tuaj të dëgjimit në ListenBrainz; videot e tjera nuk dërgohen kurrë",
+  "Open ListenBrainz settings": "Hap cilësimet e ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Bëj scrobble këngët në ListenBrainz",
+  "User token": "Tokeni i përdoruesit"
 }

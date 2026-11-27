@@ -4262,5 +4262,21 @@
   "Length {0}": "משך {0}",
   "{0}% watched": "{0}% נצפו",
   "Scroll left": "גלילה שמאלה",
-  "Scroll right": "גלילה ימינה"
+  "Scroll right": "גלילה ימינה",
+  "Connect": "חיבור",
+  "Connect ListenBrainz": "חיבור ListenBrainz",
+  "Connected as {0}": "מחובר בתור {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "מחובר בתור {0} · {1} האזנות ממתינות לשליחה",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "מחובר בתור {0}. שיר נספר לאחר שהאזנת למחציתו או לארבע דקות, המוקדם מביניהם. במצב גלישה בסתר לא נשלח דבר.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "העתיקו את אסימון המשתמש שלכם מדף ההגדרות של ListenBrainz והדביקו אותו כאן. הוא נשמר מוצפן במכשיר הזה.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "לא ניתן להתחבר ל-ListenBrainz. בדקו את הרשת ונסו שוב",
+  "Couldn't save the token": "לא ניתן היה לשמור את האסימון",
+  "Disconnect": "ניתוק",
+  "ListenBrainz did not accept this token": "ListenBrainz לא קיבל את האסימון הזה",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz כבר לא מקבל את האסימון. הקישו כדי להזין חדש",
+  "Listening history, scrobbling, music": "היסטוריית האזנה, scrobbling, מוזיקה",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "כבוי. שירים שאתם מאזינים להם יכולים להתווסף להיסטוריית ההאזנה שלכם ב-ListenBrainz; סרטונים אחרים לא נשלחים לעולם",
+  "Open ListenBrainz settings": "פתיחת הגדרות ListenBrainz",
+  "Scrobble songs to ListenBrainz": "שליחת שירים ל-ListenBrainz (scrobble)",
+  "User token": "אסימון משתמש"
 }

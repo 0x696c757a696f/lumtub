@@ -4262,5 +4262,21 @@
   "Length {0}": "Ilgums {0}",
   "{0}% watched": "Noskatīti {0}%",
   "Scroll left": "Ritināt pa kreisi",
-  "Scroll right": "Ritināt pa labi"
+  "Scroll right": "Ritināt pa labi",
+  "Connect": "Savienot",
+  "Connect ListenBrainz": "Savienot ListenBrainz",
+  "Connected as {0}": "Savienots kā {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Savienots kā {0} · {1} klausīšanās gaida nosūtīšanu",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Savienots kā {0}. Dziesma tiek ieskaitīta, kad esat noklausījies pusi no tās vai četras minūtes, atkarībā no tā, kas notiek ātrāk. Inkognito režīmā nekas netiek sūtīts.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Nokopējiet savu lietotāja pilnvaru ListenBrainz iestatījumu lapā un ielīmējiet to šeit. Tā šajā ierīcē tiek glabāta šifrēta.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Neizdevās sazināties ar ListenBrainz. Pārbaudiet tīklu un mēģiniet vēlreiz",
+  "Couldn't save the token": "Neizdevās saglabāt pilnvaru",
+  "Disconnect": "Atvienot",
+  "ListenBrainz did not accept this token": "ListenBrainz nepieņēma šo pilnvaru",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz vairs nepieņem pilnvaru. Pieskarieties, lai ievadītu jaunu",
+  "Listening history, scrobbling, music": "Klausīšanās vēsture, skroblēšana, mūzika",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Izslēgts. Dziesmas, ko klausāties, var pievienot jūsu ListenBrainz klausīšanās vēsturei; citi video netiek sūtīti nekad",
+  "Open ListenBrainz settings": "Atvērt ListenBrainz iestatījumus",
+  "Scrobble songs to ListenBrainz": "Skroblēt dziesmas uz ListenBrainz",
+  "User token": "Lietotāja pilnvara"
 }

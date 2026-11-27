@@ -4262,5 +4262,21 @@
   "Length {0}": "ကြာချိန် {0}",
   "{0}% watched": "{0}% ကြည့်ပြီး",
   "Scroll left": "ဘယ်ဘက်သို့ လှိမ့်ရန်",
-  "Scroll right": "ညာဘက်သို့ လှိမ့်ရန်"
+  "Scroll right": "ညာဘက်သို့ လှိမ့်ရန်",
+  "Connect": "ချိတ်ဆက်ရန်",
+  "Connect ListenBrainz": "ListenBrainz ကို ချိတ်ဆက်ရန်",
+  "Connected as {0}": "{0} အဖြစ် ချိတ်ဆက်ထားသည်",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} အဖြစ် ချိတ်ဆက်ထားသည် · နားထောင်မှု {1} ခု ပို့ရန် စောင့်နေသည်",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} အဖြစ် ချိတ်ဆက်ထားသည်။ သီချင်းတစ်ပုဒ်ကို တစ်ဝက် သို့မဟုတ် လေးမိနစ် (အရင်ရောက်သည့်အတိုင်း) နားထောင်ပြီးလျှင် ရေတွက်သည်။ ရှုပ်ထွေးမှုမဲ့မုဒ်တွင် မည်သည့်အရာမျှ မပို့ပါ။",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ListenBrainz ဆက်တင်စာမျက်နှာမှ သင့်အသုံးပြုသူတိုကင်ကို ကူးယူပြီး ဤနေရာတွင် ကူးထည့်ပါ။ ၎င်းကို ဤစက်ပေါ်တွင် စာဝှက်ထား၍ သိမ်းဆည်းသည်။",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz သို့ ချိတ်ဆက်၍ မရပါ။ ကွန်ရက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ",
+  "Couldn't save the token": "တိုကင်ကို သိမ်းဆည်း၍ မရပါ",
+  "Disconnect": "ဖြတ်တောက်ရန်",
+  "ListenBrainz did not accept this token": "ListenBrainz က ဤတိုကင်ကို လက်မခံပါ",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz က တိုကင်ကို မလက်ခံတော့ပါ။ အသစ်ထည့်ရန် ထိပါ",
+  "Listening history, scrobbling, music": "နားထောင်မှုမှတ်တမ်း၊ scrobbling၊ ဂီတ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ပိတ်ထားသည်။ သင်နားထောင်သော သီချင်းများကို သင့် ListenBrainz နားထောင်မှုမှတ်တမ်းသို့ ထည့်နိုင်သည်၊ အခြားဗီဒီယိုများကို ဘယ်သောအခါမျှ မပို့ပါ",
+  "Open ListenBrainz settings": "ListenBrainz ဆက်တင်များ ဖွင့်ရန်",
+  "Scrobble songs to ListenBrainz": "သီချင်းများကို ListenBrainz သို့ scrobble လုပ်ရန်",
+  "User token": "အသုံးပြုသူတိုကင်"
 }

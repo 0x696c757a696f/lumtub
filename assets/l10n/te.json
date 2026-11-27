@@ -4262,5 +4262,21 @@
   "Length {0}": "నిడివి {0}",
   "{0}% watched": "{0}% వీక్షించారు",
   "Scroll left": "ఎడమవైపు స్క్రోల్ చేయి",
-  "Scroll right": "కుడివైపు స్క్రోల్ చేయి"
+  "Scroll right": "కుడివైపు స్క్రోల్ చేయి",
+  "Connect": "కనెక్ట్ చేయండి",
+  "Connect ListenBrainz": "ListenBrainz ను కనెక్ట్ చేయండి",
+  "Connected as {0}": "{0} గా కనెక్ట్ అయ్యారు",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} గా కనెక్ట్ అయ్యారు · {1} వినడాలు పంపడానికి వేచి ఉన్నాయి",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} గా కనెక్ట్ అయ్యారు. పాటలో సగం లేదా నాలుగు నిమిషాలు, ఏది ముందైతే అది విన్నప్పుడు అది లెక్కించబడుతుంది. ఇన్‌కాగ్నిటో మోడ్‌లో ఏదీ పంపబడదు.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "మీ ListenBrainz సెట్టింగ్‌ల పేజీ నుండి యూజర్ టోకెన్‌ను కాపీ చేసి ఇక్కడ అతికించండి. ఇది ఈ పరికరంలో ఎన్‌క్రిప్ట్ చేసి నిల్వ చేయబడుతుంది.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ను చేరుకోలేకపోయాం. మీ నెట్‌వర్క్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి",
+  "Couldn't save the token": "టోకెన్‌ను సేవ్ చేయలేకపోయాం",
+  "Disconnect": "డిస్‌కనెక్ట్ చేయండి",
+  "ListenBrainz did not accept this token": "ListenBrainz ఈ టోకెన్‌ను అంగీకరించలేదు",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ఇకపై ఈ టోకెన్‌ను అంగీకరించదు. కొత్తది నమోదు చేయడానికి నొక్కండి",
+  "Listening history, scrobbling, music": "వినడం చరిత్ర, scrobbling, సంగీతం",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ఆఫ్. మీరు వినే పాటలు మీ ListenBrainz వినడం చరిత్రకు జోడించబడవచ్చు; ఇతర వీడియోలు ఎప్పుడూ పంపబడవు",
+  "Open ListenBrainz settings": "ListenBrainz సెట్టింగ్‌లను తెరవండి",
+  "Scrobble songs to ListenBrainz": "పాటలను ListenBrainz కు scrobble చేయండి",
+  "User token": "యూజర్ టోకెన్"
 }

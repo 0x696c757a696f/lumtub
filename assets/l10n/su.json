@@ -4262,5 +4262,21 @@
   "Length {0}": "Lilana {0}",
   "{0}% watched": "{0}% geus ditonton",
   "Scroll left": "Gulung ka kenca",
-  "Scroll right": "Gulung ka katuhu"
+  "Scroll right": "Gulung ka katuhu",
+  "Connect": "Sambungkeun",
+  "Connect ListenBrainz": "Sambungkeun ListenBrainz",
+  "Connected as {0}": "Nyambung salaku {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Nyambung salaku {0} · {1} dengekeun ngantosan dikirim",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Nyambung salaku {0}. Hiji lagu diitung nalika anjeun parantos ngadangukeun satengahna atanapi opat menit, mana nu leuwih heula. Teu aya nu dikirim dina mode inkognito.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Salin token pamaké tina kaca setélan ListenBrainz tuluy témpélkeun di dieu. Disimpen dienkripsi dina parangkat ieu.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Teu bisa ngahubungan ListenBrainz. Pariksa jaringan anjeun tuluy cobian deui",
+  "Couldn't save the token": "Teu bisa nyimpen token",
+  "Disconnect": "Peutingkeun",
+  "ListenBrainz did not accept this token": "ListenBrainz henteu narima token ieu",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz geus teu narima token ieu deui. Ketok pikeun ngasupkeun anu anyar",
+  "Listening history, scrobbling, music": "Sajarah ngadangukeun, scrobbling, musik",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Pareum. Lagu anu anjeun dangukeun bisa ditambahkeun kana sajarah ngadangukeun ListenBrainz anjeun; vidéo séjén teu pernah dikirim",
+  "Open ListenBrainz settings": "Buka setélan ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble lagu ka ListenBrainz",
+  "User token": "Token pamaké"
 }

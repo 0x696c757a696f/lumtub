@@ -61,6 +61,7 @@ import '../downloads/download_models.dart';
 import '../downloads/download_selection.dart';
 import '../downloads/download_subtitles.dart';
 import '../return_dislike.dart';
+import '../scrobble.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
@@ -640,6 +641,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The video whose position is being recorded; null while switching, so
   /// positions of the previous file are not credited to the next.
   VideoItem? _tracking;
+  /// The song [_tracking] was taken for, worked out once for its details and length.
+  (String, VideoDetails?, Duration, ScrobbleTrack?)? _scrobbleFor;
   DateTime _lastProgressSave = DateTime(0);
   List<SkipSegment> _segments = const [];
 
@@ -805,6 +808,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The start-up under way, so a retry joins it instead of running twice.
   Future<void>? _initializing;
   late final _sponsorBlock = SponsorBlock(_http);
+  /// 听歌记录: songs listened to, told to ListenBrainz once a token is given.
+  late final scrobbler = Scrobbler(_http, version: appVersion);
   late final _returnDislike = ReturnDislike(_http);
   /// Each channel's last speed and volume; see [ChannelPlayback].
   ChannelPlayback? channelPlayback;

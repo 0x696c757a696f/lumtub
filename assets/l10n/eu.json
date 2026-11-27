@@ -4262,5 +4262,21 @@
   "Length {0}": "Iraupena {0}",
   "{0}% watched": "%{0} ikusita",
   "Scroll left": "Joan ezkerrera",
-  "Scroll right": "Joan eskuinera"
+  "Scroll right": "Joan eskuinera",
+  "Connect": "Konektatu",
+  "Connect ListenBrainz": "Konektatu ListenBrainz",
+  "Connected as {0}": "{0} gisa konektatuta",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} gisa konektatuta · {1} entzunaldi bidaltzeko zain",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} gisa konektatuta. Abesti bat kontatzen da erdia edo lau minutu entzun dituzunean, lehenik gertatzen dena. Ez da ezer bidaltzen ezkutuko moduan.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopiatu zure erabiltzaile-tokena ListenBrainz-en ezarpenen orritik eta itsatsi hemen. Gailu honetan zifratuta gordetzen da.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Ezin izan da ListenBrainz-ekin konektatu. Egiaztatu sarea eta saiatu berriro",
+  "Couldn't save the token": "Ezin izan da tokena gorde",
+  "Disconnect": "Deskonektatu",
+  "ListenBrainz did not accept this token": "ListenBrainz-ek ez du token hau onartu",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz-ek ez du dagoeneko tokena onartzen. Sakatu berri bat sartzeko",
+  "Listening history, scrobbling, music": "Entzute-historia, scrobbling, musika",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Desaktibatuta. Entzuten dituzun abestiak zure ListenBrainz entzute-historiara gehi daitezke; beste bideoak ez dira inoiz bidaltzen",
+  "Open ListenBrainz settings": "Ireki ListenBrainz-en ezarpenak",
+  "Scrobble songs to ListenBrainz": "Scrobbleatu abestiak ListenBrainz-en",
+  "User token": "Erabiltzaile-tokena"
 }

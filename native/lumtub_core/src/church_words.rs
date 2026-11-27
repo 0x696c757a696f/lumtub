@@ -709,6 +709,42 @@ mod tests {
             "拉斐尔的壁画"
         );
         assert_eq!(simplified("天使拉斐尔陪伴多俾亚"), "天使辣法耳陪伴多俾亚");
+        assert_eq!(
+            beside("炽天使和小天使", "The seraphim and the cherubim"),
+            "色辣芬和革鲁宾"
+        );
+        // A cherub only when the original says one.
+        assert_eq!(
+            beside("可爱的小天使", "A cute little angel"),
+            "可爱的小天使"
+        );
+        assert_eq!(simplified("智天使与炽天使"), "革鲁宾与色辣芬");
+        assert_eq!(simplified("我的守护天使"), "我的护守天使");
+        assert_eq!(simplified("好星期五和灰烬星期三"), "圣周五和圣灰礼仪日");
+        assert_eq!(
+            beside("红衣主教进入秘密会议", "I cardinali entrano in conclave"),
+            "枢机进入教宗选举秘密会议"
+        );
+        assert_eq!(
+            beside("米兰大教堂", "Il Duomo, la cattedrale di Milano"),
+            "米兰主教座堂"
+        );
+        assert_eq!(
+            beside(
+                "画十字架的标志，念冰雹玛丽",
+                "Make the sign of the cross and pray a Hail Mary"
+            ),
+            "画十字圣号，念圣母经"
+        );
+        assert_eq!(
+            beside("关于圣召的百科全书", "An encyclical on vocations"),
+            "关于圣召的通谕"
+        );
+        // Said once, written twice: neither is sure, so neither changes.
+        assert_eq!(
+            beside("他的职业和职业", "His vocation and his career"),
+            "他的职业和职业"
+        );
         // An English assumption is only an assumption.
         assert_eq!(
             beside("这个假设是错的", "This assumption is wrong"),

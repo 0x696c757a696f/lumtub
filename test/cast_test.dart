@@ -405,7 +405,7 @@ void main() {
       name: 'Cast',
       address: InternetAddress.loopbackIPv4,
       port: server.port,
-      connector: (host, port) => Socket.connect(host, port),
+      connector: Socket.connect,
     );
     await device.load(const CastMedia(url: 'http://v/x.mp4', title: 'My video', start: Duration(seconds: 5)));
     final load = received.firstWhere((m) => m.json!['type'] == 'LOAD');
@@ -486,7 +486,7 @@ void main() {
           f('136', v: 'avc1.4d401f', h: 720, size: null),
           f('140-drc', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129, note: 'DRC'),
           f('140', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129),
-          f('140-dub', a: 'mp4a.40.2', ext: 'm4a', lang: -1, abr: 129),
+          f('140-dub', a: 'mp4a.40.2', ext: 'm4a', abr: 129),
           f('251', a: 'opus', ext: 'webm', lang: 10, abr: 140),
         ],
       };

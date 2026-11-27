@@ -114,7 +114,7 @@ abstract class RelayServers {
     final before = catalog;
     final measuring = _measure(before);
     // After the known servers, so no more than [probeConcurrency] probes run at once.
-    final others = Future.wait([update, measuring]).then((r) => _measure((r[0] as List<String>).where((s) => !before.contains(s))));
+    final others = (update, measuring).wait.then((r) => _measure(r.$1.where((s) => !before.contains(s))));
     await measuring;
     if (_timings.isEmpty) {
       await others;

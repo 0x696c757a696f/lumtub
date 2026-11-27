@@ -43,7 +43,7 @@ void main() {
     expect(ByteData.sublistView(tail).getUint32(40, Endian.little), 2000);
     expect(ByteData.sublistView(tail).getUint32(4, Endian.little), tail.length - 8);
     // The last sample stays the last.
-    expect(tail[tail.length - 2], (2999) & 0xff);
+    expect(tail[tail.length - 2], 2999 & 0xff);
     // A size of 0, as a file written while playing may say, reads to the end.
     expect(wavTail(wav(1000, 3000, dataSize: 0), 0.5).length, 44 + 1000);
     expect(wavTail([1, 2, 3], 1), [1, 2, 3]);

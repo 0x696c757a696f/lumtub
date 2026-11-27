@@ -1,9 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
 import 'fill_icon.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 
 /// Like and dislike under a comment or a post. With [onRate] the buttons
 /// press (signed in, from a page that carried their actions); without it

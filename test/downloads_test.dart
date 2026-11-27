@@ -4,14 +4,14 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/blocked_sign_in.dart';
-import 'package:lumtub/stream_resolver.dart' show MembersCookies;
-import 'package:lumtub/video_codec.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/sponsor_block.dart';
+import 'package:lumtub/stream_resolver.dart' show MembersCookies;
+import 'package:lumtub/video_codec.dart';
 
 class FakeProcess implements Process {
   final _stdout = StreamController<List<int>>();
@@ -613,7 +613,7 @@ void main() {
       }
       File('${dir.path}/downloads.json').writeAsStringSync(jsonEncode({
         'tasks': [
-          (DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem)).toJson(),
+          DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem).toJson(),
         ],
       }));
       final m = manager(recorder: recorder, join: (r) async {

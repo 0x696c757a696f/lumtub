@@ -260,7 +260,7 @@ Widget _groupTile(BuildContext context, AppController controller, BlockedGroup g
     enabled: master,
     leading: Checkbox(
       value: prefs.groupOn(group, media: media),
-      onChanged: master ? (on) => controller.savePreferences(prefs.withGroup(group, on == true, media: media)) : null,
+      onChanged: master ? (on) => controller.savePreferences(prefs.withGroup(group, on ?? false, media: media)) : null,
     ),
     title: Text(group.label),
     subtitle: Text(lines.join('\n'), maxLines: note != null ? 3 : 1, overflow: TextOverflow.ellipsis, style: _faint(context)),
@@ -299,7 +299,7 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
                 onChanged: (checked) {
                   final latest = controller.preferences;
                   final rest = latest.allowedEntries.where((k) => k != entry.key).toList();
-                  controller.savePreferences(latest.copyWith(allowedEntries: checked == true ? rest : [...rest, entry.key]));
+                  controller.savePreferences(latest.copyWith(allowedEntries: checked ?? false ? rest : [...rest, entry.key]));
                 },
               ),
           ],
@@ -541,7 +541,6 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
             max: 100,
             divisions: 100,
             suffix: '%',
-            precise: 0,
             onSelected: (v) => change((s) => s.copyWith(subtitlePosition: v.round())),
           ),
         ),
@@ -671,7 +670,7 @@ class _KnownLanguagesDialogState extends State<_KnownLanguagesDialog> {
                   contentPadding: EdgeInsets.zero,
                   value: _ticked.contains(l.code),
                   title: Text(l.label),
-                  onChanged: (on) => setState(() => on == true ? _ticked.add(l.code) : _ticked.remove(l.code)),
+                  onChanged: (on) => setState(() => on ?? false ? _ticked.add(l.code) : _ticked.remove(l.code)),
                 ),
             ]),
           ),
@@ -723,7 +722,7 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
                 ? (checked) {
                     final latest = controller.settings;
                     final next = {...latest.sponsorCategories};
-                    checked == true ? next.add(category) : next.remove(category);
+                    checked ?? false ? next.add(category) : next.remove(category);
                     controller.saveSettings(latest.copyWith(sponsorCategories: next));
                   }
                 : null,
@@ -1031,9 +1030,7 @@ class _PicturePageState extends State<_PicturePage> {
     required int min,
     required int max,
     required int step,
-    String suffix = '',
-    required ValueChanged<int> onChanged,
-    required VoidCallback onReset,
+    required ValueChanged<int> onChanged, required VoidCallback onReset, String suffix = '',
   }) =>
       Padding(
         padding: const EdgeInsetsDirectional.only(start: 16, top: 4, bottom: 4, end: 8),
@@ -1279,7 +1276,7 @@ List<SettingEntry> aboutEntries(AppController controller) {
       (context) => NormalItem(
         title: tr('Support development'),
         subtitle: tr('Sponsor Lumtub on GitHub Sponsors or with crypto'),
-        leading: Icon(AppIcons.heartFill, color: const Color(0xFFEA4AAA)),
+        leading: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
         onTap: () => openSupport(context),
       ),
       subtitle: tr('sponsor donate support'),

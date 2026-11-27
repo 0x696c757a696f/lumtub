@@ -93,7 +93,7 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
       var total = 0;
       final sink = target.openWrite();
       try {
-        Stream<List<int>> data = archive.openRead(start, start + packed);
+        var data = archive.openRead(start, start + packed);
         if (method == 8) data = data.transform(ZLibDecoder(raw: true));
         await for (final chunk in data) {
           total += chunk.length;

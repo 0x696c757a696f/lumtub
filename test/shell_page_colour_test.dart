@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/main.dart';
 import 'package:lumtub/ui/app_shell.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Without a skin the pages sit on the theme's own page colour, light or
 /// dark, not on whatever the window shows under Flutter.

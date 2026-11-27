@@ -4,9 +4,9 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
+import '../friendly_error.dart';
 import '../models.dart';
 import '../video_repository.dart';
-import '../friendly_error.dart';
 
 /// Pages through a listing such as search results or a channel's uploads,
 /// keeping the items, loading state and last error for the page that shows

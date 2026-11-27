@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
+import '../../l10n/l10n.dart';
 import '../../piped_streams.dart';
 import '../../relay_servers.dart';
-import '../theme.dart';
-import 'settings_sections.dart';
-import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 import '../common.dart';
 import '../skin_paint.dart';
+import '../theme.dart';
+import 'settings_sections.dart';
 
 /// 设置 › Piped 服务器 / Invidious 实例: choose automatic selection or one
 /// server, measure them all, and download the public list again.
@@ -93,7 +93,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
           final custom = source == (_isPiped ? PlaybackSource.pipedCustom : PlaybackSource.invidiousCustom) ? (_isPiped ? settings.pipedServer : settings.invidiousServer) : null;
           final auto = source == (_isPiped ? PlaybackSource.pipedAuto : PlaybackSource.invidiousAuto);
           final servers = _sorted();
-          Widget option({required bool selected, required String title, String? subtitle, Widget? trailing, required VoidCallback onTap}) => ListTile(
+          Widget option({required bool selected, required String title, required VoidCallback onTap, String? subtitle, Widget? trailing}) => ListTile(
                 leading: Icon(selected ? AppIcons.radioButton : AppIcons.circle, color: selected ? colors.primary : colors.outline),
                 title: Text(title),
                 subtitle: subtitle == null ? null : Text(subtitle, style: TextStyle(color: colors.outline, fontSize: 12)),

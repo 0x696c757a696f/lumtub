@@ -1,26 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
-import 'ai_filter.dart';
-import 'block_list_renames.dart';
-import 'app_log.dart';
 
+import 'ai_filter.dart';
 import 'app_directories.dart';
+import 'app_log.dart';
+import 'block_list_renames.dart';
 import 'blocked_groups.dart';
 import 'danmaku.dart' show DanmakuSettings;
 import 'explore_filters.dart';
-import 'feed_quality.dart';
 import 'explore_topics.dart';
+import 'feed_quality.dart';
+import 'l10n/l10n.dart';
+import 'list_order.dart';
+import 'live_chat.dart' show ChatView;
 import 'models.dart';
 import 'player_settings.dart' show interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'right_click.dart';
 import 'title_translation.dart';
 import 'translation.dart';
-import 'wheel_gesture.dart';
 import 'translation_services.dart';
-import 'l10n/l10n.dart';
-import 'list_order.dart';
-import 'live_chat.dart' show ChatView;
+import 'wheel_gesture.dart';
 
 /// Pages the app can open on start, in navigation order.
 ///
@@ -52,6 +52,163 @@ enum SubtitleListMode {
 }
 
 class AppPreferences {
+  factory AppPreferences.fromJson(Object? raw) {
+    if (raw is! Map) return const AppPreferences();
+    const d = AppPreferences();
+    bool flag(String key, bool fallback) => raw[key] is bool ? raw[key] as bool : fallback;
+    int number(String key, int fallback, int min, int max) {
+      final value = raw[key];
+      return value is num ? value.toInt().clamp(min, max) : fallback;
+    }
+    List<ChannelRef> channelList(String key) {
+      final channels = <ChannelRef>[];
+      final ids = <String>{};
+      if (raw[key] is List) {
+        for (final entry in raw[key] as List) {
+          if (entry is! Map) continue;
+          final id = entry['id']?.toString() ?? '';
+          if (ChannelRef.isValidId(id) && ids.add(id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
+        }
+      }
+      return channels;
+    }
+    List<String> strings(String key, [List<String> fallback = const []]) => raw[key] is List
+        ? (raw[key] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
+        : fallback;
+    final topics = raw['exploreCustomTopics'] is List
+        ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
+        : const <CustomTopic>[];
+    Map<String, List<String>> keyLists(String key) {
+      final value = raw[key];
+      if (value is! Map) return const {};
+      return {
+        for (final entry in value.entries)
+          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) legacyTopicKeys['$k'] ?? '$k'],
+      };
+    }
+    final start = raw['startPage']?.toString();
+    return AppPreferences(
+      recordHistory: flag('recordHistory', d.recordHistory),
+      recordProgress: flag('recordProgress', d.recordProgress),
+      blockedChannels: channelList('blockedChannels'),
+      blockedKeywords: strings('blockedKeywords'),
+      unrecommendedChannels: channelList('unrecommendedChannels'),
+      allowedGroups: renamedBlockLists(strings('allowedGroups')),
+      allowedMedia: renamedBlockLists(strings('allowedMedia')),
+      reversedPlaylists: strings('reversedPlaylists'),
+      groupOrder: GroupOrder.parse(raw['groupOrder']),
+      channelOrder: ChannelOrder.parse(raw['channelOrder']),
+      playlistOrder: PlaylistOrder.parse(raw['playlistOrder']),
+      videoOrders: {
+        if (raw['videoOrders'] case final Map<String, dynamic> orders)
+          for (final MapEntry(:key, :value) in orders.entries)
+            if (VideoOrder.values.where((v) => v.name == value).firstOrNull case final order? when order != VideoOrder.added) key: order,
+      },
+      castMaxHeight: const {720, 1080, 1440, 2160, 4320}.contains(raw['castMaxHeight']) ? raw['castMaxHeight'] as int : d.castMaxHeight,
+      castFormats: {
+        if (raw['castFormats'] case final Map<String, dynamic> formats)
+          for (final MapEntry(:key, :value) in formats.entries)
+            if (value case 'ts' || 'hls' || 'mp4' || 'mkv') key: value as String,
+      },
+      enabledGroups: renamedBlockLists(strings('enabledGroups')),
+      allowedEntries: renamedBlockEntries(strings('allowedEntries')),
+      blockedChannelNames: strings('blockedChannelNames'),
+      exploreCustomTopics: topics,
+      exploreOrder: keyLists('exploreOrder'),
+      exploreHidden: keyLists('exploreHidden'),
+      exploreRegion: ExploreRegion.parse(raw['exploreRegion']),
+      exploreLanguage: ExploreLanguage.parse(raw['exploreLanguage']),
+      hideShorts: flag('hideShorts', d.hideShorts),
+      aiFilter: AiFilterMode.parse(raw['aiFilter']),
+      logLevel: LogLevel.parse(raw['logLevel']),
+      minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
+      hideWatched: flag('hideWatched', d.hideWatched),
+      hideMembersOnly: flag('hideMembersOnly', d.hideMembersOnly),
+      updateBlockLists: flag('updateBlockLists', d.updateBlockLists),
+      // Saved before new installs started with it off and asked.
+      blockGroups: flag('blockGroups', true),
+      blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
+      blockOtherLists: flag('blockOtherLists', d.blockOtherLists),
+      filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
+      homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
+      homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
+      homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
+      homeAutoRefresh: flag('homeAutoRefresh', d.homeAutoRefresh),
+      feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
+      feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
+      syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
+      syncHistoryToYoutube: flag('syncHistoryToYoutube', d.syncHistoryToYoutube),
+      startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
+      feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
+      feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),
+      autoPlay: flag('autoPlay', d.autoPlay),
+      resumePlayback: flag('resumePlayback', d.resumePlayback),
+      watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
+      autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
+      autoLightsOff: flag('autoLightsOff', d.autoLightsOff),
+      rememberChannelPlayback: flag('rememberChannelPlayback', d.rememberChannelPlayback),
+      focusHideHome: flag('focusHideHome', d.focusHideHome),
+      focusHideComments: flag('focusHideComments', d.focusHideComments),
+      lightsOffDim: number('lightsOffDim', 85, 50, 98),
+      miniPlayer: flag('miniPlayer', d.miniPlayer),
+      exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
+      pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
+      audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
+      pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
+      closeToTray: flag('closeToTray', d.closeToTray),
+      minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      speakSubtitles: flag('speakSubtitles', d.speakSubtitles),
+      audioDescription: flag('audioDescription', d.audioDescription),
+      systemCaptionsSeen: flag('systemCaptionsSeen', d.systemCaptionsSeen),
+      learningMode: flag('learningMode', d.learningMode),
+      softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
+      batteryAsked: flag('batteryAsked', d.batteryAsked),
+      gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,
+      matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
+      keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
+      seekSeconds: number('seekSeconds', 5, 1, 60),
+      longSeekSeconds: number('longSeekSeconds', 10, 1, 120),
+      volumeStep: number('volumeStep', 5, 1, 25),
+      shortcutKeys: keyLists('shortcutKeys'),
+      rightClick: RightClick.parse(raw['rightClick'], raw['rightClickBack']),
+      wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
+      controlsHideSeconds: number('controlsHideSeconds', 3, 0, 30),
+      showHeatmap: flag('showHeatmap', d.showHeatmap),
+      progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),
+      showRelated: flag('showRelated', d.showRelated),
+      expandDescription: flag('expandDescription', d.expandDescription),
+      autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
+      // Simplified Chinese was the default before Windows' language was
+      // followed, so a value saved then follows Windows too.
+      translateLanguage: raw.containsKey('translateLanguageV2')
+          ? TranslationLanguage.maybeByCode(raw['translateLanguageV2'])?.code ?? ''
+          : raw['translateLanguage'] == TranslationLanguage.defaultCode
+              ? ''
+              : TranslationLanguage.maybeByCode(raw['translateLanguage'])?.code ?? '',
+      translation: TranslationConfig.fromJson(raw['translation']),
+      subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
+      bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
+      immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      titleTranslation: TitleTranslation.values.where((v) => v.name == raw['titleTranslation']).firstOrNull ?? d.titleTranslation,
+      superChatHighlights: flag('superChatHighlights', d.superChatHighlights),
+      chatView: ChatView.values.where((v) => v.name == raw['chatView']).firstOrNull ?? d.chatView,
+      danmaku: DanmakuSettings.fromJson(raw['danmaku']),
+      immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
+      translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
+      translationFirst: flag('translationFirst', d.translationFirst),
+      subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
+      exploreRailWidth: raw['exploreRailWidth'] is num ? (raw['exploreRailWidth'] as num).toDouble().clamp(128.0, 360.0) : d.exploreRailWidth,
+      skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
+      chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
+      neverTranslate: [
+        if (raw['neverTranslate'] is List)
+          for (final code in raw['neverTranslate'] as List)
+            if (TranslationLanguage.maybeByCode(code) != null) TranslationLanguage.maybeByCode(code)!.code,
+      ],
+    );
+  }
+
   const AppPreferences({
     this.recordHistory = true,
     this.recordProgress = true,
@@ -800,163 +957,6 @@ class AppPreferences {
         'chineseAsOne': chineseAsOne,
         'neverTranslate': neverTranslate,
       };
-
-  factory AppPreferences.fromJson(Object? raw) {
-    if (raw is! Map) return const AppPreferences();
-    const d = AppPreferences();
-    bool flag(String key, bool fallback) => raw[key] is bool ? raw[key] as bool : fallback;
-    int number(String key, int fallback, int min, int max) {
-      final value = raw[key];
-      return value is num ? value.toInt().clamp(min, max) : fallback;
-    }
-    List<ChannelRef> channelList(String key) {
-      final channels = <ChannelRef>[];
-      final ids = <String>{};
-      if (raw[key] is List) {
-        for (final entry in raw[key] as List) {
-          if (entry is! Map) continue;
-          final id = entry['id']?.toString() ?? '';
-          if (ChannelRef.isValidId(id) && ids.add(id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
-        }
-      }
-      return channels;
-    }
-    List<String> strings(String key, [List<String> fallback = const []]) => raw[key] is List
-        ? (raw[key] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
-        : fallback;
-    final topics = raw['exploreCustomTopics'] is List
-        ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
-        : const <CustomTopic>[];
-    Map<String, List<String>> keyLists(String key) {
-      final value = raw[key];
-      if (value is! Map) return const {};
-      return {
-        for (final entry in value.entries)
-          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) legacyTopicKeys['$k'] ?? '$k'],
-      };
-    }
-    final start = raw['startPage']?.toString();
-    return AppPreferences(
-      recordHistory: flag('recordHistory', d.recordHistory),
-      recordProgress: flag('recordProgress', d.recordProgress),
-      blockedChannels: channelList('blockedChannels'),
-      blockedKeywords: strings('blockedKeywords'),
-      unrecommendedChannels: channelList('unrecommendedChannels'),
-      allowedGroups: renamedBlockLists(strings('allowedGroups')),
-      allowedMedia: renamedBlockLists(strings('allowedMedia')),
-      reversedPlaylists: strings('reversedPlaylists'),
-      groupOrder: GroupOrder.parse(raw['groupOrder']),
-      channelOrder: ChannelOrder.parse(raw['channelOrder']),
-      playlistOrder: PlaylistOrder.parse(raw['playlistOrder']),
-      videoOrders: {
-        if (raw['videoOrders'] case final Map<String, dynamic> orders)
-          for (final MapEntry(:key, :value) in orders.entries)
-            if (VideoOrder.values.where((v) => v.name == value).firstOrNull case final order? when order != VideoOrder.added) key: order,
-      },
-      castMaxHeight: const {720, 1080, 1440, 2160, 4320}.contains(raw['castMaxHeight']) ? raw['castMaxHeight'] as int : d.castMaxHeight,
-      castFormats: {
-        if (raw['castFormats'] case final Map<String, dynamic> formats)
-          for (final MapEntry(:key, :value) in formats.entries)
-            if (value case 'ts' || 'hls' || 'mp4' || 'mkv') key: value as String,
-      },
-      enabledGroups: renamedBlockLists(strings('enabledGroups')),
-      allowedEntries: renamedBlockEntries(strings('allowedEntries')),
-      blockedChannelNames: strings('blockedChannelNames'),
-      exploreCustomTopics: topics,
-      exploreOrder: keyLists('exploreOrder'),
-      exploreHidden: keyLists('exploreHidden'),
-      exploreRegion: ExploreRegion.parse(raw['exploreRegion']),
-      exploreLanguage: ExploreLanguage.parse(raw['exploreLanguage']),
-      hideShorts: flag('hideShorts', d.hideShorts),
-      aiFilter: AiFilterMode.parse(raw['aiFilter']),
-      logLevel: LogLevel.parse(raw['logLevel']),
-      minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
-      hideWatched: flag('hideWatched', d.hideWatched),
-      hideMembersOnly: flag('hideMembersOnly', d.hideMembersOnly),
-      updateBlockLists: flag('updateBlockLists', d.updateBlockLists),
-      // Saved before new installs started with it off and asked.
-      blockGroups: flag('blockGroups', true),
-      blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
-      blockOtherLists: flag('blockOtherLists', d.blockOtherLists),
-      filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
-      homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
-      homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
-      homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
-      homeAutoRefresh: flag('homeAutoRefresh', d.homeAutoRefresh),
-      feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
-      feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
-      syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
-      syncHistoryToYoutube: flag('syncHistoryToYoutube', d.syncHistoryToYoutube),
-      startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
-      feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
-      feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),
-      autoPlay: flag('autoPlay', d.autoPlay),
-      resumePlayback: flag('resumePlayback', d.resumePlayback),
-      watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
-      autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
-      autoLightsOff: flag('autoLightsOff', d.autoLightsOff),
-      rememberChannelPlayback: flag('rememberChannelPlayback', d.rememberChannelPlayback),
-      focusHideHome: flag('focusHideHome', d.focusHideHome),
-      focusHideComments: flag('focusHideComments', d.focusHideComments),
-      lightsOffDim: number('lightsOffDim', 85, 50, 98),
-      miniPlayer: flag('miniPlayer', d.miniPlayer),
-      exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
-      pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
-      audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
-      pipOnLeave: flag('pipOnLeave', d.pipOnLeave),
-      closeToTray: flag('closeToTray', d.closeToTray),
-      minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
-      speakSubtitles: flag('speakSubtitles', d.speakSubtitles),
-      audioDescription: flag('audioDescription', d.audioDescription),
-      systemCaptionsSeen: flag('systemCaptionsSeen', d.systemCaptionsSeen),
-      learningMode: flag('learningMode', d.learningMode),
-      softwareQualityTold: flag('softwareQualityTold', d.softwareQualityTold),
-      batteryAsked: flag('batteryAsked', d.batteryAsked),
-      gpuPreference: gpuPreferences.contains(raw['gpuPreference']) ? raw['gpuPreference'] as String : d.gpuPreference,
-      matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
-      keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
-      seekSeconds: number('seekSeconds', 5, 1, 60),
-      longSeekSeconds: number('longSeekSeconds', 10, 1, 120),
-      volumeStep: number('volumeStep', 5, 1, 25),
-      shortcutKeys: keyLists('shortcutKeys'),
-      rightClick: RightClick.parse(raw['rightClick'], raw['rightClickBack']),
-      wheelGesture: WheelGesture.parse(raw['wheelGesture'], d.wheelGesture),
-      controlsHideSeconds: number('controlsHideSeconds', 3, 0, 30),
-      showHeatmap: flag('showHeatmap', d.showHeatmap),
-      progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),
-      showRelated: flag('showRelated', d.showRelated),
-      expandDescription: flag('expandDescription', d.expandDescription),
-      autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
-      autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
-      // Simplified Chinese was the default before Windows' language was
-      // followed, so a value saved then follows Windows too.
-      translateLanguage: raw.containsKey('translateLanguageV2')
-          ? TranslationLanguage.maybeByCode(raw['translateLanguageV2'])?.code ?? ''
-          : raw['translateLanguage'] == TranslationLanguage.defaultCode
-              ? ''
-              : TranslationLanguage.maybeByCode(raw['translateLanguage'])?.code ?? '',
-      translation: TranslationConfig.fromJson(raw['translation']),
-      subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
-      bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
-      immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
-      titleTranslation: TitleTranslation.values.where((v) => v.name == raw['titleTranslation']).firstOrNull ?? d.titleTranslation,
-      superChatHighlights: flag('superChatHighlights', d.superChatHighlights),
-      chatView: ChatView.values.where((v) => v.name == raw['chatView']).firstOrNull ?? d.chatView,
-      danmaku: DanmakuSettings.fromJson(raw['danmaku']),
-      immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
-      translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
-      translationFirst: flag('translationFirst', d.translationFirst),
-      subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
-      exploreRailWidth: raw['exploreRailWidth'] is num ? (raw['exploreRailWidth'] as num).toDouble().clamp(128.0, 360.0) : d.exploreRailWidth,
-      skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
-      chineseAsOne: flag('chineseAsOne', d.chineseAsOne),
-      neverTranslate: [
-        if (raw['neverTranslate'] is List)
-          for (final code in raw['neverTranslate'] as List)
-            if (TranslationLanguage.maybeByCode(code) != null) TranslationLanguage.maybeByCode(code)!.code,
-      ],
-    );
-  }
 }
 
 class AppPreferencesStore {

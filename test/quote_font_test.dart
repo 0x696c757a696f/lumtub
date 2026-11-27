@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<void> _load(String family, String path) async {
   final loader = FontLoader(family)..addFont(Future.value(ByteData.sublistView(File(path).readAsBytesSync())));

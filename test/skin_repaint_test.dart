@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/l10n/l10n.dart';
@@ -11,6 +10,8 @@ import 'package:lumtub/ui/skin_paint.dart';
 import 'package:lumtub/ui/skin_scenes.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/window_chrome.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'player_controls_test.dart' show FakePlayer;
 
 Skin _skin(Map<String, Object?> extra) => Skin.parse({

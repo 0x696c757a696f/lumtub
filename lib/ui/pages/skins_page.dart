@@ -1,26 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart';
 import '../../l10n/l10n.dart';
 import '../../skins/skin.dart';
 import '../../skins/skin_library.dart';
+import '../../widgets/settings_tiles.dart';
 import '../../window_frame.dart';
 import '../../window_glass.dart';
 import '../app_icons.dart';
 import '../common.dart';
-import '../theme_preset_card.dart';
 import '../motion.dart';
+import '../palettes.dart' show paletteForSkin;
 import '../skin_paint.dart';
 import '../theme.dart';
-import '../../widgets/settings_tiles.dart';
+import '../theme_preset_card.dart';
 import 'downloads_page.dart' show openInExplorer;
-import '../palettes.dart' show paletteForSkin;
 import 'settings_sections.dart' show themeModeTiles;
 import 'settings_subpages.dart' show openColorSelect;
 
@@ -262,7 +262,7 @@ class SkinCard extends StatelessWidget {
   Widget _drawn(BuildContext context, Skin? skin) {
     if (skin == null) {
       // Lumtub's own neutral look, whatever is chosen now.
-      const colors = ColorScheme.light(surface: Colors.white, onSurface: Color(0xFF18181B), surfaceContainer: Color(0xFFF4F4F5));
+      const colors = ColorScheme.light(onSurface: Color(0xFF18181B), surfaceContainer: Color(0xFFF4F4F5));
       return ColoredBox(
         color: colors.surface,
         child: Padding(
@@ -331,7 +331,7 @@ class SkinCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => _Lift(builder: (context, hovered, focused) => _card(context, hovered, focused));
+  Widget build(BuildContext context) => _Lift(builder: _card);
 
   Widget _card(BuildContext context, bool hovered, bool focused) {
     final colors = context.colors;

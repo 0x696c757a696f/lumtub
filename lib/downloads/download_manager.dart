@@ -9,19 +9,19 @@ import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
 import '../blocked_sign_in.dart';
+import '../cast/cast_subtitles.dart' show toVtt;
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
+import '../native_core.dart';
 import '../process_priority.dart';
 import '../sponsor_block.dart';
+import '../subtitle_cues.dart';
+import '../user_folders.dart';
 import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
 import 'download_subtitles.dart';
-import '../subtitle_cues.dart';
-import '../cast/cast_subtitles.dart' show toVtt;
-import '../native_core.dart';
-import '../user_folders.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
@@ -693,7 +693,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+  static final _botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Prefix of the line a signed-in download prints its info on.
   static const _infoPrefix = 'lumtub-info|';

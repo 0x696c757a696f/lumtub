@@ -4,15 +4,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart' show AppPreferences, rateText;
 import '../device.dart';
+import '../format_policy.dart';
 import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../l10n/l10n.dart';
@@ -32,7 +33,7 @@ import '../widgets/position_ticks.dart';
 import '../widgets/video_progress_bar.dart';
 import '../window_frame.dart';
 import '../youtube_account.dart';
-import '../format_policy.dart';
+import 'accessibility.dart';
 import 'app_icons.dart';
 import 'cast_ui.dart';
 import 'common.dart';
@@ -40,28 +41,27 @@ import 'danmaku_panel.dart';
 import 'fill_window.dart';
 import 'format_policy_dialogs.dart';
 import 'haptics.dart';
+import 'learning_drawer.dart' show LearningDrawerHandle;
 import 'lights_off.dart';
 import 'motion.dart';
-import 'accessibility.dart';
 import 'pages/settings_sections.dart' show qualityLabel, trimSpeed;
 import 'pages/settings_subpages.dart' show openPictureSettings;
 import 'player_panel.dart';
-import 'learning_drawer.dart' show LearningDrawerHandle;
 import 'player_shortcuts.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
 import 'subtitle_list_panel.dart';
 import 'subtitle_panel.dart';
-import 'theme.dart';
 import 'subtitle_style_panel.dart';
 import 'theater_mode.dart';
+import 'theme.dart';
 import 'video_aspect.dart';
 import 'video_box.dart';
 
-part 'player_controls_widgets.dart';
 part 'player_controls_bottom.dart';
 part 'player_controls_panel.dart';
+part 'player_controls_widgets.dart';
 
 /// How the picture is fitted into the player.
 enum VideoFit {
@@ -1178,7 +1178,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           title: title,
         );
       } else {
-        final box = anchor.findRenderObject() as RenderBox;
+        final box = anchor.findRenderObject()! as RenderBox;
         final origin = box.localToGlobal(Offset.zero);
         final touch = touchFirst;
         final height = rows.length * (touch ? 48.0 : 36.0) + 12;

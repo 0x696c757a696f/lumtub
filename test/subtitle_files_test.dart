@@ -50,7 +50,7 @@ class _Joining implements Translator {
 class _Busy implements Translator {
   _Busy(this.busy);
   int busy;
-  var asked = 0;
+  int asked = 0;
   @override
   Future<String> translate(String text, String target) async {
     asked++;
@@ -157,7 +157,7 @@ void main() {
       if (n > most) most = n;
     });
     final updated = <String>[];
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3, position: () => const Duration(seconds: 20), onUpdated: (path) async {
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => const Duration(seconds: 20), onUpdated: (path) async {
       updated.add(path);
       return true;
     });

@@ -2,15 +2,15 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../app/account_controller.dart';
 import '../../google_auth.dart';
+import '../../l10n/l10n.dart';
 import '../../youtube_account.dart';
 import '../../youtube_web_sign_in.dart';
-import '../common.dart';
-import '../theme.dart';
-import 'cookie_sign_in_tile.dart';
-import 'channel_page.dart' show ChannelAvatar;
-import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../sign_in_row.dart';
+import '../theme.dart';
+import 'channel_page.dart' show ChannelAvatar;
+import 'cookie_sign_in_tile.dart';
 
 /// The browser sign-in, the optional Google sign-in, sync, and the OAuth
 /// client Google's uses.

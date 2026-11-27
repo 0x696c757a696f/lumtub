@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'theme.dart';
 import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
@@ -15,6 +14,7 @@ import 'app_icons.dart';
 import 'motion.dart';
 import 'reveal.dart';
 import 'side_sheet.dart';
+import 'theme.dart';
 
 export '../models.dart' show formatBytes;
 

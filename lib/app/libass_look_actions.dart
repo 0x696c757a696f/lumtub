@@ -263,7 +263,7 @@ extension LibassLookActions on AppController {
       var source = copy?.source ?? shown;
       if (moved != null && source == moved.old) source = moved.now;
       final wanted = libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
-      if (second && _subtitleCopies[wanted]?.key.endsWith(_quickMark) == true) quick = true;
+      if (second && (_subtitleCopies[wanted]?.key.endsWith(_quickMark) ?? false)) quick = true;
       if (!current()) return;
       if (wanted != shown) {
         await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);

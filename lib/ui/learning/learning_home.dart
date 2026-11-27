@@ -25,7 +25,7 @@ class _LearningHomeState extends State<LearningHome> {
   List<Widget> _cards(BuildContext context) => [
         if (learning.licenseStopped) _StoppedCard(learning: learning),
         // Today's words first: what a learner comes back to the page for.
-        if ((learning.book?.words.isNotEmpty ?? false)) _ReviewHomeCard(controller: controller),
+        if (learning.book?.words.isNotEmpty ?? false) _ReviewHomeCard(controller: controller),
         if (_GettingStarted.needed(learning)) _GettingStarted(controller: controller),
         if (learning.licensed) _StatusCard(controller: controller) else _Pitch(learning: learning),
         _LevelVideosCard(controller: controller),

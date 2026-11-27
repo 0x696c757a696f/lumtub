@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 Widget _host(TextDirection direction, Widget child, {double width = 320}) => MaterialApp(
       builder: (context, page) => Directionality(textDirection: direction, child: page!),

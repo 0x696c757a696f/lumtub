@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/library_controller.dart';
@@ -9,14 +8,16 @@ import 'package:lumtub/app_directories.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/library_store.dart';
 import 'package:lumtub/models.dart';
-import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/play_queue.dart';
+import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/ui/pages/history_page.dart';
 import 'package:lumtub/ui/pages/library_pages.dart';
 import 'package:lumtub/ui/play_queue_panel.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 void main() {

@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/danmaku_picture.dart';
@@ -19,7 +18,7 @@ void main() {
     ]);
   });
 
-  test("Unicode emoji YouTube sent pictures of are drawn from them, skin tones whole", () {
+  test('Unicode emoji YouTube sent pictures of are drawn from them, skin tones whole', () {
     final parts = danmakuParts('🫛 and 👍🏽 👍', const {'🫛': 'https://e/pea', '👍': 'https://e/up', '👍🏽': 'https://e/up-tone'})!;
     expect(parts.map((p) => switch (p) { DanmakuText(:final text) => 'T($text)', DanmakuEmojiPicture(:final url) => 'P($url)', DanmakuEmojiGlyph(:final emoji) => 'E($emoji)' }), [
       'P(https://e/pea)',
@@ -38,7 +37,7 @@ void main() {
     Future<(int, int, Uint8List)> rgba(double osdHeight, bool paid) async {
       final (image, pad) = (await painter.image(parts, osdHeight: osdHeight, paid: paid))!;
       expect(pad, greaterThan(0));
-      final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      final data = (await image.toByteData())!;
       final size = (image.width, image.height);
       image.dispose();
       return (size.$1, size.$2, data.buffer.asUint8List());

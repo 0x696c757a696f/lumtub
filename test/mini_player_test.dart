@@ -1,14 +1,14 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/main.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/ui/app_icons.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/mini_player.dart';
 import 'package:lumtub/ui/theme.dart';
-import 'package:lumtub/ui/app_icons.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 import 'tooltip_finder.dart';

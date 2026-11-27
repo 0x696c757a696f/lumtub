@@ -1,33 +1,33 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../app/app_controller.dart';
-import '../app_preferences.dart' show SubtitleListMode;
-import '../l10n/l10n.dart';
-import '../models.dart' show SubtitleOption;
-import '../subtitle_cues.dart';
-import '../save_file.dart';
-import '../friendly_error.dart';
 import '../app_log.dart';
+import '../app_preferences.dart' show SubtitleListMode;
+import '../friendly_error.dart';
+import '../l10n/l10n.dart';
 import '../language_guess.dart' show readsAs;
-import '../translation.dart' show translateForeignLines;
-import 'common.dart';
-import 'motion.dart';
-import 'player_panel.dart';
-import 'app_icons.dart';
 import '../learning/known_words.dart';
 import '../learning/learning.dart';
 import '../learning/vocabulary.dart' show VocabularyBook;
+import '../models.dart' show SubtitleOption;
+import '../save_file.dart';
+import '../subtitle_cues.dart';
+import '../translation.dart' show translateForeignLines;
+import 'app_icons.dart';
+import 'common.dart';
 import 'learning/ruby_line.dart';
 import 'learning/word_card.dart';
-import 'video_notes.dart';
+import 'motion.dart';
+import 'player_panel.dart';
 import 'study_bar.dart' show StudyVeil;
+import 'video_notes.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
@@ -553,7 +553,7 @@ class _SubtitleListState extends State<SubtitleList> {
                 Padding(
                   padding: const EdgeInsetsDirectional.only(start: 8),
                   child: Text(
-                    shown.isEmpty ? '0' : '${(_match < 0 ? 0 : _match + 1)}/${shown.length}',
+                    shown.isEmpty ? '0' : '${_match < 0 ? 0 : _match + 1}/${shown.length}',
                     style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]),
                   ),
                 ),

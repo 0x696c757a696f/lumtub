@@ -98,7 +98,7 @@ extension LearningActions on AppController {
   void _rememberDifficulty(String key) {
     final id = playing?.id;
     final book = learning.book;
-    if (id == null || book == null || !learningOn || !learning.unlocked || _learningLines.isEmpty || playing?.isLive == true) return;
+    if (id == null || book == null || !learningOn || !learning.unlocked || _learningLines.isEmpty || (playing?.isLive ?? false)) return;
     unawaited(Future<void>.delayed(const Duration(seconds: 4), () async {
       if (_learningLinesKey != key || playing?.id != id) return;
       final words = await videoWordsOf(learning, knownWordsOf(book), id, [for (final l in _learningLines) l.text]);
@@ -118,7 +118,7 @@ extension LearningActions on AppController {
   /// Called with each position: pauses as a line ends while 每句说完暂停 is on.
   void _pauseAtLineEnd(Player player, Duration position) {
     _studyTick(player, position);
-    if (!_pauseLinesNow || playing?.isLive == true) {
+    if (!_pauseLinesNow || (playing?.isLive ?? false)) {
       _linePause.reset();
       return;
     }
@@ -518,7 +518,7 @@ extension LearningActions on AppController {
   Future<double?> _cutLine(SubtitleCue line, Directory folder, File packets, File sound, {int? sampleRate}) async {
     final player = this.player;
     final platform = player?.platform;
-    if (player == null || platform is! NativePlayer || playing?.isLive == true) return null;
+    if (player == null || platform is! NativePlayer || (playing?.isLive ?? false)) return null;
     final from = line.start - const Duration(milliseconds: 150);
     final start = (from < Duration.zero ? 0 : from.inMilliseconds) / 1000;
     final end = (line.end + const Duration(milliseconds: 250)).inMilliseconds / 1000;
@@ -534,7 +534,7 @@ extension LearningActions on AppController {
       await folder.create(recursive: true);
       await platform.command(['dump-cache', '$start', '$end', packets.path]);
       if (!await packets.exists() || await packets.length() == 0) return null;
-      decoder = Player(configuration: const PlayerConfiguration(vo: 'null', title: 'Lumtub line'));
+      decoder = Player(configuration: const PlayerConfiguration(title: 'Lumtub line'));
       final silent = decoder.platform;
       if (silent is! NativePlayer) return null;
       for (final (name, value) in [

@@ -38,7 +38,7 @@ class YoutubeAccountFeed {
   /// [pages] pages. Shorts are left out unless [shorts].
   Stream<String> lines(String browseId, {bool shorts = false, int pages = 20}) async* {
     if (NativeCore.instance == null) return;
-    Map<String, Object?> body = {'browseId': browseId};
+    var body = <String, Object?>{'browseId': browseId};
     final seen = <String>{};
     final tokens = <String>{};
     // Read afresh, so a row's "Today" is never kept past its day.

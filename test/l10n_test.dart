@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/appearance_settings.dart';
@@ -14,6 +13,7 @@ import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/settings_sections.dart';
 import 'package:lumtub/ui/subtitle_style.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The first argument of every tr('…') and tr("…") call in lib/, as the
 /// running app passes it.

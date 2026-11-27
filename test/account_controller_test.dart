@@ -10,8 +10,8 @@ import 'package:lumtub/app/library_controller.dart';
 import 'package:lumtub/google_auth.dart';
 import 'package:lumtub/library_store.dart';
 import 'package:lumtub/models.dart';
-import 'package:lumtub/youtube_account.dart';
 import 'package:lumtub/secure_store.dart';
+import 'package:lumtub/youtube_account.dart';
 
 /// Stands in for DPAPI off Windows; it only has to round-trip.
 class _XorProtector implements SecretProtector {

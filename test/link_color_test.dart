@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/language_guess.dart';
 import 'package:lumtub/skins/skin.dart' show contrastRatio;
 import 'package:lumtub/ui/linked_text.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   test('a dark accent on a dark page is lightened until links read', () {

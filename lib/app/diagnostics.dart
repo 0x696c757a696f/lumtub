@@ -303,7 +303,7 @@ extension Diagnostics on AppController {
 
   Future<PlaybackSample> _sampleCodec(VideoCodec codec, int seconds) async {
     _benchmark = settings.copyWith(disabledCodecs: {for (final c in VideoCodec.values) if (c != codec) c}, maxHeight: 1080);
-    await play(VideoItem(id: _benchmarkVideo, title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=$_benchmarkVideo'));
+    await play(const VideoItem(id: _benchmarkVideo, title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=$_benchmarkVideo'));
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return PlaybackSample(codec: codec, error: tr('No player'));

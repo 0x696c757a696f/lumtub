@@ -7,9 +7,9 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 
 import 'android_python.dart';
+import 'app_log.dart';
 import 'ios_python.dart';
 import 'js_challenge_plugin.dart';
-import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'yt_dlp_tls.dart';

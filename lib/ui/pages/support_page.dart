@@ -2,10 +2,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/l10n.dart';
 import '../../support_reminder.dart';
-import '../common.dart';
-import '../theme.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../skin_paint.dart';
+import '../theme.dart';
 
 const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
 
@@ -57,7 +57,7 @@ Future<void> askForSupport(BuildContext context, SupportReminder reminder) async
     ),
   );
   if (answer == false) reminder.enabled = false;
-  if (answer == true && context.mounted) await openSupport(context);
+  if ((answer ?? false) && context.mounted) await openSupport(context);
 }
 
 /// Asks once, after a week of use, for a star on GitHub.
@@ -78,7 +78,7 @@ Future<void> askForStar(BuildContext context, SupportReminder reminder) async {
       ],
     ),
   );
-  if (star == true) openExternal(repositoryPage);
+  if (star ?? false) openExternal(repositoryPage);
 }
 
 class _SupportPage extends StatelessWidget {

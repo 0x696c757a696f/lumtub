@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/academic_topics.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -15,8 +14,10 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/search_options.dart';
 import 'package:lumtub/state_media.dart';
-import 'package:lumtub/ui/pages/explore_page.dart';
 import 'package:lumtub/ui/app_icons.dart';
+import 'package:lumtub/ui/pages/explore_page.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 /// Narrower than [ExplorePage.wideLayout], so zones are in a row on top.
@@ -69,7 +70,7 @@ Future<void> _reveal(WidgetTester tester, String label, {bool back = false}) asy
 void main() {
   test('each mode asks YouTube for its own order and filters', () {
     expect(exploreParams(ExploreMode.popular, period: SearchUploadDate.month), 'CAMSBAgEEAE%253D');
-    expect(exploreParams(ExploreMode.popular, period: SearchUploadDate.any), 'CAMSAhAB');
+    expect(exploreParams(ExploreMode.popular), 'CAMSAhAB');
     expect(exploreParams(ExploreMode.liveViewers), 'CAMSAkAB');
     // Newest first, videos only.
     expect(exploreParams(ExploreMode.latest), 'CAISAhAB');

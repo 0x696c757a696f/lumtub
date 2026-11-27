@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -51,7 +50,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 16));
     }
     final image = (await tester.runAsync(() => (key.currentContext!.findRenderObject()! as RenderRepaintBoundary).toImage()))!;
-    final bytes = (await tester.runAsync(() => image.toByteData(format: ui.ImageByteFormat.rawRgba)))!;
+    final bytes = (await tester.runAsync(image.toByteData))!;
     final width = image.width;
     image.dispose();
     // At 9 s a message that came in at 1 s has gone half way: its left edge

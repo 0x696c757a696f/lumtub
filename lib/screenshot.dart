@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:media_kit/media_kit.dart';
+
 import 'system_env.dart';
 import 'user_folders.dart';
-
-import 'package:media_kit/media_kit.dart';
 
 /// Where screenshots go: Lumtub in the user's pictures folder.
 Directory screenshotDirectory([Map<String, String>? environment]) {
@@ -73,7 +73,7 @@ Future<void> copyImageToClipboard(File file) async {
       '-NoProfile',
       '-NonInteractive',
       '-Command',
-      r"Add-Type -AssemblyName System.Windows.Forms,System.Drawing; $i=[System.Drawing.Image]::FromFile($env:LUMTUB_SHOT); [System.Windows.Forms.Clipboard]::SetImage($i); $i.Dispose()",
+      r'Add-Type -AssemblyName System.Windows.Forms,System.Drawing; $i=[System.Drawing.Image]::FromFile($env:LUMTUB_SHOT); [System.Windows.Forms.Clipboard]::SetImage($i); $i.Dispose()',
     ], environment: {'LUMTUB_SHOT': file.path}).timeout(const Duration(seconds: 10));
   } catch (_) {
     // The file is saved; the clipboard is a convenience.

@@ -3,8 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 
-import 'emoji_text.dart';
 import '../thumbnail_cache.dart';
+import 'emoji_text.dart';
 
 /// A piece of a 弹幕 message: text, a YouTube emoji picture, or a Unicode
 /// emoji drawn in colour.

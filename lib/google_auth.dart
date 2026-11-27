@@ -5,9 +5,10 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+
+import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'system_env.dart';
-import 'app_log.dart';
 
 /// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';

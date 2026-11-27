@@ -10,10 +10,10 @@ import '../app/app_controller.dart';
 import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
 import '../widgets/video_progress_bar.dart';
+import 'accessibility.dart';
 import 'app_icons.dart';
 import 'common.dart';
 import 'motion.dart';
-import 'accessibility.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'video_box.dart';
 import 'warm_layer.dart';
@@ -231,9 +231,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                 initialData: player.state.playing,
                 builder: (context, snapshot) => IconButton(
                   style: style(),
-                  tooltip: snapshot.data == true ? tr('Pause (Space)') : tr('Play (Space)'),
+                  tooltip: snapshot.data ?? false ? tr('Pause (Space)') : tr('Play (Space)'),
                   iconSize: 40,
-                  icon: Icon(snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill),
+                  icon: Icon(snapshot.data ?? false ? AppIcons.pauseCircle : AppIcons.playCircleFill),
                   onPressed: () => unawaited(player.playOrPause()),
                 ),
               ),
@@ -349,9 +349,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                       stream: player.stream.playing,
                       initialData: player.state.playing,
                       builder: (context, snapshot) => IconButton(
-                        tooltip: snapshot.data == true ? tr('Pause (Space)') : tr('Play (Space)'),
+                        tooltip: snapshot.data ?? false ? tr('Pause (Space)') : tr('Play (Space)'),
                         iconSize: 28,
-                        icon: Icon(snapshot.data == true ? AppIcons.pauseFill : AppIcons.playFill),
+                        icon: Icon(snapshot.data ?? false ? AppIcons.pauseFill : AppIcons.playFill),
                         onPressed: () => unawaited(player.playOrPause()),
                       ),
                     ),

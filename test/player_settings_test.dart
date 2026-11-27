@@ -58,7 +58,7 @@ void main() {
   });
 
   test('quality limit and autoplay survive a round trip', () {
-    const original = PlayerSettings(maxHeight: 720, playOrder: PlayOrder.pause);
+    const original = PlayerSettings(maxHeight: 720);
     final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
     expect(restored.maxHeight, 720);
     expect(restored.autoplayNext, isFalse);
@@ -130,7 +130,7 @@ void main() {
   });
 
   test('reads mpv.conf lines and refuses unsafe ones', () {
-    final (options, rejected) = parseMpvConf("""
+    final (options, rejected) = parseMpvConf('''
 d3d11va-zero-copy=yes
 
 # 只对这些常见编码尝试硬解
@@ -144,7 +144,7 @@ scale="ewa_lanczossharp"  # sharper
 script=evil.lua
 vo=gpu-next
 [profile]
-""");
+''');
     expect(options, {
       'd3d11va-zero-copy': 'yes',
       'hwdec-codecs': 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1',
@@ -270,7 +270,7 @@ vo=gpu-next
     expect(saved.subtitleMode.anySubtitle, isTrue);
     expect(saved.knownLanguages, ['en', 'ja']);
     expect(saved.understood, ['en', 'ja']);
-    const plain = PlayerSettings(subtitleLanguage: SubtitleLanguage.auto);
+    const plain = PlayerSettings();
     expect(plain.understood, isNotEmpty);
     expect(SubtitleMode.manual.anySubtitle, isFalse);
   });

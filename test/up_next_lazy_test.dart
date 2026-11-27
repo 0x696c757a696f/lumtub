@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -9,6 +8,7 @@ import 'package:lumtub/translation.dart' show TranslationStyle;
 import 'package:lumtub/ui/pages/watch_page.dart';
 import 'package:lumtub/ui/translatable.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   setUpAll(loadTranslations);

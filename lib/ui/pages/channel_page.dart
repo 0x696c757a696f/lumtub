@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
-import '../../device.dart';
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
 import '../../app/posts_loader.dart';
@@ -13,23 +12,24 @@ import '../../app/video_list_loader.dart';
 import '../../channel_avatar_lookup.dart';
 import '../../channel_sort.dart';
 import '../../community_posts.dart';
+import '../../device.dart';
+import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
+import '../app_icons.dart';
 import '../comments_view.dart';
 import '../common.dart';
-import '../motion.dart';
 import '../haptics.dart';
 import '../key_scroll.dart';
+import '../live_chat_input.dart';
+import '../motion.dart';
 import '../press_scale.dart';
 import '../rating_buttons.dart';
 import '../reveal.dart';
 import '../theme.dart';
 import '../translatable.dart';
 import '../video_card.dart';
-import '../../l10n/l10n.dart';
-import '../app_icons.dart';
-import '../live_chat_input.dart';
 
 /// A channel's page: header with follow button, tabs for videos, Shorts,
 /// live streams, playlists and posts, and a search inside the channel.
@@ -632,7 +632,7 @@ class ChannelHeader extends StatelessWidget {
           ConstrainedBox(constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4), child: follow),
           const SizedBox(width: 8),
           IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
-          ChannelMenuButton(controller: controller, channel: channel, browser: false),
+          ChannelMenuButton(controller: controller, channel: channel),
         ]);
       }),
     );

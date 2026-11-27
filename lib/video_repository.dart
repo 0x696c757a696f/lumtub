@@ -6,19 +6,19 @@ import 'dart:isolate';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
-import 'channel_sort.dart';
 import 'app_log.dart';
 import 'background_json.dart';
+import 'channel_sort.dart';
+import 'l10n/l10n.dart';
 import 'library_store.dart';
 import 'live_chat_repository.dart';
 import 'local_db.dart';
 import 'models.dart';
+import 'native_core.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 import 'stream_resolver.dart';
 import 'youtube_listing.dart';
-import 'l10n/l10n.dart';
-import 'native_core.dart';
 
 enum SearchFilter {
   all('All', null),
@@ -160,6 +160,8 @@ class Listing {
 }
 
 class VideoRepository {
+  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const [], this.proxy, http.Client? client})
+      : web = client == null ? null : YoutubeListing(client);
   final String ytDlpPath;
   final String? cacheDirectory;
   /// Deno for YouTube's JavaScript challenges.
@@ -174,8 +176,6 @@ class VideoRepository {
   /// Reads search results and channel tabs from YouTube's web API, with
   /// yt-dlp as the fallback; null lists everything with yt-dlp.
   final YoutubeListing? web;
-  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const [], this.proxy, http.Client? client})
-      : web = client == null ? null : YoutubeListing(client);
 
   List<String> get _proxyArguments {
     final value = proxy?.call();
@@ -500,8 +500,8 @@ class VideoRepository {
 const historyLimit = 5000;
 
 class HistoryStore {
-  final AppDirectories directories;
   HistoryStore(this.directories);
+  final AppDirectories directories;
 
   late File file;
   final List<VideoItem> items = [];

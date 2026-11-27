@@ -3,15 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' show Random, max;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_controller.dart';
-import '../../appearance_settings.dart' show languageStyle;
+import '../../app/video_list_loader.dart';
 import '../../app_log.dart';
+import '../../appearance_settings.dart' show languageStyle;
+import '../../explore_filters.dart' show ExploreLanguage;
 import '../../friendly_error.dart';
-import '../../native_core.dart';
 import '../../l10n/l10n.dart';
 import '../../learning/anki_connect.dart';
 import '../../learning/anki_package.dart';
@@ -22,33 +23,32 @@ import '../../learning/level_test.dart';
 import '../../learning/level_videos.dart';
 import '../../learning/review.dart';
 import '../../learning/video_words.dart';
-import '../../explore_filters.dart' show ExploreLanguage;
-import '../../app/video_list_loader.dart';
-import '../../models.dart' show VideoItem;
-import '../fitting_segments.dart';
-import '../haptics.dart';
-import '../reveal.dart';
-import '../../learning/word_token.dart';
 import '../../learning/vocabulary.dart';
+import '../../learning/word_token.dart';
 import '../../learning/word_voice.dart' show azureVoiceKey, azureVoiceRegion, googleVoiceKey;
+import '../../models.dart' show VideoItem;
+import '../../native_core.dart';
 import '../../save_file.dart';
+import '../../subtitle_cues.dart' show SubtitleCue;
 import '../../thumbnail_cache.dart' show CachedThumbnail;
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
-import '../motion.dart';
 import '../app_shell.dart' show openSettings;
 import '../common.dart';
+import '../fitting_segments.dart';
+import '../haptics.dart';
 import '../learning_drawer.dart' show LearningDrawerSection, addLearningDrawerSection, studyLockedView;
+import '../motion.dart';
 import '../pages/settings_sections.dart' show SettingsCategory;
+import '../reveal.dart';
 import '../skin_paint.dart';
 import '../theme.dart';
 import '../video_card.dart' show SliverSkeletonGrid, SliverVideoGrid, VideoActions, thumbnailFor;
 import 'review_page.dart' show ReviewPlate, openReview, showSavedWord, watchVocabularyMoment;
-import '../../subtitle_cues.dart' show SubtitleCue;
 import 'word_card.dart' show englishLevelName, showWordCard;
 
-part 'learning_home.dart';
 part 'learning_drawer_parts.dart';
+part 'learning_home.dart';
 part 'level_test_page.dart';
 part 'level_videos_page.dart';
 
@@ -205,7 +205,7 @@ Future<bool> claimPurchase(BuildContext context, Learning learning, {required bo
   );
   // Opened from the page: the dialog's own context is gone by now.
   if (tooManyDevices && outer.mounted) unawaited(manageLicenseDevices(outer, learning));
-  if (ok == true && context.mounted) await _showConfirmation(context, learning, source: source, order: order);
+  if ((ok ?? false) && context.mounted) await _showConfirmation(context, learning, source: source, order: order);
   return ok ?? false;
 }
 

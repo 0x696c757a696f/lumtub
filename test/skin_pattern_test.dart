@@ -2,9 +2,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_paint.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<ByteData> _draw(SkinPaint layer, Size size) async {
   final recorder = ui.PictureRecorder();

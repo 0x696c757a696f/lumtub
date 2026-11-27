@@ -9,8 +9,8 @@ import '../../translation_services.dart';
 import '../../widgets/settings_tiles.dart';
 import '../app_icons.dart';
 import '../common.dart' show dialogWidth;
-import '../translatable.dart' show TranslationView, standInNotice;
 import '../skin_paint.dart';
+import '../translatable.dart' show TranslationView, standInNotice;
 
 /// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
 /// the one AI interface that AI 翻译 and AI 总结 share.
@@ -376,7 +376,7 @@ class _NeverTranslateDialogState extends State<_NeverTranslateDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _chosen.contains(language.code),
                 title: Text(language.label),
-                onChanged: (v) => setState(() => v == true ? _chosen.add(language.code) : _chosen.remove(language.code)),
+                onChanged: (v) => setState(() => v ?? false ? _chosen.add(language.code) : _chosen.remove(language.code)),
               ),
           ]),
         ),

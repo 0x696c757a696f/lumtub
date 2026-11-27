@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/appearance_settings.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/main.dart';
 import 'package:lumtub/ui/animated_visibility.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/page_switcher.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   Future<AppController> pumpApp(WidgetTester tester, Size size, {Brightness? platformBrightness}) async {
@@ -142,7 +142,7 @@ void main() {
   testWidgets('a change that is not navigation leaves the rail alone, while the rest follows it', (tester) async {
     final controller = await pumpApp(tester, const Size(1280, 800));
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-    final incognito = find.byWidgetPredicate((w) => w is IconButton && w.isSelected == true);
+    final incognito = find.byWidgetPredicate((w) => w is IconButton && (w.isSelected ?? false));
     expect(incognito, findsNothing);
 
     controller.status = 'Fetching the player';

@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   Future<TestGesture> hover(WidgetTester tester, String text, double width) async {

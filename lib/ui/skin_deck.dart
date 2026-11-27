@@ -424,7 +424,7 @@ class _GelPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
     }
     // The socket it sits in.
-    canvas.drawCircle(c, r + 1.5, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: const [Color(0x66000000), Color(0x22FFFFFF)]).createShader(rect.inflate(2)));
+    canvas.drawCircle(c, r + 1.5, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x66000000), Color(0x22FFFFFF)]).createShader(rect.inflate(2)));
     final deep = b.colors.last;
     final light = down ? deep : (hover ? Color.lerp(b.colors.first, const Color(0xFFFFFFFF), 0.25)! : b.colors.first);
     canvas.drawCircle(c, r, Paint()..shader = RadialGradient(colors: [deep, deep, Color.lerp(deep, const Color(0xFF000000), 0.35)!], stops: const [0, 0.6, 1]).createShader(rect));

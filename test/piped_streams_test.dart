@@ -6,8 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/piped_streams.dart';
-import 'package:lumtub/relay_servers.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/relay_servers.dart';
 import 'package:lumtub/video_codec.dart';
 
 Map<String, dynamic> _streams() => {
@@ -244,7 +244,7 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     expect(order.toSet().containsAll(servers), isTrue);
     expect(ranked.toSet(), {servers[9], servers[3]});
     await streams.saved;
-    expect(((jsonDecode(await file.readAsString()) as Map)['last']), ranked.first);
+    expect((jsonDecode(await file.readAsString()) as Map)['last'], ranked.first);
   });
 
   test('a server that lists streams but cannot fetch them is not used', () async {

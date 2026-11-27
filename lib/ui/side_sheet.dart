@@ -9,7 +9,7 @@ const double sideSheetBreakpoint = 720;
 
 /// The width of a side sheet in a window [windowWidth] across: two fifths
 /// of it, kept between a phone's width and a comfortable reading measure.
-double sideSheetWidth(double windowWidth) => (windowWidth * 0.4).clamp(360.0, 560.0).toDouble();
+double sideSheetWidth(double windowWidth) => (windowWidth * 0.4).clamp(360.0, 560.0);
 
 /// Whether [context] is inside a sheet, a [showSideSheet] or a sheet from
 /// the bottom, so a panel lays itself out as one rather than as a dialog.

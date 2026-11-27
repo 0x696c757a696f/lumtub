@@ -119,7 +119,7 @@ void main() {
   });
 
   test('a phone in the background reads less ahead and keeps little of what was played', () {
-    const settings = PlayerSettings(cacheMemoryMb: 64, cacheSeconds: 60);
+    const settings = PlayerSettings(cacheMemoryMb: 64);
     expect(PlayerOptionApplicator.cacheOptions(settings), {'cache-secs': '60', 'demuxer-max-bytes': '64MiB', 'demuxer-max-back-bytes': '16MiB'});
     expect(PlayerOptionApplicator.cacheOptions(settings, background: true), {'cache-secs': '30', 'demuxer-max-bytes': '24MiB', 'demuxer-max-back-bytes': '4MiB'});
     expect(PlayerOptionApplicator.optionsFor(settings)['demuxer-max-bytes'], '64MiB');
@@ -157,7 +157,7 @@ void main() {
   });
 
   test('turning the lighter scaling off sets back its options only', () {
-    const settings = PlayerSettings(hwdec: 'auto-safe', scale: 'lanczos', audioFilter: 'lavfi=[dynaudnorm]');
+    const settings = PlayerSettings(scale: 'lanczos', audioFilter: 'lavfi=[dynaudnorm]');
     final before = PlayerOptionApplicator.appliedOptions(settings, lightened: true);
     final wanted = PlayerOptionApplicator.optionsFor(settings);
     final changed = {for (final MapEntry(:key, :value) in wanted.entries) if (before[key] != value) key};

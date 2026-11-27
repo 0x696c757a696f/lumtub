@@ -5,13 +5,13 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
 import 'appearance_settings.dart' show cjkFormOf, downloadedCjkFamilies;
-import 'device_memory.dart';
 import 'decoder_status.dart';
+import 'device_memory.dart';
+import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
 import 'translation.dart';
 import 'video_codec.dart';
-import 'l10n/l10n.dart';
 
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
@@ -382,6 +382,258 @@ T _enumByName<T extends Enum>(List<T> values, Object? name, T fallback) =>
     values.where((value) => value.name == name).firstOrNull ?? fallback;
 
 class PlayerSettings {
+  const PlayerSettings({
+    this.hwdec = 'auto-safe',
+    this.scale = 'spline36',
+    this.deband = false,
+    this.interpolation = false,
+    this.subtitleScale = 1.0,
+    this.subtitlePosition = 100,
+    this.subtitleFont = defaultSubtitleFont,
+    this.subtitleColor = 0xFFFFFF,
+    this.subtitleOpacity = 1.0,
+    this.secondaryFont = defaultSubtitleFont,
+    this.secondaryScale = 0.9,
+    this.secondaryColor = 0xFFE7A8,
+    this.secondaryOpacity = 0.95,
+    this.cacheMode = 'auto',
+    this.cacheSeconds = 60,
+    this.cacheMemoryMb = 100,
+    this.strategy = PlaybackStrategy.auto,
+    Set<VideoCodec>? disabledCodecs,
+    this.audioQuality = AudioQuality.best,
+    this.dubbedAudio = DubbedAudio.original,
+    this.audioDevice = 'auto',
+    this.videoSync = VideoSync.audio,
+    this.upscaling = Upscaling.off,
+    this.hdr = HdrPreference.auto,
+    this.maxHeight = 0,
+    this.playOrder = PlayOrder.pause,
+    this.defaultSpeed = 1.0,
+    this.speeds = defaultSpeeds,
+    this.defaultVolume = 100,
+    this.volumeMax = 100,
+    this.subtitleMode = SubtitleMode.off,
+    this.subtitleLanguage = SubtitleLanguage.auto,
+    this.subtitleOriginal = false,
+    this.secondarySubtitleLanguage = interfaceSubtitle,
+    this.knownLanguages = const [],
+    this.subtitleBorder = 3,
+    this.subtitleBackground = false,
+    this.subtitleBold = false,
+    this.pauseEachLine = false,
+    this.blurSecondary = false,
+    this.pipSubtitles = true,
+    this.miniPlayerSubtitles = true,
+    this.sponsorBlock = false,
+    this.returnDislike = false,
+    this.decoderAdapter = '',
+    this.deArrowTitles = false,
+    this.deArrowThumbnails = false,
+    this.sponsorCategories = defaultSponsorCategories,
+    this.sponsorNotice = true,
+    this.sponsorCut = false,
+    this.cachePath,
+    this.cacheLimitGb,
+    this.mpvConf = '',
+    this.decoderResults = const {},
+    this.d3d11vaZeroCopy = false,
+    this.libassSubtitles = false,
+    this.proxyMode = ProxyMode.system,
+    this.proxyAddress = '',
+    this.dnsServer = '',
+    this.dnsCustomUrl = '',
+    this.certificateRoots = 'system',
+    this.postQuantum = 'prefer',
+    this.ipVersion = 'auto',
+    this.signInWhenBlocked = false,
+    this.playbackSource = PlaybackSource.youtube,
+    this.relayFallback = true,
+    this.skipSilence = false,
+    this.mixWithOthers = false,
+    this.volumeBalance = 0,
+    this.pipedServer = '',
+    this.invidiousServer = '',
+    this.directRendering = 'auto',
+    this.autosync = 0,
+    this.audioFilter = '',
+    this.picture = const {},
+    this.audioDelayMs = 0,
+  }) : chosenCodecs = disabledCodecs;
+
+  factory PlayerSettings.fromJson(Object? raw) {
+    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
+    String choice(String key, Set<String> allowed, String fallback) {
+      final value = raw[key]?.toString();
+      return allowed.contains(value) ? value! : fallback;
+    }
+    int number(String key, int fallback, int min, int max) {
+      final value = raw[key];
+      final parsed = value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
+      if (parsed == null || parsed < min) return fallback;
+      return parsed.clamp(min, max);
+    }
+    double decimal(String key, double fallback, double min, double max) {
+      final value = raw[key];
+      final parsed = value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
+      return parsed == null ? fallback : parsed.clamp(min, max);
+    }
+    final results = <String, DecoderStatus>{};
+    // Earlier builds kept custom options as a map.
+    var conf = raw['mpvConf'] is String ? raw['mpvConf'] as String : '';
+    if (conf.isEmpty && raw['customOptions'] is Map) {
+      conf = [for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'].join('\n');
+    }
+    if (conf.length > 200000) conf = '';
+    final picture = <String, int>{};
+    if (raw['picture'] is Map) {
+      for (final (key, _) in pictureProperties) {
+        final value = (raw['picture'] as Map)[key];
+        if (value is num && value != 0) picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
+      }
+    }
+    final filter = raw['audioFilter']?.toString() ?? '';
+    if (raw['decoderResults'] is Map) {
+      for (final entry in (raw['decoderResults'] as Map).entries) {
+        final codec = entry.key.toString().toLowerCase();
+        final status = DecoderStatus.fromJson(entry.value);
+        if (DecoderStatus.codecs.contains(codec) && status != null) results[codec] = status;
+      }
+    }
+    final speeds = raw['speeds'] is List
+        ? ((raw['speeds'] as List).whereType<num>().map((s) => s.toDouble()).where((s) => s >= 0.1 && s <= 8).toSet().toList()..sort())
+        : defaultSpeeds;
+    final categories = raw['sponsorCategories'] is List
+        ? (raw['sponsorCategories'] as List).map((c) => c.toString()).where(sponsorCategoryNames.containsKey).toSet()
+        : defaultSponsorCategories;
+    // Builds before the format policy saved a preferred `codec`: "any" and a
+    // switched-off codec selection meant best quality, the rest automatic.
+    final strategy = raw.containsKey('strategy')
+        ? _enumByName(PlaybackStrategy.values, raw['strategy'], PlaybackStrategy.auto)
+        : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
+    final disabled = raw['disabledCodecs'] is List
+        ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
+        : null;
+    // A file that disables every codec YouTube plays would play nothing.
+    if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
+    // Builds before the play order menu had an autoplay switch.
+    // Builds before playOrderDefault 2 saved 自动连播 as the default even
+    // when untouched; the default is now to stop at the end.
+    final savedOrder = raw.containsKey('playOrder')
+        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.pause)
+        : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
+    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
+    final path = raw['cachePath']?.toString();
+    final device = raw['audioDevice']?.toString() ?? 'auto';
+    final bufferVersion = raw['bufferDefaults'] is int ? raw['bufferDefaults'] as int : 1;
+    final oldBuffer = bufferVersion < 2;
+    final savedBuffer = raw['cacheMemoryMb'];
+    final loaded = PlayerSettings(
+      hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
+      scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
+      deband: raw['deband'] == true,
+      interpolation: raw['interpolation'] == true,
+      subtitleScale: decimal('subtitleScale', 1.0, 0.5, 3.0),
+      subtitlePosition: number('subtitlePosition', 100, 0, 100),
+      subtitleFont: raw.containsKey('subtitleFont') ? cleanFont(raw['subtitleFont']) : defaultSubtitleFont,
+      subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
+      subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
+      secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
+      // 0.8 was the default before it grew to 0.9, too small to read;
+      // from subtitleStyleVersion 2 on, a saved 0.8 was chosen.
+      secondaryScale: raw['secondaryScale'] == 0.8 && raw['subtitleStyleVersion'] != 2 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
+      secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
+      secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
+      cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
+      // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
+      // those move to the larger defaults that ride out network hiccups.
+      cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
+      // Builds before bufferDefaults 3 saved mpv's 150 MB even when
+      // untouched; it now uses less memory, less still on phones and TVs.
+      // Before bufferDefaults 4 iPhones and iPads saved the computers' 100
+      // MB, and devices with little memory the phones' 64 MB.
+      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) || (bufferVersion < 4 && ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory))) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
+      strategy: strategy,
+      disabledCodecs: disabled,
+      audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
+      dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
+      audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
+      videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
+      upscaling: _enumByName(Upscaling.values, raw['upscaling'], Upscaling.off),
+      hdr: _enumByName(HdrPreference.values, raw['hdr'], HdrPreference.auto),
+      maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
+      playOrder: playOrder,
+      defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),
+      speeds: speeds.isEmpty ? defaultSpeeds : speeds,
+      defaultVolume: number('defaultVolume', 100, 0, 100),
+      volumeMax: number('volumeMax', 100, 100, 200),
+      subtitleMode: _enumByName(SubtitleMode.values, raw['subtitleMode'], SubtitleMode.off),
+      // Saved under a new key since 跟随界面语言 came; 简体中文优先, the
+      // default before it, saved under the old one now follows too.
+      subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
+          ? SubtitleLanguage.byName(raw['subtitleLanguageV2'] ?? raw['subtitleLanguage']) ?? SubtitleLanguage.auto
+          : SubtitleLanguage.auto,
+      subtitleOriginal: raw['subtitleOriginal'] == true,
+      // Saved under a new key since the interface's language became the
+      // default; none, the default before it, follows it too.
+      secondarySubtitleLanguage: switch (raw['secondarySubtitleLanguageV2'] ?? (raw['secondarySubtitleLanguage'] == '' ? null : raw['secondarySubtitleLanguage'])) {
+        null => interfaceSubtitle,
+        originalSubtitle => originalSubtitle,
+        interfaceSubtitle => interfaceSubtitle,
+        final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
+      },
+      knownLanguages: raw['knownLanguages'] is List ? [for (final code in (raw['knownLanguages'] as List).whereType<String>()) if (TranslationLanguage.maybeByCode(code) != null) code] : const [],
+      subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
+      subtitleBackground: raw['subtitleBackground'] == true,
+      subtitleBold: raw['subtitleBold'] == true,
+      pauseEachLine: raw['pauseEachLine'] == true,
+      blurSecondary: raw['blurSecondary'] == true,
+      pipSubtitles: raw['pipSubtitles'] != false,
+      miniPlayerSubtitles: raw['miniPlayerSubtitles'] != false,
+      sponsorBlock: raw['sponsorBlock'] == true,
+      returnDislike: raw['returnDislike'] == true,
+      decoderAdapter: raw['decoderAdapter']?.toString() ?? '',
+      deArrowTitles: raw['deArrowTitles'] == true,
+      deArrowThumbnails: raw['deArrowThumbnails'] == true,
+      sponsorCategories: categories,
+      sponsorNotice: raw['sponsorNotice'] != false,
+      relayFallback: raw['relayFallback'] != false,
+      skipSilence: raw['skipSilence'] == true,
+      mixWithOthers: raw['mixWithOthers'] == true,
+      volumeBalance: raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
+      sponsorCut: raw['sponsorCut'] == true,
+      cachePath: path != null && path.trim().isNotEmpty ? path : null,
+      cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
+      mpvConf: conf,
+      decoderResults: results,
+      d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
+      // Always on iOS: Flutter's subtitles over the video's platform view
+      // leave ghosts of earlier lines there.
+      libassSubtitles: raw['libassSubtitles'] == true || (Platform.isIOS && !raw.containsKey('libassSubtitles')),
+      proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
+      proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
+      dnsServer: raw['dnsServer']?.toString() ?? '',
+      dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
+      certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
+      postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
+      ipVersion: const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
+      signInWhenBlocked: raw['signInWhenBlocked'] == true,
+      // V2: the default became direct YouTube (2026-10-21); the old key held
+      // the old default for everyone who never chose.
+      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),
+      pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
+      invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
+      directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
+      autosync: number('autosync', 0, 0, 100),
+      audioFilter: filter.length > 4000 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,
+      picture: picture,
+      audioDelayMs: number('audioDelayMs', 0, -5000, 5000),
+    );
+    // The same codecs as the automatic choice stay automatic.
+    final chosen = loaded.chosenCodecs;
+    return chosen != null ? loaded.withDisabledCodecs(chosen) : loaded;
+  }
+
   /// Whether the device is a phone, tablet or TV, where the read-ahead
   /// cache stays small: each MB of it is memory the system may take back by
   /// closing the app in the background.
@@ -580,85 +832,6 @@ class PlayerSettings {
   Map<String, String> get customOptions => parseMpvConf(mpvConf).$1;
 
   static const defaultSponsorCategories = {'sponsor', 'selfpromo', 'interaction'};
-
-  const PlayerSettings({
-    this.hwdec = 'auto-safe',
-    this.scale = 'spline36',
-    this.deband = false,
-    this.interpolation = false,
-    this.subtitleScale = 1.0,
-    this.subtitlePosition = 100,
-    this.subtitleFont = defaultSubtitleFont,
-    this.subtitleColor = 0xFFFFFF,
-    this.subtitleOpacity = 1.0,
-    this.secondaryFont = defaultSubtitleFont,
-    this.secondaryScale = 0.9,
-    this.secondaryColor = 0xFFE7A8,
-    this.secondaryOpacity = 0.95,
-    this.cacheMode = 'auto',
-    this.cacheSeconds = 60,
-    this.cacheMemoryMb = 100,
-    this.strategy = PlaybackStrategy.auto,
-    Set<VideoCodec>? disabledCodecs,
-    this.audioQuality = AudioQuality.best,
-    this.dubbedAudio = DubbedAudio.original,
-    this.audioDevice = 'auto',
-    this.videoSync = VideoSync.audio,
-    this.upscaling = Upscaling.off,
-    this.hdr = HdrPreference.auto,
-    this.maxHeight = 0,
-    this.playOrder = PlayOrder.pause,
-    this.defaultSpeed = 1.0,
-    this.speeds = defaultSpeeds,
-    this.defaultVolume = 100,
-    this.volumeMax = 100,
-    this.subtitleMode = SubtitleMode.off,
-    this.subtitleLanguage = SubtitleLanguage.auto,
-    this.subtitleOriginal = false,
-    this.secondarySubtitleLanguage = interfaceSubtitle,
-    this.knownLanguages = const [],
-    this.subtitleBorder = 3,
-    this.subtitleBackground = false,
-    this.subtitleBold = false,
-    this.pauseEachLine = false,
-    this.blurSecondary = false,
-    this.pipSubtitles = true,
-    this.miniPlayerSubtitles = true,
-    this.sponsorBlock = false,
-    this.returnDislike = false,
-    this.decoderAdapter = '',
-    this.deArrowTitles = false,
-    this.deArrowThumbnails = false,
-    this.sponsorCategories = defaultSponsorCategories,
-    this.sponsorNotice = true,
-    this.sponsorCut = false,
-    this.cachePath,
-    this.cacheLimitGb,
-    this.mpvConf = '',
-    this.decoderResults = const {},
-    this.d3d11vaZeroCopy = false,
-    this.libassSubtitles = false,
-    this.proxyMode = ProxyMode.system,
-    this.proxyAddress = '',
-    this.dnsServer = '',
-    this.dnsCustomUrl = '',
-    this.certificateRoots = 'system',
-    this.postQuantum = 'prefer',
-    this.ipVersion = 'auto',
-    this.signInWhenBlocked = false,
-    this.playbackSource = PlaybackSource.youtube,
-    this.relayFallback = true,
-    this.skipSilence = false,
-    this.mixWithOthers = false,
-    this.volumeBalance = 0,
-    this.pipedServer = '',
-    this.invidiousServer = '',
-    this.directRendering = 'auto',
-    this.autosync = 0,
-    this.audioFilter = '',
-    this.picture = const {},
-    this.audioDelayMs = 0,
-  }) : chosenCodecs = disabledCodecs;
 
   /// Whether a finished video is followed by another one.
   bool get autoplayNext => playOrder != PlayOrder.pause && playOrder != PlayOrder.singleCycle;
@@ -980,179 +1153,6 @@ class PlayerSettings {
   static String mpvColor(int rgb, double opacity) =>
       '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
 
-  factory PlayerSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
-    String choice(String key, Set<String> allowed, String fallback) {
-      final value = raw[key]?.toString();
-      return allowed.contains(value) ? value! : fallback;
-    }
-    int number(String key, int fallback, int min, int max) {
-      final value = raw[key];
-      final parsed = value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
-      if (parsed == null || parsed < min) return fallback;
-      return parsed.clamp(min, max).toInt();
-    }
-    double decimal(String key, double fallback, double min, double max) {
-      final value = raw[key];
-      final parsed = value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
-      return parsed == null ? fallback : parsed.clamp(min, max).toDouble();
-    }
-    final results = <String, DecoderStatus>{};
-    // Earlier builds kept custom options as a map.
-    var conf = raw['mpvConf'] is String ? raw['mpvConf'] as String : '';
-    if (conf.isEmpty && raw['customOptions'] is Map) {
-      conf = [for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'].join('\n');
-    }
-    if (conf.length > 200000) conf = '';
-    final picture = <String, int>{};
-    if (raw['picture'] is Map) {
-      for (final (key, _) in pictureProperties) {
-        final value = (raw['picture'] as Map)[key];
-        if (value is num && value != 0) picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
-      }
-    }
-    final filter = raw['audioFilter']?.toString() ?? '';
-    if (raw['decoderResults'] is Map) {
-      for (final entry in (raw['decoderResults'] as Map).entries) {
-        final codec = entry.key.toString().toLowerCase();
-        final status = DecoderStatus.fromJson(entry.value);
-        if (DecoderStatus.codecs.contains(codec) && status != null) results[codec] = status;
-      }
-    }
-    final speeds = raw['speeds'] is List
-        ? ((raw['speeds'] as List).whereType<num>().map((s) => s.toDouble()).where((s) => s >= 0.1 && s <= 8).toSet().toList()..sort())
-        : defaultSpeeds;
-    final categories = raw['sponsorCategories'] is List
-        ? (raw['sponsorCategories'] as List).map((c) => c.toString()).where(sponsorCategoryNames.containsKey).toSet()
-        : defaultSponsorCategories;
-    // Builds before the format policy saved a preferred `codec`: "any" and a
-    // switched-off codec selection meant best quality, the rest automatic.
-    final strategy = raw.containsKey('strategy')
-        ? _enumByName(PlaybackStrategy.values, raw['strategy'], PlaybackStrategy.auto)
-        : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
-    final disabled = raw['disabledCodecs'] is List
-        ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
-        : null;
-    // A file that disables every codec YouTube plays would play nothing.
-    if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
-    // Builds before the play order menu had an autoplay switch.
-    // Builds before playOrderDefault 2 saved 自动连播 as the default even
-    // when untouched; the default is now to stop at the end.
-    final savedOrder = raw.containsKey('playOrder')
-        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.pause)
-        : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
-    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
-    final path = raw['cachePath']?.toString();
-    final device = raw['audioDevice']?.toString() ?? 'auto';
-    final bufferVersion = raw['bufferDefaults'] is int ? raw['bufferDefaults'] as int : 1;
-    final oldBuffer = bufferVersion < 2;
-    final savedBuffer = raw['cacheMemoryMb'];
-    final loaded = PlayerSettings(
-      hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
-      scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
-      deband: raw['deband'] == true,
-      interpolation: raw['interpolation'] == true,
-      subtitleScale: decimal('subtitleScale', 1.0, 0.5, 3.0),
-      subtitlePosition: number('subtitlePosition', 100, 0, 100),
-      subtitleFont: raw.containsKey('subtitleFont') ? cleanFont(raw['subtitleFont']) : defaultSubtitleFont,
-      subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
-      subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
-      secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
-      // 0.8 was the default before it grew to 0.9, too small to read;
-      // from subtitleStyleVersion 2 on, a saved 0.8 was chosen.
-      secondaryScale: raw['secondaryScale'] == 0.8 && raw['subtitleStyleVersion'] != 2 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
-      secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
-      secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
-      cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
-      // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
-      // those move to the larger defaults that ride out network hiccups.
-      cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
-      // Builds before bufferDefaults 3 saved mpv's 150 MB even when
-      // untouched; it now uses less memory, less still on phones and TVs.
-      // Before bufferDefaults 4 iPhones and iPads saved the computers' 100
-      // MB, and devices with little memory the phones' 64 MB.
-      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) || (bufferVersion < 4 && ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory))) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
-      strategy: strategy,
-      disabledCodecs: disabled,
-      audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
-      dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
-      audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
-      videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
-      upscaling: _enumByName(Upscaling.values, raw['upscaling'], Upscaling.off),
-      hdr: _enumByName(HdrPreference.values, raw['hdr'], HdrPreference.auto),
-      maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
-      playOrder: playOrder,
-      defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),
-      speeds: speeds.isEmpty ? defaultSpeeds : speeds,
-      defaultVolume: number('defaultVolume', 100, 0, 100),
-      volumeMax: number('volumeMax', 100, 100, 200),
-      subtitleMode: _enumByName(SubtitleMode.values, raw['subtitleMode'], SubtitleMode.off),
-      // Saved under a new key since 跟随界面语言 came; 简体中文优先, the
-      // default before it, saved under the old one now follows too.
-      subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
-          ? SubtitleLanguage.byName(raw['subtitleLanguageV2'] ?? raw['subtitleLanguage']) ?? SubtitleLanguage.auto
-          : SubtitleLanguage.auto,
-      subtitleOriginal: raw['subtitleOriginal'] == true,
-      // Saved under a new key since the interface's language became the
-      // default; none, the default before it, follows it too.
-      secondarySubtitleLanguage: switch (raw['secondarySubtitleLanguageV2'] ?? (raw['secondarySubtitleLanguage'] == '' ? null : raw['secondarySubtitleLanguage'])) {
-        null => interfaceSubtitle,
-        originalSubtitle => originalSubtitle,
-        interfaceSubtitle => interfaceSubtitle,
-        final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
-      },
-      knownLanguages: raw['knownLanguages'] is List ? [for (final code in (raw['knownLanguages'] as List).whereType<String>()) if (TranslationLanguage.maybeByCode(code) != null) code] : const [],
-      subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
-      subtitleBackground: raw['subtitleBackground'] == true,
-      subtitleBold: raw['subtitleBold'] == true,
-      pauseEachLine: raw['pauseEachLine'] == true,
-      blurSecondary: raw['blurSecondary'] == true,
-      pipSubtitles: raw['pipSubtitles'] != false,
-      miniPlayerSubtitles: raw['miniPlayerSubtitles'] != false,
-      sponsorBlock: raw['sponsorBlock'] == true,
-      returnDislike: raw['returnDislike'] == true,
-      decoderAdapter: raw['decoderAdapter']?.toString() ?? '',
-      deArrowTitles: raw['deArrowTitles'] == true,
-      deArrowThumbnails: raw['deArrowThumbnails'] == true,
-      sponsorCategories: categories,
-      sponsorNotice: raw['sponsorNotice'] != false,
-      relayFallback: raw['relayFallback'] != false,
-      skipSilence: raw['skipSilence'] == true,
-      mixWithOthers: raw['mixWithOthers'] == true,
-      volumeBalance: raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
-      sponsorCut: raw['sponsorCut'] == true,
-      cachePath: path != null && path.trim().isNotEmpty ? path : null,
-      cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
-      mpvConf: conf,
-      decoderResults: results,
-      d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
-      // Always on iOS: Flutter's subtitles over the video's platform view
-      // leave ghosts of earlier lines there.
-      libassSubtitles: raw['libassSubtitles'] == true || (Platform.isIOS && !raw.containsKey('libassSubtitles')),
-      proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
-      proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
-      dnsServer: raw['dnsServer']?.toString() ?? '',
-      dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
-      certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
-      postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
-      ipVersion: const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
-      signInWhenBlocked: raw['signInWhenBlocked'] == true,
-      // V2: the default became direct YouTube (2026-10-21); the old key held
-      // the old default for everyone who never chose.
-      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),
-      pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
-      invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
-      directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
-      autosync: number('autosync', 0, 0, 100),
-      audioFilter: filter.length > 4000 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,
-      picture: picture,
-      audioDelayMs: number('audioDelayMs', 0, -5000, 5000),
-    );
-    // The same codecs as the automatic choice stay automatic.
-    final chosen = loaded.chosenCodecs;
-    return chosen != null ? loaded.withDisabledCodecs(chosen) : loaded;
-  }
-
   /// [value] if it is a comma list of decoders offered on this platform
   /// (or in [choices]), else null.
   static String? validHwdec(String? value, {List<(String, String)>? choices}) {
@@ -1187,8 +1187,8 @@ final sponsorCategoryNames = {
 };
 
 class PlayerSettingsStore {
-  final File file;
   PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
+  final File file;
 
   Future<PlayerSettings> load() async {
     if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);

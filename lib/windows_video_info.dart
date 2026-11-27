@@ -3,15 +3,15 @@ import 'dart:io';
 import 'system_env.dart';
 
 class WindowsVideoInfo {
-  final List<String> gpuNames;
-  final ExtensionStatus vp9Extension;
-  final ExtensionStatus av1Extension;
-
   const WindowsVideoInfo({
     this.gpuNames = const [],
     this.vp9Extension = ExtensionStatus.unknown,
     this.av1Extension = ExtensionStatus.unknown,
   });
+
+  final List<String> gpuNames;
+  final ExtensionStatus vp9Extension;
+  final ExtensionStatus av1Extension;
 
   static Future<WindowsVideoInfo> read() async {
     // Tests run without asking PowerShell, whose process outlives them.

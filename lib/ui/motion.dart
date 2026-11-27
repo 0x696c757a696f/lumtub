@@ -23,7 +23,7 @@ abstract final class Ease {
 /// Brings [child] in once, when it first appears: it fades in while growing
 /// from [scale] to its full size. With animations reduced it is simply there.
 class Entrance extends StatefulWidget {
-  const Entrance({super.key, this.duration = Ease.move, this.curve = Ease.curve, this.scale = 0.92, required this.child});
+  const Entrance({required this.child, super.key, this.duration = Ease.move, this.curve = Ease.curve, this.scale = 0.92});
   final Duration duration;
   final Curve curve;
   final double scale;

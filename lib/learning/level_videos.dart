@@ -1045,7 +1045,7 @@ class LevelVideos extends ChangeNotifier {
       final json = features.toJson();
       final bytes = await Isolate.run(() => gzip.encode(utf8.encode(jsonEncode(json))));
       await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes, flush: false);
+      await file.writeAsBytes(bytes);
     } catch (e) {
       logDebug(() => 'Level videos: could not keep the words of $id: $e');
     }

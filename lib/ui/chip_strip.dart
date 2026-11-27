@@ -239,7 +239,7 @@ class _ChipStripState extends State<ChipStrip> {
             onPointerSignal: _wheel,
             child: ListenableBuilder(
               listenable: _scroll,
-              builder: (context, child) => ShaderMask(blendMode: BlendMode.dstIn, shaderCallback: (bounds) => _edgeMask(bounds), child: child),
+              builder: (context, child) => ShaderMask(blendMode: BlendMode.dstIn, shaderCallback: _edgeMask, child: child),
               child: SingleChildScrollView(
                 key: const PageStorageKey<String>('chips'),
                 controller: _scroll,

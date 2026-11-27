@@ -586,9 +586,7 @@ class AiTranslator extends _CachedTranslator {
   AiTranslator(
     super.client, {
     required this.baseUrl,
-    this.key = '',
-    required this.model,
-    required this.prompt,
+    required this.model, required this.prompt, this.key = '',
     this.tone = '',
     this.glossary = '',
     this.temperature = 0.2,
@@ -880,6 +878,35 @@ class AiTranslator extends _CachedTranslator {
 /// The settings of the translation service that are not secret. API keys are
 /// kept apart from these.
 class TranslationConfig {
+  factory TranslationConfig.fromJson(Object? json) {
+    if (json is! Map) return const TranslationConfig();
+    String text(String name, String fallback) => json[name] is String ? json[name] as String : fallback;
+    final service = TranslationService.values.firstWhere((s) => s.name == json['service'], orElse: () => TranslationService.google);
+    final aiPreset = text('aiPreset', 'openai');
+    final promptPreset = text('promptPreset', 'subtitle');
+    final temperature = json['aiTemperature'];
+    final context = json['aiContext'];
+    return TranslationConfig(
+      service: service,
+      libreServer: text('libreServer', ''),
+      microsoftRegion: text('microsoftRegion', ''),
+      deeplxServer: text('deeplxServer', ''),
+      baiduAppId: text('baiduAppId', ''),
+      aiPreset: AiTranslator.aiPresets.any((p) => p.id == aiPreset) ? aiPreset : 'openai',
+      aiBaseUrl: text('aiBaseUrl', ''),
+      aiModel: text('aiModel', ''),
+      promptPreset: promptPreset == 'custom' || AiTranslator.promptPresets.any((p) => p.id == promptPreset) ? promptPreset : 'subtitle',
+      customPrompt: text('customPrompt', ''),
+      aiTone: AiTone.byId(text('aiTone', 'default')).id,
+      aiGlossary: text('aiGlossary', ''),
+      aiTemperature: temperature is num ? temperature.toDouble().clamp(0.0, 1.5) : 0.2,
+      aiContext: context is int ? context.clamp(0, 10) : 3,
+      speechPreset: SpeechPreset.byId(text('speechPreset', 'groq')).id,
+      speechBaseUrl: text('speechBaseUrl', ''),
+      speechModel: text('speechModel', ''),
+    );
+  }
+
   const TranslationConfig({
     this.service = TranslationService.google,
     this.libreServer = '',
@@ -997,35 +1024,6 @@ class TranslationConfig {
         'speechBaseUrl': speechBaseUrl,
         'speechModel': speechModel,
       };
-
-  factory TranslationConfig.fromJson(Object? json) {
-    if (json is! Map) return const TranslationConfig();
-    String text(String name, String fallback) => json[name] is String ? json[name] as String : fallback;
-    final service = TranslationService.values.firstWhere((s) => s.name == json['service'], orElse: () => TranslationService.google);
-    final aiPreset = text('aiPreset', 'openai');
-    final promptPreset = text('promptPreset', 'subtitle');
-    final temperature = json['aiTemperature'];
-    final context = json['aiContext'];
-    return TranslationConfig(
-      service: service,
-      libreServer: text('libreServer', ''),
-      microsoftRegion: text('microsoftRegion', ''),
-      deeplxServer: text('deeplxServer', ''),
-      baiduAppId: text('baiduAppId', ''),
-      aiPreset: AiTranslator.aiPresets.any((p) => p.id == aiPreset) ? aiPreset : 'openai',
-      aiBaseUrl: text('aiBaseUrl', ''),
-      aiModel: text('aiModel', ''),
-      promptPreset: promptPreset == 'custom' || AiTranslator.promptPresets.any((p) => p.id == promptPreset) ? promptPreset : 'subtitle',
-      customPrompt: text('customPrompt', ''),
-      aiTone: AiTone.byId(text('aiTone', 'default')).id,
-      aiGlossary: text('aiGlossary', ''),
-      aiTemperature: temperature is num ? temperature.toDouble().clamp(0.0, 1.5) : 0.2,
-      aiContext: context is int ? context.clamp(0, 10) : 3,
-      speechPreset: SpeechPreset.byId(text('speechPreset', 'groq')).id,
-      speechBaseUrl: text('speechBaseUrl', ''),
-      speechModel: text('speechModel', ''),
-    );
-  }
 
   List<Object?> get _fields => [
         service, libreServer, microsoftRegion, deeplxServer, baiduAppId, aiPreset, aiBaseUrl, aiModel, //

@@ -56,7 +56,7 @@ extension _BottomBar on _PlayerControlsState {
               ),
             if (!phone) _VolumeControl(host: this, width: width),
             SizedBox(width: phone ? 8 : 4),
-            if (c.playing?.isLive == true) _LiveButton(host: this) else _TimeText(host: this),
+            if (c.playing?.isLive ?? false) _LiveButton(host: this) else _TimeText(host: this),
             Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _ChapterMenu(host: this))),
             if (c.hasDanmaku) _danmakuButtons(width, narrow),
             _subtitleButtons(width),

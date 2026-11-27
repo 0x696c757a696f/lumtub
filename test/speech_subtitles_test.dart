@@ -102,7 +102,7 @@ void main() {
     final file = File('${dir.path}/vid.en.vtt')..writeAsStringSync('WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nhello\n');
     final speech = SubtitleOption(language: 'en', name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
     expect(speech.label, contains('speech recognition'));
-    expect(originalSubtitle([speech], language: null), same(speech));
+    expect(originalSubtitle([speech]), same(speech));
     final translated = translationOf([speech], TranslationLanguage.all.firstWhere((l) => l.code == 'zh-CN'))!;
     final files = SubtitleFiles(MockClient((_) async => http.Response('', 500)), Directory('${dir.path}/subs'), _Upper.new);
     expect(await File(await files.pathFor(speech)).readAsString(), contains('hello'));
@@ -110,7 +110,7 @@ void main() {
   });
 
   test('语音识别 settings survive a round trip and reuse an OpenAI key', () {
-    const config = TranslationConfig(aiPreset: 'openai', speechPreset: 'openai', speechModel: 'gpt-4o-transcribe');
+    const config = TranslationConfig(speechPreset: 'openai', speechModel: 'gpt-4o-transcribe');
     final again = TranslationConfig.fromJson(jsonDecode(jsonEncode(config.toJson())));
     expect(again, config);
     expect(again.effectiveSpeechBaseUrl, 'https://api.openai.com/v1');
@@ -118,6 +118,6 @@ void main() {
     expect(speechReady(config, const {'ai@api.openai.com': 'sk'}), isTrue);
     expect(speechReady(const TranslationConfig(), const {'ai': 'sk'}), isFalse);
     expect(speechReady(const TranslationConfig(), const {'speech@api.groq.com': 'gsk'}), isTrue);
-    expect(config.cacheScope, const TranslationConfig(aiPreset: 'openai').cacheScope);
+    expect(config.cacheScope, const TranslationConfig().cacheScope);
   });
 }

@@ -11,11 +11,11 @@ import '../../downloads/download_selection.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../system_env.dart';
-import '../download_dialog.dart';
-import '../common.dart';
-import '../theme.dart';
-import '../app_icons.dart';
 import '../../thumbnail_cache.dart';
+import '../app_icons.dart';
+import '../common.dart';
+import '../download_dialog.dart';
+import '../theme.dart';
 
 /// Asks what to download [item] as, then queues it; a live stream starts
 /// recording.

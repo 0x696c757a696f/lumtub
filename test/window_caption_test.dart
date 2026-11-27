@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_chrome.dart';
 import 'package:lumtub/window_frame.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   final calls = <Map<Object?, Object?>>[];
@@ -25,7 +25,7 @@ void main() {
 
   tearDown(() => WindowFrame.debugCaptions = false);
 
-  List<double> rect(Object? value) => [for (final n in value as List<Object?>) (n as num).toDouble()];
+  List<double> rect(Object? value) => [for (final n in value! as List<Object?>) (n! as num).toDouble()];
 
   testWidgets('the caption follows the window buttons when the layout moves without a rebuild', (tester) async {
     final menus = [SkinMenu('Lumtub', [SkinMenuEntry('Quit', () {})], bold: true), SkinMenu('File', [SkinMenuEntry('Quit', () {})])];
@@ -50,7 +50,7 @@ void main() {
     await tester.pump();
     final last = calls.last;
     expect(rect(last['maximize'])[2], greaterThan(700));
-    final interactive = [for (final r in last['interactive'] as List<Object?>) rect(r)];
+    final interactive = [for (final r in last['interactive']! as List<Object?>) rect(r)];
     expect(interactive.any((r) => r[2] > 700), isTrue, reason: 'close button');
     final menusRect = SkinMenuBarView.menusAbove.value!;
     expect(interactive.any((r) => r[0] == menusRect.left && r[2] == menusRect.right), isTrue, reason: 'menus stay clickable');

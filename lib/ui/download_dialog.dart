@@ -9,9 +9,9 @@ import '../l10n/l10n.dart';
 import '../models.dart';
 import '../translation.dart';
 import '../video_codec.dart';
+import 'app_icons.dart';
 import 'common.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 
 /// What the download dialog returns: the formats picked, or just a simple
 /// [quality] when the formats could not be read.

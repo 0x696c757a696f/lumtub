@@ -1,14 +1,15 @@
-import 'package:material_ui/material_ui.dart';
+import 'dart:io';
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
-import 'package:lumtub/app/video_list_loader.dart';
-import 'package:lumtub/l10n/l10n.dart';
-import 'package:lumtub/models.dart';
-import 'dart:io';
-
 import 'package:lumtub/app/library_controller.dart';
+import 'package:lumtub/app/video_list_loader.dart';
+import 'package:lumtub/device.dart';
+import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/library_store.dart';
+import 'package:lumtub/models.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/learning/learning_page.dart';
 import 'package:lumtub/ui/pages/channel_page.dart';
 import 'package:lumtub/ui/pages/downloads_page.dart';
@@ -17,11 +18,10 @@ import 'package:lumtub/ui/pages/library_pages.dart';
 import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/video_pages.dart';
 import 'package:lumtub/ui/pages/youtube_playlist_page.dart';
-import 'package:lumtub/device.dart';
-import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Text that a row squeezed: a word stood on end a letter or two per line
 /// (a phone's playlist heading, 2026-11-25), or a name cut to a few letters

@@ -4,15 +4,15 @@ import 'package:material_ui/material_ui.dart';
 import 'package:media_kit_video/media_kit_video.dart' show videoObstruction;
 
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
 import 'common.dart';
 import 'motion.dart';
-import 'app_icons.dart';
 
 /// A panel that slides in from the player's right edge, for choices that
 /// apply at once while the video keeps playing (更多设置, 字幕).
 /// A phone held upright gets a sheet under the player instead, as phone
 /// video apps open their panels, so the video stays in view.
-Future<void> showPlayerPanel(BuildContext context, {required String title, List<PanelAction> actions = const [], double width = 400, required WidgetBuilder builder}) {
+Future<void> showPlayerPanel(BuildContext context, {required String title, required WidgetBuilder builder, List<PanelAction> actions = const [], double width = 400}) {
   final size = MediaQuery.sizeOf(context);
   if (watchesLikePhone(context) && size.height > size.width) {
     final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
@@ -41,7 +41,6 @@ Future<void> showPlayerPanel(BuildContext context, {required String title, List<
 
 Future<void> _sidePanel(BuildContext context, {required String title, required List<PanelAction> actions, required double width, required WidgetBuilder builder}) => showGeneralDialog<void>(
       context: context,
-      useRootNavigator: true,
       barrierDismissible: true,
       barrierLabel: tr('Close'),
       barrierColor: Colors.black26,

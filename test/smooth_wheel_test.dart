@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/smooth_wheel.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   Widget list(ScrollController controller, {int count = 100, Widget? rail}) => MaterialApp(

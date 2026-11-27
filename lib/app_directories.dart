@@ -12,15 +12,6 @@ import 'app_log.dart';
 /// and passes it on as LUMTUB_HOME. On Linux they live in
 /// `$XDG_DATA_HOME/lumtub` (`~/.local/share/lumtub`). Only files created by Lumtub are kept here.
 class AppDirectories {
-  final Directory root;
-  final Directory config;
-  final Directory data;
-  final Directory cache;
-  final Directory components;
-  final Directory logs;
-  /// Skins the user added, one folder each (lib/skins/skin_library.dart).
-  Directory get skins => Directory('${root.path}${Platform.pathSeparator}skins');
-
   const AppDirectories({
     required this.root,
     required this.config,
@@ -38,6 +29,15 @@ class AppDirectories {
         components: Directory('${root.path}${Platform.pathSeparator}components'),
         logs: Directory('${root.path}${Platform.pathSeparator}logs'),
       );
+
+  final Directory root;
+  final Directory config;
+  final Directory data;
+  final Directory cache;
+  final Directory components;
+  final Directory logs;
+  /// Skins the user added, one folder each (lib/skins/skin_library.dart).
+  Directory get skins => Directory('${root.path}${Platform.pathSeparator}skins');
 
   static Future<AppDirectories> create({Map<String, String>? environment}) async {
     final env = environment ?? Platform.environment;

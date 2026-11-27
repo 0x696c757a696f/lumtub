@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/video_list_loader.dart';
-import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/video_repository.dart';
 
 String _video(int i) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
 
@@ -53,7 +53,7 @@ void main() {
 
   test('publishes a page once instead of rebuilding for every result', () async {
     final source = _Source([for (var i = 0; i < 20; i++) _video(i)]);
-    final loader = VideoListLoader(() => Listing(source.open), pageSize: 20);
+    final loader = VideoListLoader(() => Listing(source.open));
     addTearDown(loader.dispose);
     var notifications = 0;
     loader.addListener(() => notifications++);

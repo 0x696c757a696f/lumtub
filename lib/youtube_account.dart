@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'models.dart';
 import 'l10n/l10n.dart';
+import 'models.dart';
 
 /// A playlist of the signed-in account.
 class RemotePlaylist {

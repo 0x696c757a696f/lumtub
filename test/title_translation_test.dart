@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/title_translation.dart';
+import 'package:lumtub/translation.dart';
 import 'package:lumtub/ui/video_card.dart' show TitleText;
 import 'package:material_ui/material_ui.dart';
-import 'package:lumtub/translation.dart';
 
 class _Recorder implements Translator {
   final asked = <String>[];
@@ -35,7 +35,7 @@ void main() {
 
   test('asks only for titles that stay on screen, once each', () {
     fakeAsync((async) {
-      titles = TitleTranslations(dwell: const Duration(milliseconds: 250), now: () => async.getClock(DateTime(2026)).now());
+      titles = TitleTranslations(now: () => async.getClock(DateTime(2026)).now());
       configure();
       var woken = 0;
       void wake() => woken++;
@@ -75,7 +75,7 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       expect(translator.asked, isEmpty);
       expect(titles.lookup('Bonjour'), isNull);
-      configure(mode: TitleTranslation.replace);
+      configure();
       async.elapse(const Duration(seconds: 1));
       expect(translator.asked, ['Bonjour'], reason: 'turning it on asks for the titles on screen');
       configure(mode: TitleTranslation.off);
@@ -102,7 +102,7 @@ void main() {
 
   test('a new setup drops old answers and asks again; failures wait', () {
     fakeAsync((async) {
-      titles = TitleTranslations(retryAfter: const Duration(minutes: 1), now: () => async.getClock(DateTime(2026)).now());
+      titles = TitleTranslations(now: () => async.getClock(DateTime(2026)).now());
       translator.hold = true;
       configure();
       titles.listen('Bonjour', () {});
@@ -127,7 +127,7 @@ void main() {
 
   test('a refusal pauses every title, longer each time, then asks again', () {
     fakeAsync((async) {
-      titles = TitleTranslations(firstPause: const Duration(seconds: 15), now: () => async.getClock(DateTime(2026)).now());
+      titles = TitleTranslations(now: () => async.getClock(DateTime(2026)).now());
       translator.fail = true;
       configure();
       for (var i = 0; i < 5; i++) {

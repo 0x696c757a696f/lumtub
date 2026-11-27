@@ -72,7 +72,7 @@ void main() {
     bool exists(String name) => File('${dir.path}/$name').existsSync();
 
     test('a selected download is used from the next launch', () async {
-      final state = LibmpvState(dir, loadedPath: null, bundled: base);
+      final state = LibmpvState(dir, bundled: base);
       await state.select(dll);
       expect(read('use.txt'), dll);
       expect(state.selected, const LibmpvBuild('20261019', LibmpvBuild.v3Variant));
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('nothing is written when the bundled DLL is in use', () async {
-      final state = LibmpvState(dir, loadedPath: null, bundled: base);
+      final state = LibmpvState(dir, bundled: base);
       await state.markPlaying();
       await state.confirm();
       expect(dir.listSync(), isEmpty);
@@ -108,14 +108,14 @@ void main() {
     });
 
     test('an app update with a newer bundled DLL drops an older download', () async {
-      await LibmpvState(dir, loadedPath: null, bundled: base).select('${dir.path}/20261017-x86_64-v3/libmpv-2.dll');
-      await LibmpvState(dir, loadedPath: null, bundled: const LibmpvBuild('20261020', LibmpvBuild.baseVariant)).dropIfOutdated();
+      await LibmpvState(dir, bundled: base).select('${dir.path}/20261017-x86_64-v3/libmpv-2.dll');
+      await LibmpvState(dir, bundled: const LibmpvBuild('20261020', LibmpvBuild.baseVariant)).dropIfOutdated();
       expect(exists('use.txt'), isFalse);
       expect(exists('failed.txt'), isFalse);
     });
 
     test('a newer download survives an older bundled DLL', () async {
-      final state = LibmpvState(dir, loadedPath: null, bundled: base);
+      final state = LibmpvState(dir, bundled: base);
       await state.select(dll);
       await state.dropIfOutdated();
       expect(exists('use.txt'), isTrue);

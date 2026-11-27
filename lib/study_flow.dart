@@ -277,7 +277,7 @@ class StudyRun {
     final unit = current;
     final hard = [for (var i = unit.first; i <= unit.last; i++) if (isHard(i)) i];
     hard.sort((a, b) {
-      final byMarked = (marked[b] == true ? 1 : 0) - (marked[a] == true ? 1 : 0);
+      final byMarked = (marked[b] ?? false ? 1 : 0) - (marked[a] ?? false ? 1 : 0);
       if (byMarked != 0) return byMarked;
       final byReplays = (replays[b] ?? 0) - (replays[a] ?? 0);
       return byReplays != 0 ? byReplays : a - b;

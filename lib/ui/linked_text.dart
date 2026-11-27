@@ -4,8 +4,8 @@ import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../skins/skin.dart' show contrastRatio;
-import 'theme.dart' show SkinTheme;
 import 'emoji_text.dart';
+import 'theme.dart' show SkinTheme;
 
 /// A piece of text: plain, a time such as 1:23:45, or a web link.
 sealed class TextPart {
@@ -56,7 +56,7 @@ List<TextPart> splitLinks(String text) {
 
 /// [text] with its times and links tappable.
 class LinkedText extends StatefulWidget {
-  const LinkedText(this.text, {super.key, this.style, this.maxLines, required this.onTime, required this.onLink, this.emojis = const {}});
+  const LinkedText(this.text, {required this.onTime, required this.onLink, super.key, this.style, this.maxLines, this.emojis = const {}});
 
   final String text;
   final TextStyle? style;

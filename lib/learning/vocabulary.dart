@@ -16,14 +16,13 @@ class VocabularyWord {
   const VocabularyWord({
     required this.word,
     required this.language,
-    this.reading = '',
+    required this.added, this.reading = '',
     this.meaning = '',
     this.sentence = '',
     this.translation = '',
     this.videoId = '',
     this.videoTitle = '',
     this.at = Duration.zero,
-    required this.added,
   });
 
   final String word;

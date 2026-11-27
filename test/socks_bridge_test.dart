@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/native_core.dart';
+import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/socks_bridge.dart';
 
 /// A SOCKS5 server on loopback that sends every request to [target] and

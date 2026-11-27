@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../youtube_comments.dart';
 import '../app_log.dart';
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
+import '../youtube_comments.dart';
 
 /// The replies under one comment, loaded on demand.
 class ReplyThread {

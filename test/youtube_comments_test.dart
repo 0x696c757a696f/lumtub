@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:lumtub/app/comments_loader.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
-import 'package:lumtub/app/comments_loader.dart';
 import 'package:lumtub/youtube_web_sign_in.dart';
 
 Map<String, Object?> _continuation(String token) => {

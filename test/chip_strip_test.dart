@@ -1,8 +1,9 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/chip_strip.dart';
 import 'package:lumtub/ui/common.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 Future<List<int>> _show(WidgetTester tester, {required int count, int selected = 0, double width = 400}) async {

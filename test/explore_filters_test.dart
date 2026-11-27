@@ -7,8 +7,8 @@ import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/explore_topics.dart';
 import 'package:lumtub/faith_topics.dart';
-import 'package:lumtub/models.dart';
 import 'package:lumtub/l10n/l10n.dart';
+import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/youtube_related.dart';
@@ -83,11 +83,11 @@ void main() {
   });
 
   test('details take the translated title, description and chapter names', () {
-    final details = VideoDetails(
+    final details = const VideoDetails(
       title: 'Original',
       channel: 'c',
       description: '0:00 Intro\n1:30 Main part',
-      chapters: const [Chapter(Duration.zero, Duration(seconds: 90), 'Intro'), Chapter(Duration(seconds: 90), Duration.zero, 'Main part')],
+      chapters: [Chapter(Duration.zero, Duration(seconds: 90), 'Intro'), Chapter(Duration(seconds: 90), Duration.zero, 'Main part')],
     );
     final local = details.localized('翻译标题', '0:00 开场\n01:30 - 正片\n结尾');
     expect(local.title, '翻译标题');

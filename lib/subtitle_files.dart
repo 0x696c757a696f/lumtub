@@ -4,14 +4,14 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
+import 'scripts.dart';
 import 'translation.dart';
 import 'translation_cache.dart';
 import 'translation_services.dart';
 import 'youtube_web.dart';
-import 'app_log.dart';
-import 'scripts.dart';
 
 /// Subtitles fetched by the app and handed to mpv as files.
 ///

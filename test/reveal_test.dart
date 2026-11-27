@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/page_switcher.dart';
 import 'package:lumtub/ui/reveal.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A page that loads: a spinner, then its content.
 Widget _page({required bool loaded}) => MaterialApp(

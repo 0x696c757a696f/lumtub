@@ -1,13 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
-import '../common.dart';
-import '../playlist_length.dart';
-import '../theme.dart';
-import '../playlist_order_button.dart';
-import '../video_card.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../common.dart';
+import '../playlist_length.dart';
+import '../playlist_order_button.dart';
+import '../theme.dart';
+import '../video_card.dart';
 
 /// A YouTube playlist's videos, with play-all and a link to YouTube.
 class YoutubePlaylistPage extends StatelessWidget {

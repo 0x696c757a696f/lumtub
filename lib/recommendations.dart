@@ -3,12 +3,12 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'background_json.dart';
 import 'feed_quality.dart';
 import 'library_store.dart' show WatchProgress;
 import 'models.dart';
 import 'native_core.dart';
-import 'app_log.dart';
 
 /// Where a recommended video came from.
 enum RecommendSource {
@@ -49,30 +49,6 @@ class Recommendation {
 /// weighted TF-IDF style so words in every title count for little. Without
 /// the library it knows nothing, and [recommend] keeps the sources' order.
 class TasteProfile implements Finalizable {
-  TasteProfile._(this._core, this._handle);
-
-  NativeCore? _core;
-  Pointer<Void> _handle;
-
-  /// Whether [close] was called; a closed profile knows nothing.
-  bool get isClosed => _core == null;
-
-  /// Frees the native profile now instead of when Dart collects it. Safe to
-  /// call twice; a closed profile answers like one without the library.
-  void close() {
-    final core = _core;
-    if (core == null) return;
-    final handle = _handle;
-    _core = null;
-    _handle = nullptr;
-    core.tasteFinalizer.detach(this);
-    core.tasteFree(handle);
-  }
-
-  /// Older entries weigh next to nothing at the decays used, so only this
-  /// many of the history, newest first, are read.
-  static const maxHistory = 600;
-
   /// [searches] are the words typed into search, newest first.
   factory TasteProfile.from({
     required List<VideoItem> history,
@@ -108,6 +84,30 @@ class TasteProfile implements Finalizable {
     core.tasteFinalizer.attach(taste, handle, detach: taste);
     return taste;
   }
+
+  TasteProfile._(this._core, this._handle);
+
+  NativeCore? _core;
+  Pointer<Void> _handle;
+
+  /// Whether [close] was called; a closed profile knows nothing.
+  bool get isClosed => _core == null;
+
+  /// Frees the native profile now instead of when Dart collects it. Safe to
+  /// call twice; a closed profile answers like one without the library.
+  void close() {
+    final core = _core;
+    if (core == null) return;
+    final handle = _handle;
+    _core = null;
+    _handle = nullptr;
+    core.tasteFinalizer.detach(this);
+    core.tasteFree(handle);
+  }
+
+  /// Older entries weigh next to nothing at the decays used, so only this
+  /// many of the history, newest first, are read.
+  static const maxHistory = 600;
 
   /// -1 to 1: how much [item]'s channel is watched, below 0 when mostly
   /// skipped.
@@ -164,7 +164,7 @@ class TasteProfile implements Finalizable {
 /// Each ranks its videos with its own weights.
 enum FeedLane {
   /// What the whole history keeps coming back to.
-  longTerm(0.35, RankWeights(channel: 0.8, title: 0.6, fresh: 0.3, views: 0.3)),
+  longTerm(0.35, RankWeights(fresh: 0.3)),
   /// What the last few videos were about; follows the latest watch.
   recent(0.30, RankWeights(channel: 0.5, title: 0.9, fresh: 0.3, views: 0.2)),
   /// Near the interests but from channels not watched yet.

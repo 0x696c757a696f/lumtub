@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -9,6 +8,8 @@ import 'package:lumtub/right_click.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
 import 'package:lumtub/ui/shortcut_settings.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 void main() {

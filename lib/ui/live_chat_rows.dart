@@ -6,13 +6,13 @@ import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../live_chat.dart';
 import '../models.dart';
+import '../thumbnail_cache.dart';
 import 'app_icons.dart';
 import 'common.dart';
 import 'emoji_text.dart';
 import 'live_chat_input.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
-import '../thumbnail_cache.dart';
 
 /// Whether Super Chats show in their amount's colour, followed by the rows
 /// kept between rebuilds; [syncSuperChatHighlights] follows the preference.

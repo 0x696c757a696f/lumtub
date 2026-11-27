@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/press_scale.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   tearDown(() => Motion.reduced = false);

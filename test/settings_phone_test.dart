@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/ui/pages/settings_sections.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Every settings group lays out on the narrowest phones, at large text,
 /// from top to bottom: a row that doesn't fit shows as a grey block on a

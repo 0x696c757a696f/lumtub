@@ -159,7 +159,7 @@ extension PlaybackControls on AppController {
     // Said once, so a speed that came back on its own is not a surprise.
     if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('This channel plays at its last speed, {0}x', [rateText(kept)]));
     final volume = saved?.volume?.toDouble() ?? _sessionVolume;
-    if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()).toDouble());
+    if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()));
     if (this.player == player && playing?.id == item.id) _playbackChannel = key;
   }
 
@@ -181,7 +181,7 @@ extension PlaybackControls on AppController {
 
   Future<void> changeVolume(double delta) async {
     final player = this.player;
-    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
+    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()));
   }
 
   /// Brightens or darkens the video by [delta] and returns the new value;

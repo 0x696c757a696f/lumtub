@@ -39,6 +39,6 @@ void main() {
       'live_status': 'is_upcoming',
       'timestamp': 1767225600,
     });
-    expect(item.scheduledStart?.toUtc(), DateTime.utc(2026, 1, 1));
+    expect(item.scheduledStart?.toUtc(), DateTime.utc(2026));
   });
 }

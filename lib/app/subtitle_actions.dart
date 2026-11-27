@@ -673,7 +673,7 @@ extension SubtitleActions on AppController {
     // Lumtub's copy of the second one also holds the main one's lines,
     // invisible, after a blank line: only its own lines are its font's.
     final own = [
-      for (final (i, line) in lines.indexed) i == 1 && _subtitleCopies[secondaryTrackId]?.second == true ? secondCopyOwnText(line) : line,
+      for (final (i, line) in lines.indexed) i == 1 && (_subtitleCopies[secondaryTrackId]?.second ?? false) ? secondCopyOwnText(line) : line,
     ];
     final (:drawable, main: family) = AndroidSubtitleFonts.forLines(own, language: player.state.track.subtitle.language ?? '');
     if (!drawable) {

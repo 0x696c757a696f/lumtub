@@ -1,9 +1,9 @@
-export 'explore_pivots.dart';
-
 import 'explore_pivots.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'scripts.dart';
+
+export 'explore_pivots.dart';
 
 /// A 类型 or 视角 choice in explore: words added to the zone's search, so it
 /// leans the results rather than sorting them exactly.

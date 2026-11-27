@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
@@ -9,6 +8,7 @@ import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/youtube_related.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Every card's title keeps room for its two lines, with a reason line
 /// under it, on every built-in skin, compact or not, and at larger text.

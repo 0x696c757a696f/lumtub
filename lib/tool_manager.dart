@@ -1,26 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
-import 'package:ffi/ffi.dart' show Utf8;
 import 'dart:io';
 import 'dart:isolate';
+
 import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
+import 'package:ffi/ffi.dart' show Utf8;
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:http/http.dart' as http;
 
 import 'android_python.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
 import 'file_mode.dart';
 import 'ios_python.dart';
-import 'zip_archive.dart';
+import 'l10n/l10n.dart';
 import 'libmpv_updates.dart';
 import 'native_core.dart';
 import 'native_http.dart';
 import 'process_runner.dart';
 import 'system_env.dart';
 import 'version_order.dart';
-import 'l10n/l10n.dart';
+import 'zip_archive.dart';
 
 /// The libmpv-2.dll entry of a `tar -tf` listing, when its path stays
 /// inside the folder it is unpacked to.
@@ -35,10 +36,10 @@ String? libmpvMember(String listing) {
 }
 
 class ToolPaths {
+  const ToolPaths({required this.mpv, required this.ytDlp, this.deno});
   final String mpv;
   final String ytDlp;
   final String? deno;
-  const ToolPaths({required this.mpv, required this.ytDlp, this.deno});
   List<String> get executableDirectories => [
         if (mpv.isNotEmpty && Platform.isWindows) File(mpv).parent.path,
         if (ytDlp.isNotEmpty) File(ytDlp).parent.path,
@@ -48,10 +49,10 @@ class ToolPaths {
 
 /// Downloads GitHub release assets to versioned directories and checks SHA-256.
 class ToolManager {
+  ToolManager(this.directories, this.report, {http.Client? client}) : _client = client ?? appHttpClient();
   final AppDirectories directories;
   /// Shows a message, and writes it to the log in English.
   final void Function(String shown, String logged) report;
-  ToolManager(this.directories, this.report, {http.Client? client}) : _client = client ?? appHttpClient();
 
   void status(String text, [List<Object?> args = const []]) => report(tr(text, args), trLog(text, args));
 
@@ -111,11 +112,11 @@ class ToolManager {
   Future<ToolPaths> ensureReady() async {
     // Android: libmpv comes inside the APK; yt-dlp runs with the APK's
     // Python, and without it streams come from the core (quick.rs) alone.
-    if (Platform.isAndroid) return ToolPaths(mpv: '', ytDlp: await _androidYtDlp(), deno: null);
+    if (Platform.isAndroid) return ToolPaths(mpv: '', ytDlp: await _androidYtDlp());
     // iOS: libmpv comes inside the app, and no other program may run, so
     // yt-dlp runs in the app's own Python; without it streams come from
     // the core alone.
-    if (Platform.isIOS) return ToolPaths(mpv: '', ytDlp: await _iosYtDlp(), deno: null);
+    if (Platform.isIOS) return ToolPaths(mpv: '', ytDlp: await _iosYtDlp());
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS, Android and iOS.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.

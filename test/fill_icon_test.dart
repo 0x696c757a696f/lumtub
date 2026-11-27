@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/fill_icon.dart';
 import 'package:lumtub/ui/motion.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _outline = IconData(0xe0e6, fontFamily: 'Phosphor');
 const _fill = IconData(0xe0e6, fontFamily: 'Phosphor Fill');

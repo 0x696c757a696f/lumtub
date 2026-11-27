@@ -1,8 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/ui/summary_dialog.dart';
 import 'package:lumtub/ui/video_notes.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 void main() {
@@ -23,7 +24,7 @@ void main() {
 
   for (final size in const [Size(1400, 900), Size(400, 800)]) {
     testWidgets('AI summary shows the notes on the video under it at ${size.width.toInt()} px', (tester) async {
-      await pump(tester, size, (context, controller) => showVideoSummary(context, controller));
+      await pump(tester, size, showVideoSummary);
       expect(find.text('My notes'), findsOneWidget);
       expect(byTooltip('Add a note here'), findsOneWidget);
       expect(tester.takeException(), isNull);

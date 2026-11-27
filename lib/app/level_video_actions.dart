@@ -76,7 +76,7 @@ extension LevelVideoActions on AppController {
     final known = book == null ? null : knownWordsOf(book);
     final sp = searchParams(type: SearchFilter.videos)!;
     final free = measure && kind == LevelVideoKind.native && !learning.unlocked;
-    LevelCheck total = (asked: 0, measured: 0, noSubtitles: 0, failed: 0, skipped: 0, budgetSpent: false, refused: false);
+    var total = (asked: 0, measured: 0, noSubtitles: 0, failed: 0, skipped: 0, budgetSpent: false, refused: false);
 
     Listing step(List<String> queries) {
       final anchor = spoken.searchAnchor;

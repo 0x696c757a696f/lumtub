@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/channel_avatar_lookup.dart';
 import 'package:lumtub/ui/pages/channel_page.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   const id = 'UCuAXFkgsw1L7xaCfnd5JJOw';

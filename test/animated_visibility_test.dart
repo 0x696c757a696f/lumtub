@@ -1,6 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/animated_visibility.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   Future<double Function(Finder)> pumpRow(WidgetTester tester, Widget Function(bool) panel, ValueNotifier<bool> open) async {

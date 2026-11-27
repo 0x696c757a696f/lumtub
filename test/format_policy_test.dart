@@ -162,7 +162,7 @@ void main() {
     test('puts a dub in that language before the original in the expression', () {
       const settings = PlayerSettings(disabledCodecs: {});
       final plain = _expression(settings);
-      expect(FormatPolicy.expression(settings, audioLanguage: ''), plain);
+      expect(FormatPolicy.expression(settings), plain);
       final dub = FormatPolicy.expression(settings, audioLanguage: 'it');
       expect(dub, startsWith('bestvideo+bestaudio[language^=it][language!*=desc]/'));
       expect(dub, endsWith(plain));

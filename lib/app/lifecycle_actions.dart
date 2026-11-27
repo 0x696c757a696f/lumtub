@@ -119,7 +119,7 @@ extension LifecycleActions on AppController {
       _optionsApplied(player);
       if (!Platform.isWindows && player.platform is NativePlayer) {
         try {
-          manager.mpvVersion = await (player.platform as NativePlayer).getProperty('mpv-version');
+          manager.mpvVersion = await (player.platform! as NativePlayer).getProperty('mpv-version');
         } catch (e) {
           logDebug(() => 'Could not read the mpv version: $e');
         }
@@ -301,7 +301,7 @@ extension LifecycleActions on AppController {
     if (SmokeCheck.requested) {
       unawaited(Platform.environment['LUMTUB_GLASS_CHECK'] == '1'
           ? runGlassCheck()
-          : Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true
+          : Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty ?? false
               ? runShowcase()
               : runSmokeCheck());
     }

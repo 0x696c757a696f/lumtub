@@ -168,7 +168,7 @@ void main() {
     await expectLater(YoutubeListing.orElse(partial, fallback), emitsInOrder(['web', emitsError(isStateError)]));
   });
 
-  test("a channel without a tab lists nothing instead of failing", () {
+  test('a channel without a tab lists nothing instead of failing', () {
     expect(VideoRepository.missingTab('ERROR: [youtube:tab] UCOKz4SMjsjrJ3FHuVVj_sng: This channel does not have a videos tab'), isTrue);
     expect(VideoRepository.missingTab('ERROR: [youtube:tab] UC1: This channel does not have a shorts tab'), isTrue);
     expect(VideoRepository.missingTab('ERROR: [youtube] abc: Video unavailable'), isFalse);

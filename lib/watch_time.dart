@@ -7,8 +7,8 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 
 import 'app_directories.dart';
-import 'native_core.dart';
 import 'app_log.dart';
+import 'native_core.dart';
 
 /// 观看统计: how long videos played each day, per channel, kept in
 /// `data/watch_time.json` on this computer only.
@@ -107,18 +107,6 @@ class WatchTime {
 
 /// What lumtub_core worked out from [WatchTime], in seconds.
 class WatchStats {
-  const WatchStats({required this.today, required this.week, required this.month, required this.total, required this.average, required this.days, required this.top});
-  final int today;
-  final int week;
-  final int month;
-  final int total;
-  /// A day's average over the span.
-  final int average;
-  /// Each day of the span, oldest first.
-  final List<(String, int)> days;
-  /// The channels watched most in the span: key, name, seconds.
-  final List<(String, String, int)> top;
-
   factory WatchStats.fromJson(Object? raw) {
     final map = raw is Map ? raw : const {};
     int number(String key) => (map[key] as num?)?.toInt() ?? 0;
@@ -132,4 +120,16 @@ class WatchStats {
       top: [for (final t in map['top'] is List ? map['top'] as List : const []) if (t is List && t.length == 3) ('${t[0]}', '${t[1]}', (t[2] as num).toInt())],
     );
   }
+
+  const WatchStats({required this.today, required this.week, required this.month, required this.total, required this.average, required this.days, required this.top});
+  final int today;
+  final int week;
+  final int month;
+  final int total;
+  /// A day's average over the span.
+  final int average;
+  /// Each day of the span, oldest first.
+  final List<(String, int)> days;
+  /// The channels watched most in the span: key, name, seconds.
+  final List<(String, String, int)> top;
 }

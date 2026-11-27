@@ -26,14 +26,14 @@ enum PackKind {
 }
 
 class PackFile {
+  factory PackFile.fromJson(Map<String, dynamic> json) =>
+      PackFile(path: '${json['path']}', url: '${json['url']}', sha256: '${json['sha256']}', size: (json['size'] as num?)?.toInt() ?? 0);
+
   const PackFile({required this.path, required this.url, required this.sha256, required this.size});
   final String path;
   final String url;
   final String sha256;
   final int size;
-
-  factory PackFile.fromJson(Map<String, dynamic> json) =>
-      PackFile(path: '${json['path']}', url: '${json['url']}', sha256: '${json['sha256']}', size: (json['size'] as num?)?.toInt() ?? 0);
 
   Map<String, dynamic> toJson() => {'path': path, 'url': url, 'sha256': sha256, 'size': size};
 }
@@ -47,13 +47,11 @@ class Pack {
     required this.version,
     required this.kind,
     required this.titles,
-    this.descriptions = const {},
-    required this.license,
+    required this.license, required this.files, this.descriptions = const {},
     this.notice = '',
     this.source = '',
     this.minApp = '',
     this.platforms = const [],
-    required this.files,
   });
 
   final String id;

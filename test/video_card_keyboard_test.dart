@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
-import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/ui/app_icons.dart';
+import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('a card reached with the keyboard shows focus and its actions, and opens', (tester) async {

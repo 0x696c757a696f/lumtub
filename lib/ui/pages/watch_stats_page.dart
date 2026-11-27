@@ -7,9 +7,9 @@ import '../../l10n/l10n.dart';
 import '../../models.dart' show ChannelRef;
 import '../../watch_time.dart';
 import '../../widgets/settings_tiles.dart' show confirmDialog;
-import '../theme.dart';
 import '../app_icons.dart';
 import '../skin_paint.dart';
+import '../theme.dart';
 
 /// [seconds] as a duration, such as 1 小时 5 分 or 12 分钟.
 String watchDuration(int seconds) {

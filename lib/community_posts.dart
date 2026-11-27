@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'l10n/l10n.dart';
 import 'models.dart';
 import 'native_core.dart';
-import 'l10n/l10n.dart';
 import 'youtube_comments.dart';
 import 'youtube_web.dart';
 

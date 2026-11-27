@@ -161,7 +161,7 @@ void main() {
     expect(check!.asked, lessThan(VideoLanguages.giveUpAfterDefault ~/ 4 + VideoLanguages.parallel * 3 + 2));
   }, skip: core);
 
-  test("takes views and publishing time from the answer, as a search asked in another language writes them its own way", () async {
+  test('takes views and publishing time from the answer, as a search asked in another language writes them its own way', () async {
     final client = MockClient((request) async => _json({
           ..._player('Lezione di filosofia', asr: 'it'),
           'videoDetails': {'title': 'Lezione di filosofia', 'shortDescription': '', 'viewCount': '1234567'},

@@ -80,7 +80,7 @@ void main() {
     await store.grade('zh:x', ReviewGrade.good, now, seconds: 3600);
     expect(store.secondsPerWord, lessThan(12));
     await store.setFocus(true);
-    final words = [VocabularyWord(word: 'w0', language: 'zh', added: DateTime(2026, 11, 1))];
+    final words = [VocabularyWord(word: 'w0', language: 'zh', added: DateTime(2026, 11))];
     expect(store.nextDue(words, now), store.of('zh:w0')!.due);
     final again = ReviewStore(File('${dir.path}/review.json'));
     await again.load();
@@ -90,7 +90,7 @@ void main() {
   });
 
   test("today's scenes: words by video, most words first, no video last", () {
-    VocabularyWord word(String w, String video) => VocabularyWord(word: w, language: 'ja', videoId: video, videoTitle: video.isEmpty ? '' : 'Title $video', added: DateTime(2026, 11, 1));
+    VocabularyWord word(String w, String video) => VocabularyWord(word: w, language: 'ja', videoId: video, videoTitle: video.isEmpty ? '' : 'Title $video', added: DateTime(2026, 11));
     final scenes = todaysScenes([word('a', ''), word('b', 'v1'), word('c', 'v2'), word('d', 'v2')]);
     expect([for (final s in scenes) s.videoId], ['v2', 'v1', '']);
     expect([for (final w in scenes.first.words) w.word], ['c', 'd']);

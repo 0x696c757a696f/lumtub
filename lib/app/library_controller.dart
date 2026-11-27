@@ -6,8 +6,8 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../channel_avatars.dart';
 import '../app_log.dart';
+import '../channel_avatars.dart';
 import '../channel_feed.dart';
 import '../library_store.dart';
 import '../map_limited.dart';

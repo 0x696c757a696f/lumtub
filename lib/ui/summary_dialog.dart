@@ -3,13 +3,13 @@ import 'package:material_ui/material_ui.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind;
+import '../video_summary.dart' show VideoOverview;
+import 'app_icons.dart';
 import 'common.dart';
 import 'linked_text.dart';
 import 'pages/translation_settings_page.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 import 'video_notes.dart';
-import '../video_summary.dart' show VideoOverview;
 
 /// AI 总结 of the video playing, as AI 概览 (what it is about, chapters
 /// and key quotes), with the person's notes on it under it. The times in

@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/models.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/pages/watch_page.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets("a phone's title folds to two lines, and 更多 holds the other actions", (tester) async {

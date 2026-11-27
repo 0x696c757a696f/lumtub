@@ -48,20 +48,6 @@ class DownloadAudioFormat {
 /// without it there is nothing to pick and the dialog offers its simple
 /// choices.
 class DownloadFormats {
-  const DownloadFormats(this.video, this.audio, {this.preference = const []});
-  final List<DownloadVideoFormat> video;
-  final List<DownloadAudioFormat> audio;
-  /// The codecs automatic picks may take, most preferred first: the
-  /// playback order (`FormatPolicy.codecOrder`), so a download plays as
-  /// smoothly as the stream would. Empty: any codec, the best picture.
-  final List<VideoCodec> preference;
-
-  bool get isEmpty => video.isEmpty && audio.isEmpty;
-
-  /// [parse] away from the UI isolate: [info] runs to a few megabytes.
-  static Future<DownloadFormats> parseInBackground(Map<String, dynamic> info, {List<VideoCodec> preference = const []}) =>
-      Isolate.run(() => DownloadFormats.parse(info, preference: preference));
-
   /// Video-only and audio-only formats of [info]; storyboards, formats
   /// without an address, playlist streams and loudness-boosted copies are
   /// left out.
@@ -87,6 +73,20 @@ class DownloadFormats {
       preference: preference,
     );
   }
+
+  const DownloadFormats(this.video, this.audio, {this.preference = const []});
+  final List<DownloadVideoFormat> video;
+  final List<DownloadAudioFormat> audio;
+  /// The codecs automatic picks may take, most preferred first: the
+  /// playback order (`FormatPolicy.codecOrder`), so a download plays as
+  /// smoothly as the stream would. Empty: any codec, the best picture.
+  final List<VideoCodec> preference;
+
+  bool get isEmpty => video.isEmpty && audio.isEmpty;
+
+  /// [parse] away from the UI isolate: [info] runs to a few megabytes.
+  static Future<DownloadFormats> parseInBackground(Map<String, dynamic> info, {List<VideoCodec> preference = const []}) =>
+      Isolate.run(() => DownloadFormats.parse(info, preference: preference));
 
   static DownloadAudioFormat _audio(Map<String, dynamic> f) => DownloadAudioFormat(
         id: f['id'] as String,

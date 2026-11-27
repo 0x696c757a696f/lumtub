@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'app_log.dart';
-import 'background_json.dart';
-import 'heatmap.dart';
-import 'blocked_sign_in.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
+import 'background_json.dart';
+import 'blocked_sign_in.dart';
+import 'heatmap.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'native_http.dart';
@@ -20,8 +20,8 @@ import 'process_runner.dart';
 import 'storyboard.dart';
 import 'video_codec.dart';
 import 'video_facts_lookup.dart';
-import 'youtube_player_probe.dart';
 import 'volume_balance.dart';
+import 'youtube_player_probe.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
@@ -176,7 +176,7 @@ abstract interface class MembersCookies {
 }
 
 class StreamResolver {
-  StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
+  StreamResolver(this.ytDlpPath, {required this.infoDirectory, this.cacheDirectory, this.deno, this.proxy, Map<String, String>? environment})
       : _environment = environment {
     unawaited(deleteStaleInfo());
   }
@@ -221,7 +221,7 @@ class StreamResolver {
   void Function(String videoId)? onSignedInPlay;
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+  static final botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Each kept answer takes about 5 MB once decoded (measured with a 1 MB
   /// answer: 55 MB for 12), so only the last few are kept.
@@ -455,7 +455,7 @@ class StreamResolver {
         // too, so it asks its default clients for a while.
         if (answer.contains('"LOGIN_REQUIRED"') && avoidingTv) {
           _tvNeededUntil = DateTime.now().add(tvNeededFor);
-          logInfo("visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes");
+          logInfo('visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes');
         }
         if (answer.contains('"LOGIN_REQUIRED"') && botCheck.hasMatch(answer)) blockedSignIn.noteBlocked();
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');

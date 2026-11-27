@@ -200,6 +200,7 @@ extension LifecycleActions on AppController {
         VideoFactsLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
         unawaited(EmojiPictures.configure(File('${directories.cache.path}${Platform.pathSeparator}emoji_pictures.json')));
         unawaited(PortraitThumbnails.configure(File('${directories.cache.path}${Platform.pathSeparator}portrait_thumbnails.json')));
+        unawaited(ChurchWording.configure(File('${directories.cache.path}${Platform.pathSeparator}catholic_channels.json')));
         // Answers kept before 0.2.12 went by titles, which took some Chinese
         // ones for Japanese and every Italian one for English.
         for (final old in ['video_languages.json', 'spoken_languages.json']) {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'youtube_web_sign_in.dart';
@@ -45,7 +46,10 @@ class YoutubeAccountFeed {
     if (browseId == history) historyDays.clear();
     for (var page = 0; page < pages; page++) {
       final answer = await signIn.post('browse', body, hl: 'en');
-      if (answer == null) return;
+      if (answer == null) {
+        logInfo('Signed-in page $browseId not read: signed out, or the saved sign-in stayed locked');
+        return;
+      }
       if (answer.status != 200) throw StateError('YouTube answered ${answer.status} for $browseId');
       final data = await read(answer.body);
       if (data == null) throw StateError('YouTube sent a page that is not JSON for $browseId');

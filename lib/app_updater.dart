@@ -356,11 +356,14 @@ class AppUpdater extends ChangeNotifier {
     error = null;
     _notify();
     try {
+      final shown = Stopwatch()..start();
       final file = await _download(asset, _directory, (received, total) {
         if (total == null || total <= 0) return;
-        // Whole percents only: each notice rebuilds the app.
+        // Whole percents, at most four a second: each notice rebuilds the
+        // app (a fast line gave 104 in a minute, user log 2026-11-27).
         final next = (received * 100 ~/ total) / 100;
-        if (next == progress) return;
+        if (next == progress || next < 1 && shown.elapsedMilliseconds < 250) return;
+        shown.reset();
         progress = next;
         _notify();
       });

@@ -28,6 +28,7 @@ enum FaithTradition {
     strong: [
       'catholic', 'catholicism', 'cattolic', 'catolic', 'catholique', 'katho', 'katolick', 'katolik', 'katoliko', 'καθολικ', 'католи',
       'vatican', 'vaticano', 'vatikan', 'watykan', 'pope\$', 'popes\$', 'papal', 'pontifex', 'papa francesco', 'papa francisco', 'papa leone', 'papa leon', 'pope leo', 'pope francis', 'pope benedict', 'papst',
+      'pape\$', 'papes\$', 'papiez', 'il papa\$', 'el papa\$', 'o papa\$', 'do papa\$', 'del papa\$', 'al papa\$', 'dal papa\$', 'papa leao', 'leo xiv\$', 'leone xiv\$', 'leon xiv\$', 'leao xiv\$', 'santa sede', 'saint siege', 'heiliger stuhl', 'heiligen stuhl', 'stolica apostolska', 'santo padre', 'ojciec swiety', 'ojca swietego',
       'latin mass', 'tridentine', 'jesuit', 'gesuit', 'jesuita', 'opus dei', 'ewtn', 'word on fire', 'bishop barron', 'ascension presents', 'catholic answers', 'pints with aquinas', 'radio veritas', 'vatican news',
       '天主教', '天主', '教宗', '梵蒂冈', '梵蒂岡', '思高', '耶稣会', '耶穌會', '光启社', '光啟社', '真理电台', '真理電台', 'カトリック', '천주교', '가톨릭',
     ],

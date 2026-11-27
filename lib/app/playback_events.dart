@@ -638,6 +638,11 @@ extension PlaybackEvents on AppController {
   /// idle memory is given back and, on a phone or tablet, the player's
   /// cache shrinks to the background's until the app is next shown.
   void onMemoryPressure() {
+    // Android sends one per trim level, several in the same moment.
+    final now = DateTime.now();
+    final last = _lastMemoryPressure;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) return;
+    _lastMemoryPressure = now;
     logInfo('The system is short of memory (${ProcessInfo.currentRss >> 20} MB in use)');
     releaseMemory();
     final platform = player?.platform;

@@ -1860,5 +1860,13 @@ jobs:
             cat "$notes" "$footer" > "$RUNNER_TEMP/notes.md"
             gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$RUNNER_TEMP/notes.md"
           else
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $TAG" --generate-notes --notes-file "$footer"
+            # GitHub writes the notes from the pull requests merged since the
+            # last release, grouped and filtered by .github/release.yml
+            # (no-notes and bot pull requests are left out).
+            previous=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || true)
+            args=(-f tag_name="$TAG")
+            [[ -n "$previous" ]] && args+=(-f previous_tag_name="$previous")
+            gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${args[@]}" --jq .body > "$RUNNER_TEMP/notes.md"
+            cat "$footer" >> "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "Lumtub $version" --notes-file "$RUNNER_TEMP/notes.md"
           fi

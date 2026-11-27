@@ -2,6 +2,9 @@
 # release-notes/<version>.md (the monthly automatic release, for one).
 changelog:
   exclude:
+    # Changes left out of the notes on purpose.
+    labels:
+      - no-notes
     authors:
       - dependabot
       - dependabot[bot]

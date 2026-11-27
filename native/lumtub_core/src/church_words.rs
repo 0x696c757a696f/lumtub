@@ -686,6 +686,11 @@ mod tests {
             in_variant("聖母無原罪始胎", "Immaculate Conception", Variant::TAIWAN),
             "聖母始胎無染原罪"
         );
+        assert_eq!(
+            beside("露西亚修女和约瑟夫·拉辛格", "Irmã Lúcia e Joseph Ratzinger"),
+            "路济亚修女和若瑟·拉青格"
+        );
+        assert_eq!(beside("拉辛格枢机", "Kardinal Ratzinger"), "拉青格枢机");
         // An English assumption is only an assumption.
         assert_eq!(
             beside("这个假设是错的", "This assumption is wrong"),

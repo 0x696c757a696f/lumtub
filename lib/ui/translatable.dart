@@ -18,16 +18,16 @@ import 'app_icons.dart';
 /// translation under the original (双语对照), or in its place when that is
 /// turned off. Nothing is sent until the button is tapped.
 class Translatable extends StatefulWidget {
-  const Translatable({super.key, required this.controller, required this.text, required this.builder, this.padding = EdgeInsets.zero, this.catholic = false});
+  const Translatable({super.key, required this.controller, required this.text, required this.builder, this.padding = EdgeInsets.zero, this.rite});
   final AppController controller;
   final String text;
   /// Draws the text it is given: the original or the translation.
   final Widget Function(BuildContext context, String text) builder;
   final EdgeInsetsGeometry padding;
-  /// Whether [text] belongs to something Catholic (the video playing, the
-  /// channel), so its Chinese translation uses the Church's wording; text
-  /// that says so itself does anyway.
-  final bool catholic;
+  /// The rite of the Catholic video or channel [text] belongs to, so its
+  /// Chinese translation uses the Church's wording; text that says it is
+  /// Catholic itself does anyway.
+  final ChurchRite? rite;
 
   @override
   State<Translatable> createState() => _TranslatableState();
@@ -130,7 +130,7 @@ class _TranslatableState extends State<Translatable> {
     final round = _round;
     try {
       final translated = await translateForeignLines(widget.controller.textTranslator, text, language, (line) => reads(line) || !_hasLetters(line));
-      final result = ChurchWording.apply(translated, language, catholic: widget.catholic || ChurchWording.isCatholicText(text));
+      final result = ChurchWording.apply(translated, language, rite: widget.rite ?? ChurchWording.riteOf(text), original: text);
       if (!mounted || text != widget.text || round != _round) return;
       // The service gave the text back as it was: it is in that language.
       if (_same(translated, text)) {

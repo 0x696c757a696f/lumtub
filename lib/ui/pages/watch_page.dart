@@ -566,7 +566,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Translatable(
               controller: controller,
-              catholic: controller.playingCatholic,
+              rite: controller.playingRite,
               text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
               builder: (context, title) => Text(title, maxLines: _open ? null : 2, overflow: _open ? null : TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
             ),
@@ -588,7 +588,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
         const SizedBox(height: 8),
         Reveal(child: Translatable(
           controller: controller,
-          catholic: controller.playingCatholic,
+          rite: controller.playingRite,
           text: description,
           builder: (context, text) => SelectionArea(
             child: LinkedText(text, style: TextStyle(height: 1.5, fontSize: 13, color: colors.onSurfaceVariant), onTime: (time) => unawaited(controller.seek(time)), onLink: openExternal),
@@ -894,7 +894,7 @@ class _Details extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Translatable(
         controller: controller,
-        catholic: controller.playingCatholic,
+        rite: controller.playingRite,
         text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
         builder: (context, title) => SelectableText(title, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
       ),
@@ -974,7 +974,7 @@ class _DescriptionState extends State<_Description> {
               const SizedBox(height: 4),
               Translatable(
                 controller: widget.controller,
-                catholic: widget.controller.playingCatholic,
+                rite: widget.controller.playingRite,
                 text: widget.description,
                 builder: (context, description) => AnimatedSize(
                   duration: Motion.of(Ease.fade),

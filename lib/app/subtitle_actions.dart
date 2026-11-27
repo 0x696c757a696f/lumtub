@@ -228,7 +228,7 @@ extension SubtitleActions on AppController {
     try {
       final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
       final translated = await translateForeignLines(textTranslator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne));
-      final lines = ChurchWording.apply(translated, language, catholic: playingCatholic).split('\n');
+      final lines = ChurchWording.apply(translated, language, rite: playingRite, original: titles.join('\n')).split('\n');
       if (playing?.id != id) return;
       _update(() {
         chapterTranslation = lines.length == titles.length ? lines : titles;

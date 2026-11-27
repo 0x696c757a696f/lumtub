@@ -144,7 +144,7 @@ class ChatMessageTranslation extends StatelessWidget {
     if (text.split('\n').every(done)) return null;
     try {
       final result = await translateForeignLines(controller.textTranslator, text, language, done);
-      return result.trim() == text ? null : ChurchWording.apply(result, language, catholic: controller.playingCatholic);
+      return result.trim() == text ? null : ChurchWording.apply(result, language, rite: controller.playingRite, original: text);
     } catch (_) {
       return null;
     }

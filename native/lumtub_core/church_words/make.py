@@ -1,4 +1,8 @@
-"""Writes hans.tsv and hant.tsv from terms.json and extra.json for church_words.rs.
+"""Writes the tables church_words.rs compiles in.
+
+hans.tsv, hant.tsv and hk.tsv (Latin rite) and the same with -byzantine
+come from terms.json and extra.json; sourced-hans.tsv, sourced-hant.tsv
+and sourced-hk.tsv from sourced.json.
 
 terms.json is the Protestant (和合本) to Catholic (思高本) table of
 github.com/0x696c757a696f/thechosen-dualsub, in simplified Chinese (its
@@ -33,12 +37,15 @@ for line in urllib.request.urlopen(STCHARACTERS).read().decode("utf-8").splitlin
     forms[simplified] = traditional.split()
 
 
-def rules(convert):
+def rules(convert, region, byzantine):
     out = {}
     for t in terms:
         if t.get("only", "p2c") != "p2c" or not t.get("p") or not t.get("c"):
             continue
-        p, c = convert(t["p"]), convert(t["c"])
+        if byzantine and t.get("rite") == "latin":
+            out.pop(convert(t["p"]), None)
+            continue
+        p, c = convert(t["p"]), convert(t.get(region) or t["c"])
 
         def chars(s):
             every = {*s, *convert(s)}
@@ -54,12 +61,30 @@ def same(s):
     return s
 
 
-for name, convert in (("hans", same), ("hant", to_tw.convert)):
-    lines = ["\t".join(r) for r in rules(convert)]
-    (here / f"{name}.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(name, len(lines))
+variants = (("hans", same, "cn"), ("hant", to_tw.convert, "tw"), ("hk", to_tw.convert, "hk"))
+for name, convert, region in variants:
+    for byzantine in (False, True):
+        lines = ["\t".join(r) for r in rules(convert, region, byzantine)]
+        file = f"{name}-byzantine.tsv" if byzantine else f"{name}.tsv"
+        (here / file).write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print(file, len(lines))
 
 # The shared test cases in traditional characters, for church_words.rs.
 cases = json.loads((here / "cases.json").read_text(encoding="utf-8"))["cases"]
 lines = [f"{to_tw.convert(c['in'])}\t{to_tw.convert(c['out'])}" for c in cases if c["dir"] == "p2c"]
 (here / "cases-hant.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+# Rules that need the original: words of the original (| between them),
+# words that rule it out, the Chinese words, what they become.
+sourced = json.loads((here / "sourced.json").read_text(encoding="utf-8"))["rules"]
+for name, convert, region in variants:
+    lines = [
+        "\t".join((
+            "|".join(w.lower() for w in r["src"]),
+            "|".join(w.lower() for w in r.get("unless", [])),
+            "|".join(convert(z) for z in r["zh"]),
+            convert(r.get(region) or r["c"]),
+        ))
+        for r in sourced
+    ]
+    (here / f"sourced-{name}.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")

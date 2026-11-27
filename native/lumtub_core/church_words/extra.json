@@ -1,6 +1,395 @@
 {
-  "$comment": "Lumtub's own rules, added after terms.json (a word here replaces its rule there). Same fields as terms.json, simplified Chinese.",
+  "$comment": [
+    "Lumtub's own rules, added after terms.json (a word here replaces its rule there). Same fields as terms.json, simplified Chinese.",
+    "hk: what Hong Kong writes instead of c (亞孟 for 阿們); a rule whose p and c are the same then changes only Hong Kong text.",
+    "tw: what Taiwan writes instead of c, where it differs from mainland and Hong Kong (婚姻聖事). rite: latin marks a rule left out for Byzantine-rite videos (their Great Lent is 大斋期).",
+    "Sources: the Hong Kong and Taiwan dioceses' liturgy commissions, the Catechism, vatican.va Chinese pages (from a GPT/Gemini survey the user checked, 2026-11-27)."
+  ],
   "terms": [
-    { "p": "牧师", "c": "神父", "cat": "church", "note": "priest in a Catholic video, which services often write as a Protestant pastor" }
+    {
+      "p": "牧师",
+      "c": "神父",
+      "cat": "church",
+      "note": "priest in a Catholic video, which services often write as a Protestant pastor"
+    },
+    {
+      "p": "阿尔斯牧师",
+      "c": "亚尔斯本堂神父",
+      "cat": "pope"
+    },
+    {
+      "p": "坚信礼",
+      "c": "坚振圣事",
+      "cat": "church"
+    },
+    {
+      "p": "确认礼",
+      "c": "坚振圣事",
+      "cat": "church"
+    },
+    {
+      "p": "临终涂油",
+      "c": "病人傅油",
+      "cat": "church"
+    },
+    {
+      "p": "涂油礼",
+      "c": "傅油礼",
+      "cat": "church"
+    },
+    {
+      "p": "圣职授任",
+      "c": "圣秩圣事",
+      "cat": "church"
+    },
+    {
+      "p": "告解室",
+      "c": "告解亭",
+      "cat": "church"
+    },
+    {
+      "p": "大斋期",
+      "c": "四旬期",
+      "cat": "church",
+      "rite": "latin"
+    },
+    {
+      "p": "四旬斋",
+      "c": "四旬期",
+      "cat": "church"
+    },
+    {
+      "p": "大斋戒",
+      "c": "四旬期",
+      "cat": "church",
+      "rite": "latin"
+    },
+    {
+      "p": "降临节",
+      "c": "将临期",
+      "cat": "church",
+      "note": "Advent; 圣灵降临节 (Pentecost) is its own rule"
+    },
+    {
+      "p": "圣灵降临节",
+      "c": "圣神降临节",
+      "cat": "church"
+    },
+    {
+      "p": "圣灵降临",
+      "c": "圣神降临",
+      "cat": "church"
+    },
+    {
+      "p": "赎罪券",
+      "c": "大赦",
+      "cat": "church"
+    },
+    {
+      "p": "阿门",
+      "c": "阿们",
+      "hk": "亚孟",
+      "cat": "church"
+    },
+    {
+      "p": "阿们",
+      "c": "阿们",
+      "hk": "亚孟",
+      "cat": "church"
+    },
+    {
+      "p": "哈利路亚",
+      "c": "阿肋路亚",
+      "hk": "亚肋路亚",
+      "cat": "church"
+    },
+    {
+      "p": "阿肋路亚",
+      "c": "阿肋路亚",
+      "hk": "亚肋路亚",
+      "cat": "church"
+    },
+    {
+      "p": "和解圣事",
+      "c": "和好圣事",
+      "hk": "修和圣事",
+      "cat": "church"
+    },
+    {
+      "p": "和好圣事",
+      "c": "和好圣事",
+      "hk": "修和圣事",
+      "cat": "church"
+    },
+    {
+      "p": "法蒂玛",
+      "c": "法蒂玛",
+      "hk": "花地玛",
+      "cat": "place"
+    },
+    {
+      "p": "信友祷词",
+      "c": "信友祷词",
+      "hk": "信友祷文",
+      "cat": "church"
+    },
+    {
+      "p": "卢尔德",
+      "c": "露德",
+      "cat": "place"
+    },
+    {
+      "p": "圣伯纳黛特",
+      "c": "圣女伯尔纳德",
+      "cat": "pope"
+    },
+    {
+      "p": "伯纳黛特",
+      "c": "伯尔纳德",
+      "cat": "pope"
+    },
+    {
+      "p": "利雪的圣特蕾莎",
+      "c": "圣女小德兰",
+      "cat": "pope"
+    },
+    {
+      "p": "利雪的圣德肋撒",
+      "c": "圣女小德兰",
+      "cat": "pope"
+    },
+    {
+      "p": "里修的圣特蕾莎",
+      "c": "圣女小德兰",
+      "cat": "pope"
+    },
+    {
+      "p": "福斯蒂娜",
+      "c": "傅天娜",
+      "cat": "pope"
+    },
+    {
+      "p": "浮士德修女",
+      "c": "傅天娜修女",
+      "cat": "pope"
+    },
+    {
+      "p": "上帝仁慈的花环",
+      "c": "慈悲串经",
+      "cat": "church"
+    },
+    {
+      "p": "神圣慈悲花环",
+      "c": "慈悲串经",
+      "cat": "church"
+    },
+    {
+      "p": "瓜达卢佩处女",
+      "c": "瓜达卢佩圣母",
+      "cat": "pope"
+    },
+    {
+      "p": "瓜达卢佩的处女",
+      "c": "瓜达卢佩圣母",
+      "cat": "pope"
+    },
+    {
+      "p": "约翰保罗二世",
+      "c": "若望保禄二世",
+      "cat": "pope"
+    },
+    {
+      "p": "顾客是上帝",
+      "c": "顾客是上帝",
+      "cat": "keep"
+    },
+    {
+      "p": "上帝视角",
+      "c": "上帝视角",
+      "cat": "keep"
+    },
+    {
+      "p": "彼得大帝",
+      "c": "彼得大帝",
+      "cat": "keep"
+    },
+    {
+      "p": "亚伯拉罕·林肯",
+      "c": "亚伯拉罕·林肯",
+      "cat": "keep"
+    },
+    {
+      "p": "摩西奶奶",
+      "c": "摩西奶奶",
+      "cat": "keep"
+    },
+    {
+      "p": "犹大旷野",
+      "c": "犹大旷野",
+      "cat": "keep"
+    },
+    {
+      "p": "犹大狮子",
+      "c": "犹大狮子",
+      "cat": "keep"
+    },
+    {
+      "p": "圣洁化",
+      "c": "圣化",
+      "cat": "church"
+    },
+    {
+      "p": "完全赦免",
+      "c": "全大赦",
+      "cat": "church"
+    },
+    {
+      "p": "神圣传统",
+      "c": "圣传",
+      "cat": "church"
+    },
+    {
+      "p": "使徒传统",
+      "c": "宗徒圣传",
+      "cat": "church"
+    },
+    {
+      "p": "圣礼",
+      "c": "圣事",
+      "cat": "church",
+      "notNext": "仪",
+      "note": "Sacrament; 圣礼仪 is the Orthodox liturgy"
+    },
+    {
+      "p": "领圣餐",
+      "c": "领圣体",
+      "cat": "church"
+    },
+    {
+      "p": "圣餐崇拜",
+      "c": "朝拜圣体",
+      "cat": "church"
+    },
+    {
+      "p": "圣餐展示",
+      "c": "明供圣体",
+      "cat": "church"
+    },
+    {
+      "p": "读经礼拜",
+      "c": "圣道礼仪",
+      "cat": "church"
+    },
+    {
+      "p": "祝圣祷告",
+      "c": "感恩经",
+      "cat": "church"
+    },
+    {
+      "p": "神圣命令",
+      "c": "圣秩圣事",
+      "cat": "church"
+    },
+    {
+      "p": "婚姻圣礼",
+      "c": "婚配圣事",
+      "tw": "婚姻圣事",
+      "cat": "church"
+    },
+    {
+      "p": "婚配圣事",
+      "c": "婚配圣事",
+      "tw": "婚姻圣事",
+      "cat": "church"
+    },
+    {
+      "p": "忏悔圣礼",
+      "c": "和好圣事",
+      "hk": "修和圣事",
+      "cat": "church"
+    },
+    {
+      "p": "和解圣礼",
+      "c": "和好圣事",
+      "hk": "修和圣事",
+      "cat": "church"
+    },
+    {
+      "p": "病人涂油",
+      "c": "病人傅油",
+      "cat": "church"
+    },
+    {
+      "p": "大主教",
+      "c": "总主教",
+      "cat": "group",
+      "note": "Archbishop; Major Archbishop (大总主教) comes from the original"
+    },
+    {
+      "p": "教堂牧师",
+      "c": "本堂神父",
+      "cat": "church"
+    },
+    {
+      "p": "教义问答",
+      "c": "教理",
+      "cat": "church"
+    },
+    {
+      "p": "尊主颂",
+      "c": "谢主曲",
+      "cat": "church"
+    },
+    {
+      "p": "十字架之路",
+      "c": "苦路",
+      "cat": "church"
+    },
+    {
+      "p": "圣灵降临祷文",
+      "c": "圣神降临经",
+      "cat": "church"
+    },
+    {
+      "p": "神圣慈悲念珠",
+      "c": "慈悲串经",
+      "cat": "church"
+    },
+    {
+      "p": "每小时礼仪",
+      "c": "时辰礼仪",
+      "hk": "时辰颂祷",
+      "cat": "church"
+    },
+    {
+      "p": "神圣慈悲主日",
+      "c": "天主慈悲主日",
+      "hk": "救主慈悲主日",
+      "cat": "church"
+    },
+    {
+      "p": "神圣慈悲星期日",
+      "c": "天主慈悲主日",
+      "hk": "救主慈悲主日",
+      "cat": "church"
+    },
+    {
+      "p": "天主慈悲主日",
+      "c": "天主慈悲主日",
+      "hk": "救主慈悲主日",
+      "cat": "church"
+    },
+    {
+      "p": "救主慈悲主日",
+      "c": "救主慈悲主日",
+      "tw": "天主慈悲主日",
+      "cat": "church"
+    },
+    {
+      "p": "圣母升天节",
+      "c": "圣母蒙召升天节",
+      "cat": "church",
+      "rite": "latin"
+    }
   ]
 }

@@ -383,7 +383,7 @@ class _TitleTextState extends State<TitleText> {
   @override
   Widget build(BuildContext context) {
     final found = titleTranslations.lookup(widget.text);
-    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, catholic: ChurchWording.isCatholicText('${widget.text}\n${widget.about}'));
+    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, rite: ChurchWording.riteOf('${widget.text}\n${widget.about}'), original: widget.text);
     final mode = titleTranslations.mode;
     final Widget child;
     final String message;

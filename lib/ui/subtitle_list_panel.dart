@@ -101,7 +101,7 @@ class _SubtitleListState extends State<SubtitleList> {
         if (done(sentence)) return null;
         try {
           final result = (await translateForeignLines(widget.controller.translator, sentence, target, done)).trim();
-          return result.isEmpty || result == sentence.trim() ? null : ChurchWording.apply(result, target, catholic: widget.controller.playingCatholic);
+          return result.isEmpty || result == sentence.trim() ? null : ChurchWording.apply(result, target, rite: widget.controller.playingRite, original: sentence);
         } catch (_) {
           return null;
         }

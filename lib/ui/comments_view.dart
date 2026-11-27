@@ -200,25 +200,25 @@ class _CommentsSectionState extends State<CommentsSection> {
     return posted;
   }
 
-  /// Whether the video or post commented on is Catholic, so translated
-  /// comments use the Church's wording.
-  bool get _catholic {
+  /// The rite of the video or post commented on when it is Catholic, so
+  /// translated comments use the Church's wording.
+  ChurchRite? get _rite {
     final c = widget.controller;
-    final creator = widget.creator?.name ?? '';
-    if (widget.videoId != null) return widget.videoId == c.playing?.id && c.playingCatholic || ChurchWording.isCatholicText(creator);
-    return ChurchWording.isCatholicText(creator) || c.channel?.id == widget.creator?.id && c.channelCatholic;
+    final creator = ChurchWording.riteOf(widget.creator?.name ?? '');
+    if (widget.videoId != null) return (widget.videoId == c.playing?.id ? c.playingRite : null) ?? creator;
+    return creator ?? (c.channel?.id == widget.creator?.id ? c.channelRite : null);
   }
 
   /// [comment] and, once loaded, its replies.
   List<Widget> _thread(BuildContext context, YoutubeComment comment) {
     final loader = _loader;
     final thread = loader.replies[comment.id];
-    final catholic = _catholic;
+    final rite = _rite;
     Widget tile(YoutubeComment c, {bool reply = false}) => _CommentTile(
           comment: c,
           loader: loader,
           controller: widget.controller,
-          catholic: catholic,
+          rite: rite,
           onSeek: widget.onSeek,
           creator: widget.creator,
           reply: reply,
@@ -347,12 +347,12 @@ class _CommentsSectionState extends State<CommentsSection> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, required this.loader, required this.controller, this.catholic = false, this.onSeek, this.creator, this.reply = false, this.onReply});
+  const _CommentTile({required this.comment, required this.loader, required this.controller, this.rite, this.onSeek, this.creator, this.reply = false, this.onReply});
   final ChannelRef? creator;
   final YoutubeComment comment;
   final CommentsLoader loader;
   final AppController controller;
-  final bool catholic;
+  final ChurchRite? rite;
   final void Function(Duration position)? onSeek;
   final bool reply;
   final VoidCallback? onReply;
@@ -402,7 +402,7 @@ class _CommentTile extends StatelessWidget {
           const SizedBox(height: 4),
           Translatable(
             controller: controller,
-            catholic: catholic,
+            rite: rite,
             text: comment.text,
             builder: (context, text) => SelectionArea(child: LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal)),
           ),

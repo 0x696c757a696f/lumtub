@@ -449,24 +449,37 @@ class AppController extends ChangeNotifier with _ExploreState {
   VideoDetails? details;
   bool loadingDetails = false;
 
-  /// Whether the video playing is a Catholic one, so its subtitles,
-  /// comments, chapters and chat translated into Chinese use the Church's
-  /// wording ([ChurchWording]).
-  bool get playingCatholic {
+  /// The rite of the video playing when it is a Catholic one, so its
+  /// subtitles, comments, chapters and chat translated into Chinese use the
+  /// Church's wording ([ChurchWording]); null otherwise.
+  ChurchRite? get playingRite {
     final item = playing;
-    return item != null && ChurchWording.isCatholicVideo(item, description: details?.description);
+    return item == null ? null : ChurchWording.riteOfVideo(item, description: details?.description);
   }
 
-  /// Whether the open channel is a Catholic one: its name says so, or at
-  /// least two of the videos loaded from it are Catholic and they make up
-  /// a quarter of them. Each title is looked at once ([ChurchWording]).
-  bool get channelCatholic {
+  /// The rite of the open channel when it is a Catholic one: its name says
+  /// so, or at least two of the videos loaded from it are Catholic and they
+  /// make up a quarter of them, Byzantine when most of those are. Each title
+  /// is looked at once ([ChurchWording]).
+  ChurchRite? get channelRite {
     final open = channel;
-    if (open == null) return false;
-    if (ChurchWording.isCatholicText(open.name)) return true;
+    if (open == null) return null;
+    if (ChurchWording.riteOf(open.name) case final rite?) return rite;
     final items = channelVideos?.items ?? const <VideoItem>[];
-    final catholic = items.where((item) => ChurchWording.isCatholicVideo(item)).length;
-    return catholic >= 2 && catholic * 4 >= items.length;
+    var latin = 0;
+    var byzantine = 0;
+    for (final item in items) {
+      switch (ChurchWording.riteOfVideo(item)) {
+        case ChurchRite.latin:
+          latin++;
+        case ChurchRite.byzantine:
+          byzantine++;
+        case null:
+      }
+    }
+    final catholic = latin + byzantine;
+    if (catholic < 2 || catholic * 4 < items.length) return null;
+    return byzantine > latin ? ChurchRite.byzantine : ChurchRite.latin;
   }
   List<LiveChatMessage> replayChat = const [];
   /// Recent Super Chats of the live chat, newest first, with when each
@@ -1017,7 +1030,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     playing: () => playing?.id,
-    wording: (text, target) => ChurchWording.apply(text, target, catholic: playingCatholic),
+    wording: (text, target, original) => ChurchWording.apply(text, target, rite: playingRite, original: original),
     onUpdated: _subtitleFileUpdated,
   );
 

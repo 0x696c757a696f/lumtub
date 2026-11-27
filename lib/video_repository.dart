@@ -388,12 +388,35 @@ class VideoRepository {
     }
   }
 
-  /// The videos of a YouTube playlist.
-  Listing playlist(String id) {
+  /// The videos of a YouTube playlist; read through [signedIn] first when
+  /// given, and signed out when that finds nothing.
+  Listing playlist(String id, {Stream<String> Function()? signedIn}) {
     final url = 'https://www.youtube.com/playlist?list=$id';
     final web = this.web;
-    if (web == null || !YoutubeListing.available) return _listing(url);
-    return Listing(() => YoutubeListing.orElse(() => web.playlist(id), () => _lines(listingArguments(url))));
+    Stream<String> signedOut() => web == null || !YoutubeListing.available
+        ? _lines(listingArguments(url))
+        : YoutubeListing.orElse(() => web.playlist(id), () => _lines(listingArguments(url)));
+    return Listing(signedIn == null ? signedOut : () => _signedInOr(id, signedIn, signedOut));
+  }
+
+  /// The lines of [signedIn], or of [signedOut] when it fails or ends
+  /// before its first line: the account's page can come back empty, or the
+  /// cookies stay shut, while the list itself is public or unlisted.
+  static Stream<String> _signedInOr(String id, Stream<String> Function() signedIn, Stream<String> Function() signedOut) async* {
+    var any = false;
+    try {
+      await for (final line in signedIn()) {
+        any = true;
+        yield line;
+      }
+    } catch (e) {
+      if (any) rethrow;
+      logWarn('Signed-in playlist $id failed, reading it signed out: $e');
+    }
+    if (!any) {
+      logInfo('Signed-in playlist $id gave no videos, reading it signed out');
+      yield* signedOut();
+    }
   }
 
   /// Videos of [channel] matching [query].

@@ -4,8 +4,8 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 use lumtub_core::{
-    ass, comment_action, comments, counts, downloads, filter, hashes, innertube, insights,
-    listing, lists, live_chat, posts, quick, resolved, taste, tv_browse,
+    ass, comment_action, comments, counts, downloads, filter, hashes, innertube, insights, listing,
+    lists, live_chat, posts, quick, resolved, taste, tv_browse,
 };
 use serde_json::Value;
 
@@ -37,7 +37,9 @@ fuzz_target!(|data: &[u8]| {
     }
     // SAFETY: each call gets the bytes of [text].
     ffi(text, |p, n| unsafe { innertube::lumtub_youtube_next(p, n) });
-    ffi(text, |p, n| unsafe { quick::lumtub_quick_info(p, n, b"{}".as_ptr(), 2) });
+    ffi(text, |p, n| unsafe {
+        quick::lumtub_quick_info(p, n, b"{}".as_ptr(), 2)
+    });
     let Ok(value) = serde_json::from_str::<Value>(text) else {
         return;
     };

@@ -7,7 +7,8 @@
 mod jsonc;
 
 use std::fmt::Write;
-use std::{env, fs, path::Path};
+use std::path::Path;
+use std::{env, fs};
 
 use serde_json::Value;
 
@@ -24,7 +25,9 @@ fn main() {
     for id in ids {
         let path = format!("../skins/{id}/skin.jsonc");
         println!("cargo:rerun-if-changed={path}");
-        let json: Value = serde_json::from_str(&jsonc::strip(&fs::read_to_string(&path).expect(&path))).expect(&path);
+        let json: Value =
+            serde_json::from_str(&jsonc::strip(&fs::read_to_string(&path).expect(&path)))
+                .expect(&path);
         let name = json["name"].as_str().unwrap_or(id);
         let names: Vec<(&str, &str)> = ["zh-Hans", "es", "fr", "de", "it"]
             .into_iter()
@@ -36,7 +39,9 @@ fn main() {
         let colors = &json["colors"];
         let page = colors["page"].as_str().unwrap_or("#ffffff");
         let accent = colors["accent"].as_str().unwrap_or("#e53935");
-        let dark_page = json["overrides"]["dark"]["colors"]["page"].as_str().unwrap_or(page);
+        let dark_page = json["overrides"]["dark"]["colors"]["page"]
+            .as_str()
+            .unwrap_or(page);
         writeln!(
             out,
             "    SkinInfo {{ id: {id:?}, names: &{names:?}, en: {name:?}, side: {side:?}, scheme: {scheme}, page: {page:?}, dark_page: {dark_page:?}, accent: {accent:?} }},"
@@ -44,5 +49,9 @@ fn main() {
         .unwrap();
     }
     out.push_str("];\n");
-    fs::write(Path::new(&env::var("OUT_DIR").unwrap()).join("skins.rs"), out).unwrap();
+    fs::write(
+        Path::new(&env::var("OUT_DIR").unwrap()).join("skins.rs"),
+        out,
+    )
+    .unwrap();
 }

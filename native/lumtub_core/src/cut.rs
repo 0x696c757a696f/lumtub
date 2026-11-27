@@ -12,13 +12,13 @@ use serde::Deserialize;
 use crate::cast_webm::{CLUSTER, element};
 use crate::taste::{give, text};
 
-const EBML: u32 = 0x1A45_DFA3;
+const EBML: u32 = 0x1a45_dfa3;
 const SEGMENT: u32 = 0x1853_8067;
-const INFO: u32 = 0x1549_A966;
-const TRACKS: u32 = 0x1654_AE6B;
-const TIMECODE_SCALE: u32 = 0x2A_D7B1;
+const INFO: u32 = 0x1549_a966;
+const TRACKS: u32 = 0x1654_ae6b;
+const TIMECODE_SCALE: u32 = 0x2a_d7b1;
 const DURATION: u32 = 0x4489;
-const TIMESTAMP: u32 = 0xE7;
+const TIMESTAMP: u32 = 0xe7;
 
 /// The most read whole of a WebM's EBML head, Info or Tracks.
 const MAX_WEBM_HEAD: u64 = 1 << 20;
@@ -219,10 +219,10 @@ fn webm<R: ReadSeek, W: Write>(
         write(
             &mut out,
             &[
-                0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             ],
         )?;
-        write(&mut out, &[0x15, 0x49, 0xA9, 0x66])?;
+        write(&mut out, &[0x15, 0x49, 0xa9, 0x66])?;
         write(&mut out, &size8(info.len() as u64))?;
         write(&mut out, &info)?;
         write(&mut out, &tracks)?;
@@ -467,19 +467,19 @@ mod tests {
     /// block whose byte is the cluster's number.
     fn webm_file(path: &str) {
         let mut segment = ebml(
-            &[0x15, 0x49, 0xA9, 0x66],
+            &[0x15, 0x49, 0xa9, 0x66],
             &[
-                ebml(&[0x2A, 0xD7, 0xB1], &[0x0F, 0x42, 0x40]),
+                ebml(&[0x2a, 0xd7, 0xb1], &[0x0f, 0x42, 0x40]),
                 ebml(&[0x44, 0x89], &20000f64.to_be_bytes()),
             ]
             .concat(),
         );
         segment.extend(ebml(
-            &[0x16, 0x54, 0xAE, 0x6B],
+            &[0x16, 0x54, 0xae, 0x6b],
             &ebml(
-                &[0xAE],
+                &[0xae],
                 &[
-                    ebml(&[0xD7], &[1]),
+                    ebml(&[0xd7], &[1]),
                     ebml(&[0x83], &[2]),
                     ebml(&[0x86], b"A_OPUS"),
                 ]
@@ -489,11 +489,11 @@ mod tests {
         for n in 0..10u8 {
             let time = (n as u16 * 2000).to_be_bytes();
             segment.extend(ebml(
-                &[0x1F, 0x43, 0xB6, 0x75],
-                &[ebml(&[0xE7], &time), ebml(&[0xA3], &[0x81, 0, 0, 0x80, n])].concat(),
+                &[0x1f, 0x43, 0xb6, 0x75],
+                &[ebml(&[0xe7], &time), ebml(&[0xa3], &[0x81, 0, 0, 0x80, n])].concat(),
             ));
         }
-        let mut file = ebml(&[0x1A, 0x45, 0xDF, 0xA3], &ebml(&[0x42, 0x82], b"webm"));
+        let mut file = ebml(&[0x1a, 0x45, 0xdf, 0xa3], &ebml(&[0x42, 0x82], b"webm"));
         file.extend(ebml(&[0x18, 0x53, 0x80, 0x67], &segment));
         std::fs::write(path, file).unwrap();
     }
@@ -559,7 +559,7 @@ mod tests {
                     assert!(!bytes.windows(2).any(|w| w == [0x44, 0x89]));
                     let cluster = bytes
                         .windows(4)
-                        .position(|w| w == [0x1F, 0x43, 0xB6, 0x75])
+                        .position(|w| w == [0x1f, 0x43, 0xb6, 0x75])
                         .unwrap();
                     let stamp = element(&bytes, cluster + 12).unwrap();
                     assert_eq!(&bytes[stamp.data..stamp.end], &[0, 0]);
@@ -596,11 +596,11 @@ mod tests {
         file.extend(mp4_box(b"moov", b"mdhd"));
         assert_eq!(cut_bytes(&file), Err("damaged mdhd".into()));
         // Info claiming far more than the file holds.
-        let mut webm = ebml(&[0x1A, 0x45, 0xDF, 0xA3], &[]);
-        webm.extend_from_slice(&[0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF]);
-        webm.extend_from_slice(&[0xFF, 0xFF, 0xFF]);
-        webm.extend_from_slice(&[0x15, 0x49, 0xA9, 0x66, 0x01, 0x00, 0xFF, 0xFF]);
-        webm.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFE]);
+        let mut webm = ebml(&[0x1a, 0x45, 0xdf, 0xa3], &[]);
+        webm.extend_from_slice(&[0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff]);
+        webm.extend_from_slice(&[0xff, 0xff, 0xff]);
+        webm.extend_from_slice(&[0x15, 0x49, 0xa9, 0x66, 0x01, 0x00, 0xff, 0xff]);
+        webm.extend_from_slice(&[0xff, 0xff, 0xff, 0xfe]);
         assert_eq!(cut_bytes(&webm), Err("damaged WebM".into()));
     }
 

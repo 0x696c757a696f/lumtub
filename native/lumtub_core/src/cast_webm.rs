@@ -50,43 +50,43 @@ pub struct Frame {
     pub key: bool,
 }
 
-pub(crate) const EBML: u32 = 0x1A45_DFA3;
+pub(crate) const EBML: u32 = 0x1a45_dfa3;
 pub(crate) const SEGMENT: u32 = 0x1853_8067;
-const INFO: u32 = 0x1549_A966;
-const TIMECODE_SCALE: u32 = 0x2A_D7B1;
-const TRACKS: u32 = 0x1654_AE6B;
-const TRACK_ENTRY: u32 = 0xAE;
-const TRACK_NUMBER: u32 = 0xD7;
+const INFO: u32 = 0x1549_a966;
+const TIMECODE_SCALE: u32 = 0x2a_d7b1;
+const TRACKS: u32 = 0x1654_ae6b;
+const TRACK_ENTRY: u32 = 0xae;
+const TRACK_NUMBER: u32 = 0xd7;
 const TRACK_TYPE: u32 = 0x83;
 const CODEC_ID: u32 = 0x86;
-const CODEC_PRIVATE: u32 = 0x63A2;
-const DEFAULT_DURATION: u32 = 0x23_E383;
-const VIDEO: u32 = 0xE0;
-const PIXEL_WIDTH: u32 = 0xB0;
-const PIXEL_HEIGHT: u32 = 0xBA;
-const COLOUR: u32 = 0x55B0;
-const MATRIX: u32 = 0x55B1;
-const BITS: u32 = 0x55B2;
-const RANGE: u32 = 0x55B9;
-const TRANSFER: u32 = 0x55BA;
-const PRIMARIES: u32 = 0x55BB;
-const AUDIO: u32 = 0xE1;
-const SAMPLING: u32 = 0xB5;
-const CHANNELS: u32 = 0x9F;
-const CODEC_DELAY: u32 = 0x56AA;
-const SEEK_PREROLL: u32 = 0x56BB;
-const CUES: u32 = 0x1C53_BB6B;
-const CUE_POINT: u32 = 0xBB;
-const CUE_TIME: u32 = 0xB3;
-const CUE_POSITIONS: u32 = 0xB7;
-const CUE_TRACK: u32 = 0xF7;
-const CUE_CLUSTER: u32 = 0xF1;
-pub(crate) const CLUSTER: u32 = 0x1F43_B675;
-const TIMECODE: u32 = 0xE7;
-const SIMPLE_BLOCK: u32 = 0xA3;
-const BLOCK_GROUP: u32 = 0xA0;
-const BLOCK: u32 = 0xA1;
-const REFERENCE: u32 = 0xFB;
+const CODEC_PRIVATE: u32 = 0x63a2;
+const DEFAULT_DURATION: u32 = 0x23_e383;
+const VIDEO: u32 = 0xe0;
+const PIXEL_WIDTH: u32 = 0xb0;
+const PIXEL_HEIGHT: u32 = 0xba;
+const COLOUR: u32 = 0x55b0;
+const MATRIX: u32 = 0x55b1;
+const BITS: u32 = 0x55b2;
+const RANGE: u32 = 0x55b9;
+const TRANSFER: u32 = 0x55ba;
+const PRIMARIES: u32 = 0x55bb;
+const AUDIO: u32 = 0xe1;
+const SAMPLING: u32 = 0xb5;
+const CHANNELS: u32 = 0x9f;
+const CODEC_DELAY: u32 = 0x56aa;
+const SEEK_PREROLL: u32 = 0x56bb;
+const CUES: u32 = 0x1c53_bb6b;
+const CUE_POINT: u32 = 0xbb;
+const CUE_TIME: u32 = 0xb3;
+const CUE_POSITIONS: u32 = 0xb7;
+const CUE_TRACK: u32 = 0xf7;
+const CUE_CLUSTER: u32 = 0xf1;
+pub(crate) const CLUSTER: u32 = 0x1f43_b675;
+const TIMECODE: u32 = 0xe7;
+const SIMPLE_BLOCK: u32 = 0xa3;
+const BLOCK_GROUP: u32 = 0xa0;
+const BLOCK: u32 = 0xa1;
+const REFERENCE: u32 = 0xfb;
 
 /// An element: its id, where its data starts and ends (`end` may lie past
 /// the bytes read, or is `usize::MAX` for an unknown size).
@@ -487,13 +487,13 @@ mod tests {
         assert_eq!(vint(&[0x81], 0, false), Some((1, 1)));
         assert_eq!(vint(&[0x40, 0x02], 0, false), Some((2, 2)));
         assert_eq!(
-            vint(&[0x1A, 0x45, 0xDF, 0xA3], 0, true),
-            Some((0x1A45_DFA3, 4))
+            vint(&[0x1a, 0x45, 0xdf, 0xa3], 0, true),
+            Some((0x1a45_dfa3, 4))
         );
         assert_eq!(vint(&[0], 0, false), None);
         let unknown = element(
             &[
-                0x1F, 0x43, 0xB6, 0x75, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0x1f, 0x43, 0xb6, 0x75, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             ],
             0,
         )
@@ -504,12 +504,12 @@ mod tests {
     #[test]
     fn a_block_shorter_than_its_header_is_an_error() {
         let cluster = [
-            0x1F, 0x43, 0xB6, 0x75, 0x8A, 0xE7, 0x81, 0x00, 0xA3, 0x82, 0x81, 0x00, 0xA3, 0x80,
+            0x1f, 0x43, 0xb6, 0x75, 0x8a, 0xe7, 0x81, 0x00, 0xa3, 0x82, 0x81, 0x00, 0xa3, 0x80,
             0x81,
         ];
         assert!(frames(&cluster, 1).is_err());
         let whole = [
-            0x1F, 0x43, 0xB6, 0x75, 0x89, 0xE7, 0x81, 0x00, 0xA3, 0x84, 0x81, 0x00, 0x00, 0x80,
+            0x1f, 0x43, 0xb6, 0x75, 0x89, 0xe7, 0x81, 0x00, 0xa3, 0x84, 0x81, 0x00, 0x00, 0x80,
         ];
         assert_eq!(frames(&whole, 1).unwrap().len(), 1);
     }

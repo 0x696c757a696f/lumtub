@@ -117,7 +117,7 @@ impl Doh {
         if let Some((ips, until)) = self
             .cache
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .expect("lock poisoned by a panic")
             .get(&key)
             && *until > Instant::now()
         {
@@ -145,7 +145,7 @@ impl Doh {
         if ips.is_empty() {
             return Err(failure.unwrap_or(Failure::NoSuchName));
         }
-        let mut cache = self.cache.lock().unwrap_or_else(|e| e.into_inner());
+        let mut cache = self.cache.lock().expect("lock poisoned by a panic");
         if cache.len() >= KEEP {
             let now = Instant::now();
             cache.retain(|_, (_, until)| *until > now);
@@ -189,17 +189,17 @@ static CURRENT: RwLock<Option<Arc<Doh>>> = RwLock::new(None);
 static SETTINGS: LazyLock<Mutex<Settings>> = LazyLock::new(|| Mutex::new(Settings::default()));
 
 pub fn current() -> Option<Arc<Doh>> {
-    CURRENT.read().unwrap_or_else(|e| e.into_inner()).clone()
+    CURRENT.read().expect("lock poisoned by a panic").clone()
 }
 
 /// Switches to [settings], or to the certificate authorities now chosen;
 /// returns whether anything changed.
 pub fn set(settings: Settings) -> bool {
-    let mut old = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
+    let mut old = SETTINGS.lock().expect("lock poisoned by a panic");
     if *old == settings && current().is_none_or(|doh| doh.tls == crate::tls::current()) {
         return false;
     }
-    *CURRENT.write().unwrap_or_else(|e| e.into_inner()) = Doh::new(&settings).map(Arc::new);
+    *CURRENT.write().expect("lock poisoned by a panic") = Doh::new(&settings).map(Arc::new);
     *old = settings;
     true
 }

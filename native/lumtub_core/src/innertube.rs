@@ -293,9 +293,15 @@ fn lockup(value: &Value) -> Option<Video> {
                 if let Some(badge @ Value::Object(_)) = map.get("thumbnailBadgeViewModel") {
                     out.push(text_of(badge.get("text")));
                 }
-                map.values().for_each(|v| badges_in(v, out));
+                for value in map.values() {
+                    badges_in(value, out);
+                }
             }
-            Value::Array(list) => list.iter().for_each(|v| badges_in(v, out)),
+            Value::Array(list) => {
+                for value in list {
+                    badges_in(value, out);
+                }
+            }
             _ => {}
         }
     }

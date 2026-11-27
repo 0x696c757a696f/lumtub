@@ -197,7 +197,11 @@ fn post(post: &Value) -> Option<Post> {
 pub fn page(data: &Value) -> Page {
     fn walk(node: &Value, page: &mut Page) {
         match node {
-            Value::Array(list) => list.iter().for_each(|child| walk(child, page)),
+            Value::Array(list) => {
+                for child in list {
+                    walk(child, page);
+                }
+            }
             Value::Object(map) => {
                 if let Some(renderer) = map
                     .get("backstagePostRenderer")
@@ -223,9 +227,11 @@ pub fn page(data: &Value) -> Page {
                 ) {
                     page.continuation = Some(token.clone());
                 }
-                map.values()
-                    .filter(|v| v.is_object() || v.is_array())
-                    .for_each(|v| walk(v, page));
+                for value in map.values() {
+                    if value.is_object() || value.is_array() {
+                        walk(value, page);
+                    }
+                }
             }
             _ => {}
         }

@@ -10,7 +10,13 @@ fn inside(path: &str) -> bool {
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(catalog) = parse(data) {
-        assert!(catalog.packs.iter().flat_map(|p| &p.files).all(|f| inside(&f.path)));
+        assert!(
+            catalog
+                .packs
+                .iter()
+                .flat_map(|p| &p.files)
+                .all(|f| inside(&f.path))
+        );
     }
     if let Ok(pack) = read_entry(data) {
         assert!(pack.files.iter().all(|f| inside(&f.path)));

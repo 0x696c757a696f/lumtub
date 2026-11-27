@@ -58,7 +58,7 @@ static STATE: Mutex<State> = Mutex::new(State::Unconfigured);
 /// Records where Python is; it starts with the first run. A second call
 /// with other settings is ignored once Python has started.
 pub fn configure(config: Config) {
-    let mut state = STATE.lock().unwrap_or_else(|e| e.into_inner());
+    let mut state = STATE.lock().expect("lock poisoned by a panic");
     if matches!(*state, State::Unconfigured | State::Configured(_)) {
         *state = State::Configured(config);
     }
@@ -66,7 +66,7 @@ pub fn configure(config: Config) {
 
 /// Python, started on the first call; the error says why it cannot run.
 fn api() -> Result<Api, String> {
-    let mut state = STATE.lock().unwrap_or_else(|e| e.into_inner());
+    let mut state = STATE.lock().expect("lock poisoned by a panic");
     let config = match &*state {
         State::Ready(api) => return Ok(*api),
         State::Failed(error) => return Err(error.clone()),

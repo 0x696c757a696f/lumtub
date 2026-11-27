@@ -183,7 +183,7 @@ static SESSION: LazyLock<Mutex<Session>> = LazyLock::new(|| {
 static OPENING: Mutex<()> = Mutex::new(());
 
 fn session() -> std::sync::MutexGuard<'static, Session> {
-    SESSION.lock().unwrap_or_else(|e| e.into_inner())
+    SESSION.lock().expect("lock poisoned by a panic")
 }
 
 fn write_file(file: &Path, sealed: &[u8]) -> Result<(), String> {
@@ -230,7 +230,7 @@ enum Shut {
 /// user first where it guards them. [ask] asks again after the user
 /// closed the prompt once.
 fn unlock(ask: bool) -> Result<(), Shut> {
-    let _opening = OPENING.lock().unwrap_or_else(|e| e.into_inner());
+    let _opening = OPENING.lock().expect("lock poisoned by a panic");
     let (sealed, reason) = {
         let mut session = session();
         if session.open.is_some() {

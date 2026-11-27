@@ -358,7 +358,7 @@ fn ntp_now() -> (u32, u32) {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
-    let seconds = (now.as_secs() + 0x83AA_7E80) as u32;
+    let seconds = (now.as_secs() + 0x83aa_7e80) as u32;
     let fraction = ((now.subsec_nanos() as u64) << 32) / 1_000_000_000;
     (seconds, fraction as u32)
 }
@@ -377,7 +377,7 @@ fn answer_timing(socket: UdpSocket, stop: Arc<AtomicBool>) {
         let (s, f) = ntp_now();
         let mut reply = [0u8; 32];
         reply[0] = packet[0];
-        reply[1] = 0xD3;
+        reply[1] = 0xd3;
         reply[2..4].copy_from_slice(&7u16.to_be_bytes());
         reply[8..16].copy_from_slice(&packet[24..32]);
         reply[16..20].copy_from_slice(&s.to_be_bytes());

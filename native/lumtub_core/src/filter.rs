@@ -271,9 +271,9 @@ fn kana_say_japanese(title: &str) -> bool {
     let mut han = false;
     for c in title.chars() {
         match c as u32 {
-            0x3041..=0x309F if c != 'の' => hiragana += 1,
-            0x30A1..=0x30FA => katakana += 1,
-            0x4E00..=0x9FFF | 0x3400..=0x4DBF => han = true,
+            0x3041..=0x309f if c != 'の' => hiragana += 1,
+            0x30a1..=0x30fa => katakana += 1,
+            0x4e00..=0x9fff | 0x3400..=0x4dbf => han = true,
             _ => {}
         }
     }
@@ -624,54 +624,54 @@ fn read(title: &str) -> Language {
     if kana_say_japanese(title) {
         return Language::Ja;
     }
-    if any_in(title, &[(0xAC00, 0xD7AF), (0x1100, 0x11FF)]) {
+    if any_in(title, &[(0xac00, 0xd7af), (0x1100, 0x11ff)]) {
         return Language::Ko;
     }
-    if any_in(title, &[(0x4E00, 0x9FFF), (0x3400, 0x4DBF)]) {
+    if any_in(title, &[(0x4e00, 0x9fff), (0x3400, 0x4dbf)]) {
         return Language::Zh;
     }
-    if any_in(title, &[(0x0E00, 0x0E7F)]) {
+    if any_in(title, &[(0x0e00, 0x0e7f)]) {
         return Language::Th;
     }
     // Scripts of one language each among explore's.
     for (ranges, language) in [
-        (&[(0x0A80u32, 0x0AFFu32)][..], Language::Gu),
-        (&[(0x0A00, 0x0A7F)], Language::Pa),
-        (&[(0x0C80, 0x0CFF)], Language::Kn),
-        (&[(0x0D00, 0x0D7F)], Language::Ml),
-        (&[(0x0D80, 0x0DFF)], Language::Si),
-        (&[(0x0E80, 0x0EFF)], Language::Lo),
-        (&[(0x1000, 0x109F)], Language::My),
-        (&[(0x10A0, 0x10FF), (0x1C90, 0x1CBF)], Language::Ka),
-        (&[(0x0530, 0x058F)], Language::Hy),
-        (&[(0x1780, 0x17FF)], Language::Km),
+        (&[(0x0a80u32, 0x0affu32)][..], Language::Gu),
+        (&[(0x0a00, 0x0a7f)], Language::Pa),
+        (&[(0x0c80, 0x0cff)], Language::Kn),
+        (&[(0x0d00, 0x0d7f)], Language::Ml),
+        (&[(0x0d80, 0x0dff)], Language::Si),
+        (&[(0x0e80, 0x0eff)], Language::Lo),
+        (&[(0x1000, 0x109f)], Language::My),
+        (&[(0x10a0, 0x10ff), (0x1c90, 0x1cbf)], Language::Ka),
+        (&[(0x0530, 0x058f)], Language::Hy),
+        (&[(0x1780, 0x17ff)], Language::Km),
         // Ge'ez: Amharic, the more common of the two that write it.
-        (&[(0x1200, 0x137F)], Language::Am),
+        (&[(0x1200, 0x137f)], Language::Am),
     ] {
         if any_in(title, ranges) {
             return language;
         }
     }
-    if any_in(title, &[(0x0900, 0x097F)]) {
+    if any_in(title, &[(0x0900, 0x097f)]) {
         // Devanagari: Hindi unless the words are Marathi's or Nepali's.
         return devanagari(title).unwrap_or(Language::Hi);
     }
-    if any_in(title, &[(0x0980, 0x09FF)]) {
+    if any_in(title, &[(0x0980, 0x09ff)]) {
         return Language::Bn;
     }
-    if any_in(title, &[(0x0B80, 0x0BFF)]) {
+    if any_in(title, &[(0x0b80, 0x0bff)]) {
         return Language::Ta;
     }
-    if any_in(title, &[(0x0C00, 0x0C7F)]) {
+    if any_in(title, &[(0x0c00, 0x0c7f)]) {
         return Language::Te;
     }
-    if any_in(title, &[(0x0590, 0x05FF)]) {
+    if any_in(title, &[(0x0590, 0x05ff)]) {
         return Language::He;
     }
-    if any_in(title, &[(0x0370, 0x03FF)]) {
+    if any_in(title, &[(0x0370, 0x03ff)]) {
         return Language::El;
     }
-    if any_in(title, &[(0x0600, 0x06FF)]) {
+    if any_in(title, &[(0x0600, 0x06ff)]) {
         // Letters Arabic itself does not use.
         if title.contains(['ٹ', 'ڈ', 'ڑ', 'ں', 'ے']) {
             return Language::Ur;
@@ -686,7 +686,7 @@ fn read(title: &str) -> Language {
         }
         return Language::Ar;
     }
-    if any_in(title, &[(0x0400, 0x04FF)]) {
+    if any_in(title, &[(0x0400, 0x04ff)]) {
         let lower = title.to_lowercase();
         if lower.contains(['ї', 'є', 'ґ']) {
             return Language::Uk;
@@ -1017,7 +1017,7 @@ pub fn name_starts_with(name: &str, word: &str) -> bool {
     let Some(next) = rest.chars().next() else {
         return true;
     };
-    word.chars().last().is_some_and(|c| c as u32 > 0x2E7F) || !next.is_alphanumeric()
+    word.chars().last().is_some_and(|c| c as u32 > 0x2e7f) || !next.is_alphanumeric()
 }
 
 /// The language of the UTF-8 title, as its place in [Language].
@@ -1111,7 +1111,8 @@ mod tests {
 
     #[test]
     fn reads_the_smaller_latin_languages_by_their_words() {
-        use super::{Language::*, reading};
+        use super::Language::*;
+        use super::reading;
         for (title, language) in [
             ("Balita ngayong umaga: ang mga pangunahing ulat", Tl),
             ("Gaur egungo albisteak eta euskara", Eu),

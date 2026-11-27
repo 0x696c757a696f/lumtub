@@ -9,27 +9,41 @@ thread_local! {
     static OBSERVERS: RefCell<Vec<IntersectionObserver>> = const { RefCell::new(Vec::new()) };
 }
 
-fn observer(margin: &str, threshold: f64, on: impl Fn(&IntersectionObserverEntry, &IntersectionObserver) + 'static) -> Option<IntersectionObserver> {
-    let callback = Closure::<dyn FnMut(js_sys::Array, IntersectionObserver)>::new(move |entries: js_sys::Array, obs: IntersectionObserver| {
-        for entry in entries.iter() {
-            if let Ok(entry) = entry.dyn_into::<IntersectionObserverEntry>() {
-                on(&entry, &obs);
+fn observer(
+    margin: &str,
+    threshold: f64,
+    on: impl Fn(&IntersectionObserverEntry, &IntersectionObserver) + 'static,
+) -> Option<IntersectionObserver> {
+    let callback = Closure::<dyn FnMut(js_sys::Array, IntersectionObserver)>::new(
+        move |entries: js_sys::Array, obs: IntersectionObserver| {
+            for entry in entries.iter() {
+                if let Ok(entry) = entry.dyn_into::<IntersectionObserverEntry>() {
+                    on(&entry, &obs);
+                }
             }
-        }
-    });
+        },
+    );
     let init = IntersectionObserverInit::new();
     init.set_root_margin(margin);
     init.set_threshold(&threshold.into());
-    let obs = IntersectionObserver::new_with_options(callback.as_ref().unchecked_ref(), &init).ok()?;
+    let obs =
+        IntersectionObserver::new_with_options(callback.as_ref().unchecked_ref(), &init).ok()?;
     callback.forget();
     Some(obs)
 }
 
 fn each(selector: &str, mut f: impl FnMut(web_sys::Element)) {
-    let Some(doc) = web_sys::window().and_then(|w| w.document()) else { return };
-    let Ok(list) = doc.query_selector_all(selector) else { return };
+    let Some(doc) = web_sys::window().and_then(|w| w.document()) else {
+        return;
+    };
+    let Ok(list) = doc.query_selector_all(selector) else {
+        return;
+    };
     for i in 0..list.length() {
-        if let Some(el) = list.item(i).and_then(|n| n.dyn_into::<web_sys::Element>().ok()) {
+        if let Some(el) = list
+            .item(i)
+            .and_then(|n| n.dyn_into::<web_sys::Element>().ok())
+        {
             f(el);
         }
     }
@@ -74,7 +88,9 @@ pub fn observe(active: RwSignal<String>) {
         let mut i = 0;
         each(".word:not(.lit)", |el| {
             if let Some(html) = el.dyn_ref::<web_sys::HtmlElement>() {
-                let _ = html.style().set_property("--d", &format!("{}ms", (i % 6) * 60));
+                let _ = html
+                    .style()
+                    .set_property("--d", &format!("{}ms", (i % 6) * 60));
             }
             i += 1;
             obs.observe(&el);
@@ -84,5 +100,8 @@ pub fn observe(active: RwSignal<String>) {
         each("main section[id]", |el| obs.observe(&el));
     }
 
-    OBSERVERS.with(|o| o.borrow_mut().extend([reveal, words, sections].into_iter().flatten()));
+    OBSERVERS.with(|o| {
+        o.borrow_mut()
+            .extend([reveal, words, sections].into_iter().flatten())
+    });
 }

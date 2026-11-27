@@ -77,7 +77,7 @@ fn flatten(value: &Value, objects: &mut Vec<Vec<u8>>, width: usize) -> u64 {
         }
         Value::Array(items) => {
             let ids: Vec<u64> = items.iter().map(|v| flatten(v, objects, width)).collect();
-            marker(&mut out, 0xA, ids.len());
+            marker(&mut out, 0xa, ids.len());
             refs(&ids, &mut out);
         }
         Value::Dict(entries) => {
@@ -89,7 +89,7 @@ fn flatten(value: &Value, objects: &mut Vec<Vec<u8>>, width: usize) -> u64 {
                 .iter()
                 .map(|(_, v)| flatten(v, objects, width))
                 .collect();
-            marker(&mut out, 0xD, keys.len());
+            marker(&mut out, 0xd, keys.len());
             refs(&keys, &mut out);
             refs(&values, &mut out);
         }
@@ -102,7 +102,7 @@ fn marker(out: &mut Vec<u8>, kind: u8, count: usize) {
     if count < 15 {
         out.push(kind << 4 | count as u8);
     } else {
-        out.push(kind << 4 | 0xF);
+        out.push(kind << 4 | 0xf);
         out.push(0x13);
         out.extend_from_slice(&(count as u64).to_be_bytes());
     }
@@ -180,10 +180,10 @@ impl Reader<'_> {
     }
 
     fn length(&self, at: usize, low: u8) -> Option<(usize, usize)> {
-        if low != 0xF {
+        if low != 0xf {
             return Some((low as usize, at.checked_add(1)?));
         }
-        let size = 1usize << (self.data.get(at.checked_add(1)?)? & 0xF);
+        let size = 1usize << (self.data.get(at.checked_add(1)?)? & 0xf);
         let from = at.checked_add(2)?;
         Some((
             uint(self.span(from, size)?) as usize,
@@ -207,7 +207,7 @@ impl Reader<'_> {
         self.budget.set(self.budget.get() - 1);
         let at = *self.offsets.get(id)?;
         let byte = *self.data.get(at)?;
-        let (kind, low) = (byte >> 4, byte & 0xF);
+        let (kind, low) = (byte >> 4, byte & 0xf);
         Some(match kind {
             0x0 => match low {
                 0x8 => Value::Bool(false),
@@ -253,7 +253,7 @@ impl Reader<'_> {
                 Value::String(String::from_utf16_lossy(&units))
             }
             0x8 => Value::Int(uint(self.span(at.checked_add(1)?, low as usize + 1)?) as i64),
-            0xA | 0xC => {
+            0xa | 0xc => {
                 let (n, from) = self.length(at, low)?;
                 Value::Array(
                     self.refs(from, n)?
@@ -262,7 +262,7 @@ impl Reader<'_> {
                         .collect::<Option<_>>()?,
                 )
             }
-            0xD => {
+            0xd => {
                 let (n, from) = self.length(at, low)?;
                 let keys = self.refs(from, n)?;
                 let values = self.refs(from.checked_add(n.checked_mul(self.width)?)?, n)?;
@@ -362,7 +362,7 @@ mod tests {
     #[test]
     fn shared_references_cannot_unfold_without_end() {
         // Each array holds its successor twice: 2^32 values if unfolded.
-        let mut objects: Vec<Vec<u8>> = (0..32u8).map(|i| vec![0xA2, i + 1, i + 1]).collect();
+        let mut objects: Vec<Vec<u8>> = (0..32u8).map(|i| vec![0xa2, i + 1, i + 1]).collect();
         objects.push(vec![0x09]);
         let mut data = b"bplist00".to_vec();
         let mut offsets = Vec::new();

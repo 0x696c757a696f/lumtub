@@ -11,11 +11,10 @@ mod imp {
     use std::mem::{size_of, zeroed};
     use std::ptr::null;
     use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
-    use windows_sys::Win32::System::JobObjects::JOB_OBJECT_LIMIT_PRIORITY_CLASS;
     use windows_sys::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, TerminateJobObject,
+        JOB_OBJECT_LIMIT_PRIORITY_CLASS, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JobObjectExtendedLimitInformation, SetInformationJobObject, TerminateJobObject,
     };
     use windows_sys::Win32::System::Threading::{
         BELOW_NORMAL_PRIORITY_CLASS, GetCurrentProcess, OpenProcess,
@@ -133,7 +132,7 @@ mod imp {
     static WATCH: Once = Once::new();
 
     fn trees() -> std::sync::MutexGuard<'static, Option<HashMap<libc::pid_t, Vec<Member>>>> {
-        TREES.lock().unwrap_or_else(|e| e.into_inner())
+        TREES.lock().expect("lock poisoned by a panic")
     }
 
     /// The "job" is the first process's id.

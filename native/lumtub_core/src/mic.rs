@@ -131,7 +131,7 @@ pub fn read_wav(bytes: &[u8]) -> Result<(Vec<i16>, u32), String> {
             let channels = u16::from_le_bytes([bytes[body + 2], bytes[body + 3]]);
             let rate = u32::from_le_bytes(bytes[body + 4..body + 8].try_into().unwrap());
             let bits = u16::from_le_bytes([bytes[body + 14], bytes[body + 15]]);
-            if !(tag == 1 || tag == 0xFFFE) || bits != 16 || channels == 0 || rate == 0 {
+            if !(tag == 1 || tag == 0xfffe) || bits != 16 || channels == 0 || rate == 0 {
                 return Err(format!(
                     "the WAV file is not 16-bit PCM (format {tag}, {bits} bits)"
                 ));
@@ -618,7 +618,7 @@ mod tests {
         assert_eq!(u32::from_le_bytes(file[28..32].try_into().unwrap()), 96000);
         assert_eq!(&file[36..40], b"data");
         assert_eq!(u32::from_le_bytes(file[40..44].try_into().unwrap()), 6);
-        assert_eq!(&file[44..], &[1, 0, 0xFE, 0xFF, 0x2C, 0x01]);
+        assert_eq!(&file[44..], &[1, 0, 0xfe, 0xff, 0x2c, 0x01]);
     }
 
     #[test]

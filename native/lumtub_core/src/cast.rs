@@ -3274,7 +3274,7 @@ mod tests {
         let trak = text_trak("en", Some(&styled), (1920, 1080));
         assert_eq!(picture_size(&trak), (1920, 1080));
         let at = trak.windows(4).position(|w| w == b"tx3g").unwrap() + 4 + 8 + 4 + 2;
-        assert_eq!(&trak[at..at + 4], &0x0000_00ABu32.to_be_bytes());
+        assert_eq!(&trak[at..at + 4], &0x0000_00abu32.to_be_bytes());
         let edges: Vec<u16> = (0..4)
             .map(|i| u16::from_be_bytes([trak[at + 4 + 2 * i], trak[at + 5 + 2 * i]]))
             .collect();
@@ -3512,7 +3512,7 @@ mod tests {
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
             std::fs::write(format!("{dir}/{name}"), &out).unwrap();
-            assert!(out.len() > 100_000 && out.starts_with(&[0x1A, 0x45, 0xDF, 0xA3]));
+            assert!(out.len() > 100_000 && out.starts_with(&[0x1a, 0x45, 0xdf, 0xa3]));
         }
         // Replies cut short every 300 kB, and an address refused until renewed.
         let reference = std::fs::read(format!("{dir}/out.mp4")).unwrap();

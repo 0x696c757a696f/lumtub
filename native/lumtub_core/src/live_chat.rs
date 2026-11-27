@@ -166,7 +166,7 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
 /// yellow 5, orange 10, magenta 30 and red an hour.
 fn ticker_seconds(argb: u32) -> u32 {
     let [r, g, b] =
-        [(argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF].map(|c| c as f32 / 255.0);
+        [(argb >> 16) & 0xff, (argb >> 8) & 0xff, argb & 0xff].map(|c| c as f32 / 255.0);
     let (max, min) = (r.max(g).max(b), r.min(g).min(b));
     if max - min < 0.1 {
         return 120;
@@ -715,16 +715,16 @@ mod tests {
         );
         assert_eq!(
             (sticker.color, sticker.ticker_seconds),
-            (Some(0xFF1DE9B6), Some(120))
+            (Some(0xff1de9b6), Some(120))
         );
         let tiers = [
-            0xFF1E88E5u32,
-            0xFF00E5FF,
-            0xFF1DE9B6,
-            0xFFFFCA28,
-            0xFFF57C00,
-            0xFFE91E63,
-            0xFFE62117,
+            0xff1e88e5u32,
+            0xff00e5ff,
+            0xff1de9b6,
+            0xffffca28,
+            0xfff57c00,
+            0xffe91e63,
+            0xffe62117,
         ]
         .map(ticker_seconds);
         assert_eq!(tiers, [0, 0, 120, 300, 600, 1800, 3600]);

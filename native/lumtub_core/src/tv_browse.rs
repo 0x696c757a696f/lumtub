@@ -327,7 +327,11 @@ fn tiles<'a>(
                 tiles(value, shorts, shelf, out);
             }
         }
-        Value::Array(list) => list.iter().for_each(|v| tiles(v, shorts, shelf, out)),
+        Value::Array(list) => {
+            for value in list {
+                tiles(value, shorts, shelf, out);
+            }
+        }
         _ => {}
     }
 }

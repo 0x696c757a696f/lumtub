@@ -1,0 +1,5 @@
+max_width = 100
+# Unstable options: stable rustfmt ignores these; Checks runs nightly rustfmt with them.
+imports_granularity = "Module"
+hex_literal_case = "Lower"
+format_macro_matchers = true

@@ -110,7 +110,7 @@ impl Web {
     fn client(&self, proxy: &Option<String>) -> Result<reqwest::Client, String> {
         let tls = crate::tls::current();
         let key = (proxy.clone(), tls);
-        let mut clients = self.clients.lock().unwrap_or_else(|e| e.into_inner());
+        let mut clients = self.clients.lock().expect("lock poisoned by a panic");
         // A new network: the pools hold connections over the old route.
         let network = crate::netwatch::generation();
         if self.network.swap(network, Ordering::AcqRel) != network {

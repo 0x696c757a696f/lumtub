@@ -70,7 +70,7 @@ CREATE INDEX IF NOT EXISTS note_video ON note(video, at);
 static BUSY: Mutex<()> = Mutex::new(());
 
 fn lock() -> MutexGuard<'static, ()> {
-    BUSY.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    BUSY.lock().expect("lock poisoned by a panic")
 }
 
 #[derive(Debug)]

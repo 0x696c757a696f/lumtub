@@ -295,7 +295,7 @@ fn client(proxy: Option<String>) -> reqwest::Client {
 
 #[test]
 fn direct_http_and_socks5_connections_agree_on_the_hybrid() {
-    let _turn = LOCALHOST.lock().unwrap_or_else(|e| e.into_inner());
+    let _turn = LOCALHOST.lock().expect("lock poisoned by a panic");
     let server = server(aws_lc_rs::DEFAULT_KX_GROUPS.to_vec(), TLS13_AND_12);
     let url = format!("https://localhost:{}/", server.port());
     let routes = [

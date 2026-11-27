@@ -59,7 +59,7 @@ static ACCOUNT: LazyLock<Mutex<Account>> = LazyLock::new(|| {
 static ATTEMPT: AtomicU64 = AtomicU64::new(0);
 
 fn account() -> std::sync::MutexGuard<'static, Account> {
-    ACCOUNT.lock().unwrap_or_else(|e| e.into_inner())
+    ACCOUNT.lock().expect("lock poisoned by a panic")
 }
 
 /// Where requests go: YouTube, or a test server.

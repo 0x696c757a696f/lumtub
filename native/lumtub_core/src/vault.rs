@@ -226,7 +226,7 @@ impl Sealer {
         // One at a time: two first seals at once would each make a key and
         // the second would replace the first.
         static MAKING: std::sync::Mutex<()> = std::sync::Mutex::new(());
-        let _making = MAKING.lock().unwrap_or_else(|e| e.into_inner());
+        let _making = MAKING.lock().expect("lock poisoned by a panic");
         // A keyring holds one key for the app: one already there is used
         // again, so that files sealed earlier still open.
         for &mode in keys::modes(presence) {
@@ -562,7 +562,7 @@ mod keys {
     const ALLOW_DECRYPT: u32 = 1;
     const ALLOW_SIGNING: u32 = 2;
     /// HRESULT_FROM_WIN32(ERROR_CANCELLED).
-    const ERROR_CANCELLED: HRESULT = 0x800704C7_u32 as _;
+    const ERROR_CANCELLED: HRESULT = 0x800704c7_u32 as _;
 
     pub fn modes(presence: bool) -> &'static [u8] {
         if presence {
@@ -958,7 +958,7 @@ mod keys {
     const ASK_AGAIN: Duration = Duration::from_secs(60);
 
     fn down() -> Option<Down> {
-        let mut down = DOWN.lock().unwrap_or_else(|e| e.into_inner());
+        let mut down = DOWN.lock().expect("lock poisoned by a panic");
         match *down {
             Some((since, why)) if since.elapsed() < ASK_AGAIN => Some(why),
             _ => {
@@ -969,7 +969,7 @@ mod keys {
     }
 
     fn mark(why: Down) {
-        *DOWN.lock().unwrap_or_else(|e| e.into_inner()) = Some((Instant::now(), why));
+        *DOWN.lock().expect("lock poisoned by a panic") = Some((Instant::now(), why));
     }
 
     /// True when the last attempt found no Secret Service at all.

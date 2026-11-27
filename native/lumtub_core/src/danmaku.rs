@@ -88,14 +88,14 @@ pub fn text_width(text: &str, size: f64) -> f64 {
     text.chars()
         .map(|c| {
             let code = c as u32;
-            let wide = (0x1100..=0x115F).contains(&code)
-                || (0x2E80..=0xA4CF).contains(&code)
-                || (0xAC00..=0xD7A3).contains(&code)
-                || (0xF900..=0xFAFF).contains(&code)
-                || (0xFE30..=0xFE4F).contains(&code)
-                || (0xFF00..=0xFF60).contains(&code)
-                || (0xFFE0..=0xFFE6).contains(&code)
-                || code >= 0x1F300;
+            let wide = (0x1100..=0x115f).contains(&code)
+                || (0x2e80..=0xa4cf).contains(&code)
+                || (0xac00..=0xd7a3).contains(&code)
+                || (0xf900..=0xfaff).contains(&code)
+                || (0xfe30..=0xfe4f).contains(&code)
+                || (0xff00..=0xff60).contains(&code)
+                || (0xffe0..=0xffe6).contains(&code)
+                || code >= 0x1f300;
             if wide {
                 size
             } else if c == ' ' {

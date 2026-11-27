@@ -97,7 +97,7 @@ fn run_here(source: &str) -> (String, Option<String>) {
                 .map(|p| p.0)
                 .collect::<Vec<_>>()
                 .join(" ");
-            let mut out = sink.lock().unwrap_or_else(|e| e.into_inner());
+            let mut out = sink.lock().expect("lock poisoned by a panic");
             out.push_str(&line);
             out.push('\n');
         })
@@ -111,7 +111,7 @@ fn run_here(source: &str) -> (String, Option<String>) {
             .catch(&ctx)
             .map_err(|e| e.to_string())
     });
-    let out = std::mem::take(&mut *printed.lock().unwrap_or_else(|e| e.into_inner()));
+    let out = std::mem::take(&mut *printed.lock().expect("lock poisoned by a panic"));
     match result {
         Ok(()) => (out, None),
         Err(_) if stopped.load(Ordering::Relaxed) => (
@@ -183,7 +183,7 @@ fn solve_on_thread(input: SolveInput) -> Result<Value, String> {
     let mut job = SolveJob { input, reply };
     loop {
         let (thread, waiting) = {
-            let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
+            let mut solver = SOLVER.lock().expect("lock poisoned by a panic");
             let Some(thread) = solver.clone() else {
                 *solver = Some(start_solver(job)?);
                 break;
@@ -240,7 +240,7 @@ fn solver_thread(jobs: mpsc::Receiver<SolveJob>) {
             Err(RecvTimeoutError::Timeout) => {
                 // Jobs sent after this point find the sender gone and start
                 // a new thread.
-                let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
+                let mut solver = SOLVER.lock().expect("lock poisoned by a panic");
                 match jobs.try_recv() {
                     Ok(job) => {
                         drop(solver);

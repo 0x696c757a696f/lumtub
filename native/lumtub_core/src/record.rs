@@ -511,11 +511,11 @@ fn mp4<R: Read + Seek>(file: &mut R, start: &[u8], size: u64) -> Result<Option<U
 }
 
 const SEGMENT: u32 = 0x1853_8067;
-const CLUSTER: u32 = 0x1F43_B675;
-const INFO: u32 = 0x1549_A966;
-const TRACKS: u32 = 0x1654_AE6B;
-const CUES: u32 = 0x1C53_BB6B;
-const TIMESTAMP: u32 = 0xE7;
+const CLUSTER: u32 = 0x1f43_b675;
+const INFO: u32 = 0x1549_a966;
+const TRACKS: u32 = 0x1654_ae6b;
+const CUES: u32 = 0x1c53_bb6b;
+const TIMESTAMP: u32 = 0xe7;
 /// The most clusters given Cues, each a CuePoint of 70 bytes.
 const MAX_CLUSTERS: usize = 1 << 20;
 
@@ -553,7 +553,7 @@ fn webm<R: Read + Seek>(
                 let entry = element(start, e.data).ok_or("no track")?;
                 number = children(start, entry.data, entry.end.min(start.len()))
                     .into_iter()
-                    .find(|c| c.id == 0xD7)
+                    .find(|c| c.id == 0xd7)
                     .and_then(|c| start.get(c.data..c.end))
                     .map(|b| b.iter().fold(0u64, |n, &x| n << 8 | x as u64));
             }
@@ -610,20 +610,20 @@ fn webm<R: Read + Seek>(
     let mut cues = Vec::with_capacity(cues_size);
     for &(at, time) in &clusters {
         let mut positions = Vec::new();
-        ebml(&mut positions, 0xF7, &number.to_be_bytes());
+        ebml(&mut positions, 0xf7, &number.to_be_bytes());
         ebml(
             &mut positions,
-            0xF1,
+            0xf1,
             &((before + cues_size) as u64 + at - from).to_be_bytes(),
         );
         let mut point = Vec::new();
-        ebml(&mut point, 0xB3, &time.to_be_bytes());
-        ebml(&mut point, 0xB7, &positions);
-        ebml(&mut cues, 0xBB, &point);
+        ebml(&mut point, 0xb3, &time.to_be_bytes());
+        ebml(&mut point, 0xb7, &positions);
+        ebml(&mut cues, 0xbb, &point);
     }
     let mut head = start[..ebml_head.end].to_vec();
     head.extend_from_slice(&[
-        0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     ]);
     head.extend_from_slice(info);
     head.extend_from_slice(tracks);

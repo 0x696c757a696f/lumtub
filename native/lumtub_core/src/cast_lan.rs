@@ -37,7 +37,7 @@ pub fn cast_message(bytes: &[u8]) -> Result<CastMessage, &'static str> {
             if shift > 63 {
                 return Err("bad varint");
             }
-            value |= u64::from(b & 0x7F) << shift;
+            value |= u64::from(b & 0x7f) << shift;
             if b & 0x80 == 0 {
                 return Ok(value);
             }
@@ -196,7 +196,7 @@ fn skip_name(packet: &[u8], mut offset: usize) -> Option<usize> {
         if length == 0 {
             return Some(offset + 1);
         }
-        if length & 0xC0 == 0xC0 {
+        if length & 0xc0 == 0xc0 {
             return Some(offset + 2);
         }
         offset += usize::from(length) + 1;
@@ -213,9 +213,9 @@ fn read_name(packet: &[u8], mut offset: usize) -> Option<(String, usize)> {
         if length == 0 {
             return Some((labels.join("."), after.unwrap_or(offset + 1)));
         }
-        if length & 0xC0 == 0xC0 {
+        if length & 0xc0 == 0xc0 {
             after.get_or_insert(offset + 2);
-            offset = (usize::from(length & 0x3F) << 8) | usize::from(*packet.get(offset + 1)?);
+            offset = (usize::from(length & 0x3f) << 8) | usize::from(*packet.get(offset + 1)?);
             hops += 1;
             if hops > 20 {
                 return None;
@@ -485,8 +485,8 @@ mod tests {
     fn field(out: &mut Vec<u8>, number: u8, value: &str) {
         out.push((number << 3) | 2);
         let mut length = value.len();
-        while length > 0x7F {
-            out.push((length as u8 & 0x7F) | 0x80);
+        while length > 0x7f {
+            out.push((length as u8 & 0x7f) | 0x80);
             length >>= 7;
         }
         out.push(length as u8);
@@ -521,18 +521,18 @@ mod tests {
         assert_eq!(messages.len(), 2);
         assert_eq!(messages[1].payload, long);
         assert_eq!(used, stream.len() - 5);
-        assert!(cast_frames(&[0xFF, 0xFF, 0xFF, 0xFF]).is_err());
+        assert!(cast_frames(&[0xff, 0xff, 0xff, 0xff]).is_err());
     }
 
     #[test]
     fn refuses_bad_lengths() {
         let negative = [
-            0x0A, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x41,
+            0x0a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x41,
         ];
         assert!(cast_message(&negative).is_err());
-        assert!(cast_message(&[0x0A, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x41]).is_err());
+        assert!(cast_message(&[0x0a, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x41]).is_err());
         assert!(cast_message(&[0x09, 1, 2]).is_err());
-        assert!(cast_message(&[0x0B]).is_err());
+        assert!(cast_message(&[0x0b]).is_err());
     }
 
     fn mdns_packet() -> Vec<u8> {
@@ -547,12 +547,12 @@ mod tests {
         out.extend_from_slice(&[0, 12, 0, 1, 0, 0, 0, 120]);
         let mut ptr_data = vec![14];
         ptr_data.extend_from_slice(b"Chromecast-abc");
-        ptr_data.extend_from_slice(&[0xC0, 12]);
+        ptr_data.extend_from_slice(&[0xc0, 12]);
         out.extend_from_slice(&[0, ptr_data.len() as u8]);
         out.extend_from_slice(&ptr_data);
         let mut instance = vec![14];
         instance.extend_from_slice(b"Chromecast-abc");
-        instance.extend_from_slice(&[0xC0, 12]);
+        instance.extend_from_slice(&[0xc0, 12]);
         out.extend_from_slice(&instance);
         let mut target = vec![6];
         target.extend_from_slice(b"abc123");
@@ -574,7 +574,7 @@ mod tests {
             0,
             0,
             0,
-            0x1F,
+            0x1f,
             0x49,
         ]);
         out.extend_from_slice(&target);
@@ -624,7 +624,7 @@ mod tests {
         assert_eq!(cut.ptr.len(), 1);
         assert_eq!(mdns_records(&[1, 2, 3]), MdnsRecords::default());
         // A name pointing at itself.
-        let mut looping = vec![0, 0, 0x84, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xC0, 12];
+        let mut looping = vec![0, 0, 0x84, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xc0, 12];
         looping.extend_from_slice(&[0, 12, 0, 1, 0, 0, 0, 0, 0, 0]);
         assert_eq!(mdns_records(&looping), MdnsRecords::default());
     }
@@ -680,7 +680,7 @@ mod tests {
 
     #[test]
     fn random_input_never_panics() {
-        let mut seed: u64 = 0x2545_F491_4F6C_DD1D;
+        let mut seed: u64 = 0x2545_f491_4f6c_dd1d;
         let mut next = || {
             seed ^= seed << 13;
             seed ^= seed >> 7;

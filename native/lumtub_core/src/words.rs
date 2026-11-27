@@ -535,7 +535,7 @@ fn hiragana(katakana: &str) -> String {
     katakana
         .chars()
         .map(|c| match c as u32 {
-            code @ 0x30A1..=0x30F6 => char::from_u32(code - 0x60).unwrap_or(c),
+            code @ 0x30a1..=0x30f6 => char::from_u32(code - 0x60).unwrap_or(c),
             _ => c,
         })
         .collect()

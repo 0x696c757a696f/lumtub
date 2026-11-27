@@ -32,7 +32,7 @@ pub fn generation() -> u64 {
 /// The log lines since the last call.
 pub fn take_log() -> Vec<String> {
     LOG.lock()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .drain(..)
         .collect()
 }
@@ -104,7 +104,7 @@ fn start() {
                 }
                 GENERATION.fetch_add(1, Ordering::AcqRel);
                 crate::http::network_changed();
-                let mut log = LOG.lock().unwrap_or_else(|e| e.into_inner());
+                let mut log = LOG.lock().expect("lock poisoned by a panic");
                 if log.len() >= 20 {
                     log.pop_front();
                 }

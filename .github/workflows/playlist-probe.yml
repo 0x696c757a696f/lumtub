@@ -1,0 +1,29 @@
+name: Playlist probe
+on:
+  push:
+    branches: [claude/project-thread-ya96ji]
+    paths: [.github/workflows/playlist-probe.yml, probe/**]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install Flutter
+        run: |
+          version=$(tr -d '[:space:]' < .flutter-version)
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/flutter.tar.xz" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$version-stable.tar.xz"
+          tar -xJf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: checks-linux
+      - run: cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib
+      - run: |
+          flutter pub get
+          cp probe/live_playlist_test.dart test/zz_live_playlist_test.dart
+          LUMTUB_CORE_DLL=$PWD/native/lumtub_core/target/release/liblumtub_core.so flutter test test/zz_live_playlist_test.dart 2>&1 | grep -E "PROBE|listing|Error|error|passed|failed" | head -80

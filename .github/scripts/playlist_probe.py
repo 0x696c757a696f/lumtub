@@ -28,7 +28,7 @@ ids = sys.argv[1:]
 search = call('search', {'query': 'catholic playlist', 'params': 'EgIQAw=='})
 text = json.dumps(search)
 import re
-ids += list(dict.fromkeys(re.findall(r'"(PL[0-9A-Za-z_-]{16,40})"', text)))[:2]
+ids += [i for i in dict.fromkeys(re.findall(r'"(PL[0-9A-Za-z_-]{16,40})"', text)) if '_' not in i[:12]][:1]
 for pid in ids:
     print('=' * 20, pid)
     r = call('browse', {'browseId': 'VL' + pid})
@@ -40,5 +40,8 @@ for pid in ids:
         print(n, p)
     with open(f'probe-{pid}.json', 'w') as f:
         json.dump(r, f)
-    tok = re.findall(r'"token":"([^"]+)"', json.dumps(r))
-    print('tokens', len(tok))
+    sec = r['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents']
+    items = sec[0]['itemSectionRenderer']['contents']
+    print('FIRST', json.dumps(items[0]))
+    print('LASTITEM', json.dumps(items[-1]))
+    print('LASTSEC', json.dumps(sec[-1]))

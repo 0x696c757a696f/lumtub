@@ -9,7 +9,8 @@ import 'models.dart';
 import 'native_core.dart';
 import 'video_repository.dart';
 
-/// A channel tab in an order YouTube does not offer (最长, 最短): read
+/// A channel tab in an order YouTube does not offer, Longest or Shortest
+/// (最长, 最短): read
 /// newest first, then ordered by the core (native/lumtub_core/src/
 /// channel_lengths.rs), which keeps what was read in [folder]. A tab read
 /// in the last [fresh] is read only as far as the first videos it already

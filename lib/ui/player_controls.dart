@@ -482,7 +482,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     }
   }
 
-  /// A middle click: what 鼠标中键 is set to.
+  /// A middle click: what the middle-click setting (鼠标中键) asks for.
   void _onTertiaryTapUp(TapUpDetails details) {
     if (_locked) return;
     switch (_c.preferences.middleClick) {

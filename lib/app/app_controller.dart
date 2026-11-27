@@ -279,7 +279,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   ChannelSort channelSort = ChannelSort.latest;
   /// The length of video the open channel tab shows.
   SearchDuration channelLength = SearchDuration.any;
-  /// The reading behind a 最长 or 最短 order, for its progress.
+  /// The reading behind a Longest or Shortest order (最长, 最短), for its
+  /// progress.
   ChannelLengths? channelLengths;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);

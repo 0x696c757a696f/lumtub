@@ -1,4 +1,4 @@
-//! 按时长排序 a channel tab: YouTube has no such order, so the app reads
+//! Sorting a channel tab by length (按时长排序): YouTube has no such order, so the app reads
 //! the tab newest first and the videos are ordered here. What was read is
 //! kept in the cache folder, one file per channel tab, so the next time
 //! only the uploads since then are read: the newest-first listing stops at
@@ -313,9 +313,12 @@ fn lines(items: Vec<Box<RawValue>>) -> Vec<String> {
 /// does not parse.
 ///
 /// # Safety
-/// [json] points at [len] bytes, or is null.
+/// [json] points at [len] readable bytes of UTF-8, or is null; it is only
+/// read during the call. The answer is freed with `lumtub_string_free`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_channel_lengths(json: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: the caller passes `len` readable bytes at `json`, or null, as
+    // the `# Safety` section requires; `text` checks the UTF-8.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, len) }) else {
         return std::ptr::null_mut();
     };
@@ -379,14 +382,17 @@ mod tests {
     }
 
     fn ask(json: &str) -> Option<String> {
+        // SAFETY: `json` is a live `&str`, so its pointer and length are valid.
         let out = unsafe { lumtub_channel_lengths(json.as_ptr(), json.len()) };
         if out.is_null() {
             return None;
         }
+        // SAFETY: `out` is a non-null, NUL-terminated string the export made.
         let text = unsafe { std::ffi::CStr::from_ptr(out) }
             .to_str()
             .unwrap()
             .to_owned();
+        // SAFETY: `out` came from the export and is freed once, after its last use.
         unsafe { crate::taste::lumtub_string_free(out) };
         Some(text)
     }
@@ -438,7 +444,15 @@ mod tests {
         let dir = temp();
         let d = dir.to_str().unwrap();
         let first: Vec<_> = (0..5).map(|i| item(&id(i), Some(i as u64 * 10))).collect();
-        let out = update(d, "UCabc", "videos", 100, true, first, Order::Longest);
+        let out = update(
+            d,
+            "UCabc",
+            "videos",
+            100,
+            /* whole= */ true,
+            first,
+            Order::Longest,
+        );
         assert_eq!(ids(&out), vec![id(4), id(3), id(2), id(1), id(0)]);
         let k = known(d, "UCabc", "videos");
         assert_eq!(k.saved, 100);
@@ -449,7 +463,7 @@ mod tests {
             "UCabc",
             "videos",
             200,
-            false,
+            /* whole= */ false,
             vec![item(&id(9), Some(25))],
             Order::Shortest,
         );
@@ -461,7 +475,7 @@ mod tests {
             "UCabc",
             "videos",
             300,
-            true,
+            /* whole= */ true,
             vec![item(&id(9), Some(25)), item(&id(1), Some(10))],
             Order::Longest,
         );
@@ -493,7 +507,7 @@ mod tests {
             "../evil",
             "videos",
             1,
-            true,
+            /* whole= */ true,
             vec![item(&id(1), Some(1)), item(&id(2), Some(2))],
             Order::Longest,
         );
@@ -513,7 +527,7 @@ mod tests {
             "UCabc",
             "videos",
             1,
-            true,
+            /* whole= */ true,
             vec![big, bad, odd, item(&id(4), Some(0))],
             Order::Longest,
         );
@@ -532,7 +546,7 @@ mod tests {
             "UCabc",
             "videos",
             5,
-            false,
+            /* whole= */ false,
             vec![item(&id(1), Some(1))],
             Order::Longest,
         );
@@ -554,7 +568,7 @@ mod tests {
             "UCnew",
             "live",
             1,
-            true,
+            /* whole= */ true,
             vec![item(&id(1), Some(1))],
             Order::Longest,
         );
@@ -574,7 +588,7 @@ mod tests {
             .map(|i| Entry::of(item(&id(i), Some(i as u64))).unwrap())
             .collect();
         let start = std::time::Instant::now();
-        let merged = merge(fresh, saved, false);
+        let merged = merge(fresh, saved, /* whole= */ false);
         let out = ordered(merged, Order::Longest);
         assert_eq!(out.len(), MAX_ITEMS);
         assert!(start.elapsed().as_millis() < 2_000);

@@ -10,7 +10,8 @@ import 'player_settings.dart';
 class CacheManager {
   static const managedFolders = {'thumbnails', 'temp', 'yt-dlp', 'mpv', channelsFolder};
 
-  /// Channel tabs read for 最长 and 最短 (channel_lengths.dart).
+  /// Channel tabs read for the Longest and Shortest orders (最长, 最短), see
+  /// channel_lengths.dart.
   static const channelsFolder = 'channels';
 
   /// The folders yt-dlp downloads and recordings use while they run.

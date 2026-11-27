@@ -9,10 +9,17 @@ the run's Dart port; its exit code through ``lumtub_py_exit``.
 import os
 import sys
 
+# The app's settings (LUMTUB_CORE, SSL_CERT_FILE, and each run's TLS
+# settings), which the core puts here before this file runs. They stay out
+# of os.environ: changing the process environment while another thread of
+# the app reads it is undefined behavior in C.
+SETTINGS = globals().get("SETTINGS") or {}
+_STARTUP = dict(SETTINGS)
+
 # Python finds its compiled modules (Frameworks/*.framework, named in .fwork
 # files) beside the executable; embedded, it is told which that is.
-if os.environ.get("LUMTUB_EXECUTABLE"):
-    sys.executable = os.environ["LUMTUB_EXECUTABLE"]
+if SETTINGS.get("LUMTUB_EXECUTABLE"):
+    sys.executable = SETTINGS["LUMTUB_EXECUTABLE"]
 
 import ctypes  # noqa: E402
 import io  # noqa: E402
@@ -20,7 +27,7 @@ import json  # noqa: E402
 import threading  # noqa: E402
 import zipfile  # noqa: E402
 
-_core = ctypes.CDLL(os.environ["LUMTUB_CORE"])
+_core = ctypes.CDLL(SETTINGS["LUMTUB_CORE"])
 _core.lumtub_py_emit.argtypes = (ctypes.c_int64, ctypes.c_int32, ctypes.c_char_p, ctypes.c_size_t)
 _core.lumtub_py_emit.restype = None
 _core.lumtub_py_exit.argtypes = (ctypes.c_int64, ctypes.c_int32)
@@ -144,7 +151,7 @@ def _challenges():
     """Registers Lumtub's challenge solver (LUMTUB_JSC, lumtub_jsc.py) once,
     for every run: through --plugin-dirs a second run would register it
     again, which yt-dlp refuses."""
-    path = os.environ.get("LUMTUB_JSC")
+    path = SETTINGS.get("LUMTUB_JSC")
     if not path or not os.path.exists(path):
         return
     try:
@@ -160,10 +167,30 @@ def _challenges():
         traceback.print_exc()
 
 
+def _bundled_roots():
+    """yt-dlp's HTTPS also trusts the certificate list Python carries
+    (SSL_CERT_FILE): iOS gives OpenSSL none of the system's. Loaded before
+    the TLS plugin, which leaves it out when Lumtub is set to trust only
+    Mozilla's or Google's list."""
+    path = SETTINGS.get("SSL_CERT_FILE")
+    if not path:
+        return
+    from yt_dlp.networking import _helper
+
+    own = _helper.ssl_load_certs
+
+    def ssl_load_certs(context, use_certifi=True):
+        own(context, use_certifi)
+        if os.path.isfile(path):
+            context.load_verify_locations(cafile=path)
+
+    _helper.ssl_load_certs = ssl_load_certs
+
+
 def _tls(path):
     """Loads Lumtub's TLS plugin (lumtub_tls.py) once: yt-dlp's HTTPS then
     follows the app's certificate and post-quantum settings, which each
-    run passes in its environment."""
+    run passes in its settings."""
     if not path or "lumtub_tls" in sys.modules or not os.path.exists(path):
         return
     try:
@@ -188,14 +215,12 @@ def _version_of(app):
 
 
 def _main(run, app, argv, environment=None):
-    global _loaded
+    global _loaded, SETTINGS
     _local.run = run
-    # The settings in force for this run; every run sets the same names.
-    # Only a change is written: setting the process environment while other
-    # threads read it is not safe, and the values rarely change.
-    for name, value in (environment or {}).items():
-        if os.environ.get(name) != value:
-            os.environ[name] = value
+    # The settings in force for this run: the app's, then the run's own.
+    # A new dict replaces the old in one step, so a reader on another
+    # run's thread sees either the old settings or the new, never half.
+    SETTINGS = {**_STARTUP, **(environment or {})}
     code = 0
     try:
         if _loaded not in (None, app) and argv == ["--version"]:
@@ -208,9 +233,10 @@ def _main(run, app, argv, environment=None):
                     sys.path.insert(0, app)
                     import yt_dlp
 
+                    _bundled_roots()
                     _challenges()
                     _loaded = app
-                _tls(os.environ.get("LUMTUB_TLS_PLUGIN"))
+                _tls(SETTINGS.get("LUMTUB_TLS_PLUGIN"))
             import yt_dlp
 
             yt_dlp.main(argv)

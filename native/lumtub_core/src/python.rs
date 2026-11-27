@@ -29,8 +29,10 @@ pub struct Config {
     pub home: String,
     /// Where a failure to start is written for the core to read.
     pub temporary: String,
-    /// Set in the environment before Python starts (LUMTUB_CORE,
-    /// SSL_CERT_FILE…).
+    /// Settings the runner and the plugins read (LUMTUB_CORE,
+    /// SSL_CERT_FILE…), handed to Python as the runner's `SETTINGS`. The
+    /// process environment is never changed: another thread may be
+    /// reading it.
     #[serde(default)]
     pub environment: HashMap<String, String>,
 }
@@ -200,24 +202,12 @@ unsafe fn initialize_configured(
 }
 
 unsafe fn start_python(config: &Config) -> Result<Api, String> {
-    // The app's own settings (LUMTUB_CORE, SSL_CERT_FILE…) are read from
-    // the environment by the runner and by OpenSSL, so they go there, once:
-    // Python starts only on the first run.
-    for (name, value) in &config.environment {
-        // SAFETY: this runs once, under the STATE lock, before Python
-        // starts. Rust code reading the environment takes std's own lock;
-        // C code on another thread calling getenv at this moment is not
-        // excluded, which is why the variables are few and set only once.
-        unsafe { std::env::set_var(name, value) };
-    }
     let path = CString::new(config.library.as_str()).map_err(|e| e.to_string())?;
     // SAFETY: `path` ends in NUL; the handle is checked for null below.
     let library = unsafe { libc::dlopen(path.as_ptr(), libc::RTLD_NOW | libc::RTLD_GLOBAL) };
     if library.is_null() {
         return Err(format!("Could not load Python: {}", dl_error()));
     }
-    // SAFETY: dlsym finds `Py_InitializeEx`, whose C signature is `void (int)`.
-    let initialize: unsafe extern "C" fn(c_int) = unsafe { symbol(library, "Py_InitializeEx")? };
     let is_initialized: unsafe extern "C" fn() -> c_int =
         // SAFETY: dlsym finds `Py_IsInitialized`, whose C signature is `int (void)`.
         unsafe { symbol(library, "Py_IsInitialized")? };
@@ -237,43 +227,20 @@ unsafe fn start_python(config: &Config) -> Result<Api, String> {
         release,
     };
     // SAFETY: `library` is a live handle and this function's caller holds the STATE lock.
-    match unsafe { initialize_configured(library, config) } {
-        Some(started) => started?,
-        None => {
-            // An older Python reads its settings from the environment.
-            let (strings, _) = settings(config);
-            for (name, value) in [
-                ("PYTHONHOME", strings[0].1),
-                ("PYTHONUTF8", "1"),
-                ("PYTHONIOENCODING", "utf-8"),
-                ("PYTHONDONTWRITEBYTECODE", "1"),
-                ("PYTHONNOUSERSITE", "1"),
-                ("PYTHONUNBUFFERED", "1"),
-            ] {
-                // SAFETY: `start_python` runs once, under the STATE lock, before Python starts.
-                unsafe { std::env::set_var(name, value) };
-            }
-            // Text is UTF-8 whatever the locale says.
-            // SAFETY: dlsym finds `Py_UTF8Mode`, a Python global `int`.
-            if let Ok(utf8) = unsafe { symbol::<*mut c_int>(library, "Py_UTF8Mode") } {
-                // SAFETY: `utf8` points at Python's `Py_UTF8Mode` int, which is writable before
-                // initialization.
-                unsafe { *utf8 = 1 };
-            }
-            // 0: Python leaves the app's signal handlers alone.
-            // SAFETY: `initialize` is `Py_InitializeEx`, called once here, before any other Python
-            // call.
-            unsafe { initialize(0) };
-        }
-    }
+    let Some(started) = (unsafe { initialize_configured(library, config) }) else {
+        return Err("This Python is older than 3.14, which Lumtub needs".into());
+    };
+    started?;
     // SAFETY: `is_initialized` is `Py_IsInitialized`, which may be called at any time.
     if unsafe { is_initialized() } == 0 {
         return Err("Python did not start".into());
     }
     let error_file = format!("{}/python-error.txt", config.temporary);
     let _ = std::fs::remove_file(&error_file);
+    let settings_json = serde_json::to_string(&config.environment).map_err(|e| e.to_string())?;
     let bootstrap = format!(
-        "try:\n    import sys, types\n    _m = types.ModuleType('_lumtub_runner')\n    exec(compile({}, 'lumtub_runner', 'exec'), _m.__dict__)\n    sys.modules['_lumtub_runner'] = _m\n    del _m\nexcept BaseException:\n    import traceback\n    with open({}, 'w') as _f:\n        _f.write(traceback.format_exc())\n    raise\n",
+        "try:\n    import json, sys, types\n    _m = types.ModuleType('_lumtub_runner')\n    _m.SETTINGS = json.loads({})\n    exec(compile({}, 'lumtub_runner', 'exec'), _m.__dict__)\n    sys.modules['_lumtub_runner'] = _m\n    del _m\nexcept BaseException:\n    import traceback\n    with open({}, 'w') as _f:\n        _f.write(traceback.format_exc())\n    raise\n",
+        literal(&settings_json),
         literal(RUNNER),
         literal(&error_file)
     );

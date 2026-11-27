@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui show Codec, Image, ImmutableBuffer, Picture, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
@@ -481,7 +482,7 @@ class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
     final inner = image.obtainKey(configuration);
     if (inner is SynchronousFuture<Object>) {
       Object? found;
-      inner.then((key) => found = key);
+      unawaited(inner.then((key) => found = key));
       return SynchronousFuture(keyOf(found!));
     }
     return inner.then(keyOf);
@@ -598,7 +599,7 @@ class _Nothing extends CustomPainter {
 
 /// A box drawn as [surface] (or nothing when null) round [child].
 class SkinBox extends StatelessWidget {
-  const SkinBox({super.key, required this.surface, this.radius = 0, this.padding, required this.child});
+  const SkinBox({super.key, required this.surface, required this.child, this.radius = 0, this.padding});
   final SkinSurface? surface;
   final double radius;
   final EdgeInsetsGeometry? padding;

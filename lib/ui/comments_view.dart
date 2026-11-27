@@ -267,7 +267,7 @@ class _CommentsSectionState extends State<CommentsSection> {
                 selected: {loader.newest},
                 onSelectionChanged: (value) {
                   Haptics.select();
-                  loader.setNewest(value.first);
+                  unawaited(loader.setNewest(value.first));
                 },
               );
               final title = Text(loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);

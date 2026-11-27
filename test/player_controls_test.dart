@@ -110,6 +110,11 @@ class FakePlayer implements Player {
     _volume.add(volume);
   }
 
+  /// Ends the streams once a test is over.
+  Future<void> close() async {
+    await Future.wait([_playing.close(), _completed.close(), _position.close(), _volume.close(), _rate.close()]);
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -126,6 +131,8 @@ void main() {
     controller.player = player;
     controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
+
+  tearDown(() => player.close());
 
   Future<void> pump(WidgetTester tester) async {
     tester.view.physicalSize = const Size(960, 540);

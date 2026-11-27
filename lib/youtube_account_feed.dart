@@ -49,7 +49,7 @@ class YoutubeAccountFeed {
       if (answer.status != 200) throw StateError('YouTube answered ${answer.status} for $browseId');
       final data = await read(answer.body);
       if (data == null) throw StateError('YouTube sent a page that is not JSON for $browseId');
-      for (final entry in (data['entries'] as List? ?? const []).whereType<Map>()) {
+      for (final entry in (data['entries'] as List<dynamic>? ?? const []).whereType<Map<dynamic, dynamic>>()) {
         final id = '${entry['id'] ?? ''}';
         final day = entry.remove('shelf');
         if (!seen.add(id)) continue;

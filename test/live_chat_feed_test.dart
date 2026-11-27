@@ -80,7 +80,7 @@ void main() {
           ]),
         _ => throw StateError('unexpected ${request.body}'),
       };
-      if (endpoint != 'next') expect(body['context']['client']['visitorData'], 'v1');
+      if (endpoint != 'next') expect((((body['context'] as Map<String, dynamic>)['client']) as Map<String, dynamic>)['visitorData'], 'v1');
       return http.Response(jsonEncode(answer), 200);
     });
     final batches = await LiveChatFeed(client).follow('abcdefghijk', ChatView.all).toList();

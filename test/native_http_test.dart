@@ -58,7 +58,7 @@ void main() {
               sentEndless += 64 * 1024;
             }
           case '/redirect':
-            response.redirect(base.replace(path: '/echo'));
+            await response.redirect(base.replace(path: '/echo'));
             return;
           case '/missing':
             response.statusCode = 404;
@@ -94,6 +94,7 @@ void main() {
       expect(sentEndless, lessThan(16 * 1024 * 1024));
       reading.resume();
       await done.future;
+      await reading.cancel();
       expect(read, 512 * 64 * 1024);
       client.close();
     });
@@ -164,7 +165,7 @@ void main() {
       expect(big.bodyBytes[32 * 1024 * 39], 39);
       final moved = await client.get(base.replace(path: '/redirect'));
       expect(moved.statusCode, 200);
-      expect(jsonDecode(moved.body)['body'], '');
+      expect((jsonDecode(moved.body) as Map)['body'], '');
       expect((await client.get(base.replace(path: '/missing'))).statusCode, 404);
     }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
 

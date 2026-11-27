@@ -80,7 +80,8 @@ four lines above, or `# zizmor: ignore[<audit>] <reason>` in a workflow.
     C++, Kotlin or Swift. `unsafe` only at the FFI edge, each block with a
     `// SAFETY:` comment; integer arithmetic on outside numbers uses
     `checked_*`/`saturating_*`. The rest of the Rust rules are in
-    [RUST-STYLE.md](RUST-STYLE.md).
+    [RUST-STYLE.md](RUST-STYLE.md); the other languages' in
+    [CODE-STYLE.md](CODE-STYLE.md).
 18. **Every new parser gets a fuzz target** in `native/lumtub_core/fuzz`.
 
 ## Android

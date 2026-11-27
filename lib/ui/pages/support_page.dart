@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/l10n.dart';
@@ -78,7 +80,7 @@ Future<void> askForStar(BuildContext context, SupportReminder reminder) async {
       ],
     ),
   );
-  if (star ?? false) openExternal(repositoryPage);
+  if (star ?? false) unawaited(openExternal(repositoryPage));
 }
 
 class _SupportPage extends StatelessWidget {

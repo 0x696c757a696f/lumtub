@@ -307,7 +307,7 @@ class VideoRepository {
         }
         if (feeds.isNotEmpty) i %= feeds.length;
       }
-      if (!yielded && lastError != null) throw lastError;
+      if (!yielded && lastError != null) Error.throwWithStackTrace(lastError, StackTrace.current);
     } finally {
       for (final feed in feeds) {
         await feed.cancel();

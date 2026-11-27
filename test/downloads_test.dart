@@ -206,7 +206,7 @@ void main() {
       expect(processes, hasLength(1), reason: 'off by default');
       expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);
       expect(signIn.recentlyBlocked, isTrue);
-      m.remove('aaaaaaaaaaa');
+      unawaited(m.remove('aaaaaaaaaaa'));
       await settle();
 
       on = true;
@@ -534,7 +534,7 @@ void main() {
       expect(requests.single.toJson()['cut'], [[10.0, 20.0], [50.0, 60.0]]);
       final local = LocalVideo.read(File(task.filePath!));
       expect(local.info['duration'], 94);
-      expect([for (final c in local.info['chapters'] as List) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
+      expect([for (final c in (local.info['chapters'] as List<Object?>).cast<Map<String, Object?>>()) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
       expect([for (final s in local.segments) (s.start, s.end, s.category)], [(sec * 10, sec * 14, 'sponsor'), (sec * 44, sec * 54, 'selfpromo')]);
     });
 
@@ -659,7 +659,7 @@ void main() {
       await settle();
       expect(list.existsSync(), isFalse);
       await m.flush();
-      expect(jsonDecode(list.readAsStringSync())['tasks'], hasLength(2));
+      expect((jsonDecode(list.readAsStringSync()) as Map<String, Object?>)['tasks'], hasLength(2));
     });
 
     test('keeps the list and the folder across restarts, and resumes interrupted downloads', () async {

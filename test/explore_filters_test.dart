@@ -58,6 +58,7 @@ void main() {
     slow.add('a0');
     unawaited(slow.close());
     await ended;
+    await reading.cancel();
     expect(mixed.last, 'a0');
   });
 

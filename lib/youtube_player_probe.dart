@@ -235,7 +235,7 @@ class YoutubePlayerProbe {
     ((body['context']! as Map)['client'] as Map)['visitorData'] = data;
   }
 
-  static Future<bool> _isKnown() async => await (_visitor ?? Future.value()) != null;
+  static Future<bool> _isKnown() async => await (_visitor ?? Future<_Visitor?>.value()) != null;
 
   static String? _visitorIn(String text) {
     final raw = _visitorData.firstMatch(text)?.group(1);

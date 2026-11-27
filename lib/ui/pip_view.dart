@@ -54,7 +54,7 @@ class _PipViewState extends State<PipView> {
   void dispose() {
     _hide?.cancel();
     for (final s in _subscriptions) {
-      s.cancel();
+      unawaited(s.cancel());
     }
     super.dispose();
   }
@@ -89,7 +89,7 @@ class _PipViewState extends State<PipView> {
       child: WarmLayer(
         child: Video(
           controller: _controller.videoController!,
-          controls: NoVideoControls,
+          controls: null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
           pauseUponEnteringBackgroundMode: false,
           subtitleViewConfiguration: settings.pipSubtitles
               ? subtitleViewFor(settings, smallWindow: window, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws, mainLanguage: _controller.mainSubtitleLanguage, secondLanguage: _controller.secondSubtitleLanguage)

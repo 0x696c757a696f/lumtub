@@ -457,7 +457,7 @@ mod tests {
         }
         let out = temporary.join("seen.json");
         let code = format!(
-            "import json, os, sys, ssl\nwith open({}, 'w') as f:\n    json.dump({{'utf8': sys.flags.utf8_mode, 'bytecode': sys.dont_write_bytecode, 'user_site': sys.flags.no_user_site, 'prefix': sys.prefix, 'python_vars': sorted(k for k in os.environ if k.startswith('PYTHON')), 'setting': os.environ.get('LUMTUB_TEST_SETTING'), 'stdout': sys.stdout.encoding, 'runner': '_lumtub_runner' in sys.modules}}, f)\n",
+            "import json, os, sys, ssl\nwith open({}, 'w') as f:\n    json.dump({{'utf8': sys.flags.utf8_mode, 'bytecode': sys.dont_write_bytecode, 'user_site': sys.flags.no_user_site, 'prefix': sys.prefix, 'python_vars': sorted(k for k in os.environ if k.startswith('PYTHON')), 'setting': sys.modules['_lumtub_runner'].SETTINGS.get('LUMTUB_TEST_SETTING'), 'in_environ': 'LUMTUB_TEST_SETTING' in os.environ, 'stdout': sys.stdout.encoding, 'runner': '_lumtub_runner' in sys.modules}}, f)\n",
             literal(&out.to_string_lossy())
         );
         // SAFETY: `api` came from `start_python`, so Python is initialized; `lock` takes the GIL.
@@ -478,6 +478,8 @@ mod tests {
             .collect();
         assert!(set.is_empty(), "{seen}");
         assert_eq!(seen["setting"], "kept", "{seen}");
+        // The settings reach the runner, not the process environment.
+        assert_eq!(seen["in_environ"], false, "{seen}");
         assert_eq!(seen["stdout"], "utf-8", "{seen}");
         assert_eq!(seen["runner"], true, "{seen}");
     }

@@ -21,9 +21,10 @@ void main() {
 
   test('asks YouTube as its visionOS client', () {
     final request = jsonDecode(core!.quickRequest('abc')!) as Map<String, dynamic>;
-    expect(request['body']['videoId'], 'abc');
-    expect(request['body']['context']['client']['clientName'], 'VISIONOS');
-    expect(request['headers']['X-YouTube-Client-Name'], '101');
+    final body = request['body'] as Map<String, dynamic>;
+    expect(body['videoId'], 'abc');
+    expect(((body['context'] as Map<String, dynamic>)['client'] as Map<String, dynamic>)['clientName'], 'VISIONOS');
+    expect((request['headers'] as Map<String, dynamic>)['X-YouTube-Client-Name'], '101');
   }, skip: core == null);
 
   test('plays the picked streams directly, or leaves the video to yt-dlp', () {

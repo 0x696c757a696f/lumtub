@@ -170,7 +170,7 @@ class _DanmakuLayerState extends State<DanmakuLayer> with SingleTickerProviderSt
     final generation = _generation;
     for (final item in _items) {
       if (_sprites.containsKey(item.key) || !_drawing.add(item.key)) continue;
-      painter.image(item.parts, osdHeight: height, paid: item.paid).then((drawn) {
+      unawaited(painter.image(item.parts, osdHeight: height, paid: item.paid).then((drawn) {
         if (generation != _generation || !mounted) {
           drawn?.$1.dispose();
           return;
@@ -184,7 +184,7 @@ class _DanmakuLayerState extends State<DanmakuLayer> with SingleTickerProviderSt
       }, onError: (Object e) {
         _drawing.remove(item.key);
         logWarn('Could not draw a danmaku message: $e');
-      });
+      }));
     }
   }
 

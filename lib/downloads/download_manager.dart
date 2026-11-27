@@ -139,7 +139,7 @@ class LocalVideo {
     final raw = ((info['lumtub'] ?? info['ytplus']) as Map?)?['sponsorblock'];
     final segments = <SkipSegment>[
       if (raw is List)
-        for (final s in raw.whereType<Map>())
+        for (final s in raw.whereType<Map<dynamic, dynamic>>())
           if (s['start'] is int && s['end'] is int) SkipSegment(Duration(milliseconds: s['start'] as int), Duration(milliseconds: s['end'] as int), '${s['category']}'),
     ];
     return LocalVideo(media, info, subtitles, segments);
@@ -148,7 +148,7 @@ class LocalVideo {
 
 /// The download queue: runs up to [maxConcurrent] yt-dlp processes, keeps the
 /// list in [file] and finds the downloaded files for playback.
-class _NoList {
+class _NoList implements Exception {
   const _NoList();
 }
 
@@ -504,7 +504,7 @@ class DownloadManager extends ChangeNotifier {
       if (live) {
         final id = task.id;
         _recordTasks[id] = _record(task).whenComplete(() {
-          _recordTasks.remove(id);
+          unawaited(_recordTasks.remove(id));
           _pump();
         });
       } else {
@@ -1023,7 +1023,7 @@ class DownloadManager extends ChangeNotifier {
   static Object? shiftChapters(Object? chapters, List<(Duration, Duration)> cut) {
     if (chapters is! List) return chapters;
     return [
-      for (final c in chapters.whereType<Map>())
+      for (final c in chapters.whereType<Map<dynamic, dynamic>>())
         if (c['start_time'] is num && c['end_time'] is num)
           if ((_shiftSeconds(c['start_time'] as num, cut), _shiftSeconds(c['end_time'] as num, cut)) case (final start, final end) when end > start) {...c, 'start_time': start, 'end_time': end},
     ];

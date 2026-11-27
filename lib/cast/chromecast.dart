@@ -124,11 +124,11 @@ class CastFrameReader {
 /// The receiver app named [appId] in a RECEIVER_STATUS payload.
 ({String transportId, String sessionId})? parseReceiverApp(Map<String, dynamic> json, String appId) {
   final status = json['status'];
-  final apps = status is Map ? status['applications'] : null;
+  final apps = status is Map<String, Object?> ? status['applications'] : null;
   if (apps is! List) return null;
-  for (final app in apps.whereType<Map>()) {
-    if (app['appId'] == appId && app['transportId'] is String && app['sessionId'] is String) {
-      return (transportId: app['transportId'] as String, sessionId: app['sessionId'] as String);
+  for (final app in apps.whereType<Map<String, Object?>>()) {
+    if (app case {'appId': final String id, 'transportId': final String transportId, 'sessionId': final String sessionId} when id == appId) {
+      return (transportId: transportId, sessionId: sessionId);
     }
   }
   return null;
@@ -201,6 +201,7 @@ class ChromecastDevice implements CastDevice {
 
   Future<void> _connect() async {
     if (_socket != null) return;
+    // ignore: close_sinks, the socket is kept in _socket and destroyed by close()
     final Socket socket;
     try {
       socket = await _connector(address, port);

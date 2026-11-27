@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -74,10 +75,10 @@ abstract final class Power {
   static bool _readPhone() {
     if (!_askingPhone) {
       _askingPhone = true;
-      const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('powerSaving').then((value) {
+      unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('powerSaving').then((value) {
         _savingPhone = value ?? false;
         _last = (DateTime.now(), _savingPhone);
-      }, onError: (Object _) {}).whenComplete(() => _askingPhone = false);
+      }, onError: (Object _) {}).whenComplete(() => _askingPhone = false));
     }
     return _savingPhone;
   }
@@ -91,10 +92,10 @@ abstract final class Power {
   static bool _readMac() {
     if (!_askingMac) {
       _askingMac = true;
-      Process.run('pmset', ['-g', 'batt']).then((result) {
+      unawaited(Process.run('pmset', ['-g', 'batt']).then((result) {
         _onBatteryMac = result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
         _last = (DateTime.now(), _onBatteryMac);
-      }, onError: (Object _) {}).whenComplete(() => _askingMac = false);
+      }, onError: (Object _) {}).whenComplete(() => _askingMac = false));
     }
     return _onBatteryMac;
   }

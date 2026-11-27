@@ -42,7 +42,7 @@ class SupportReminder {
       _last = time(data['last']);
       _star = time(data['star']);
       _off = data['off'] == true;
-      if (data['days'] case final List days) _days.addAll(days.whereType<String>());
+      if (data['days'] case final List<Object?> days) _days.addAll(days.whereType<String>());
     } catch (e) {
       await setBrokenFileAside(file, e);
     }

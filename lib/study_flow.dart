@@ -425,12 +425,12 @@ class StudyStore {
     }
   }
 
-  void readFrom(Map raw) {
+  void readFrom(Map<Object?, Object?> raw) {
     if (raw['unitSeconds'] case final num seconds) {
       unitLength = Duration(seconds: seconds.round().clamp(studyUnitShortest.inSeconds, studyUnitLongest.inSeconds));
     }
     if (raw['slowRate'] case final num rate) slowRate = rate.toDouble().clamp(0.5, 1.0);
-    if (raw['videos'] case final Map videos) {
+    if (raw['videos'] case final Map<Object?, Object?> videos) {
       for (final MapEntry(:key, :value) in videos.entries) {
         if (value is! Map || key is! String) continue;
         final start = value['unitStart'], step = value['step'], at = DateTime.tryParse('${value['at']}');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -93,7 +94,7 @@ class _ChipStripState extends State<ChipStrip> {
     final target = (position.pixels + from + chip.size.width / 2 - viewport.size.width / 2).clamp(position.minScrollExtent, position.maxScrollExtent);
     if ((target - position.pixels).abs() < 1) return;
     if (animate) {
-      Motion.scrollTo(_scroll, target, duration: Motion.of(Ease.move));
+      unawaited(Motion.scrollTo(_scroll, target, duration: Motion.of(Ease.move)));
     } else {
       _scroll.jumpTo(target);
     }

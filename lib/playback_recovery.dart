@@ -200,11 +200,11 @@ Future<T> firstSuccess<T>(List<Future<T>> futures) {
   final done = Completer<T>();
   var failed = 0;
   for (final future in futures) {
-    future.then((value) {
+    unawaited(future.then((value) {
       if (!done.isCompleted) done.complete(value);
     }, onError: (Object error, StackTrace stack) {
       if (++failed == futures.length && !done.isCompleted) done.completeError(error, stack);
-    });
+    }));
   }
   return done.future;
 }

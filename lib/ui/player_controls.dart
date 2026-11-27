@@ -216,7 +216,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       stream.height.listen((_) => _applyFit()),
       stream.duration.listen((_) {
         if (_heat == null && _preview == null) _infoId = null;
-        _readInfo();
+        unawaited(_readInfo());
       }),
     ]);
     _restartHide();
@@ -224,7 +224,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _applyFit();
-      _readInfo();
+      unawaited(_readInfo());
       _updateLift();
     });
   }
@@ -285,7 +285,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       _picture.reset();
       _releaseHold();
     }
-    _readInfo();
+    unawaited(_readInfo());
     _keepAwake();
     _rebuild();
   }

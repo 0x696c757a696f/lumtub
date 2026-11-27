@@ -241,7 +241,7 @@ Widget _tip(BuildContext context, String text) => Padding(
 /// A skin drawn as a tiny window: its background, title bar, a card and a
 /// button, with its name under it. [skin] null is Lumtub's own look.
 class SkinCard extends StatelessWidget {
-  const SkinCard({super.key, required this.skin, required this.name, this.note, required this.selected, required this.onTap});
+  const SkinCard({super.key, required this.skin, required this.name, required this.selected, required this.onTap, this.note});
   final Skin? skin;
   final String name;
   final String? note;
@@ -333,7 +333,7 @@ class SkinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Lift(builder: _card);
 
-  Widget _card(BuildContext context, bool hovered, bool focused) {
+  Widget _card(BuildContext context, {required bool hovered, required bool focused}) {
     final colors = context.colors;
     final lit = hovered || focused;
     return Semantics(
@@ -393,7 +393,7 @@ class SkinCard extends StatelessWidget {
 /// small lift of a card.
 class _Lift extends StatefulWidget {
   const _Lift({required this.builder});
-  final Widget Function(BuildContext context, bool hovered, bool focused) builder;
+  final Widget Function(BuildContext context, {required bool hovered, required bool focused}) builder;
 
   static ValueChanged<bool> hoverOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._hover;
   static ValueChanged<bool> focusOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._focus;
@@ -415,7 +415,7 @@ class _LiftState extends State<_Lift> {
   }
 
   @override
-  Widget build(BuildContext context) => Builder(builder: (context) => widget.builder(context, _hovered, _focused));
+  Widget build(BuildContext context) => Builder(builder: (context) => widget.builder(context, hovered: _hovered, focused: _focused));
 }
 
 /// 窗口透明: the desktop through the window, under any skin

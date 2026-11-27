@@ -86,7 +86,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
   @override
   void dispose() {
     for (final s in _subscriptions) {
-      s.cancel();
+      unawaited(s.cancel());
     }
     widget.controller.removeListener(_changed);
     super.dispose();

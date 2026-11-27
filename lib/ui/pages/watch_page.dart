@@ -155,7 +155,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
       final state = _video.currentState;
       if (mounted && state != null && !state.isFullscreen()) {
         fillingWindow.value = false;
-        state.enterFullscreen();
+        unawaited(state.enterFullscreen());
       }
     });
   }
@@ -484,7 +484,7 @@ class _Toolbar extends StatelessWidget {
                       icon: Icon(AppIcons.timer),
                       onPressed: () {
                         final link = timestampLink(item.id, controller.player?.state.position ?? Duration.zero);
-                        if (link != null) copyText(context, link, tr('Link copied'));
+                        if (link != null) unawaited(copyText(context, link, tr('Link copied')));
                       },
                     ),
             ),
@@ -642,7 +642,7 @@ class _PhoneActions extends StatelessWidget {
     if (picked == null || !context.mounted) return;
     if (picked.startsWith('order:')) {
       final order = PlayOrder.values.byName(picked.substring(6));
-      controller.setPlayOrder(order);
+      unawaited(controller.setPlayOrder(order));
       return;
     }
     switch (picked) {
@@ -653,10 +653,10 @@ class _PhoneActions extends StatelessWidget {
       case 'summary':
         await showVideoSummary(context, controller);
       case 'link':
-        copyText(context, item.url, tr('Link copied'));
+        unawaited(copyText(context, item.url, tr('Link copied')));
       case 'time':
         final link = timestampLink(item.id, position);
-        if (link != null) copyText(context, link, tr('Link copied'));
+        if (link != null) unawaited(copyText(context, link, tr('Link copied')));
       case 'browser':
         await openExternal(item.url);
     }

@@ -65,7 +65,7 @@ List<String> parsePipedInstanceList(String text) {
     final list = jsonDecode(text);
     return [
       if (list is List)
-        for (final entry in list.whereType<Map>())
+        for (final entry in list.whereType<Map<Object?, Object?>>())
           if (entry['up_to_date'] != false)
             if (normalizePipedServer('${entry['api_url']}') case final server?) server,
     ];

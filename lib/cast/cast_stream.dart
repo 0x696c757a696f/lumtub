@@ -23,7 +23,7 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info, {PlayerSettings? sett
   final formats = info['formats'];
   if (formats is! List) return null;
   final candidates = <(int, int, int, String)>[];
-  for (final f in formats.whereType<Map>()) {
+  for (final f in formats.whereType<Map<dynamic, dynamic>>()) {
     final url = f['url']?.toString() ?? '';
     final protocol = f['protocol']?.toString() ?? '';
     if (!url.startsWith('http') || !(protocol == 'https' || protocol == 'http') || f['fragments'] != null) continue;
@@ -88,7 +88,7 @@ class CastSplit {
   CastSplit? renewedFrom(Map<String, dynamic> info) {
     final formats = info['formats'];
     if (formats is! List) return null;
-    String? url(String id) => formats.whereType<Map>().where((f) => f['format_id']?.toString() == id && f['url'] is String).map((f) => f['url'] as String).firstOrNull;
+    String? url(String id) => formats.whereType<Map<dynamic, dynamic>>().where((f) => f['format_id']?.toString() == id && f['url'] is String).map((f) => f['url'] as String).firstOrNull;
     final (v, a) = (url(videoFormat), url(audioFormat));
     if (v == null || a == null) return null;
     return CastSplit(video: v, videoSize: videoSize, audio: a, audioSize: audioSize, height: height, fps: fps, codec: codec, videoFormat: videoFormat, audioFormat: audioFormat);
@@ -99,14 +99,14 @@ class CastSplit {
   bool get fitsTransportStream => codec == 'h264';
 }
 
-int _sizeOf(Map f) {
+int _sizeOf(Map<dynamic, dynamic> f) {
   if (f['filesize'] is num) return (f['filesize'] as num).toInt();
   final clen = Uri.tryParse(f['url']?.toString() ?? '')?.queryParameters['clen'];
   return int.tryParse(clen ?? '') ?? 0;
 }
 
 /// The picture codec of a yt-dlp format a TV may be sent, or null.
-String? _castCodec(Map f) {
+String? _castCodec(Map<dynamic, dynamic> f) {
   final v = f['vcodec']?.toString() ?? 'none';
   final ext = f['ext']?.toString();
   if (_isH264(v) && ext == 'mp4') return 'h264';
@@ -123,13 +123,13 @@ String? _castCodec(Map f) {
 CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castMaxHeight}) {
   final formats = info['formats'];
   if (formats is! List) return null;
-  bool plain(Map f) => (f['url']?.toString() ?? '').startsWith('https://') && f['protocol'] == 'https' && f['fragments'] == null && f['has_drm'] != true;
+  bool plain(Map<dynamic, dynamic> f) => (f['url']?.toString() ?? '').startsWith('https://') && f['protocol'] == 'https' && f['fragments'] == null && f['has_drm'] != true;
   const codecRank = {'h264': 2, 'vp9': 1, 'av1': 0};
-  Map? video;
+  Map<dynamic, dynamic>? video;
   (int, int, int, int)? best;
-  Map? audio;
+  Map<dynamic, dynamic>? audio;
   (int, int, int, int)? bestAudio;
-  for (final f in formats.whereType<Map>()) {
+  for (final f in formats.whereType<Map<dynamic, dynamic>>()) {
     if (!plain(f) || _sizeOf(f) <= 0) continue;
     final v = f['vcodec']?.toString() ?? 'none';
     final a = f['acodec']?.toString() ?? 'none';

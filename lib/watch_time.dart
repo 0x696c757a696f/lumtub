@@ -34,11 +34,11 @@ class WatchTime {
     try {
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) throw const FormatException('Not a JSON object');
-      for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const {}).entries) {
+      for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is! Map) continue;
         _days['$key'] = {for (final MapEntry(key: channel, value: seconds) in value.entries) if (seconds is num && seconds > 0) '$channel': seconds.round()};
       }
-      for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const {}).entries) {
+      for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is String) _names['$key'] = value;
       }
     } catch (e) {
@@ -108,7 +108,7 @@ class WatchTime {
 /// What lumtub_core worked out from [WatchTime], in seconds.
 class WatchStats {
   factory WatchStats.fromJson(Object? raw) {
-    final map = raw is Map ? raw : const {};
+    final map = raw is Map ? raw : const <dynamic, dynamic>{};
     int number(String key) => (map[key] as num?)?.toInt() ?? 0;
     return WatchStats(
       today: number('today'),

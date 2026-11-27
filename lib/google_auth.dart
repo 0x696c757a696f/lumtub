@@ -246,7 +246,5 @@ class GoogleAuth {
     }
   }
 
-  static String _page(String title, String message) => '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title>'
-      '<body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0">'
-      '<div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
+  static String _page(String title, String message) => '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0"><div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
 }

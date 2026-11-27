@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -34,9 +35,10 @@ void main() {
 
   test('the proxy a PAC script names is read by lumtub_core', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    server.listen((request) => request.response
-      ..write('function FindProxyForURL(url, host) { if (shExpMatch(host, "*.lan")) return "DIRECT"; return "PROXY 127.0.0.1:7890; DIRECT"; }')
-      ..close());
+    server.listen((request) {
+      request.response.write('function FindProxyForURL(url, host) { if (shExpMatch(host, "*.lan")) return "DIRECT"; return "PROXY 127.0.0.1:7890; DIRECT"; }');
+      unawaited(request.response.close());
+    });
     final port = server.port;
     expect((await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, 'http://127.0.0.1:7890');
     await server.close(force: true);

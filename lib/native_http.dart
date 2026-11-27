@@ -137,9 +137,9 @@ class _Pending {
 
   void head(int status, String headersJson, int? length, String? url) {
     final headers = <String, String>{};
-    for (final pair in jsonDecode(headersJson) as List) {
-      final name = (pair[0] as String).toLowerCase();
-      final value = pair[1] as String;
+    for (final pair in (jsonDecode(headersJson) as List<Object?>).cast<List<Object?>>()) {
+      final name = (pair[0]! as String).toLowerCase();
+      final value = pair[1]! as String;
       // As dart:io joins repeated headers.
       headers[name] = headers.containsKey(name) ? '${headers[name]},$value' : value;
     }

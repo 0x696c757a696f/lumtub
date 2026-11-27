@@ -96,13 +96,18 @@ bool _sameHost(Uri a, Uri b) => a.host.toLowerCase() == b.host.toLowerCase() && 
 /// at some other machine.
 DlnaDescription parseDeviceDescription(String xml, Uri location) {
   final read = readTextInCore('lumtub_upnp_description', xml);
-  final found = read is Map ? read : const {};
-  String? text(String name) => found[name] is String ? found[name] as String : null;
+  final found = read is Map<String, Object?> ? read : const <String, Object?>{};
+  String? text(String name) {
+    final value = found[name];
+    return value is String ? value : null;
+  }
+
   final baseText = text('URLBase');
   final named = baseText == null ? null : Uri.tryParse(baseText);
   final base = named != null && named.hasScheme && named.scheme.startsWith('http') && _sameHost(named, location) ? named : location;
   final services = <UpnpService>[];
-  for (final service in found['services'] is List ? found['services'] as List : const []) {
+  final listed = found['services'];
+  for (final service in listed is List ? listed : const []) {
     if (service is! Map || service['type'] is! String || service['control'] is! String) continue;
     final address = controlAddress(base, service['control'] as String);
     if (!address.scheme.startsWith('http') || !_sameHost(address, location)) continue;
@@ -128,20 +133,17 @@ Uri controlAddress(Uri base, String control) {
 bool looksApple(String about) => RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|tvOS|Apple TV|macOS|Mac|MacBook|iMac|Apple)\b', caseSensitive: false).hasMatch(about);
 
 /// The SOAP request body for [action] of [serviceType].
-String soapEnvelope(String serviceType, String action, Map<String, String> arguments) => '<?xml version="1.0" encoding="utf-8"?>'
-    '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-    '<s:Body><u:$action xmlns:u="$serviceType">'
-    '${arguments.entries.map((e) => '<${e.key}>${xmlEscape(e.value)}</${e.key}>').join()}'
-    '</u:$action></s:Body></s:Envelope>';
+String soapEnvelope(String serviceType, String action, Map<String, String> arguments) => '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:$action xmlns:u="$serviceType">${arguments.entries.map((e) => '<${e.key}>${xmlEscape(e.value)}</${e.key}>').join()}</u:$action></s:Body></s:Envelope>';
 
 /// The output arguments of a SOAP response, or throws [CastException] with
 /// the UPnP error when the body is a fault.
 Map<String, String> parseSoapResponse(String xml) {
   final read = readTextInCore('lumtub_soap_response', xml);
-  final answer = read is Map ? read : const {};
-  if (answer['fault'] case final Map fault) {
-    final code = fault['code'] is String ? fault['code'] as String : null;
-    final description = fault['description'] is String ? fault['description'] as String : '';
+  final answer = read is Map<String, Object?> ? read : const <String, Object?>{};
+  if (answer['fault'] case final Map<String, Object?> fault) {
+    final faultCode = fault['code'], faultDescription = fault['description'];
+    final code = faultCode is String ? faultCode : null;
+    final description = faultDescription is String ? faultDescription : '';
     throw CastException('UPnP ${code ?? 'error'}${description.isEmpty ? '' : ': $description'}');
   }
   final args = answer['args'];
@@ -157,17 +159,7 @@ Map<String, String> parseSoapResponse(String xml) {
 /// `upnp:subtitle` some players read. A renderer that knows none of them
 /// plays without.
 String didlLite({required String title, required String url, required String mime, bool seekable = true, String? subtitles}) =>
-    '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" '
-    'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"'
-    '${subtitles == null ? '' : ' xmlns:sec="http://www.sec.co.kr/"'}>'
-    '<item id="0" parentID="-1" restricted="1"><dc:title>${xmlEscape(title)}</dc:title>'
-    '<upnp:class>object.item.videoItem</upnp:class>'
-    '<res protocolInfo="http-get:*:$mime:DLNA.ORG_OP=${seekable ? '01' : '00'};DLNA.ORG_FLAGS=01700000000000000000000000000000">${xmlEscape(url)}</res>'
-    '${subtitles == null ? '' : '<res protocolInfo="http-get:*:text/srt:*">${xmlEscape(subtitles)}</res>'
-        '<sec:CaptionInfoEx sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfoEx>'
-        '<sec:CaptionInfo sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfo>'
-        '<upnp:subtitle>${xmlEscape(subtitles)}</upnp:subtitle>'}'
-    '</item></DIDL-Lite>';
+    '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"${subtitles == null ? '' : ' xmlns:sec="http://www.sec.co.kr/"'}><item id="0" parentID="-1" restricted="1"><dc:title>${xmlEscape(title)}</dc:title><upnp:class>object.item.videoItem</upnp:class><res protocolInfo="http-get:*:$mime:DLNA.ORG_OP=${seekable ? '01' : '00'};DLNA.ORG_FLAGS=01700000000000000000000000000000">${xmlEscape(url)}</res>${subtitles == null ? '' : '<res protocolInfo="http-get:*:text/srt:*">${xmlEscape(subtitles)}</res><sec:CaptionInfoEx sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfoEx><sec:CaptionInfo sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfo><upnp:subtitle>${xmlEscape(subtitles)}</upnp:subtitle>'}</item></DIDL-Lite>';
 
 /// `H:MM:SS` as UPnP writes positions.
 String formatUpnpTime(Duration time) {

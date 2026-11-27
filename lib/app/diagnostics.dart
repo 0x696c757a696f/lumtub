@@ -176,7 +176,7 @@ extension Diagnostics on AppController {
         logDebug(() => 'A network check failed: $e');
       }
     }
-    final formats = info?['formats'] is List ? (info!['formats'] as List).whereType<Map>() : const <Map>[];
+    final formats = info?['formats'] is List ? (info!['formats'] as List).whereType<Map<Object?, Object?>>() : const <Map<Object?, Object?>>[];
     final stream = formats.where((f) => '${f['url']}'.contains('googlevideo.com') && f['protocol'] == 'https').lastOrNull?['url']?.toString();
     final agent = info?['http_headers'] is Map ? (info!['http_headers'] as Map)['User-Agent']?.toString() : null;
     if (stream == null) {
@@ -205,8 +205,8 @@ extension Diagnostics on AppController {
     for (final key in ['subtitles', 'automatic_captions']) {
       final tracks = info?[key];
       if (tracks is! Map) continue;
-      for (final list in tracks.values.whereType<List>()) {
-        captions ??= list.whereType<Map>().where((t) => t['ext'] == 'vtt' || t['ext'] == 'json3').firstOrNull?['url']?.toString();
+      for (final list in tracks.values.whereType<List<Object?>>()) {
+        captions ??= list.whereType<Map<Object?, Object?>>().where((t) => t['ext'] == 'vtt' || t['ext'] == 'json3').firstOrNull?['url']?.toString();
       }
     }
     if (captions == null) {

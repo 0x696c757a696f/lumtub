@@ -13,7 +13,7 @@ void main() {
         ]),
       ),
     ));
-    return (finder) => tester.getSize(finder).width;
+    return (Finder finder) => tester.getSize(finder).width;
   }
 
   testWidgets('a side panel slides in from the end and the page gives up the room as it moves', (tester) async {

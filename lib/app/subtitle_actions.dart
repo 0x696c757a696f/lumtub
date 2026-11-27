@@ -71,7 +71,7 @@ extension SubtitleActions on AppController {
     try {
       Future<List<Map<dynamic, dynamic>>> tracks() async {
         final list = jsonDecode(await platform.getProperty('track-list'));
-        return [if (list is List) for (final t in list.whereType<Map>()) if (t['type'] == 'sub' && t['external-filename'] == path) t];
+        return [if (list is List<dynamic>) for (final t in list.whereType<Map<dynamic, dynamic>>()) if (t['type'] == 'sub' && t['external-filename'] == path) t];
       }
 
       final old = (await tracks()).firstOrNull;
@@ -281,7 +281,7 @@ extension SubtitleActions on AppController {
     if (option != null) return _optionCues(option);
     final cues = await _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
       final list = jsonDecode(await platform.getProperty('track-list'));
-      final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+      final entry = list is List<dynamic> ? list.whereType<Map<dynamic, dynamic>>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
       final source = entry?['external-filename'];
       if (source is String && source.startsWith(RegExp('https?://'))) {
         final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));

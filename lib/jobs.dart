@@ -40,7 +40,7 @@ enum JobPriority {
 /// What a running job is told and can tell.
 class JobContext {
   JobContext._(this._job);
-  final _Job _job;
+  final _Job<Object?> _job;
 
   /// Whether the job was cancelled; long work checks it between steps.
   bool get cancelled => _job.cancelled;

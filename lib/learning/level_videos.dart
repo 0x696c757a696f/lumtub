@@ -770,19 +770,19 @@ class LevelVideos extends ChangeNotifier {
       if (json is! Map) return;
       if (json['language'] case final String picked when picked.length <= 8) language = picked;
       if (json['explainedIn'] case final String picked) explainedIn = ExploreLanguage.values.where((l) => l.name == picked && l != ExploreLanguage.any).firstOrNull;
-      if (json['videos'] case final Map videos) {
+      if (json['videos'] case final Map<dynamic, dynamic> videos) {
         for (final MapEntry(:key, :value) in videos.entries) {
           if (!_id.hasMatch('$key')) continue;
           if (LevelReading.fromJson(value) case final reading?) _readings['$key'] = reading;
         }
       }
-      if (json['channels'] case final Map channels) {
+      if (json['channels'] case final Map<dynamic, dynamic> channels) {
         for (final MapEntry(:key, :value) in channels.entries.take(_channelsKept)) {
           if ('$key'.length > 80 || value is! List || value.length != 2) continue;
           if (value case [final int read, final int fit] when read >= 0 && fit >= 0 && fit <= read) _channels['$key'] = (read, fit);
         }
       }
-      if (json['granted'] case final List granted) {
+      if (json['granted'] case final List<dynamic> granted) {
         _granted.addAll(granted.whereType<String>().where(_id.hasMatch).take(_grantedKept));
       }
       if (json['grantDay'] case final String day when day.length == 10) _grantDay = day;

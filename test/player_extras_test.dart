@@ -97,7 +97,7 @@ void main() {
       expect(Heatmap.from({}), isNull);
       expect(Heatmap.from({'heatmap': null}), isNull);
       expect(Heatmap.from({'heatmap': [{'start_time': 0, 'end_time': 5, 'value': 1}]}), isNull);
-      expect(Heatmap.from({'heatmap': [{'start_time': 'a'}, 3, {}]}), isNull);
+      expect(Heatmap.from({'heatmap': [{'start_time': 'a'}, 3, <String, Object?>{}]}), isNull);
     });
 
     test('clamps values', () {

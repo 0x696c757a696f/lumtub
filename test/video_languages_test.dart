@@ -240,7 +240,7 @@ void main() {
           'playabilityStatus': {'status': 'LOGIN_REQUIRED', 'reason': "Sign in to confirm you're not a bot"},
         });
       }
-      expect(((jsonDecode(request.body) as Map)['context'] as Map)['client']['visitorData'], visitor);
+      expect((((jsonDecode(request.body) as Map<String, dynamic>)['context'] as Map<String, dynamic>)['client'] as Map<String, dynamic>)['visitorData'], visitor);
       return _json(_player('Ricette di casa', asr: 'it'));
     });
     final languages = VideoLanguages(client);
@@ -264,11 +264,11 @@ void main() {
         if (name == 'VISIONOS') {
           return _json({
             'playabilityStatus': {'status': 'OK'},
-            'streamingData': {'adaptiveFormats': [{}, {}]},
+            'streamingData': {'adaptiveFormats': [<String, Object?>{}, <String, Object?>{}]},
             'videoDetails': {'title': 'Tutte le news di Sky TG24', 'shortDescription': 'Per tutte le news visita il sito https://tg24.sky.it'},
           });
         }
-        return _json({'playabilityStatus': {'status': tvStatus}, 'videoDetails': {}});
+        return _json({'playabilityStatus': {'status': tvStatus}, 'videoDetails': <String, Object?>{}});
       });
       final languages = VideoLanguages(client);
       // The TV app told the last video, so it is asked first.
@@ -285,7 +285,7 @@ void main() {
       final id = (jsonDecode(request.body) as Map)['videoId'];
       return _json(switch (id) {
         'aaaaaaaaaaa' => _player('Lezione', asr: 'it'),
-        'ccccccccccc' => {'playabilityStatus': {'status': 'OK'}, 'videoDetails': {}},
+        'ccccccccccc' => {'playabilityStatus': {'status': 'OK'}, 'videoDetails': <String, Object?>{}},
         // Sure Italian: three of its small words.
         _ => _player('Lezione di filosofia per tutti gli studenti'),
       });

@@ -132,9 +132,8 @@ void main() {
       addTearDown(() => server.close(force: true));
       server.listen((request) {
         final size = int.parse(request.uri.queryParameters['size']!);
-        request.response
-          ..write('x' * size)
-          ..close();
+        request.response.write('x' * size);
+        unawaited(request.response.close());
       });
       final client = HttpClient();
       addTearDown(() => client.close(force: true));
@@ -189,16 +188,13 @@ void main() {
     });
 
     test('parses SOAP responses and faults', () {
-      const ok = '<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'
-          '<u:GetPositionInfoResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><Track>1</Track><TrackDuration>0:03:25</TrackDuration>'
-          '<TrackMetaData>&lt;DIDL-Lite&gt;&lt;/DIDL-Lite&gt;</TrackMetaData><RelTime>0:01:02</RelTime><AbsTime/></u:GetPositionInfoResponse></s:Body></s:Envelope>';
+      const ok = '<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetPositionInfoResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><Track>1</Track><TrackDuration>0:03:25</TrackDuration><TrackMetaData>&lt;DIDL-Lite&gt;&lt;/DIDL-Lite&gt;</TrackMetaData><RelTime>0:01:02</RelTime><AbsTime/></u:GetPositionInfoResponse></s:Body></s:Envelope>';
       final map = parseSoapResponse(ok);
       expect(map['RelTime'], '0:01:02');
       expect(map['TrackDuration'], '0:03:25');
       expect(map['TrackMetaData'], '<DIDL-Lite></DIDL-Lite>');
       expect(map['AbsTime'], '');
-      const fault = '<s:Envelope xmlns:s="x"><s:Body><s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring>'
-          '<detail><UPnPError><errorCode>701</errorCode><errorDescription>Transition not available</errorDescription></UPnPError></detail></s:Fault></s:Body></s:Envelope>';
+      const fault = '<s:Envelope xmlns:s="x"><s:Body><s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring><detail><UPnPError><errorCode>701</errorCode><errorDescription>Transition not available</errorDescription></UPnPError></detail></s:Fault></s:Body></s:Envelope>';
       expect(() => parseSoapResponse(fault), throwsA(isA<CastException>().having((e) => e.message, 'message', 'UPnP 701: Transition not available')));
     });
 
@@ -337,7 +333,7 @@ void main() {
       }, defaultMediaReceiverId);
       expect(app?.transportId, 'web-5');
       expect(app?.sessionId, 'abc');
-      expect(parseReceiverApp({'status': {'applications': []}}, defaultMediaReceiverId), isNull);
+      expect(parseReceiverApp({'status': {'applications': <Object?>[]}}, defaultMediaReceiverId), isNull);
       final media = parseMediaStatus({
         'type': 'MEDIA_STATUS',
         'status': [
@@ -348,7 +344,7 @@ void main() {
       expect(media?.status.state, CastState.paused);
       expect(media?.status.position, const Duration(milliseconds: 12500));
       expect(media?.status.duration, const Duration(seconds: 200));
-      expect(parseMediaStatus({'status': []}), isNull);
+      expect(parseMediaStatus({'status': <Object?>[]}), isNull);
     });
   });
 
@@ -533,12 +529,12 @@ void main() {
           {'url': 'https://p/m720', 'codec': 'avc1.64001F', 'height': 720, 'videoOnly': false, 'mimeType': 'video/mp4', 'bitrate': 900000},
           {'url': 'https://p/mwebm', 'codec': 'vp9', 'height': 1080, 'videoOnly': false, 'mimeType': 'video/webm'},
         ],
-        'audioStreams': [],
+        'audioStreams': <Object?>[],
       });
       expect(piped.muxed.map((s) => s.url), ['https://p/m360', 'https://p/m720']);
       expect(castSourceFromRelay(piped)?.url, 'https://p/m720');
       final invidious = parseInvidiousVideo('https://inv.example', {
-        'adaptiveFormats': [],
+        'adaptiveFormats': <Object?>[],
         'formatStreams': [
           {'url': '/videoplayback?id=1', 'type': 'video/mp4; codecs="avc1.64001F, mp4a.40.2"', 'size': '1280x720', 'qualityLabel': '720p'},
         ],

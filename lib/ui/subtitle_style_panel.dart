@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
@@ -22,7 +24,7 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
           label: tr('All subtitle settings'),
           onPressed: (panel) {
             Navigator.of(panel).pop();
-            openSubtitleSettings(context, controller);
+            unawaited(openSubtitleSettings(context, controller));
           },
         ),
       ],

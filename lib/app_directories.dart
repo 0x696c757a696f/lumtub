@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -80,9 +81,9 @@ Future<void> writeFileAtomic(File file, String text) {
   final result = (_atomicWrites[key] ?? Future.value()).then((_) => _writeFileAtomic(file, text));
   final tail = result.then((_) {}, onError: (_) {});
   _atomicWrites[key] = tail;
-  tail.then((_) {
-    if (identical(_atomicWrites[key], tail)) _atomicWrites.remove(key);
-  });
+  unawaited(tail.then((_) {
+    if (identical(_atomicWrites[key], tail)) unawaited(_atomicWrites.remove(key));
+  }));
   return result;
 }
 

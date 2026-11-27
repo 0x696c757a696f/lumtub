@@ -309,7 +309,7 @@ class ChannelResult {
     final thumbnails = map['thumbnails'];
     String? avatar;
     if (thumbnails is List) {
-      for (final t in thumbnails.whereType<Map>()) {
+      for (final t in thumbnails.whereType<Map<String, Object?>>()) {
         final url = t['url']?.toString() ?? '';
         if (url.isNotEmpty) avatar = url;
       }
@@ -348,7 +348,7 @@ class PlaylistResult {
     String? thumbnail;
     final thumbnails = map['thumbnails'];
     if (thumbnails is List) {
-      for (final t in thumbnails.whereType<Map>()) {
+      for (final t in thumbnails.whereType<Map<String, Object?>>()) {
         final u = t['url']?.toString() ?? '';
         if (u.isNotEmpty) thumbnail = u.startsWith('//') ? 'https:$u' : u;
       }
@@ -425,7 +425,7 @@ class Chapter {
     if (raw is! List) return const [];
     Duration? seconds(Object? value) => value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
     final chapters = [
-      for (final entry in raw.whereType<Map>())
+      for (final entry in raw.whereType<Map<String, Object?>>())
         if (seconds(entry['start_time']) case final start?)
           Chapter(start, seconds(entry['end_time']) ?? Duration.zero, entry['title']?.toString().trim() ?? ''),
     ]..sort((a, b) => a.start.compareTo(b.start));
@@ -655,8 +655,8 @@ class SubtitleOption {
     ];
   }
 
-  static (String, String)? _vtt(List formats) {
-    final maps = formats.whereType<Map>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
+  static (String, String)? _vtt(List<Object?> formats) {
+    final maps = formats.whereType<Map<String, Object?>>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
     final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ?? maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
     return pick == null ? null : ('${pick['url']}', '${pick['name'] ?? ''}');
   }

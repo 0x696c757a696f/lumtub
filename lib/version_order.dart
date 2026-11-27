@@ -14,7 +14,7 @@ int compareVersionFolders(String a, String b) {
 }
 
 class _VersionKey implements Comparable<_VersionKey> {
-  _VersionKey(this.numbers, this.unpacked, this.v3);
+  _VersionKey(this.numbers, {required this.unpacked, required this.v3});
   final List<int> numbers;
   final bool unpacked;
   final bool v3;
@@ -28,7 +28,7 @@ class _VersionKey implements Comparable<_VersionKey> {
     final numbers = match.group(1)!.split('.').map(int.tryParse).toList();
     if (numbers.contains(null)) return null;
     final rest = base.substring(match.end);
-    return _VersionKey(numbers.cast<int>(), rest.contains('-dir'), rest.contains('-x86_64-v3'));
+    return _VersionKey(numbers.cast<int>(), unpacked: rest.contains('-dir'), v3: rest.contains('-x86_64-v3'));
   }
 
   /// Positive when this is newer.

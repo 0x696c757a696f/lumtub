@@ -41,7 +41,7 @@ class PaletteCard extends StatelessWidget {
 
 /// A small window in a light and a dark scheme side by side, with a name under it.
 class SchemeCard extends StatelessWidget {
-  const SchemeCard({super.key, required this.name, this.note, required this.light, required this.dark, required this.selected, required this.onTap});
+  const SchemeCard({super.key, required this.name, required this.light, required this.dark, required this.selected, required this.onTap, this.note});
   final String name;
   final String? note;
   final ColorScheme light;

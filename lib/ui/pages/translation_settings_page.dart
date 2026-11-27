@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
@@ -31,7 +33,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
   final colors = Theme.of(context).colorScheme;
   void saveConfig(TranslationConfig Function(TranslationConfig) change) {
     final now = controller.preferences;
-    controller.savePreferences(now.copyWith(translation: change(now.translation)));
+    unawaited(controller.savePreferences(now.copyWith(translation: change(now.translation))));
   }
 
   Widget header(String text) => Padding(

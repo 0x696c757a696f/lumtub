@@ -1,0 +1,12 @@
+# Editor settings; the style guides are in docs/CODE-STYLE.md.
+root = true
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 100
+ktlint_code_style = android_studio
+
+[*.swift]
+indent_style = space
+indent_size = 2
+max_line_length = 100

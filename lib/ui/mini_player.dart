@@ -105,7 +105,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
 
   void _unwatch() {
     for (final s in _subscriptions) {
-      s.cancel();
+      unawaited(s.cancel());
     }
     _subscriptions.clear();
     _watched = null;
@@ -163,7 +163,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
       child: WarmLayer(
         child: Video(
           controller: video,
-          controls: NoVideoControls,
+          controls: null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
           pauseUponEnteringBackgroundMode: false,
           subtitleViewConfiguration: subtitles
               ? subtitleViewFor(settings, smallWindow: size, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws, mainLanguage: _controller.mainSubtitleLanguage, secondLanguage: _controller.secondSubtitleLanguage)

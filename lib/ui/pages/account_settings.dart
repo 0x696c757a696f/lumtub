@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/account_controller.dart';
@@ -15,7 +17,7 @@ import 'cookie_sign_in_tile.dart';
 /// The browser sign-in, the optional Google sign-in, sync, and the OAuth
 /// client Google's uses.
 class AccountSettings extends StatelessWidget {
-  const AccountSettings({super.key, required this.account, this.webSignIn, required this.note});
+  const AccountSettings({super.key, required this.account, required this.note, this.webSignIn});
   final AccountController? account;
   final YoutubeWebSignIn? webSignIn;
   final TextStyle note;
@@ -341,7 +343,7 @@ class _ClientSettingsState extends State<_ClientSettings> {
               onPressed: () {
                 _id.clear();
                 _secret.clear();
-                _apply(null);
+                unawaited(_apply(null));
               },
               child: Text(OAuthClientConfig.builtIn.isValid ? tr('Revert to built-in client') : tr('Clear')),
             ),

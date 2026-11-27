@@ -47,7 +47,7 @@ class FakeSocks {
         buffer.clear();
         step = u == user && p == pass ? 2 : 3;
         client.add([1, step == 2 ? 0 : 1]);
-        if (step == 3) client.close();
+        if (step == 3) unawaited(client.close());
       }
       if (step == 2 && buffer.length >= 7) {
         final atyp = buffer[3];
@@ -58,14 +58,14 @@ class FakeSocks {
         step = 4;
         if (replyCode != 0) {
           client.add([5, replyCode, 0, 1, 0, 0, 0, 0, 0, 0]);
-          client.close();
+          unawaited(client.close());
           return;
         }
-        Socket.connect('127.0.0.1', target).then((socket) {
+        unawaited(Socket.connect('127.0.0.1', target).then((socket) {
           upstream = socket;
           socket.listen(client.add, onDone: client.close);
           client.add([5, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
-        });
+        }));
       }
     }, onError: (_) {}, onDone: () => upstream?.close());
   }
@@ -80,7 +80,7 @@ Future<(HttpServer, List<String>)> startTarget() async {
   server.listen((request) {
     seen.add(request.uri.toString());
     request.response.write('hello');
-    request.response.close();
+    unawaited(request.response.close());
   });
   return (server, seen);
 }
@@ -98,7 +98,7 @@ Future<String> ask(SocksBridge bridge, String request, {String? thenSend, String
   final line = request.indexOf('\r\n') + 2;
   socket.write('${request.substring(0, line)}${login ?? loginOf(bridge)}${request.substring(line)}');
   if (thenSend != null) {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     socket.write(thenSend);
   }
   await done.future.timeout(const Duration(seconds: 10));
@@ -219,7 +219,7 @@ void _tests(bool native) {
     origin.listen((socket) => socket.listen((data) {
           heads.add(latin1.decode(data));
           socket.add(latin1.encode('HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n'));
-          socket.close();
+          unawaited(socket.close());
         }));
     final bridge = await start('socks5h://127.0.0.1:1');
     final connect = 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n';

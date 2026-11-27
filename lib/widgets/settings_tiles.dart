@@ -38,7 +38,7 @@ class NormalItem extends StatelessWidget {
 }
 
 class SwitchItem extends StatelessWidget {
-  const SwitchItem({super.key, required this.title, this.subtitle, this.leading, required this.value, required this.onChanged, this.onTap, this.enabled = true});
+  const SwitchItem({super.key, required this.title, required this.value, required this.onChanged, this.subtitle, this.leading, this.onTap, this.enabled = true});
   final String title;
   final String? subtitle;
   final Widget? leading;
@@ -79,7 +79,7 @@ class SwitchItem extends StatelessWidget {
 }
 
 class PopupItem<T> extends StatelessWidget {
-  const PopupItem({super.key, required this.title, this.leading, required this.value, required this.values, required this.onSelected, this.enabled = true});
+  const PopupItem({super.key, required this.title, required this.value, required this.values, required this.onSelected, this.leading, this.enabled = true});
   final String title;
   final Widget? leading;
   final T value;

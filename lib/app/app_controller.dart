@@ -472,6 +472,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The chat's last mode change: slow mode, subscribers-only or
   /// members-only mode turned on or off.
   LiveChatMessage? chatMode;
+  // ignore: cancel_subscriptions, cancelled by the chat-actions part when the chat stops or is replaced
   StreamSubscription<LiveChatBatch>? _currentChat;
   Timer? _currentChatFlushTimer;
   final _currentChatPending = <LiveChatMessage>[];
@@ -1011,6 +1012,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   DateTime _learningLinesAsked = DateTime(0);
 
   /// Stops a line a word card played once as it ends.
+  // ignore: cancel_subscriptions, cancelled by the learning-actions part where the line replay ends
   StreamSubscription<Duration>? _lineOnce;
   final _linePause = LinePause();
   final _reveal = TranslationReveal();

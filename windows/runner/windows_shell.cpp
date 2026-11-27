@@ -26,9 +26,12 @@ using flutter::EncodableMap;
 using flutter::EncodableValue;
 namespace media = winrt::Windows::Media;
 
-constexpr UINT kMediaButtonMessage = WM_APP + 1;  // wparam: MediaButton, lparam: milliseconds for a seek
-constexpr UINT kTrayMessage = WM_APP + 2;         // lparam: the mouse message on the tray icon
-constexpr UINT kHideMessage = WM_APP + 3;         // hides a just-minimised window to the tray
+constexpr UINT kMediaButtonMessage =
+    WM_APP + 1;  // wparam: MediaButton, lparam: milliseconds for a seek
+constexpr UINT kTrayMessage =
+    WM_APP + 2;  // lparam: the mouse message on the tray icon
+constexpr UINT kHideMessage =
+    WM_APP + 3;  // hides a just-minimised window to the tray
 constexpr UINT kTrayIconId = 1;
 
 enum MediaButton : WPARAM { kPlay = 1, kPause, kNext, kPrevious, kStop, kSeek };
@@ -37,17 +40,22 @@ enum TrayCommand : UINT { kTrayShow = 1, kTrayPlayPause, kTrayNext, kTrayExit };
 // Dart sends UTF-8; the tray and the overlay want UTF-16.
 std::wstring Widen(const std::string& text) {
   if (text.empty()) return L"";
-  const int size = ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
+  const int size = ::MultiByteToWideChar(
+      CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
   std::wstring wide(size, L'\0');
-  ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), wide.data(), size);
+  ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()),
+                        wide.data(), size);
   return wide;
 }
 
 std::string Narrow(const std::wstring& text) {
   if (text.empty()) return "";
-  const int size = ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+  const int size = ::WideCharToMultiByte(CP_UTF8, 0, text.data(),
+                                         static_cast<int>(text.size()), nullptr,
+                                         0, nullptr, nullptr);
   std::string narrow(size, '\0');
-  ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), narrow.data(), size, nullptr, nullptr);
+  ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()),
+                        narrow.data(), size, nullptr, nullptr);
   return narrow;
 }
 
@@ -56,7 +64,10 @@ std::string Narrow(const std::wstring& text) {
 // supplied directly to ThemeData.fontFamily.
 flutter::EncodableList SystemFontFamilies() {
   IDWriteFactory* factory = nullptr;
-  if (FAILED(::DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&factory)))) return {};
+  if (FAILED(::DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+                                   __uuidof(IDWriteFactory),
+                                   reinterpret_cast<IUnknown**>(&factory))))
+    return {};
   IDWriteFontCollection* collection = nullptr;
   if (FAILED(factory->GetSystemFontCollection(&collection))) {
     factory->Release();
@@ -128,31 +139,54 @@ struct WindowsShell::Media {
   winrt::event_token button_token, seek_token;
 
   explicit Media(HWND window) {
-    auto interop = winrt::get_activation_factory<media::SystemMediaTransportControls, ISystemMediaTransportControlsInterop>();
-    winrt::check_hresult(interop->GetForWindow(window, winrt::guid_of<media::SystemMediaTransportControls>(),
-                                               winrt::put_abi(controls)));
+    auto interop =
+        winrt::get_activation_factory<media::SystemMediaTransportControls,
+                                      ISystemMediaTransportControlsInterop>();
+    winrt::check_hresult(interop->GetForWindow(
+        window, winrt::guid_of<media::SystemMediaTransportControls>(),
+        winrt::put_abi(controls)));
     controls.IsEnabled(false);
     controls.IsPlayEnabled(true);
     controls.IsPauseEnabled(true);
     controls.IsStopEnabled(false);
     controls.IsNextEnabled(false);
     controls.IsPreviousEnabled(false);
-    button_token = controls.ButtonPressed([window](auto const&, media::SystemMediaTransportControlsButtonPressedEventArgs const& args) {
-      WPARAM button = 0;
-      switch (args.Button()) {
-        case media::SystemMediaTransportControlsButton::Play: button = kPlay; break;
-        case media::SystemMediaTransportControlsButton::Pause: button = kPause; break;
-        case media::SystemMediaTransportControlsButton::Next: button = kNext; break;
-        case media::SystemMediaTransportControlsButton::Previous: button = kPrevious; break;
-        case media::SystemMediaTransportControlsButton::Stop: button = kStop; break;
-        default: return;
-      }
-      ::PostMessage(window, kMediaButtonMessage, button, 0);
-    });
-    seek_token = controls.PlaybackPositionChangeRequested([window](auto const&, media::PlaybackPositionChangeRequestedEventArgs const& args) {
-      const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(args.RequestedPlaybackPosition()).count();
-      ::PostMessage(window, kMediaButtonMessage, kSeek, static_cast<LPARAM>(ms));
-    });
+    button_token = controls.ButtonPressed(
+        [window](
+            auto const&,
+            media::SystemMediaTransportControlsButtonPressedEventArgs const&
+                args) {
+          WPARAM button = 0;
+          switch (args.Button()) {
+            case media::SystemMediaTransportControlsButton::Play:
+              button = kPlay;
+              break;
+            case media::SystemMediaTransportControlsButton::Pause:
+              button = kPause;
+              break;
+            case media::SystemMediaTransportControlsButton::Next:
+              button = kNext;
+              break;
+            case media::SystemMediaTransportControlsButton::Previous:
+              button = kPrevious;
+              break;
+            case media::SystemMediaTransportControlsButton::Stop:
+              button = kStop;
+              break;
+            default:
+              return;
+          }
+          ::PostMessage(window, kMediaButtonMessage, button, 0);
+        });
+    seek_token = controls.PlaybackPositionChangeRequested(
+        [window](auto const&,
+                 media::PlaybackPositionChangeRequestedEventArgs const& args) {
+          const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              args.RequestedPlaybackPosition())
+                              .count();
+          ::PostMessage(window, kMediaButtonMessage, kSeek,
+                        static_cast<LPARAM>(ms));
+        });
   }
 
   ~Media() {
@@ -164,7 +198,8 @@ struct WindowsShell::Media {
     }
   }
 
-  void SetMetadata(const std::string& title, const std::string& artist, const std::string& thumbnail) {
+  void SetMetadata(const std::string& title, const std::string& artist,
+                   const std::string& thumbnail) {
     auto updater = controls.DisplayUpdater();
     updater.Type(media::MediaPlaybackType::Music);
     updater.MusicProperties().Title(winrt::to_hstring(title));
@@ -174,7 +209,8 @@ struct WindowsShell::Media {
       if (thumbnail.empty()) {
         updater.Thumbnail(nullptr);
       } else {
-        updater.Thumbnail(RandomAccessStreamReference::CreateFromUri(winrt::Windows::Foundation::Uri(winrt::to_hstring(thumbnail))));
+        updater.Thumbnail(RandomAccessStreamReference::CreateFromUri(
+            winrt::Windows::Foundation::Uri(winrt::to_hstring(thumbnail))));
       }
     } catch (...) {
       // A bad address only loses the picture.
@@ -213,15 +249,19 @@ struct WindowsShell::Media {
   }
 };
 
-WindowsShell::WindowsShell(HWND window, flutter::BinaryMessenger* messenger) : window_(window) {
+WindowsShell::WindowsShell(HWND window, flutter::BinaryMessenger* messenger)
+    : window_(window) {
   try {
     media_ = std::make_unique<Media>(window);
   } catch (...) {
     media_.reset();  // Without the overlay everything else still works.
   }
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
-      messenger, "lumtub/windows_shell", &flutter::StandardMethodCodec::GetInstance());
-  channel_->SetMethodCallHandler([this](const auto& call, auto result) { HandleCall(call, std::move(result)); });
+      messenger, "lumtub/windows_shell",
+      &flutter::StandardMethodCodec::GetInstance());
+  channel_->SetMethodCallHandler([this](const auto& call, auto result) {
+    HandleCall(call, std::move(result));
+  });
 }
 
 WindowsShell::~WindowsShell() {
@@ -232,11 +272,13 @@ WindowsShell::~WindowsShell() {
 }
 
 void WindowsShell::Send(const char* method, EncodableValue argument) {
-  channel_->InvokeMethod(method, std::make_unique<EncodableValue>(std::move(argument)));
+  channel_->InvokeMethod(method,
+                         std::make_unique<EncodableValue>(std::move(argument)));
 }
 
-void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
-                              std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
+void WindowsShell::HandleCall(
+    const flutter::MethodCall<EncodableValue>& call,
+    std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
   const std::string& method = call.method_name();
   const EncodableValue* args = call.arguments();
   try {
@@ -251,13 +293,18 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       next_label_ = Widen(StringArg(args, "next"));
       exit_label_ = Widen(StringArg(args, "exit"));
       if (!close_to_tray_ && !minimize_to_tray_ && tray_icon_) ShowFromTray();
-      // With either tray option on, the icon stays while the window is open too.
+      // With either tray option on, the icon stays while the window is open
+      // too.
       if (close_to_tray_ || minimize_to_tray_) AddTrayIcon();
     } else if (method == "setAppIcon") {
-      const std::string name = args ? std::get<std::string>(*args) : std::string();
-      SetAppIcon(name == "tabor" ? IDI_APP_ICON_TABOR : name == "gold" ? IDI_APP_ICON_GOLD : IDI_APP_ICON);
+      const std::string name =
+          args ? std::get<std::string>(*args) : std::string();
+      SetAppIcon(name == "tabor"  ? IDI_APP_ICON_TABOR
+                 : name == "gold" ? IDI_APP_ICON_GOLD
+                                  : IDI_APP_ICON);
     } else if (media_ && method == "setMetadata") {
-      media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"), StringArg(args, "thumbnail"));
+      media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"),
+                          StringArg(args, "thumbnail"));
     } else if (media_ && method == "setStatus") {
       media_->SetStatus(args ? std::get<std::string>(*args) : std::string());
     } else if (media_ && method == "setTimeline") {
@@ -277,9 +324,11 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
   result->Success();
 }
 
-bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result) {
+bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam,
+                                 LRESULT* result) {
   // Explorer restarted and lost every tray icon: put Lumtub's back.
-  static const UINT taskbar_created = ::RegisterWindowMessageW(L"TaskbarCreated");
+  static const UINT taskbar_created =
+      ::RegisterWindowMessageW(L"TaskbarCreated");
   if (message == taskbar_created && tray_icon_) {
     tray_icon_ = false;
     AddTrayIcon();
@@ -288,7 +337,8 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
   // Lumtub started again for the same data folder: show this window.
   static const UINT show_window = ::RegisterWindowMessageW(kShowWindowMessage);
   if (message == show_window) {
-    if (static_cast<unsigned long long>(wparam) == DataRootTag()) ShowFromTray();
+    if (static_cast<unsigned long long>(wparam) == DataRootTag())
+      ShowFromTray();
     *result = 0;
     return true;
   }
@@ -304,7 +354,8 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
     case WM_SIZE:
       // After Flutter has seen the window minimised, whichever way it was
       // (button, taskbar, Win+M, Win+Down).
-      if (wparam == SIZE_MINIMIZED && minimize_to_tray_) ::PostMessage(window_, kHideMessage, 0, 0);
+      if (wparam == SIZE_MINIMIZED && minimize_to_tray_)
+        ::PostMessage(window_, kHideMessage, 0, 0);
       return false;
     case kHideMessage:
       if (minimize_to_tray_ && ::IsIconic(window_)) HideToTray();
@@ -312,12 +363,24 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
       return true;
     case kMediaButtonMessage:
       switch (wparam) {
-        case kPlay: Send("button", EncodableValue("play")); break;
-        case kPause: Send("button", EncodableValue("pause")); break;
-        case kNext: Send("button", EncodableValue("next")); break;
-        case kPrevious: Send("button", EncodableValue("previous")); break;
-        case kStop: Send("button", EncodableValue("stop")); break;
-        case kSeek: Send("seek", EncodableValue(static_cast<int64_t>(lparam))); break;
+        case kPlay:
+          Send("button", EncodableValue("play"));
+          break;
+        case kPause:
+          Send("button", EncodableValue("pause"));
+          break;
+        case kNext:
+          Send("button", EncodableValue("next"));
+          break;
+        case kPrevious:
+          Send("button", EncodableValue("previous"));
+          break;
+        case kStop:
+          Send("button", EncodableValue("stop"));
+          break;
+        case kSeek:
+          Send("seek", EncodableValue(static_cast<int64_t>(lparam)));
+          break;
       }
       *result = 0;
       return true;
@@ -346,7 +409,9 @@ bool WindowsShell::AddTrayIcon() {
   icon.uID = kTrayIconId;
   icon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
   icon.uCallbackMessage = kTrayMessage;
-  icon.hIcon = small_icon_ ? small_icon_ : ::LoadIcon(::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
+  icon.hIcon = small_icon_ ? small_icon_
+                           : ::LoadIcon(::GetModuleHandle(nullptr),
+                                        MAKEINTRESOURCE(IDI_APP_ICON));
   wcscpy_s(icon.szTip, L"Lumtub");
   if (!::Shell_NotifyIconW(NIM_ADD, &icon)) return false;
   tray_icon_ = true;
@@ -359,7 +424,9 @@ void WindowsShell::SetAppIcon(int id) {
   const UINT dpi = ::GetDpiForWindow(window_);
   auto load = [&](int metric) {
     const int size = ::GetSystemMetricsForDpi(metric, dpi);
-    return static_cast<HICON>(::LoadImageW(instance, MAKEINTRESOURCEW(id), IMAGE_ICON, size, size, LR_DEFAULTCOLOR));
+    return static_cast<HICON>(::LoadImageW(instance, MAKEINTRESOURCEW(id),
+                                           IMAGE_ICON, size, size,
+                                           LR_DEFAULTCOLOR));
   };
   // Not "small": the Windows headers define it as a macro.
   HICON large_icon = load(SM_CXICON), little_icon = load(SM_CXSMICON);
@@ -368,8 +435,10 @@ void WindowsShell::SetAppIcon(int id) {
     if (little_icon) ::DestroyIcon(little_icon);
     return;
   }
-  ::SendMessage(window_, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(large_icon));
-  ::SendMessage(window_, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(little_icon));
+  ::SendMessage(window_, WM_SETICON, ICON_BIG,
+                reinterpret_cast<LPARAM>(large_icon));
+  ::SendMessage(window_, WM_SETICON, ICON_SMALL,
+                reinterpret_cast<LPARAM>(little_icon));
   if (tray_icon_) {
     NOTIFYICONDATAW icon{};
     icon.cbSize = sizeof(icon);
@@ -414,16 +483,24 @@ void WindowsShell::ShowTrayMenu() {
   const HWND window = window_;
   // The menu closes on a click elsewhere only if its owner is foreground.
   ::SetForegroundWindow(window);
-  const UINT command = ::TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, cursor.x, cursor.y, 0, window, nullptr);
+  const UINT command =
+      ::TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,
+                       cursor.x, cursor.y, 0, window, nullptr);
   ::DestroyMenu(menu);
   // The menu runs a message loop of its own: the window, and this object
   // with it, may be gone when it returns.
   if (!::IsWindow(window)) return;
   ::PostMessage(window, WM_NULL, 0, 0);
   switch (command) {
-    case kTrayShow: ShowFromTray(); break;
-    case kTrayPlayPause: Send("button", EncodableValue("playpause")); break;
-    case kTrayNext: Send("button", EncodableValue("next")); break;
+    case kTrayShow:
+      ShowFromTray();
+      break;
+    case kTrayPlayPause:
+      Send("button", EncodableValue("playpause"));
+      break;
+    case kTrayNext:
+      Send("button", EncodableValue("next"));
+      break;
     case kTrayExit:
       // The normal close path, so Dart saves progress and releases the player.
       close_to_tray_ = false;

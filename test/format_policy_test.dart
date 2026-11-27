@@ -138,7 +138,7 @@ void main() {
       const settings = PlayerSettings(disabledCodecs: {});
       expect(settings.dubbedAudio, DubbedAudio.original);
       expect(settings.dubLanguage, '');
-      expect(jsonDecode(FormatPolicy.settingsJson(settings))['audioLanguage'], '');
+      expect((jsonDecode(FormatPolicy.settingsJson(settings)) as Map<String, Object?>)['audioLanguage'], '');
       expect(FormatPolicy.dubLanguage(settings), '');
     });
 
@@ -166,7 +166,7 @@ void main() {
       final dub = FormatPolicy.expression(settings, audioLanguage: 'it');
       expect(dub, startsWith('bestvideo+bestaudio[language^=it][language!*=desc]/'));
       expect(dub, endsWith(plain));
-      expect(jsonDecode(FormatPolicy.settingsJson(settings, audioLanguage: 'it'))['audioLanguage'], 'it');
+      expect((jsonDecode(FormatPolicy.settingsJson(settings, audioLanguage: 'it')) as Map<String, Object?>)['audioLanguage'], 'it');
     });
   });
 

@@ -5,7 +5,7 @@ import 'package:lumtub/background_json.dart';
 
 void main() {
   test('small and large documents decode the same as jsonDecode', () async {
-    final small = jsonEncode({'id': 'a', 'formats': []});
+    final small = jsonEncode({'id': 'a', 'formats': <Object?>[]});
     final large = jsonEncode({
       'id': 'b',
       'formats': [for (var i = 0; i < 5000; i++) {'format_id': '$i', 'url': 'https://example.com/${'x' * 40}', 'height': i % 2160}],

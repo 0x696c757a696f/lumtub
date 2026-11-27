@@ -268,7 +268,7 @@ class _DownloadTile extends StatelessWidget {
   }
 
   static void _forget(String? path) {
-    _sizes.remove(path);
+    unawaited(_sizes.remove(path));
     _knownSizes.remove(path);
   }
 

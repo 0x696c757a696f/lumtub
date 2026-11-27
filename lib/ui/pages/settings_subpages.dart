@@ -299,7 +299,7 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
                 onChanged: (checked) {
                   final latest = controller.preferences;
                   final rest = latest.allowedEntries.where((k) => k != entry.key).toList();
-                  controller.savePreferences(latest.copyWith(allowedEntries: checked ?? false ? rest : [...rest, entry.key]));
+                  unawaited(controller.savePreferences(latest.copyWith(allowedEntries: checked ?? false ? rest : [...rest, entry.key])));
                 },
               ),
           ],
@@ -310,14 +310,14 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
       TextButton(
         onPressed: () {
           final latest = controller.preferences;
-          controller.savePreferences(latest.copyWith(allowedEntries: latest.allowedEntries.where((k) => !keys.contains(k)).toList()));
+          unawaited(controller.savePreferences(latest.copyWith(allowedEntries: latest.allowedEntries.where((k) => !keys.contains(k)).toList())));
         },
         child: Text(tr('Tick all')),
       ),
       TextButton(
         onPressed: () {
           final latest = controller.preferences;
-          controller.savePreferences(latest.copyWith(allowedEntries: [...latest.allowedEntries.where((k) => !keys.contains(k)), ...keys]));
+          unawaited(controller.savePreferences(latest.copyWith(allowedEntries: [...latest.allowedEntries.where((k) => !keys.contains(k)), ...keys])));
         },
         child: Text(tr('Untick all')),
       ),
@@ -412,7 +412,7 @@ Future<void> _speedSheet(BuildContext context, AppController controller, double 
               title: Text(tr('Set as default speed')),
               onTap: () {
                 Navigator.pop(sheet);
-                controller.saveSettings(controller.settings.copyWith(defaultSpeed: speed));
+                unawaited(controller.saveSettings(controller.settings.copyWith(defaultSpeed: speed)));
               },
             ),
             ListTile(
@@ -422,7 +422,7 @@ Future<void> _speedSheet(BuildContext context, AppController controller, double 
               onTap: () {
                 Navigator.pop(sheet);
                 final latest = controller.settings;
-                controller.saveSettings(latest.copyWith(speeds: latest.speeds.where((s) => s != speed).toList()));
+                unawaited(controller.saveSettings(latest.copyWith(speeds: latest.speeds.where((s) => s != speed).toList())));
               },
             ),
           ]),
@@ -723,7 +723,7 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
                     final latest = controller.settings;
                     final next = {...latest.sponsorCategories};
                     checked ?? false ? next.add(category) : next.remove(category);
-                    controller.saveSettings(latest.copyWith(sponsorCategories: next));
+                    unawaited(controller.saveSettings(latest.copyWith(sponsorCategories: next)));
                   }
                 : null,
           ),
@@ -817,7 +817,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
                     }),
                     for (var i = 0; i < accentChoices.length; i++)
                       swatch(accentChoices[i].$1, accentChoices[i].$2, appearance.accentIndex == i, () {
-                        controller.saveAppearance(controller.appearance.copyWith(accentIndex: i, skin: '', palette: ''));
+                        unawaited(controller.saveAppearance(controller.appearance.copyWith(accentIndex: i, skin: '', palette: '')));
                       }),
                   ]),
                 ),
@@ -1074,12 +1074,12 @@ class _PicturePageState extends State<_PicturePage> {
             step: 1,
             onChanged: (v) {
               setState(() => _values[key] = v);
-              _c.previewProperty(key, '$v');
+              unawaited(_c.previewProperty(key, '$v'));
             },
             onReset: () {
               setState(() => _values.remove(key));
-              _c.previewProperty(key, '0');
-              _persist();
+              unawaited(_c.previewProperty(key, '0'));
+              unawaited(_persist());
             },
           ),
         _header(context, tr('A/V sync')),
@@ -1097,7 +1097,7 @@ class _PicturePageState extends State<_PicturePage> {
           onReset: () {
             setState(() => _delay = 0);
             _previewDelay();
-            _persist();
+            unawaited(_persist());
           },
         ),
         _tip(context, tr('Previews live on the playing video while dragging. Positive audio delay plays sound later; negative plays it earlier. These values apply to all subsequent videos.')),
@@ -1584,7 +1584,7 @@ class _LogsPageState extends State<_LogsPage> {
             PopupMenuItem(
               value: () {
                 final dir = _dir;
-                if (dir != null) openInExplorer(dir.path);
+                if (dir != null) unawaited(openInExplorer(dir.path));
               },
               child: Text(tr('Open log folder')),
             ),

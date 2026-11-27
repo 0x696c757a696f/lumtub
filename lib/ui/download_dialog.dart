@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
@@ -80,7 +81,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
   @override
   void initState() {
     super.initState();
-    widget.loadFormats().then((formats) {
+    unawaited(widget.loadFormats().then((formats) {
       if (!mounted) return;
       if (formats.video.isEmpty && formats.audio.isEmpty) throw StateError(tr('No downloadable formats found'));
       setState(() {
@@ -89,12 +90,12 @@ class _DownloadDialogState extends State<DownloadDialog> {
       });
     }).catchError((Object e) {
       if (mounted) setState(() => _error = e);
-    });
-    widget.loadSubtitles?.call().then((choices) {
+    }));
+    unawaited(widget.loadSubtitles?.call().then((choices) {
       if (mounted) setState(() => _applySubtitles(choices));
     }).catchError((Object _) {
       if (mounted) setState(() => _subtitlesFailed = true);
-    });
+    }));
   }
 
   /// Offers [choices], with the picks remembered from last time in the

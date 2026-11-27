@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
@@ -49,14 +50,14 @@ class AppWindow {
   static bool get keepsAboveOnWayland => onWayland && KWinKeepAbove.available;
 
   static void _keepAboveOnKde(bool on) {
-    if (keepsAboveOnWayland) KWinKeepAbove.set(on);
+    if (keepsAboveOnWayland) unawaited(KWinKeepAbove.set(on));
   }
 
   static const _channel = MethodChannel('lumtub/windows_shell');
   static bool _nativePip = false;
 
   static bool _call(String method, [Object? arguments]) {
-    _channel.invokeMethod<void>(method, arguments).catchError((Object _) {});
+    unawaited(_channel.invokeMethod<void>(method, arguments).catchError((Object _) {}));
     return true;
   }
 

@@ -21,13 +21,15 @@ class WindowsShell {
 
   // Handles the shell's window messages (before Flutter sees them); returns
   // true, with the result in |result|, when it did.
-  bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result);
+  bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam,
+                     LRESULT* result);
 
  private:
   struct Media;  // The C++/WinRT part, kept out of this header.
 
-  void HandleCall(const flutter::MethodCall<flutter::EncodableValue>& call,
-                  std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleCall(
+      const flutter::MethodCall<flutter::EncodableValue>& call,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void ShowFromTray();
   void HideToTray();

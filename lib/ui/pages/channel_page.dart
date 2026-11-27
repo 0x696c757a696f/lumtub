@@ -56,7 +56,7 @@ class _ChannelPageState extends State<ChannelPage> {
     if (wide) {
       setState(() => _commentsFor = _commentsFor?.id == post.id ? null : post);
     } else {
-      showPostComments(context, controller, post);
+      unawaited(showPostComments(context, controller, post));
     }
   }
 
@@ -114,7 +114,7 @@ class _ChannelPageState extends State<ChannelPage> {
     return NearEndListener(
       onNearEnd: () {
         loader?.loadMore();
-        posts?.loadMore();
+        unawaited(posts?.loadMore());
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: ChannelHeader(controller: controller, channel: channel, onBack: controller.goBack)),

@@ -91,7 +91,8 @@ class _PageSwitcherState extends State<PageSwitcher> {
       switchOutCurve: slides ? Ease.curve : Curves.linear,
       // A new closure each time, so the pages already there are wrapped
       // again: the one that was shown is now on its way out.
-      transitionBuilder: _transition,
+      // ignore: unnecessary_lambdas, a tear-off would be the same function each time.
+      transitionBuilder: (child, animation) => _transition(child, animation),
       child: KeyedSubtree(key: PageStorageKey<String>(widget.pageKey), child: widget.child),
     );
   }

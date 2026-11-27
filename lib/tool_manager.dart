@@ -665,7 +665,7 @@ class ToolManager {
     final dll = File('${dest.path}${_separator}libmpv-2.dll');
     if (libmpv.hasFailed(dll.path)) return;
     if (!await dll.exists()) {
-      final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
+      final names = (release['assets'] as List? ?? const []).whereType<Map<Object?, Object?>>().map((asset) => asset['name']?.toString() ?? '');
       final assetName = libmpvAssetName(names, build.variant);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
       status('Downloading libmpv {0}…', [build.label]);

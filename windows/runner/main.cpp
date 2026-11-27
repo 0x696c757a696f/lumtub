@@ -27,10 +27,12 @@ constexpr size_t kCrashDumpsKept = 5;
 void PruneCrashDumps(const std::wstring& logs) {
   std::vector<std::wstring> dumps;
   WIN32_FIND_DATAW found{};
-  const HANDLE search = ::FindFirstFileW((logs + L"\\lumtub-crash-*.dmp").c_str(), &found);
+  const HANDLE search =
+      ::FindFirstFileW((logs + L"\\lumtub-crash-*.dmp").c_str(), &found);
   if (search == INVALID_HANDLE_VALUE) return;
   do {
-    if (!(found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) dumps.push_back(found.cFileName);
+    if (!(found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+      dumps.push_back(found.cFileName);
   } while (::FindNextFileW(search, &found));
   ::FindClose(search);
   std::sort(dumps.begin(), dumps.end());
@@ -63,12 +65,13 @@ LONG WINAPI WriteCrashDump(EXCEPTION_POINTERS* exception) {
   SYSTEMTIME now{};
   ::GetLocalTime(&now);
   wchar_t path[MAX_PATH]{};
-  swprintf_s(path, _countof(path), L"%ls\\lumtub-crash-%04u%02u%02u-%02u%02u%02u.dmp",
+  swprintf_s(path, _countof(path),
+             L"%ls\\lumtub-crash-%04u%02u%02u-%02u%02u%02u.dmp",
              crash_directory, now.wYear, now.wMonth, now.wDay, now.wHour,
              now.wMinute, now.wSecond);
-  const HANDLE file = ::CreateFileW(path, GENERIC_WRITE, 0,
-                                    nullptr, CREATE_ALWAYS,
-                                    FILE_ATTRIBUTE_NORMAL, nullptr);
+  const HANDLE file =
+      ::CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                    FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) return EXCEPTION_CONTINUE_SEARCH;
 
   MINIDUMP_EXCEPTION_INFORMATION details{};
@@ -89,16 +92,17 @@ LONG WINAPI WriteCrashDump(EXCEPTION_POINTERS* exception) {
 std::string ReadGpuPreference() {
   if (DataRoot().empty()) return "";
   const std::wstring path = DataRoot() + L"\\config\\gpu.txt";
-  const HANDLE file = ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ,
-                                    nullptr, OPEN_EXISTING,
-                                    FILE_ATTRIBUTE_NORMAL, nullptr);
+  const HANDLE file =
+      ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) return "";
   char buffer[64]{};
   DWORD read = 0;
   ::ReadFile(file, buffer, sizeof(buffer) - 1, &read, nullptr);
   ::CloseHandle(file);
   std::string value(buffer, read);
-  while (!value.empty() && (value.back() == '\n' || value.back() == '\r' || value.back() == ' ')) {
+  while (!value.empty() && (value.back() == '\n' || value.back() == '\r' ||
+                            value.back() == ' ')) {
     value.pop_back();
   }
   return value;
@@ -118,12 +122,11 @@ void HardenProcess() {
   PROCESS_MITIGATION_IMAGE_LOAD_POLICY images{};
   images.NoRemoteImages = 1;
   images.NoLowMandatoryLabelImages = 1;
-  ::SetProcessMitigationPolicy(ProcessImageLoadPolicy, &images,
-                               sizeof(images));
+  ::SetProcessMitigationPolicy(ProcessImageLoadPolicy, &images, sizeof(images));
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
-                      _In_ wchar_t *command_line, _In_ int show_command) {
+                      _In_ wchar_t* command_line, _In_ int show_command) {
   HardenProcess();
 
   // Attach to console when present (e.g., 'flutter run') or create a
@@ -144,7 +147,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   // Restarting: the old process started this one and is ending; wait for it
   // so its single-instance lock is gone.
-  if (const wchar_t* after = command_line ? ::wcsstr(command_line, L"--restart-after=") : nullptr) {
+  if (const wchar_t* after = command_line
+                                 ? ::wcsstr(command_line, L"--restart-after=")
+                                 : nullptr) {
     const DWORD pid = static_cast<DWORD>(::wcstoul(after + 16, nullptr, 10));
     if (HANDLE old = ::OpenProcess(SYNCHRONIZE, FALSE, pid)) {
       ::WaitForSingleObject(old, 15000);
@@ -155,11 +160,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // One Lumtub per data folder: two would overwrite each other's settings
   // and library. A second start brings the running one to the front. The
   // handle stays open for the life of the process.
-  const std::wstring lock_name = L"Local\\Lumtub-" + std::to_wstring(DataRootTag());
+  const std::wstring lock_name =
+      L"Local\\Lumtub-" + std::to_wstring(DataRootTag());
   HANDLE single_instance = ::CreateMutexW(nullptr, FALSE, lock_name.c_str());
   if (single_instance != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
     ::AllowSetForegroundWindow(ASFW_ANY);
-    ::PostMessageW(HWND_BROADCAST, ::RegisterWindowMessageW(kShowWindowMessage), static_cast<WPARAM>(DataRootTag()), 0);
+    ::PostMessageW(HWND_BROADCAST, ::RegisterWindowMessageW(kShowWindowMessage),
+                   static_cast<WPARAM>(DataRootTag()), 0);
     ::CloseHandle(single_instance);
     return EXIT_SUCCESS;
   }
@@ -185,12 +192,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     project.set_gpu_preference(flutter::GpuPreference::LowPowerPreference);
     ::SetEnvironmentVariableW(L"LUMTUB_GPU", L"low-power");
   } else if (gpu == "high-performance") {
-    project.set_gpu_preference(flutter::GpuPreference::HighPerformancePreference);
+    project.set_gpu_preference(
+        flutter::GpuPreference::HighPerformancePreference);
     ::SetEnvironmentVariableW(L"LUMTUB_GPU", L"high-performance");
   }
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
+  std::vector<std::string> command_line_arguments = GetCommandLineArguments();
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
@@ -198,17 +205,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Open centred on the primary monitor's work area, in logical pixels.
   RECT work_area{};
   ::SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
-  const double scale_factor =
-      FlutterDesktopGetDpiForMonitor(
-          ::MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY)) / 96.0;
-  const int work_width = static_cast<int>((work_area.right - work_area.left) / scale_factor);
-  const int work_height = static_cast<int>((work_area.bottom - work_area.top) / scale_factor);
+  const double scale_factor = FlutterDesktopGetDpiForMonitor(::MonitorFromPoint(
+                                  POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY)) /
+                              96.0;
+  const int work_width =
+      static_cast<int>((work_area.right - work_area.left) / scale_factor);
+  const int work_height =
+      static_cast<int>((work_area.bottom - work_area.top) / scale_factor);
   const int width = std::min(1280, std::max(work_width - 40, 640));
   const int height = std::min(800, std::max(work_height - 40, 480));
-  const int left = static_cast<int>(work_area.left / scale_factor) + std::max((work_width - width) / 2, 0);
-  const int top = static_cast<int>(work_area.top / scale_factor) + std::max((work_height - height) / 2, 0);
-  Win32Window::Point origin(static_cast<unsigned int>(left), static_cast<unsigned int>(top));
-  Win32Window::Size size(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
+  const int left = static_cast<int>(work_area.left / scale_factor) +
+                   std::max((work_width - width) / 2, 0);
+  const int top = static_cast<int>(work_area.top / scale_factor) +
+                  std::max((work_height - height) / 2, 0);
+  Win32Window::Point origin(static_cast<unsigned int>(left),
+                            static_cast<unsigned int>(top));
+  Win32Window::Size size(static_cast<unsigned int>(width),
+                         static_cast<unsigned int>(height));
   if (!window.Create(L"Lumtub", origin, size)) {
     return EXIT_FAILURE;
   }

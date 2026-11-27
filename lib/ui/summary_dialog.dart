@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
@@ -37,7 +39,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     super.initState();
     final id = widget.controller.playing?.id;
     _summary = id == null ? null : widget.controller.summaryOf(id);
-    if (_summary == null && widget.controller.canSummarize) _run();
+    if (_summary == null && widget.controller.canSummarize) unawaited(_run());
   }
 
   /// Subtitles from 语音识别 first, then the summary made again from them.
@@ -78,7 +80,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
   /// Out of the way so the moment shows; the summary is kept and opens
   /// again at once.
   void _seek(Duration time) {
-    widget.controller.seek(time);
+    unawaited(widget.controller.seek(time));
     Navigator.pop(context);
   }
 
@@ -144,7 +146,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
             onPressed: () async {
               await openTranslationSettings(context, controller);
               if (mounted) setState(() {});
-              if (mounted && controller.canSummarize && _summary == null) _run();
+              if (mounted && controller.canSummarize && _summary == null) unawaited(_run());
             },
             child: Text(tr('Set up AI service')),
           ),

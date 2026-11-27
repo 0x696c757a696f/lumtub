@@ -284,7 +284,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     onLongPress: (i) {
                       if (!topics[i].custom) return;
                       Haptics.menu();
-                      _removeTopic(context, section, topics[i]);
+                      unawaited(_removeTopic(context, section, topics[i]));
                     },
                     trailing: [
                       IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),

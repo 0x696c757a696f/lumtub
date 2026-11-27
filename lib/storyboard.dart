@@ -46,7 +46,7 @@ class Storyboard {
     final formats = info['formats'];
     if (formats is! List) return null;
     final candidates = <Storyboard>[
-      for (final f in formats.whereType<Map>())
+      for (final f in formats.whereType<Map<String, Object?>>())
         if (f['format_note'] == 'storyboard' || '${f['format_id']}'.startsWith('sb'))
           if (_parse(f) case final board?) board,
     ];
@@ -65,23 +65,22 @@ class Storyboard {
         rows: board['rows'] as int,
         columns: board['columns'] as int,
         interval: Duration(microseconds: board['interval'] as int),
-        sheets: [for (final s in board['sheets'] as List) StoryboardSheet(s[0] as String, Duration(microseconds: s[1] as int))],
+        sheets: [for (final s in (board['sheets'] as List<Object?>).cast<List<Object?>>()) StoryboardSheet(s[0]! as String, Duration(microseconds: s[1]! as int))],
       );
     } on TypeError {
       return null;
     }
   }
 
-  static Storyboard? _parse(Map f) {
+  static Storyboard? _parse(Map<String, Object?> f) {
     final width = f['width'], height = f['height'], rows = f['rows'], columns = f['columns'];
     if (width is! num || height is! num || rows is! num || columns is! num) return null;
     if (width <= 0 || height <= 0 || rows <= 0 || columns <= 0) return null;
     final fragments = f['fragments'];
     if (fragments is! List) return null;
     final sheets = <StoryboardSheet>[
-      for (final fragment in fragments.whereType<Map>())
-        if (fragment['url'] is String && fragment['duration'] is num && (fragment['duration'] as num) > 0)
-          StoryboardSheet(fragment['url'] as String, Duration(microseconds: ((fragment['duration'] as num) * 1e6).round())),
+      for (final fragment in fragments.whereType<Map<String, Object?>>())
+        if (fragment case {'url': final String url, 'duration': final num duration} when duration > 0) StoryboardSheet(url, Duration(microseconds: (duration * 1e6).round())),
     ];
     if (sheets.isEmpty) return null;
     // yt-dlp's fps is frames per second; without it every sheet but the
@@ -145,11 +144,11 @@ class StoryboardSheets {
     while (_images.length > keep) {
       // Not disposed: a preview may still be drawing it, and the garbage
       // collector frees it once nothing does.
-      _images.remove(_images.keys.first);
+      unawaited(_images.remove(_images.keys.first));
     }
     // A failure is not kept, so hovering again tries again.
     unawaited(future.then((image) {
-      if (image == null && identical(_images[url], future)) _images.remove(url);
+      if (image == null && identical(_images[url], future)) unawaited(_images.remove(url));
     }));
     return future;
   }

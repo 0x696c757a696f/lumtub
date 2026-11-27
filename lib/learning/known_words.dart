@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -121,5 +122,9 @@ final _known = <String, KnownWords>{};
 /// The known words kept beside [book].
 KnownWords knownWordsOf(VocabularyBook book) => _known.putIfAbsent(
       book.file.path,
-      () => KnownWords(File('${book.file.parent.path}${Platform.pathSeparator}known.json'), book, reviewStoreOf(book))..load(),
+      () {
+        final words = KnownWords(File('${book.file.parent.path}${Platform.pathSeparator}known.json'), book, reviewStoreOf(book));
+        unawaited(words.load());
+        return words;
+      },
     );

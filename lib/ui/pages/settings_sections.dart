@@ -1133,7 +1133,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.downloadSimple),
               onTap: () {
                 final library = controller.library;
-                if (library != null) importSubscriptionsFromFile(context, library);
+                if (library != null) unawaited(importSubscriptionsFromFile(context, library));
               },
             )),
         SettingEntry(tr('Export subscriptions'), (context) => NormalItem(
@@ -1142,7 +1142,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.fileArrowUp),
               onTap: () {
                 final library = controller.library;
-                if (library != null) exportSubscriptionsToFile(context, library);
+                if (library != null) unawaited(exportSubscriptionsToFile(context, library));
               },
             ), subtitle: tr('Backup')),
     ],

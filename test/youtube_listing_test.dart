@@ -40,7 +40,7 @@ void main() {
   final skip = NativeCore.instance == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : null;
 
   test('searches page by page through the web API', () async {
-    final bodies = <Map>[];
+    final bodies = <Map<dynamic, dynamic>>[];
     final client = MockClient((request) async {
       final body = jsonDecode(request.body) as Map;
       bodies.add(body);

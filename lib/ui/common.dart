@@ -44,7 +44,7 @@ bool nearListEnd(ScrollMetrics metrics) => metrics.extentAfter < (metrics.viewpo
 /// while scrolling and also when its content changes size, so a first page
 /// too short to scroll on a tall window still brings the next one.
 class NearEndListener extends StatelessWidget {
-  const NearEndListener({super.key, required this.onNearEnd, this.enabled = true, required this.child});
+  const NearEndListener({super.key, required this.onNearEnd, required this.child, this.enabled = true});
   final VoidCallback onNearEnd;
   final bool enabled;
   final Widget child;

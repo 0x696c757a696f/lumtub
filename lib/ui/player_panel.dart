@@ -193,7 +193,7 @@ class PanelHeading extends StatelessWidget {
 /// [collapsed] shows only the chosen value until 全部 is clicked, for
 /// long lists such as a video's audio tracks.
 class PanelChoices<T> extends StatefulWidget {
-  const PanelChoices({super.key, required this.label, this.icon, required this.value, required this.values, required this.onSelected, this.collapsed = false});
+  const PanelChoices({super.key, required this.label, required this.value, required this.values, required this.onSelected, this.icon, this.collapsed = false});
   final String label;
   final IconData? icon;
   final T value;

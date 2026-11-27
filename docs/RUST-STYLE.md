@@ -5,7 +5,8 @@ the website) follows [Google's Rust style guide][guide], which builds on the
 official [Rust Style Guide][rust-style] and [API Guidelines][api]. This page
 lists what is checked by machine, the rules to keep in mind when writing new
 code, and where Lumtub reads the guide in its own way. The safety rules in
-[SECURE-CODING.md](SECURE-CODING.md) come first wherever the two meet.
+[SECURE-CODING.md](SECURE-CODING.md) come first wherever the two meet. The
+other languages are in [CODE-STYLE.md](CODE-STYLE.md).
 
 [guide]: https://google.github.io/styleguide/rustguide.html
 [rust-style]: https://doc.rust-lang.org/nightly/style-guide/

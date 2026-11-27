@@ -104,7 +104,7 @@ void main() {
     expect(requests.last.url.queryParameters['key'], 'KEY');
     final body = jsonDecode(requests.last.body) as Map;
     expect(body['continuation'], 'NEXT');
-    expect(body['context']['client']['clientVersion'], '2.2026');
+    expect(((body['context'] as Map)['client'] as Map)['clientVersion'], '2.2026');
   });
 
   test('with the cookie sign-in, posts load as the website signed in and polls can be voted in', () async {

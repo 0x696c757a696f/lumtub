@@ -67,7 +67,7 @@ void main() {
 
   testWidgets('the back button closes the side sheet', (tester) async {
     await _open(tester, const Size(1200, 800), showPanel);
-    final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+    final widgetsAppState = tester.state(find.byType(WidgetsApp)) as WidgetsBindingObserver;
     expect(await widgetsAppState.didPopRoute(), isTrue);
     await tester.pumpAndSettle();
     expect(find.text('Body'), findsNothing);

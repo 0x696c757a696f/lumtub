@@ -27,7 +27,8 @@ double ScaleOf(HWND window) {
 // The sizing border Windows reserves around a maximized window.
 int FrameThickness(HWND window) {
   const UINT dpi = ::GetDpiForWindow(window);
-  return ::GetSystemMetricsForDpi(SM_CYFRAME, dpi) + ::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+  return ::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+         ::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 }
 
 // A coordinate from Dart, kept finite and within what std::lround can
@@ -36,7 +37,8 @@ double Number(const EncodableValue& value) {
   double number = 0;
   if (const auto* real = std::get_if<double>(&value)) number = *real;
   if (const auto* narrow = std::get_if<int32_t>(&value)) number = *narrow;
-  if (const auto* wide = std::get_if<int64_t>(&value)) number = static_cast<double>(*wide);
+  if (const auto* wide = std::get_if<int64_t>(&value))
+    number = static_cast<double>(*wide);
   if (!std::isfinite(number)) return 0;
   return std::clamp(number, -1e6, 1e6);
 }
@@ -66,7 +68,12 @@ constexpr DWORD kSystemBackdropBuild = 22621;
 // Windows 10 1803 and later blur with acrylic through the accent policy.
 constexpr DWORD kAccentAcrylicBuild = 17134;
 
-enum Accent { kAccentNone = 0, kAccentClear = 2, kAccentBlur = 3, kAccentAcrylic = 4 };
+enum Accent {
+  kAccentNone = 0,
+  kAccentClear = 2,
+  kAccentBlur = 3,
+  kAccentAcrylic = 4
+};
 
 // The undocumented accent policy that TranslucentTB and the taskbar use.
 // [frost] is 0xAARRGGBB: the colour laid over the blur, as Windows 10's
@@ -85,13 +92,15 @@ void SetAccent(HWND window, Accent state, DWORD frost = 0) {
     SIZE_T size;
   };
   using SetComposition = BOOL(WINAPI*)(HWND, CompositionData*);
-  static const auto set_composition = reinterpret_cast<SetComposition>(
-      ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
+  static const auto set_composition =
+      reinterpret_cast<SetComposition>(::GetProcAddress(
+          ::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
   if (!set_composition) return;
   // The policy wants 0xAABBGGRR. Clear: a gradient of nothing, so the
   // desktop shows as it is (since Windows 8 the extended frame alone is
   // drawn solid). Flag 2: use the colour.
-  const DWORD abgr = (frost & 0xFF00FF00u) | ((frost & 0xFFu) << 16) | ((frost >> 16) & 0xFFu);
+  const DWORD abgr =
+      (frost & 0xFF00FF00u) | ((frost & 0xFFu) << 16) | ((frost >> 16) & 0xFFu);
   const DWORD gradient = state == kAccentClear ? 0u : abgr;
   AccentPolicy accent{state, state == kAccentNone ? 0 : 2, gradient, 0};
   CompositionData data{19 /* WCA_ACCENT_POLICY */, &accent, sizeof(accent)};
@@ -107,10 +116,14 @@ const EncodableValue* Find(const EncodableValue* arguments, const char* key) {
 
 }  // namespace
 
-WindowFrame::WindowFrame(HWND window, flutter::BinaryMessenger* messenger) : window_(window) {
+WindowFrame::WindowFrame(HWND window, flutter::BinaryMessenger* messenger)
+    : window_(window) {
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
-      messenger, "lumtub/window_frame", &flutter::StandardMethodCodec::GetInstance());
-  channel_->SetMethodCallHandler([this](const auto& call, auto result) { HandleCall(call, std::move(result)); });
+      messenger, "lumtub/window_frame",
+      &flutter::StandardMethodCodec::GetInstance());
+  channel_->SetMethodCallHandler([this](const auto& call, auto result) {
+    HandleCall(call, std::move(result));
+  });
 }
 
 WindowFrame::~WindowFrame() {
@@ -121,13 +134,16 @@ WindowFrame::~WindowFrame() {
 void WindowFrame::AttachView(HWND view) {
   if (view_) ::RemoveWindowSubclass(view_, ViewProc, 1);
   view_ = view;
-  if (view_) ::SetWindowSubclass(view_, ViewProc, 1, reinterpret_cast<DWORD_PTR>(this));
+  if (view_)
+    ::SetWindowSubclass(view_, ViewProc, 1, reinterpret_cast<DWORD_PTR>(this));
 }
 
-LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
-                                       UINT_PTR id, DWORD_PTR data) {
+LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam,
+                                       LPARAM lparam, UINT_PTR id,
+                                       DWORD_PTR data) {
   auto* frame = reinterpret_cast<WindowFrame*>(data);
-  if (message == WM_NCHITTEST && frame->Active() && frame->HitTest(lparam) != HTCLIENT) {
+  if (message == WM_NCHITTEST && frame->Active() &&
+      frame->HitTest(lparam) != HTCLIENT) {
     // Passed on to the frame below, which answers caption, maximize
     // button or top edge for the same point.
     return HTTRANSPARENT;
@@ -141,11 +157,13 @@ LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam, L
 }
 
 void WindowFrame::Send(const char* method, EncodableValue argument) {
-  channel_->InvokeMethod(method, std::make_unique<EncodableValue>(std::move(argument)));
+  channel_->InvokeMethod(method,
+                         std::make_unique<EncodableValue>(std::move(argument)));
 }
 
-void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
-                             std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
+void WindowFrame::HandleCall(
+    const flutter::MethodCall<EncodableValue>& call,
+    std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
   const std::string& method = call.method_name();
   const EncodableValue* args = call.arguments();
   if (method == "setCustom") {
@@ -161,10 +179,12 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     const EncodableValue* tint = Find(args, "tint");
     int64_t colour = 0;
     if (tint) {
-      if (const auto* narrow = std::get_if<int32_t>(tint)) colour = static_cast<uint32_t>(*narrow);
+      if (const auto* narrow = std::get_if<int32_t>(tint))
+        colour = static_cast<uint32_t>(*narrow);
       if (const auto* wide = std::get_if<int64_t>(tint)) colour = *wide;
     }
-    result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur"), static_cast<DWORD>(colour)));
+    result->Success(SetDesktopGlass(flag("on"), flag("dark"), flag("blur"),
+                                    static_cast<DWORD>(colour)));
     return;
   } else if (method == "minimize") {
     // The shell sees the resulting WM_SIZE, so minimize-to-tray still applies.
@@ -188,14 +208,17 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     if (has_maximize_) maximize_ = {box[0], box[1], box[2], box[3]};
     interactive_.clear();
     const EncodableValue* interactive = Find(args, "interactive");
-    if (const auto* list = interactive ? std::get_if<EncodableList>(interactive) : nullptr) {
+    if (const auto* list =
+            interactive ? std::get_if<EncodableList>(interactive) : nullptr) {
       for (const auto& item : *list) {
-        if (ReadBox(item, box)) interactive_.push_back({box[0], box[1], box[2], box[3]});
+        if (ReadBox(item, box))
+          interactive_.push_back({box[0], box[1], box[2], box[3]});
       }
     }
   } else if (method == "state") {
     result->Success(EncodableValue(EncodableMap{
-        {EncodableValue("maximized"), EncodableValue(::IsZoomed(window_) != FALSE)},
+        {EncodableValue("maximized"),
+         EncodableValue(::IsZoomed(window_) != FALSE)},
         {EncodableValue("active"), EncodableValue(active_)},
     }));
     return;
@@ -209,7 +232,8 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
 // The frame is replaced only for the normal window: fullscreen (media_kit
 // drops the caption style) and picture in picture already cover everything.
 bool WindowFrame::Active() const {
-  return custom_ && (::GetWindowLongPtr(window_, GWL_STYLE) & WS_CAPTION) == WS_CAPTION &&
+  return custom_ &&
+         (::GetWindowLongPtr(window_, GWL_STYLE) & WS_CAPTION) == WS_CAPTION &&
          !InPictureInPicture(window_);
 }
 
@@ -217,7 +241,8 @@ void WindowFrame::SetCustom(bool on) {
   custom_ = on;
   ApplyMargins();
   ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
+                     SWP_FRAMECHANGED);
   FitView();
   if (!on) SetButton(0);
 }
@@ -229,40 +254,52 @@ void WindowFrame::FitView() {
   RECT now{};
   ::GetWindowRect(view_, &now);
   ::MapWindowPoints(HWND_DESKTOP, window_, reinterpret_cast<POINT*>(&now), 2);
-  if (now.left == 0 && now.top == 0 && now.right == client.right && now.bottom == client.bottom) return;
+  if (now.left == 0 && now.top == 0 && now.right == client.right &&
+      now.bottom == client.bottom)
+    return;
   ::MoveWindow(view_, 0, 0, client.right, client.bottom, TRUE);
 }
 
 void WindowFrame::TraceCaptionClick(LPARAM lparam) {
   if (traces_ >= 20) return;
   ++traces_;
-  POINT point{static_cast<short>(LOWORD(lparam)), static_cast<short>(HIWORD(lparam))};
+  POINT point{static_cast<short>(LOWORD(lparam)),
+              static_cast<short>(HIWORD(lparam))};
   ::ScreenToClient(window_, &point);
   RECT view{};
   if (view_) {
     ::GetWindowRect(view_, &view);
-    ::MapWindowPoints(HWND_DESKTOP, window_, reinterpret_cast<POINT*>(&view), 2);
+    ::MapWindowPoints(HWND_DESKTOP, window_, reinterpret_cast<POINT*>(&view),
+                      2);
   }
   RECT client{};
   ::GetClientRect(window_, &client);
   EncodableList boxes;
   for (const Box& box : interactive_) {
-    boxes.push_back(EncodableValue(EncodableList{EncodableValue(box.left), EncodableValue(box.top),
-                                                 EncodableValue(box.right), EncodableValue(box.bottom)}));
+    boxes.push_back(EncodableValue(
+        EncodableList{EncodableValue(box.left), EncodableValue(box.top),
+                      EncodableValue(box.right), EncodableValue(box.bottom)}));
   }
-  Send("captionClick", EncodableValue(EncodableMap{
-      {EncodableValue("x"), EncodableValue(static_cast<int32_t>(point.x))},
-      {EncodableValue("y"), EncodableValue(static_cast<int32_t>(point.y))},
-      {EncodableValue("scale"), EncodableValue(ScaleOf(window_))},
-      {EncodableValue("view"), EncodableValue(EncodableList{
-          EncodableValue(static_cast<int32_t>(view.left)), EncodableValue(static_cast<int32_t>(view.top)),
-          EncodableValue(static_cast<int32_t>(view.right)), EncodableValue(static_cast<int32_t>(view.bottom))})},
-      {EncodableValue("client"), EncodableValue(EncodableList{
-          EncodableValue(static_cast<int32_t>(client.right)), EncodableValue(static_cast<int32_t>(client.bottom))})},
-      {EncodableValue("caption"), EncodableValue(caption_height_)},
-      {EncodableValue("boxes"), EncodableValue(boxes)},
-      {EncodableValue("zoomed"), EncodableValue(::IsZoomed(window_) != FALSE)},
-  }));
+  Send("captionClick",
+       EncodableValue(EncodableMap{
+           {EncodableValue("x"), EncodableValue(static_cast<int32_t>(point.x))},
+           {EncodableValue("y"), EncodableValue(static_cast<int32_t>(point.y))},
+           {EncodableValue("scale"), EncodableValue(ScaleOf(window_))},
+           {EncodableValue("view"),
+            EncodableValue(EncodableList{
+                EncodableValue(static_cast<int32_t>(view.left)),
+                EncodableValue(static_cast<int32_t>(view.top)),
+                EncodableValue(static_cast<int32_t>(view.right)),
+                EncodableValue(static_cast<int32_t>(view.bottom))})},
+           {EncodableValue("client"),
+            EncodableValue(EncodableList{
+                EncodableValue(static_cast<int32_t>(client.right)),
+                EncodableValue(static_cast<int32_t>(client.bottom))})},
+           {EncodableValue("caption"), EncodableValue(caption_height_)},
+           {EncodableValue("boxes"), EncodableValue(boxes)},
+           {EncodableValue("zoomed"),
+            EncodableValue(::IsZoomed(window_) != FALSE)},
+       }));
 }
 
 // One pixel of glass keeps the shadow and, on Windows 11, the rounded
@@ -271,8 +308,10 @@ void WindowFrame::TraceCaptionClick(LPARAM lparam) {
 // glass, and the blur before Windows 11) needs no frame, and the frame
 // alone would be drawn solid over the desktop.
 void WindowFrame::ApplyMargins() {
-  const bool backdrop = glass_ && glass_blur_ && WindowsBuild() >= kSystemBackdropBuild;
-  const MARGINS margins = backdrop ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
+  const bool backdrop =
+      glass_ && glass_blur_ && WindowsBuild() >= kSystemBackdropBuild;
+  const MARGINS margins =
+      backdrop ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
   ::DwmExtendFrameIntoClientArea(window_, &margins);
 }
 
@@ -282,12 +321,15 @@ void WindowFrame::ApplyMargins() {
 static bool TransparencyEffectsOn() {
   DWORD value = 1;
   DWORD size = sizeof(value);
-  ::RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-                 L"EnableTransparency", RRF_RT_REG_DWORD, nullptr, &value, &size);
+  ::RegGetValueW(
+      HKEY_CURRENT_USER,
+      L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      L"EnableTransparency", RRF_RT_REG_DWORD, nullptr, &value, &size);
   return value != 0;
 }
 
-EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint) {
+EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur,
+                                            DWORD tint) {
   glass_ = on;
   // The skin's colour over the blur, as thick as Dart's alpha says: it
   // follows 透明度, since Windows 10's accent blurs little on its own.
@@ -298,24 +340,28 @@ EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD
   if (on) {
     // The acrylic's own shade follows the skin's side, not the system's.
     const BOOL dark_mode = dark ? TRUE : FALSE;
-    ::DwmSetWindowAttribute(window_, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark_mode, sizeof(dark_mode));
+    ::DwmSetWindowAttribute(window_, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */,
+                            &dark_mode, sizeof(dark_mode));
   } else {
     // Back to the system's light or dark title bar.
     ::SendMessage(window_, WM_DWMCOLORIZATIONCOLORCHANGED, 0, 0);
   }
   ApplyBlur(false);
   ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
+                     SWP_FRAMECHANGED);
   ::InvalidateRect(window_, nullptr, TRUE);
   return EncodableValue(EncodableMap{
       {EncodableValue("shown"), EncodableValue(on)},
       {EncodableValue("blurred"), EncodableValue(glass_blur_)},
       // For the log: which Windows, and how it blurs.
-      {EncodableValue("build"), EncodableValue(static_cast<int64_t>(WindowsBuild()))},
-      {EncodableValue("system"), EncodableValue(!glass_blur_ ? "clear"
-                                                : WindowsBuild() >= kSystemBackdropBuild ? "backdrop"
-                                                : WindowsBuild() >= kAccentAcrylicBuild ? "acrylic"
-                                                : "blur")},
+      {EncodableValue("build"),
+       EncodableValue(static_cast<int64_t>(WindowsBuild()))},
+      {EncodableValue("system"),
+       EncodableValue(!glass_blur_                             ? "clear"
+                      : WindowsBuild() >= kSystemBackdropBuild ? "backdrop"
+                      : WindowsBuild() >= kAccentAcrylicBuild  ? "acrylic"
+                                                               : "blur")},
   });
 }
 
@@ -326,15 +372,21 @@ EncodableValue WindowFrame::SetDesktopGlass(bool on, bool dark, bool blur, DWORD
 void WindowFrame::ApplyBlur(bool moving) {
   const DWORD build = WindowsBuild();
   if (build >= kSystemBackdropBuild) {
-    const int backdrop = !glass_ ? 0 /* DWMSBT_AUTO */ : glass_blur_ ? 3 /* DWMSBT_TRANSIENTWINDOW */ : 1 /* DWMSBT_NONE */;
-    ::DwmSetWindowAttribute(window_, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */, &backdrop, sizeof(backdrop));
+    const int backdrop = !glass_       ? 0 /* DWMSBT_AUTO */
+                         : glass_blur_ ? 3 /* DWMSBT_TRANSIENTWINDOW */
+                                       : 1 /* DWMSBT_NONE */;
+    ::DwmSetWindowAttribute(window_, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */,
+                            &backdrop, sizeof(backdrop));
     SetAccent(window_, glass_ && !glass_blur_ ? kAccentClear : kAccentNone);
     return;
   }
   if (!glass_blur_) {
     SetAccent(window_, glass_ ? kAccentClear : kAccentNone);
   } else {
-    SetAccent(window_, build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur, glass_frost_);
+    SetAccent(
+        window_,
+        build >= kAccentAcrylicBuild && !moving ? kAccentAcrylic : kAccentBlur,
+        glass_frost_);
   }
 }
 
@@ -360,7 +412,8 @@ LRESULT WindowFrame::HitTest(LPARAM lparam) {
   // The side and bottom borders are still the system's.
   const LRESULT system = ::DefWindowProc(window_, WM_NCHITTEST, 0, lparam);
   const bool zoomed = ::IsZoomed(window_) != FALSE;
-  POINT point{static_cast<short>(LOWORD(lparam)), static_cast<short>(HIWORD(lparam))};
+  POINT point{static_cast<short>(LOWORD(lparam)),
+              static_cast<short>(HIWORD(lparam))};
   ::ScreenToClient(window_, &point);
   const double scale = ScaleOf(window_);
   const bool top_edge = !zoomed && point.y < std::lround(6 * scale);
@@ -387,10 +440,14 @@ LRESULT WindowFrame::HitTest(LPARAM lparam) {
       break;
   }
   if (top_edge) return HTTOP;
-  if (caption_height_ <= 0 || point.y < 0 || point.y >= std::lround(caption_height_ * scale)) return HTCLIENT;
+  if (caption_height_ <= 0 || point.y < 0 ||
+      point.y >= std::lround(caption_height_ * scale))
+    return HTCLIENT;
   auto inside = [&](const Box& box) {
-    return point.x >= std::lround(box.left * scale) && point.x < std::lround(box.right * scale) &&
-           point.y >= std::lround(box.top * scale) && point.y < std::lround(box.bottom * scale);
+    return point.x >= std::lround(box.left * scale) &&
+           point.x < std::lround(box.right * scale) &&
+           point.y >= std::lround(box.top * scale) &&
+           point.y < std::lround(box.bottom * scale);
   };
   if (has_maximize_ && inside(maximize_)) return HTMAXBUTTON;
   for (const Box& box : interactive_) {
@@ -399,7 +456,8 @@ LRESULT WindowFrame::HitTest(LPARAM lparam) {
   return HTCAPTION;
 }
 
-bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result) {
+bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam,
+                                LRESULT* result) {
   switch (message) {
     case WM_NCCALCSIZE: {
       if (!wparam || !Active()) return false;
@@ -414,7 +472,8 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
         *result = system;
         return true;
       }
-      params->rgrc[0].top = ::IsZoomed(window_) ? top + FrameThickness(window_) : top;
+      params->rgrc[0].top =
+          ::IsZoomed(window_) ? top + FrameThickness(window_) : top;
       *result = 0;
       return true;
     }
@@ -426,7 +485,8 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
       if (!Active()) return false;
       if (wparam == HTMAXBUTTON) {
         if (!tracking_) {
-          TRACKMOUSEEVENT track{sizeof(track), TME_LEAVE | TME_NONCLIENT, window_, 0};
+          TRACKMOUSEEVENT track{sizeof(track), TME_LEAVE | TME_NONCLIENT,
+                                window_, 0};
           tracking_ = ::TrackMouseEvent(&track) != FALSE;
         }
         if (button_state_ == 0) SetButton(1);
@@ -448,7 +508,8 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
       return true;
     case WM_NCLBUTTONUP:
       if (!Active() || wparam != HTMAXBUTTON) return false;
-      if (button_state_ == 2) ::ShowWindow(window_, ::IsZoomed(window_) ? SW_RESTORE : SW_MAXIMIZE);
+      if (button_state_ == 2)
+        ::ShowWindow(window_, ::IsZoomed(window_) ? SW_RESTORE : SW_MAXIMIZE);
       SetButton(1);
       *result = 0;
       return true;
@@ -477,7 +538,9 @@ bool WindowFrame::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRES
 
 void WindowFrame::HidePointer(const EncodableValue* area) {
   double box[4];
-  if (!view_ || !area || !ReadBox(*area, box) || ::GetForegroundWindow() != window_) return;
+  if (!view_ || !area || !ReadBox(*area, box) ||
+      ::GetForegroundWindow() != window_)
+    return;
   POINT point;
   if (!::GetCursorPos(&point)) return;
   const HWND under = ::WindowFromPoint(point);
@@ -495,7 +558,9 @@ void WindowFrame::HidePointer(const EncodableValue* area) {
 
 void WindowFrame::PointerMoved() {
   POINT point;
-  if (!::GetCursorPos(&point) || (point.x == hidden_at_.x && point.y == hidden_at_.y)) return;
+  if (!::GetCursorPos(&point) ||
+      (point.x == hidden_at_.x && point.y == hidden_at_.y))
+    return;
   pointer_hidden_ = false;
   // Flutter answers the move with the pointer it wants, which may be the
   // one it already had and so is not sent again.

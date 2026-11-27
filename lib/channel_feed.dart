@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 
@@ -35,7 +36,7 @@ class ChannelFeed {
   Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) {
     if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return Future.value(items);
     return _inFlight[channel.id] ??= _fetch(channel).whenComplete(() {
-      _inFlight.remove(channel.id);
+      unawaited(_inFlight.remove(channel.id));
     });
   }
 

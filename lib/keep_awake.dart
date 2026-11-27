@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -31,7 +32,7 @@ class KeepAwake {
     final awake = flags & _displayRequired != 0;
     if (awake == _shellAwake) return;
     _shellAwake = awake;
-    const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setKeepAwake', awake).catchError((Object _) {});
+    unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setKeepAwake', awake).catchError((Object _) {}));
   }
 
   static bool _hidden = false;

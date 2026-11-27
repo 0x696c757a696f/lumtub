@@ -136,7 +136,7 @@ class DanmakuPainter {
         image?.dispose();
         return;
       }
-      if (image == null) _pictures.remove(url);
+      if (image == null) unawaited(_pictures.remove(url));
       done.complete(image);
     }
 

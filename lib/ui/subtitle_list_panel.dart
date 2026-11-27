@@ -255,8 +255,8 @@ class _SubtitleListState extends State<SubtitleList> {
     widget.controller.removeListener(_secondChanged);
     widget.controller.learning.removeListener(_learningChanged);
     _book?.removeListener(_learningChanged);
-    _trackChanges?.cancel();
-    _positions?.cancel();
+    unawaited(_trackChanges?.cancel());
+    unawaited(_positions?.cancel());
     _typing?.cancel();
     _scroll.dispose();
     super.dispose();
@@ -264,7 +264,7 @@ class _SubtitleListState extends State<SubtitleList> {
 
   void _listen(List<PairedCue> cues) {
     final starts = [for (final c in cues) c.cue];
-    _positions?.cancel();
+    unawaited(_positions?.cancel());
     void at(Duration position) {
       final index = cueIndexAt(starts, position);
       if (index == _current || !mounted) return;

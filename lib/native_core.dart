@@ -475,6 +475,21 @@ class NativeCore {
 
   int Function()? _processCpu;
 
+  /// Chinese [text], translated from [original] (empty when unknown), in
+  /// the Catholic Church's wording (native/lumtub_core/src/church_words.rs):
+  /// [variant] 0 simplified, 1 Taiwan, 2 Hong Kong, plus 4 for the Byzantine
+  /// rite. Null when nothing changes or without a core that has it.
+  String? churchWords(String text, {required int variant, String original = ''}) {
+    try {
+      final call = _churchWords ??= library.lookupFunction<Pointer<Utf8> Function(Uint32, Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_church_words');
+      return take(withText(text, (t, tl) => withText(original, (o, ol) => call(variant, t, tl, o, ol))));
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  Pointer<Utf8> Function(int, Pointer<Uint8>, int, Pointer<Uint8>, int)? _churchWords;
+
   /// Joins a downloaded picture and sound without ffmpeg, as [request]
   /// (`{video, audio, out, container, subtitles, title, cover, cut}`, see
   /// JoinRequest) asks; the path written and the stretches left out, or

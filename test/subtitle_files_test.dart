@@ -132,6 +132,36 @@ void main() {
     expect(WebVtt.startOf(cues.last.timing), const Duration(milliseconds: 2010));
   });
 
+  test('hands translations, and only translations, to the last words', () async {
+    final client = MockClient((request) async => http.Response(request.url.queryParameters.containsKey('tlang') ? 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nyoutube\n' : _auto, 200));
+    final seen = <String>[];
+    final files = SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero], wording: (text, target, original) {
+      seen.add(target);
+      return text.replaceAll('youtube', 'worded');
+    });
+    final own = await files.pathFor(const SubtitleOption(language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en'));
+    expect(await File(own).readAsString(), isNot(contains('worded')));
+    expect(seen, isEmpty);
+    final translated = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=fr&tlang=zh-Hans', kind: SubtitleKind.translated));
+    expect(await File(translated).readAsString(), contains('worded'));
+    expect(seen, ['zh-Hans']);
+  });
+
+  test('gives each translated cue its own original for the last words', () async {
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response(_auto, 200));
+    final seen = <(String, String)>[];
+    final translator = _Upper();
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], wording: (text, target, original) {
+      seen.add((text, original));
+      return text;
+    });
+    await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    expect(seen, isNotEmpty);
+    for (final (text, original) in seen) {
+      expect(text, original.toUpperCase());
+    }
+  });
+
   test('asks again in halves when a translation joins lines', () async {
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 5; i++) {

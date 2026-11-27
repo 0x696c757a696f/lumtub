@@ -14,6 +14,7 @@ pub mod cast_lan;
 pub mod cast_mkv;
 pub mod cast_webm;
 pub mod channel_lengths;
+pub mod church_words;
 pub mod comment_action;
 pub mod comments;
 pub mod counts;
@@ -84,5 +85,5 @@ pub mod ytdlp_signature;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    67
+    68
 }

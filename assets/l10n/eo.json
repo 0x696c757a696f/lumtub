@@ -4262,5 +4262,21 @@
   "Length {0}": "Daŭro {0}",
   "{0}% watched": "{0}% spektita",
   "Scroll left": "Rulumi maldekstren",
-  "Scroll right": "Rulumi dekstren"
+  "Scroll right": "Rulumi dekstren",
+  "Connect": "Konekti",
+  "Connect ListenBrainz": "Konekti ListenBrainz",
+  "Connected as {0}": "Konektita kiel {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Konektita kiel {0} · {1} aŭskultoj atendas sendon",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Konektita kiel {0}. Kanto kalkuliĝas kiam vi aŭskultis duonon de ĝi aŭ kvar minutojn, kiu okazas unue. Nenio sendiĝas en inkognita reĝimo.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopiu vian uzantan ĵetonon de la agorda paĝo de ListenBrainz kaj algluu ĝin ĉi tie. Ĝi estas konservata ĉifrita sur ĉi tiu aparato.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Ne eblis atingi ListenBrainz. Kontrolu vian reton kaj reprovu",
+  "Couldn't save the token": "Ne eblis konservi la ĵetonon",
+  "Disconnect": "Malkonekti",
+  "ListenBrainz did not accept this token": "ListenBrainz ne akceptis ĉi tiun ĵetonon",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ne plu akceptas la ĵetonon. Tuŝetu por enigi novan",
+  "Listening history, scrobbling, music": "Aŭskulthistorio, scrobbling, muziko",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Malŝaltita. Kantoj, kiujn vi aŭskultas, povas esti aldonitaj al via aŭskulthistorio en ListenBrainz; aliaj filmetoj neniam sendiĝas",
+  "Open ListenBrainz settings": "Malfermi agordojn de ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobbli kantojn al ListenBrainz",
+  "User token": "Uzanta ĵetono"
 }

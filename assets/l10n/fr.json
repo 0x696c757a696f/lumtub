@@ -4265,5 +4265,21 @@
   "Length {0}": "Durée {0}",
   "{0}% watched": "{0} % vu",
   "Scroll left": "Faire défiler vers la gauche",
-  "Scroll right": "Faire défiler vers la droite"
+  "Scroll right": "Faire défiler vers la droite",
+  "Connect": "Connecter",
+  "Connect ListenBrainz": "Connecter ListenBrainz",
+  "Connected as {0}": "Connecté en tant que {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Connecté en tant que {0} · {1} écoutes en attente d'envoi",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Connecté en tant que {0}. Un titre est comptabilisé dès que vous en avez écouté la moitié ou quatre minutes, selon ce qui arrive en premier. Rien n'est envoyé en navigation privée.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Copiez votre jeton utilisateur depuis la page des paramètres de ListenBrainz et collez-le ici. Il est stocké chiffré sur cet appareil.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Impossible de joindre ListenBrainz. Vérifiez votre réseau et réessayez",
+  "Couldn't save the token": "Impossible d'enregistrer le jeton",
+  "Disconnect": "Déconnecter",
+  "ListenBrainz did not accept this token": "ListenBrainz n'a pas accepté ce jeton",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz n'accepte plus le jeton. Touchez pour en saisir un nouveau",
+  "Listening history, scrobbling, music": "Historique d'écoute, scrobbling, musique",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Désactivé. Les titres que vous écoutez peuvent être ajoutés à votre historique d'écoute ListenBrainz ; les autres vidéos ne sont jamais envoyées",
+  "Open ListenBrainz settings": "Ouvrir les paramètres de ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobbler les titres vers ListenBrainz",
+  "User token": "Jeton utilisateur"
 }

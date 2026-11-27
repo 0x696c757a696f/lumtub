@@ -4262,5 +4262,21 @@
   "Length {0}": "Үргэлжлэх хугацаа {0}",
   "{0}% watched": "{0}% үзсэн",
   "Scroll left": "Зүүн тийш гүйлгэх",
-  "Scroll right": "Баруун тийш гүйлгэх"
+  "Scroll right": "Баруун тийш гүйлгэх",
+  "Connect": "Холбох",
+  "Connect ListenBrainz": "ListenBrainz холбох",
+  "Connected as {0}": "{0} гэж холбогдсон",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} гэж холбогдсон · илгээгдэхийг хүлээж буй {1} сонсолт",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} гэж холбогдсон. Дууны хагас эсвэл дөрвөн минутыг (аль түрүүлж хүрсэн нь) сонссон үед тооцогдоно. Нууцлалтай горимд юу ч илгээгдэхгүй.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ListenBrainz-ийн тохиргооны хуудаснаас хэрэглэгчийн токеноо хуулж, энд буулгана уу. Энэ төхөөрөмж дээр шифрлэгдсэн хэлбэрээр хадгалагдана.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-тэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу",
+  "Couldn't save the token": "Токенийг хадгалж чадсангүй",
+  "Disconnect": "Салгах",
+  "ListenBrainz did not accept this token": "ListenBrainz энэ токенийг хүлээн авсангүй",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz токенийг цаашид хүлээн авахаа больсон. Шинийг оруулахын тулд товшино уу",
+  "Listening history, scrobbling, music": "Сонсолтын түүх, скроббл, хөгжим",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Унтраалттай. Таны сонссон дуунуудыг ListenBrainz сонсолтын түүхэд нэмж болно; бусад бичлэгийг хэзээ ч илгээхгүй",
+  "Open ListenBrainz settings": "ListenBrainz-ийн тохиргоог нээх",
+  "Scrobble songs to ListenBrainz": "Дууг ListenBrainz руу scrobble хийх",
+  "User token": "Хэрэглэгчийн токен"
 }

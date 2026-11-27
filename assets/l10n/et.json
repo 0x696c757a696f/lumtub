@@ -4262,5 +4262,21 @@
   "Length {0}": "Pikkus {0}",
   "{0}% watched": "{0}% vaadatud",
   "Scroll left": "Keri vasakule",
-  "Scroll right": "Keri paremale"
+  "Scroll right": "Keri paremale",
+  "Connect": "Ühenda",
+  "Connect ListenBrainz": "Ühenda ListenBrainz",
+  "Connected as {0}": "Ühendatud kasutajana {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Ühendatud kasutajana {0} · {1} kuulamist ootab saatmist",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Ühendatud kasutajana {0}. Lugu loetakse, kui oled kuulanud poole sellest või neli minutit, olenevalt sellest, kumb saabub enne. Inkognito režiimis ei saadeta midagi.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopeeri oma kasutajatõend ListenBrainzi seadete lehelt ja kleebi siia. See salvestatakse sellesse seadmesse krüptituna.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainzi ei õnnestunud kätte saada. Kontrolli võrku ja proovi uuesti",
+  "Couldn't save the token": "Tõendi salvestamine ebaõnnestus",
+  "Disconnect": "Katkesta ühendus",
+  "ListenBrainz did not accept this token": "ListenBrainz ei aktsepteerinud seda tõendit",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ei aktsepteeri tõendit enam. Uue sisestamiseks puuduta",
+  "Listening history, scrobbling, music": "Kuulamisajalugu, scrobblimine, muusika",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Väljas. Sinu kuulatud lugusid saab lisada ListenBrainzi kuulamisajalukku; muid videoid ei saadeta kunagi",
+  "Open ListenBrainz settings": "Ava ListenBrainzi seaded",
+  "Scrobble songs to ListenBrainz": "Scrobbli lugusid ListenBrainzi",
+  "User token": "Kasutajatõend"
 }

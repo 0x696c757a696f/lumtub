@@ -4262,5 +4262,21 @@
   "Length {0}": "ხანგრძლივობა {0}",
   "{0}% watched": "ნანახია {0}%",
   "Scroll left": "გადაადგილება მარცხნივ",
-  "Scroll right": "გადაადგილება მარჯვნივ"
+  "Scroll right": "გადაადგილება მარჯვნივ",
+  "Connect": "დაკავშირება",
+  "Connect ListenBrainz": "ListenBrainz-ის დაკავშირება",
+  "Connected as {0}": "დაკავშირებულია როგორც {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "დაკავშირებულია როგორც {0} · გასაგზავნად ელოდება {1} მოსმენა",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "დაკავშირებულია როგორც {0}. სიმღერა ითვლება, როცა მოუსმენთ მის ნახევარს ან ოთხ წუთს, რომელიც უფრო ადრე მოხდება. ინკოგნიტო რეჟიმში არაფერი იგზავნება.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "დააკოპირეთ მომხმარებლის ტოკენი ListenBrainz-ის პარამეტრების გვერდიდან და ჩასვით აქ. ის ინახება ამ მოწყობილობაზე დაშიფრულად.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-თან დაკავშირება ვერ მოხერხდა. შეამოწმეთ ქსელი და სცადეთ ხელახლა",
+  "Couldn't save the token": "ტოკენის შენახვა ვერ მოხერხდა",
+  "Disconnect": "გამორთვა",
+  "ListenBrainz did not accept this token": "ListenBrainz-მა ეს ტოკენი არ მიიღო",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz აღარ იღებს ტოკენს. შეეხეთ ახლის შესაყვანად",
+  "Listening history, scrobbling, music": "მოსმენის ისტორია, scrobbling, მუსიკა",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "გამორთულია. თქვენ მიერ მოსმენილი სიმღერები შეიძლება დაემატოს ListenBrainz-ის მოსმენის ისტორიას; სხვა ვიდეოები არასდროს იგზავნება",
+  "Open ListenBrainz settings": "ListenBrainz-ის პარამეტრების გახსნა",
+  "Scrobble songs to ListenBrainz": "სიმღერების scrobble ListenBrainz-ზე",
+  "User token": "მომხმარებლის ტოკენი"
 }

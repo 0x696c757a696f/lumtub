@@ -4262,5 +4262,21 @@
   "Length {0}": "دورانیہ {0}",
   "{0}% watched": "{0}% دیکھا گیا",
   "Scroll left": "بائیں اسکرول کریں",
-  "Scroll right": "دائیں اسکرول کریں"
+  "Scroll right": "دائیں اسکرول کریں",
+  "Connect": "منسلک کریں",
+  "Connect ListenBrainz": "ListenBrainz منسلک کریں",
+  "Connected as {0}": "{0} کے طور پر منسلک",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} کے طور پر منسلک · {1} سماعتیں بھیجے جانے کی منتظر",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} کے طور پر منسلک۔ گانے کا آدھا حصہ یا چار منٹ، جو پہلے ہو، سننے پر وہ شمار ہوتا ہے۔ پوشیدہ موڈ میں کچھ نہیں بھیجا جاتا۔",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "اپنے ListenBrainz کی سیٹنگز کے صفحے سے صارف ٹوکن کاپی کریں اور یہاں پیسٹ کریں۔ یہ اس آلے پر انکرپٹ کر کے محفوظ کیا جاتا ہے۔",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz تک رسائی نہیں ہو سکی۔ اپنا نیٹ ورک چیک کریں اور دوبارہ کوشش کریں",
+  "Couldn't save the token": "ٹوکن محفوظ نہیں ہو سکا",
+  "Disconnect": "منقطع کریں",
+  "ListenBrainz did not accept this token": "ListenBrainz نے یہ ٹوکن قبول نہیں کیا",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz اب یہ ٹوکن قبول نہیں کرتا۔ نیا درج کرنے کے لیے ٹیپ کریں",
+  "Listening history, scrobbling, music": "سننے کی تاریخ، scrobbling، موسیقی",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "بند۔ آپ کے سنے ہوئے گانے آپ کی ListenBrainz سننے کی تاریخ میں شامل کیے جا سکتے ہیں؛ دیگر ویڈیوز کبھی نہیں بھیجی جاتیں",
+  "Open ListenBrainz settings": "ListenBrainz کی سیٹنگز کھولیں",
+  "Scrobble songs to ListenBrainz": "گانوں کو ListenBrainz پر scrobble کریں",
+  "User token": "صارف ٹوکن"
 }

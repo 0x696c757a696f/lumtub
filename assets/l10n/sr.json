@@ -4262,5 +4262,21 @@
   "Length {0}": "Трајање {0}",
   "{0}% watched": "Погледано {0}%",
   "Scroll left": "Помери улево",
-  "Scroll right": "Помери удесно"
+  "Scroll right": "Помери удесно",
+  "Connect": "Повежи",
+  "Connect ListenBrainz": "Повежи ListenBrainz",
+  "Connected as {0}": "Повезано као {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Повезано као {0} · {1} слушања чека слање",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Повезано као {0}. Песма се рачуна када послушате половину или четири минута, шта год наступи прво. У анонимном режиму ништа се не шаље.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Копирајте свој кориснички токен са странице подешавања ListenBrainz-а и налепите га овде. Чува се шифрован на овом уређају.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Није могуће доћи до ListenBrainz-а. Проверите мрежу и покушајте поново",
+  "Couldn't save the token": "Није могуће сачувати токен",
+  "Disconnect": "Прекини везу",
+  "ListenBrainz did not accept this token": "ListenBrainz није прихватио овај токен",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz више не прихвата токен. Додирните да унесете нови",
+  "Listening history, scrobbling, music": "Историја слушања, scrobbling, музика",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Искључено. Песме које слушате могу се додати у вашу историју слушања на ListenBrainz-у; други видео снимци се никада не шаљу",
+  "Open ListenBrainz settings": "Отвори подешавања ListenBrainz-а",
+  "Scrobble songs to ListenBrainz": "Scrobbluj песме на ListenBrainz",
+  "User token": "Кориснички токен"
 }

@@ -4262,5 +4262,21 @@
   "Length {0}": "সময়কাল {0}",
   "{0}% watched": "{0}% চোৱা হৈছে",
   "Scroll left": "বাওঁফালে স্ক্ৰ'ল কৰক",
-  "Scroll right": "সোঁফালে স্ক্ৰ'ল কৰক"
+  "Scroll right": "সোঁফালে স্ক্ৰ'ল কৰক",
+  "Connect": "সংযোগ কৰক",
+  "Connect ListenBrainz": "ListenBrainz সংযোগ কৰক",
+  "Connected as {0}": "{0} হিচাপে সংযুক্ত",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} হিচাপে সংযুক্ত · {1}টা শুনা পঠিয়াবলৈ অপেক্ষাৰত",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} হিচাপে সংযুক্ত। এটা গান আধা বা চাৰি মিনিট শুনিলে, যিটো আগতে হয়, গণনা কৰা হয়। ইনকগনিটো ম'ডত একো পঠোৱা নহয়।",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "আপোনাৰ ListenBrainz ছেটিংছ পৃষ্ঠাৰ পৰা ব্যৱহাৰকাৰীৰ টোকেন কপি কৰি ইয়াত পেষ্ট কৰক। ই এই ডিভাইচত এনক্ৰিপ্ট কৰি সংৰক্ষণ কৰা হয়।",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-ৰ সৈতে যোগাযোগ কৰিব পৰা নগ'ল। আপোনাৰ নেটৱৰ্ক পৰীক্ষা কৰি পুনৰ চেষ্টা কৰক",
+  "Couldn't save the token": "টোকেনটো সংৰক্ষণ কৰিব পৰা নগ'ল",
+  "Disconnect": "সংযোগ বিচ্ছিন্ন কৰক",
+  "ListenBrainz did not accept this token": "ListenBrainz-এ এই টোকেন গ্ৰহণ কৰা নাই",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz-এ আৰু টোকেনটো গ্ৰহণ নকৰে। নতুন এটা দিবলৈ টিপক",
+  "Listening history, scrobbling, music": "শুনাৰ ইতিহাস, scrobbling, সংগীত",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "বন্ধ। আপুনি শুনা গানবোৰ আপোনাৰ ListenBrainz শুনাৰ ইতিহাসত যোগ কৰিব পাৰি; অন্য ভিডিঅ' কেতিয়াও পঠোৱা নহয়",
+  "Open ListenBrainz settings": "ListenBrainz ছেটিংছ খোলক",
+  "Scrobble songs to ListenBrainz": "গান ListenBrainz-লৈ scrobble কৰক",
+  "User token": "ব্যৱহাৰকাৰীৰ টোকেন"
 }

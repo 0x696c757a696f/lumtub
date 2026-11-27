@@ -4262,5 +4262,21 @@
   "Length {0}": "Hossz: {0}",
   "{0}% watched": "{0}% megtekintve",
   "Scroll left": "Görgetés balra",
-  "Scroll right": "Görgetés jobbra"
+  "Scroll right": "Görgetés jobbra",
+  "Connect": "Csatlakozás",
+  "Connect ListenBrainz": "ListenBrainz csatlakoztatása",
+  "Connected as {0}": "Csatlakozva mint {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Csatlakozva mint {0} · {1} meghallgatás vár elküldésre",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Csatlakozva mint {0}. Egy dal akkor számít, ha meghallgattad a felét vagy négy percet belőle, attól függően, melyik következik be előbb. Inkognitó módban semmi sem kerül elküldésre.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Másold ki a felhasználói tokent a ListenBrainz beállítások oldaláról, és illeszd be ide. Titkosítva tárolódik ezen az eszközön.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Nem sikerült elérni a ListenBrainzet. Ellenőrizd a hálózatot, és próbáld újra",
+  "Couldn't save the token": "Nem sikerült menteni a tokent",
+  "Disconnect": "Leválasztás",
+  "ListenBrainz did not accept this token": "A ListenBrainz nem fogadta el ezt a tokent",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "A ListenBrainz már nem fogadja el a tokent. Koppints egy új megadásához",
+  "Listening history, scrobbling, music": "Hallgatási előzmények, scrobble, zene",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Ki. A hallgatott dalok hozzáadhatók a ListenBrainz hallgatási előzményeidhez; más videók soha nem kerülnek elküldésre",
+  "Open ListenBrainz settings": "ListenBrainz beállítások megnyitása",
+  "Scrobble songs to ListenBrainz": "Dalok scrobble-ölése a ListenBrainzre",
+  "User token": "Felhasználói token"
 }

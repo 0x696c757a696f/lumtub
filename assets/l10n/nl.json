@@ -4262,5 +4262,21 @@
   "Length {0}": "Duur {0}",
   "{0}% watched": "{0}% bekeken",
   "Scroll left": "Naar links scrollen",
-  "Scroll right": "Naar rechts scrollen"
+  "Scroll right": "Naar rechts scrollen",
+  "Connect": "Verbinden",
+  "Connect ListenBrainz": "ListenBrainz verbinden",
+  "Connected as {0}": "Verbonden als {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Verbonden als {0} · {1} luisterbeurten wachten om te worden verzonden",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Verbonden als {0}. Een nummer telt mee zodra je de helft ervan of vier minuten hebt geluisterd, wat het eerst komt. In incognitomodus wordt niets verzonden.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopieer je gebruikerstoken van je ListenBrainz-instellingenpagina en plak het hier. Het wordt versleuteld op dit apparaat opgeslagen.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz is niet bereikbaar. Controleer je netwerk en probeer het opnieuw",
+  "Couldn't save the token": "Kan het token niet opslaan",
+  "Disconnect": "Verbinding verbreken",
+  "ListenBrainz did not accept this token": "ListenBrainz heeft dit token niet geaccepteerd",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz accepteert het token niet meer. Tik om een nieuw token in te voeren",
+  "Listening history, scrobbling, music": "Luistergeschiedenis, scrobbelen, muziek",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Uit. Nummers waar je naar luistert kunnen worden toegevoegd aan je ListenBrainz-luistergeschiedenis; andere video's worden nooit verzonden",
+  "Open ListenBrainz settings": "ListenBrainz-instellingen openen",
+  "Scrobble songs to ListenBrainz": "Nummers scrobbelen naar ListenBrainz",
+  "User token": "Gebruikerstoken"
 }

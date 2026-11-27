@@ -4265,5 +4265,21 @@
   "Length {0}": "長さ {0}",
   "{0}% watched": "{0}% 視聴済み",
   "Scroll left": "左にスクロール",
-  "Scroll right": "右にスクロール"
+  "Scroll right": "右にスクロール",
+  "Connect": "接続",
+  "Connect ListenBrainz": "ListenBrainz に接続",
+  "Connected as {0}": "{0} として接続中",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} として接続中 · 未送信の再生履歴 {1} 件",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} として接続中。曲は、半分まで、または 4 分まで聴いた時点のどちらか早い方でカウントされます。シークレットモードでは何も送信されません。",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ListenBrainz の設定ページからユーザートークンをコピーして、ここに貼り付けてください。トークンは暗号化してこの端末に保存されます。",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz に接続できませんでした。ネットワークを確認して、もう一度お試しください",
+  "Couldn't save the token": "トークンを保存できませんでした",
+  "Disconnect": "接続を解除",
+  "ListenBrainz did not accept this token": "ListenBrainz がこのトークンを受け付けませんでした",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz がトークンを受け付けなくなりました。タップして新しいトークンを入力してください",
+  "Listening history, scrobbling, music": "再生履歴、スクロブル、音楽",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "オフ。聴いた曲を ListenBrainz の再生履歴に追加できます。ほかの動画が送信されることはありません",
+  "Open ListenBrainz settings": "ListenBrainz の設定を開く",
+  "Scrobble songs to ListenBrainz": "曲を ListenBrainz にスクロブル",
+  "User token": "ユーザートークン"
 }

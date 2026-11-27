@@ -4262,5 +4262,21 @@
   "Length {0}": "ርዝመት {0}",
   "{0}% watched": "{0}% ታይቷል",
   "Scroll left": "ወደ ግራ ሸብልል",
-  "Scroll right": "ወደ ቀኝ ሸብልል"
+  "Scroll right": "ወደ ቀኝ ሸብልል",
+  "Connect": "አገናኝ",
+  "Connect ListenBrainz": "ListenBrainz አገናኝ",
+  "Connected as {0}": "እንደ {0} ተገናኝቷል",
+  "Connected as {0} · {1} listens waiting to be sent": "እንደ {0} ተገናኝቷል · {1} ማዳመጦች ለመላክ በመጠባበቅ ላይ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "እንደ {0} ተገናኝቷል። ዘፈን ግማሹን ወይም አራት ደቂቃ ሲያዳምጡ፣ የትኛው ቀድሞ ቢደርስ፣ ይቆጠራል። በማያሳውቅ ሁነታ ምንም አይላክም።",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "የተጠቃሚ ቶከንዎን ከListenBrainz የቅንብሮች ገጽ ገልብጠው እዚህ ይለጥፉ። በዚህ መሣሪያ ላይ ተመስጥሮ ይቀመጣል።",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ጋር መድረስ አልተቻለም። አውታረ መረብዎን ያረጋግጡ እና እንደገና ይሞክሩ",
+  "Couldn't save the token": "ቶከኑን ማስቀመጥ አልተቻለም",
+  "Disconnect": "አቋርጥ",
+  "ListenBrainz did not accept this token": "ListenBrainz ይህን ቶከን አልተቀበለም",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ቶከኑን ከእንግዲህ አይቀበልም። አዲስ ለማስገባት መታ ያድርጉ",
+  "Listening history, scrobbling, music": "የማዳመጥ ታሪክ፣ scrobbling፣ ሙዚቃ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ጠፍቷል። የሚያዳምጧቸው ዘፈኖች ወደ ListenBrainz የማዳመጥ ታሪክዎ ሊታከሉ ይችላሉ፤ ሌሎች ቪዲዮዎች በጭራሽ አይላኩም",
+  "Open ListenBrainz settings": "የListenBrainz ቅንብሮችን ክፈት",
+  "Scrobble songs to ListenBrainz": "ዘፈኖችን ወደ ListenBrainz scrobble አድርግ",
+  "User token": "የተጠቃሚ ቶከን"
 }

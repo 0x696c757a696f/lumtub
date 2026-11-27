@@ -4262,5 +4262,21 @@
   "Length {0}": "Durada {0}",
   "{0}% watched": "{0}% vist",
   "Scroll left": "Desplaça a l'esquerra",
-  "Scroll right": "Desplaça a la dreta"
+  "Scroll right": "Desplaça a la dreta",
+  "Connect": "Connecta",
+  "Connect ListenBrainz": "Connecta ListenBrainz",
+  "Connected as {0}": "Connectat com a {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Connectat com a {0} · {1} reproduccions pendents d'enviar",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Connectat com a {0}. Una cançó compta quan n'has escoltat la meitat o quatre minuts, el que passi primer. No s'envia res en mode incògnit.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Copia el teu testimoni d'usuari des de la pàgina de configuració de ListenBrainz i enganxa'l aquí. Es desa xifrat en aquest dispositiu.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "No s'ha pogut connectar amb ListenBrainz. Comprova la xarxa i torna-ho a provar",
+  "Couldn't save the token": "No s'ha pogut desar el testimoni",
+  "Disconnect": "Desconnecta",
+  "ListenBrainz did not accept this token": "ListenBrainz no ha acceptat aquest testimoni",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ja no accepta el testimoni. Toca per introduir-ne un de nou",
+  "Listening history, scrobbling, music": "Historial d'escolta, scrobbling, música",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Desactivat. Les cançons que escoltes es poden afegir al teu historial d'escolta de ListenBrainz; els altres vídeos no s'envien mai",
+  "Open ListenBrainz settings": "Obre la configuració de ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Fes scrobble de cançons a ListenBrainz",
+  "User token": "Testimoni d'usuari"
 }

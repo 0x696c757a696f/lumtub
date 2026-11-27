@@ -4262,5 +4262,21 @@
   "Length {0}": "រយៈពេល {0}",
   "{0}% watched": "បានមើល {0}%",
   "Scroll left": "រមូរទៅឆ្វេង",
-  "Scroll right": "រមូរទៅស្តាំ"
+  "Scroll right": "រមូរទៅស្តាំ",
+  "Connect": "ភ្ជាប់",
+  "Connect ListenBrainz": "ភ្ជាប់ ListenBrainz",
+  "Connected as {0}": "បានភ្ជាប់ជា {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "បានភ្ជាប់ជា {0} · ការស្តាប់ {1} កំពុងរង់ចាំផ្ញើ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "បានភ្ជាប់ជា {0}។ ចម្រៀងមួយត្រូវបានរាប់នៅពេលអ្នកស្តាប់ពាក់កណ្តាល ឬបួននាទី ដែលមកដល់មុន។ គ្មានអ្វីត្រូវបានផ្ញើក្នុងមុខងារអនាមិកទេ។",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ចម្លងថូខឹនអ្នកប្រើរបស់អ្នកពីទំព័រការកំណត់ ListenBrainz ហើយបិទភ្ជាប់នៅទីនេះ។ វាត្រូវបានរក្សាទុកជាទម្រង់អ៊ីនគ្រីបលើឧបករណ៍នេះ។",
+  "Couldn't reach ListenBrainz. Check your network and try again": "មិនអាចទាក់ទង ListenBrainz បានទេ។ សូមពិនិត្យបណ្តាញរបស់អ្នក ហើយព្យាយាមម្តងទៀត",
+  "Couldn't save the token": "មិនអាចរក្សាទុកថូខឹនបានទេ",
+  "Disconnect": "ផ្តាច់",
+  "ListenBrainz did not accept this token": "ListenBrainz មិនទទួលយកថូខឹននេះទេ",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz លែងទទួលយកថូខឹនហើយ។ ចុចដើម្បីបញ្ចូលថូខឹនថ្មី",
+  "Listening history, scrobbling, music": "ប្រវត្តិការស្តាប់, scrobbling, តន្ត្រី",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "បិទ។ ចម្រៀងដែលអ្នកស្តាប់អាចត្រូវបានបន្ថែមទៅប្រវត្តិការស្តាប់ ListenBrainz របស់អ្នក វីដេអូផ្សេងទៀតមិនដែលត្រូវបានផ្ញើទេ",
+  "Open ListenBrainz settings": "បើកការកំណត់ ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble ចម្រៀងទៅ ListenBrainz",
+  "User token": "ថូខឹនអ្នកប្រើ"
 }

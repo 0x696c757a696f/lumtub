@@ -4262,5 +4262,21 @@
   "Length {0}": "Czas trwania {0}",
   "{0}% watched": "Obejrzano {0}%",
   "Scroll left": "Przewiń w lewo",
-  "Scroll right": "Przewiń w prawo"
+  "Scroll right": "Przewiń w prawo",
+  "Connect": "Połącz",
+  "Connect ListenBrainz": "Połącz z ListenBrainz",
+  "Connected as {0}": "Połączono jako {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Połączono jako {0} · {1} odsłuchań czeka na wysłanie",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Połączono jako {0}. Utwór jest liczony, gdy odsłuchasz jego połowę lub cztery minuty, w zależności od tego, co nastąpi wcześniej. W trybie incognito nic nie jest wysyłane.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Skopiuj swój token użytkownika ze strony ustawień ListenBrainz i wklej go tutaj. Jest przechowywany na tym urządzeniu w postaci zaszyfrowanej.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Nie można połączyć się z ListenBrainz. Sprawdź sieć i spróbuj ponownie",
+  "Couldn't save the token": "Nie udało się zapisać tokenu",
+  "Disconnect": "Rozłącz",
+  "ListenBrainz did not accept this token": "ListenBrainz nie zaakceptował tego tokenu",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz już nie akceptuje tokenu. Dotknij, aby wprowadzić nowy",
+  "Listening history, scrobbling, music": "Historia odsłuchań, scrobblowanie, muzyka",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Wyłączone. Słuchane utwory mogą być dodawane do historii odsłuchań ListenBrainz; inne filmy nigdy nie są wysyłane",
+  "Open ListenBrainz settings": "Otwórz ustawienia ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobbluj utwory do ListenBrainz",
+  "User token": "Token użytkownika"
 }

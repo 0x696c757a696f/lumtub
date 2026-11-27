@@ -4270,5 +4270,21 @@
   "Shortest": "最短",
   "Reading all videos to sort them by length: {0} so far": "正在讀取全部影片以按長度排序，已讀取 {0} 部",
   "Middle click on the video": "在影片上按滑鼠中鍵",
-  "Mute or unmute": "靜音或取消靜音"
+  "Mute or unmute": "靜音或取消靜音",
+  "Connect": "連接",
+  "Connect ListenBrainz": "連接 ListenBrainz",
+  "Connected as {0}": "已連接：{0}",
+  "Connected as {0} · {1} listens waiting to be sent": "已連接：{0} · {1} 筆記錄等待傳送",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "已連接：{0}。一首歌聽到一半或滿四分鐘（以先到者為準）就記一次。無痕模式下不會傳送任何內容。",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "在 ListenBrainz 的設定頁面複製你的使用者權杖，貼到這裡。權杖加密儲存在本機。",
+  "Couldn't reach ListenBrainz. Check your network and try again": "無法連線至 ListenBrainz，請檢查網路後重試",
+  "Couldn't save the token": "無法儲存權杖",
+  "Disconnect": "中斷連接",
+  "ListenBrainz did not accept this token": "ListenBrainz 不接受這個權杖",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz 已不再接受這個權杖，點按以輸入新的權杖",
+  "Listening history, scrobbling, music": "聽歌記錄、scrobble、音樂",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "未開啟。可將聽過的歌曲加入你的 ListenBrainz 聽歌記錄；其他影片永遠不會傳送",
+  "Open ListenBrainz settings": "開啟 ListenBrainz 設定",
+  "Scrobble songs to ListenBrainz": "同步聽歌記錄到 ListenBrainz",
+  "User token": "使用者權杖"
 }

@@ -4262,5 +4262,21 @@
   "Length {0}": "Ubude {0}",
   "{0}% watched": "{0}% ebukiwe",
   "Scroll left": "Skrola ngakwesokunxele",
-  "Scroll right": "Skrola ngakwesokudla"
+  "Scroll right": "Skrola ngakwesokudla",
+  "Connect": "Xhuma",
+  "Connect ListenBrainz": "Xhuma i-ListenBrainz",
+  "Connected as {0}": "Kuxhumeke njengo-{0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Kuxhumeke njengo-{0} · ukulalela okungu-{1} kulindele ukuthunyelwa",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Kuxhumeke njengo-{0}. Ingoma ibalwa uma uyilalele ingxenye yayo noma imizuzu emine, noma yikuphi okuza kuqala. Akukho okuthunyelwayo kumodi yokuzifihla.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopisha ithokheni yakho yomsebenzisi ekhasini lezilungiselelo le-ListenBrainz uyunamathisele lapha. Igcinwa ifihlwe kule divayisi.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Ayikwazanga ukufinyelela i-ListenBrainz. Hlola inethiwekhi yakho uzame futhi",
+  "Couldn't save the token": "Ayikwazanga ukulondoloza ithokheni",
+  "Disconnect": "Nqamula",
+  "ListenBrainz did not accept this token": "I-ListenBrainz ayiyamukelanga leli thokheni",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "I-ListenBrainz ayisalamukeli ithokheni. Thinta ukufaka elisha",
+  "Listening history, scrobbling, music": "Umlando wokulalela, scrobbling, umculo",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Kuvaliwe. Izingoma ozilalelayo zingengezwa emlandweni wakho wokulalela we-ListenBrainz; amanye amavidiyo awathunyelwa neze",
+  "Open ListenBrainz settings": "Vula izilungiselelo ze-ListenBrainz",
+  "Scrobble songs to ListenBrainz": "I-scrobble izingoma ku-ListenBrainz",
+  "User token": "Ithokheni yomsebenzisi"
 }

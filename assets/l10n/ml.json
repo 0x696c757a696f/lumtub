@@ -4262,5 +4262,21 @@
   "Length {0}": "ദൈർഘ്യം {0}",
   "{0}% watched": "{0}% കണ്ടു",
   "Scroll left": "ഇടത്തേക്ക് സ്ക്രോൾ ചെയ്യുക",
-  "Scroll right": "വലത്തേക്ക് സ്ക്രോൾ ചെയ്യുക"
+  "Scroll right": "വലത്തേക്ക് സ്ക്രോൾ ചെയ്യുക",
+  "Connect": "ബന്ധിപ്പിക്കുക",
+  "Connect ListenBrainz": "ListenBrainz ബന്ധിപ്പിക്കുക",
+  "Connected as {0}": "{0} ആയി ബന്ധിപ്പിച്ചു",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ആയി ബന്ധിപ്പിച്ചു · {1} ശ്രവണങ്ങൾ അയയ്ക്കാൻ കാത്തിരിക്കുന്നു",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ആയി ബന്ധിപ്പിച്ചു. ഒരു പാട്ടിന്റെ പകുതിയോ നാല് മിനിറ്റോ, ഏതാണോ ആദ്യം, കേട്ടാൽ അത് കണക്കാക്കും. ഇൻകോഗ്നിറ്റോ മോഡിൽ ഒന്നും അയയ്ക്കില്ല.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "നിങ്ങളുടെ ListenBrainz ക്രമീകരണ പേജിൽ നിന്ന് യൂസർ ടോക്കൺ പകർത്തി ഇവിടെ ഒട്ടിക്കുക. ഇത് ഈ ഉപകരണത്തിൽ എൻക്രിപ്റ്റ് ചെയ്ത് സൂക്ഷിക്കുന്നു.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-ൽ എത്താനായില്ല. നെറ്റ്‌വർക്ക് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക",
+  "Couldn't save the token": "ടോക്കൺ സംരക്ഷിക്കാനായില്ല",
+  "Disconnect": "വിച്ഛേദിക്കുക",
+  "ListenBrainz did not accept this token": "ListenBrainz ഈ ടോക്കൺ സ്വീകരിച്ചില്ല",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ഇനി ഈ ടോക്കൺ സ്വീകരിക്കില്ല. പുതിയത് നൽകാൻ ടാപ്പ് ചെയ്യുക",
+  "Listening history, scrobbling, music": "ശ്രവണ ചരിത്രം, scrobbling, സംഗീതം",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ഓഫ്. നിങ്ങൾ കേൾക്കുന്ന പാട്ടുകൾ നിങ്ങളുടെ ListenBrainz ശ്രവണ ചരിത്രത്തിൽ ചേർക്കാം; മറ്റ് വീഡിയോകൾ ഒരിക്കലും അയയ്ക്കില്ല",
+  "Open ListenBrainz settings": "ListenBrainz ക്രമീകരണങ്ങൾ തുറക്കുക",
+  "Scrobble songs to ListenBrainz": "പാട്ടുകൾ ListenBrainz-ലേക്ക് scrobble ചെയ്യുക",
+  "User token": "യൂസർ ടോക്കൺ"
 }

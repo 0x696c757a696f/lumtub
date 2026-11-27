@@ -4262,5 +4262,21 @@
   "Length {0}": "කාලසීමාව {0}",
   "{0}% watched": "{0}% නරඹා ඇත",
   "Scroll left": "වමට අනුචලනය කරන්න",
-  "Scroll right": "දකුණට අනුචලනය කරන්න"
+  "Scroll right": "දකුණට අනුචලනය කරන්න",
+  "Connect": "සම්බන්ධ කරන්න",
+  "Connect ListenBrainz": "ListenBrainz සම්බන්ධ කරන්න",
+  "Connected as {0}": "{0} ලෙස සම්බන්ධ වී ඇත",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ලෙස සම්බන්ධ වී ඇත · සවන්දීම් {1}ක් යැවීමට බලා සිටී",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ලෙස සම්බන්ධ වී ඇත. ගීතයක අඩක් හෝ මිනිත්තු හතරක්, යම් එකක් කලින් සිදු වේ නම්, සවන් දුන් විට එය ගණන් ගනී. ආවරණ මාදිලියේදී කිසිවක් නොයවයි.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ඔබේ ListenBrainz සැකසුම් පිටුවෙන් පරිශීලක ටෝකනය පිටපත් කර මෙතැනට අලවන්න. එය මෙම උපාංගයේ සංකේතනය කර ගබඩා කෙරේ.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz වෙත ළඟා විය නොහැකි විය. ඔබේ ජාලය පරීක්ෂා කර නැවත උත්සාහ කරන්න",
+  "Couldn't save the token": "ටෝකනය සුරැකීමට නොහැකි විය",
+  "Disconnect": "විසන්ධි කරන්න",
+  "ListenBrainz did not accept this token": "ListenBrainz මෙම ටෝකනය පිළිගත්තේ නැත",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz තවදුරටත් ටෝකනය පිළිගන්නේ නැත. අලුත් එකක් ඇතුළු කිරීමට තට්ටු කරන්න",
+  "Listening history, scrobbling, music": "සවන්දීමේ ඉතිහාසය, scrobbling, සංගීතය",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "අක්‍රියයි. ඔබ සවන් දෙන ගීත ඔබේ ListenBrainz සවන්දීමේ ඉතිහාසයට එක් කළ හැක; වෙනත් වීඩියෝ කිසිවිටෙක නොයවයි",
+  "Open ListenBrainz settings": "ListenBrainz සැකසුම් විවෘත කරන්න",
+  "Scrobble songs to ListenBrainz": "ගීත ListenBrainz වෙත scrobble කරන්න",
+  "User token": "පරිශීලක ටෝකනය"
 }

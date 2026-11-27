@@ -4270,5 +4270,21 @@
   "Shortest": "最短",
   "Reading all videos to sort them by length: {0} so far": "正在读取全部视频以按时长排序，已读取 {0} 个",
   "Middle click on the video": "在视频上按鼠标中键",
-  "Mute or unmute": "静音或取消静音"
+  "Mute or unmute": "静音或取消静音",
+  "Connect": "连接",
+  "Connect ListenBrainz": "连接 ListenBrainz",
+  "Connected as {0}": "已连接：{0}",
+  "Connected as {0} · {1} listens waiting to be sent": "已连接：{0} · {1} 条记录等待发送",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "已连接：{0}。一首歌听到一半或满四分钟（以先到者为准）就记一次。无痕模式下不会发送任何内容。",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "在 ListenBrainz 的设置页面复制你的用户令牌，粘贴到这里。令牌加密保存在本机。",
+  "Couldn't reach ListenBrainz. Check your network and try again": "无法连接 ListenBrainz，请检查网络后重试",
+  "Couldn't save the token": "无法保存令牌",
+  "Disconnect": "断开连接",
+  "ListenBrainz did not accept this token": "ListenBrainz 不接受这个令牌",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz 已不再接受这个令牌，点按以输入新的令牌",
+  "Listening history, scrobbling, music": "听歌记录、scrobble、音乐",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "未开启。可将听过的歌曲添加到你的 ListenBrainz 听歌记录；其他视频永远不会发送",
+  "Open ListenBrainz settings": "打开 ListenBrainz 设置",
+  "Scrobble songs to ListenBrainz": "同步听歌记录到 ListenBrainz",
+  "User token": "用户令牌"
 }

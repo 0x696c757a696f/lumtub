@@ -4262,5 +4262,21 @@
   "Length {0}": "நீளம் {0}",
   "{0}% watched": "{0}% பார்த்தது",
   "Scroll left": "இடப்பக்கம் உருட்டு",
-  "Scroll right": "வலப்பக்கம் உருட்டு"
+  "Scroll right": "வலப்பக்கம் உருட்டு",
+  "Connect": "இணை",
+  "Connect ListenBrainz": "ListenBrainz ஐ இணை",
+  "Connected as {0}": "{0} ஆக இணைக்கப்பட்டது",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ஆக இணைக்கப்பட்டது · {1} கேட்டல்கள் அனுப்பக் காத்திருக்கின்றன",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ஆக இணைக்கப்பட்டது. ஒரு பாடலின் பாதி அல்லது நான்கு நிமிடங்களில், எது முதலில் வருகிறதோ அதைக் கேட்டதும் அது கணக்கிடப்படும். மறைநிலைப் பயன்முறையில் எதுவும் அனுப்பப்படாது.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "உங்கள் ListenBrainz அமைப்புகள் பக்கத்திலிருந்து பயனர் டோக்கனை நகலெடுத்து இங்கே ஒட்டவும். இது இந்தச் சாதனத்தில் மறையாக்கம் செய்து சேமிக்கப்படும்.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ஐ அணுக முடியவில்லை. உங்கள் நெட்வொர்க்கைச் சரிபார்த்து மீண்டும் முயலவும்",
+  "Couldn't save the token": "டோக்கனைச் சேமிக்க முடியவில்லை",
+  "Disconnect": "துண்டி",
+  "ListenBrainz did not accept this token": "ListenBrainz இந்த டோக்கனை ஏற்கவில்லை",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz இனி இந்த டோக்கனை ஏற்காது. புதியதை உள்ளிடத் தட்டவும்",
+  "Listening history, scrobbling, music": "கேட்ட வரலாறு, scrobbling, இசை",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "முடக்கப்பட்டுள்ளது. நீங்கள் கேட்கும் பாடல்கள் உங்கள் ListenBrainz கேட்ட வரலாற்றில் சேர்க்கப்படலாம்; மற்ற வீடியோக்கள் ஒருபோதும் அனுப்பப்படாது",
+  "Open ListenBrainz settings": "ListenBrainz அமைப்புகளைத் திற",
+  "Scrobble songs to ListenBrainz": "பாடல்களை ListenBrainz க்கு scrobble செய்",
+  "User token": "பயனர் டோக்கன்"
 }

@@ -4262,5 +4262,21 @@
   "Length {0}": "Տևողություն {0}",
   "{0}% watched": "{0}% դիտված",
   "Scroll left": "Ոլորել ձախ",
-  "Scroll right": "Ոլորել աջ"
+  "Scroll right": "Ոլորել աջ",
+  "Connect": "Միացնել",
+  "Connect ListenBrainz": "Միացնել ListenBrainz-ը",
+  "Connected as {0}": "Միացված է որպես {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Միացված է որպես {0} · {1} լսում սպասում է ուղարկմանը",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Միացված է որպես {0}։ Երգը հաշվվում է, երբ լսել եք դրա կեսը կամ չորս րոպե՝ նայած ինչը կլինի ավելի շուտ։ Incognito ռեժիմում ոչինչ չի ուղարկվում։",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Պատճենեք ձեր օգտատիրոջ թոքենը ListenBrainz-ի կարգավորումների էջից և տեղադրեք այստեղ։ Այն պահվում է այս սարքում գաղտնագրված։",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Չհաջողվեց կապվել ListenBrainz-ի հետ։ Ստուգեք ցանցը և նորից փորձեք",
+  "Couldn't save the token": "Չհաջողվեց պահել թոքենը",
+  "Disconnect": "Անջատել",
+  "ListenBrainz did not accept this token": "ListenBrainz-ը չընդունեց այս թոքենը",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz-ն այլևս չի ընդունում թոքենը։ Հպեք՝ նորը մուտքագրելու համար",
+  "Listening history, scrobbling, music": "Լսումների պատմություն, scrobbling, երաժշտություն",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Անջատված է։ Ձեր լսած երգերը կարող են ավելացվել ListenBrainz-ի լսումների պատմությանը, այլ տեսանյութեր երբեք չեն ուղարկվում",
+  "Open ListenBrainz settings": "Բացել ListenBrainz-ի կարգավորումները",
+  "Scrobble songs to ListenBrainz": "Scrobble անել երգերը ListenBrainz-ում",
+  "User token": "Օգտատիրոջ թոքեն"
 }

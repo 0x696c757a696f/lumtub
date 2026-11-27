@@ -4262,5 +4262,21 @@
   "Length {0}": "مدت {0}",
   "{0}% watched": "{0}% دیده‌شده",
   "Scroll left": "پیمایش به چپ",
-  "Scroll right": "پیمایش به راست"
+  "Scroll right": "پیمایش به راست",
+  "Connect": "اتصال",
+  "Connect ListenBrainz": "اتصال به ListenBrainz",
+  "Connected as {0}": "متصل به‌عنوان {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "متصل به‌عنوان {0} · {1} شنیده در انتظار ارسال",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "متصل به‌عنوان {0}. آهنگ وقتی حساب می‌شود که نیمی از آن یا چهار دقیقه را گوش کرده باشید، هر کدام زودتر باشد. در حالت ناشناس چیزی ارسال نمی‌شود.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "توکن کاربری خود را از صفحهٔ تنظیمات ListenBrainz کپی کنید و اینجا بچسبانید. این توکن به‌صورت رمزگذاری‌شده در این دستگاه ذخیره می‌شود.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "دسترسی به ListenBrainz ممکن نشد. شبکه را بررسی کنید و دوباره امتحان کنید",
+  "Couldn't save the token": "توکن ذخیره نشد",
+  "Disconnect": "قطع اتصال",
+  "ListenBrainz did not accept this token": "ListenBrainz این توکن را نپذیرفت",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz دیگر توکن را نمی‌پذیرد. برای وارد کردن توکن جدید ضربه بزنید",
+  "Listening history, scrobbling, music": "سابقهٔ شنیدن، scrobbling، موسیقی",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "خاموش. آهنگ‌هایی که گوش می‌دهید می‌توانند به سابقهٔ شنیدن شما در ListenBrainz اضافه شوند؛ ویدیوهای دیگر هرگز ارسال نمی‌شوند",
+  "Open ListenBrainz settings": "باز کردن تنظیمات ListenBrainz",
+  "Scrobble songs to ListenBrainz": "ثبت آهنگ‌ها در ListenBrainz (scrobble)",
+  "User token": "توکن کاربری"
 }

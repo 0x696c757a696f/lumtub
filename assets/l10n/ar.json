@@ -4262,5 +4262,21 @@
   "Length {0}": "المدة {0}",
   "{0}% watched": "تمت مشاهدة {0}%",
   "Scroll left": "التمرير لليسار",
-  "Scroll right": "التمرير لليمين"
+  "Scroll right": "التمرير لليمين",
+  "Connect": "اتصال",
+  "Connect ListenBrainz": "ربط ListenBrainz",
+  "Connected as {0}": "متصل باسم {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "متصل باسم {0} · {1} عمليات استماع بانتظار الإرسال",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "متصل باسم {0}. تُحتسب الأغنية عندما تستمع إلى نصفها أو أربع دقائق منها، أيهما أسبق. لا يُرسَل شيء في وضع التصفح المتخفي.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "انسخ رمز المستخدم من صفحة إعدادات ListenBrainz والصقه هنا. يُخزَّن مشفرًا على هذا الجهاز.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "تعذّر الوصول إلى ListenBrainz. تحقق من الشبكة وحاول مرة أخرى",
+  "Couldn't save the token": "تعذّر حفظ الرمز",
+  "Disconnect": "قطع الاتصال",
+  "ListenBrainz did not accept this token": "لم يقبل ListenBrainz هذا الرمز",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "لم يعد ListenBrainz يقبل الرمز. اضغط لإدخال رمز جديد",
+  "Listening history, scrobbling, music": "سجل الاستماع، scrobbling، الموسيقى",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "متوقف. يمكن إضافة الأغاني التي تستمع إليها إلى سجل الاستماع في ListenBrainz، ولا تُرسَل أي مقاطع فيديو أخرى أبدًا",
+  "Open ListenBrainz settings": "فتح إعدادات ListenBrainz",
+  "Scrobble songs to ListenBrainz": "تسجيل الأغاني في ListenBrainz (scrobble)",
+  "User token": "رمز المستخدم"
 }

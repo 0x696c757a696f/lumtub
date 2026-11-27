@@ -4262,5 +4262,21 @@
   "Length {0}": "Süre {0}",
   "{0}% watched": "%{0} izlendi",
   "Scroll left": "Sola kaydır",
-  "Scroll right": "Sağa kaydır"
+  "Scroll right": "Sağa kaydır",
+  "Connect": "Bağlan",
+  "Connect ListenBrainz": "ListenBrainz'e bağlan",
+  "Connected as {0}": "{0} olarak bağlı",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} olarak bağlı · gönderilmeyi bekleyen {1} dinleme",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} olarak bağlı. Bir şarkı, yarısını veya dört dakikasını dinlediğinizde, hangisi önce gelirse, sayılır. Gizli modda hiçbir şey gönderilmez.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kullanıcı jetonunuzu ListenBrainz ayarlar sayfasından kopyalayıp buraya yapıştırın. Bu cihazda şifrelenmiş olarak saklanır.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz'e ulaşılamadı. Ağınızı kontrol edip tekrar deneyin",
+  "Couldn't save the token": "Jeton kaydedilemedi",
+  "Disconnect": "Bağlantıyı kes",
+  "ListenBrainz did not accept this token": "ListenBrainz bu jetonu kabul etmedi",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz artık bu jetonu kabul etmiyor. Yenisini girmek için dokunun",
+  "Listening history, scrobbling, music": "Dinleme geçmişi, scrobble, müzik",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Kapalı. Dinlediğiniz şarkılar ListenBrainz dinleme geçmişinize eklenebilir; diğer videolar asla gönderilmez",
+  "Open ListenBrainz settings": "ListenBrainz ayarlarını aç",
+  "Scrobble songs to ListenBrainz": "Şarkıları ListenBrainz'e scrobble et",
+  "User token": "Kullanıcı jetonu"
 }

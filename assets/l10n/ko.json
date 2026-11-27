@@ -4265,5 +4265,21 @@
   "Length {0}": "길이 {0}",
   "{0}% watched": "{0}% 시청함",
   "Scroll left": "왼쪽으로 스크롤",
-  "Scroll right": "오른쪽으로 스크롤"
+  "Scroll right": "오른쪽으로 스크롤",
+  "Connect": "연결",
+  "Connect ListenBrainz": "ListenBrainz 연결",
+  "Connected as {0}": "{0} 계정으로 연결됨",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} 계정으로 연결됨 · 전송 대기 중인 감상 기록 {1}개",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} 계정으로 연결됨. 노래의 절반 또는 4분 중 먼저 도달하는 시점까지 들으면 기록됩니다. 시크릿 모드에서는 아무것도 전송되지 않습니다.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ListenBrainz 설정 페이지에서 사용자 토큰을 복사해 여기에 붙여넣으세요. 토큰은 이 기기에 암호화되어 저장됩니다.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요",
+  "Couldn't save the token": "토큰을 저장할 수 없습니다",
+  "Disconnect": "연결 해제",
+  "ListenBrainz did not accept this token": "ListenBrainz에서 이 토큰을 인식하지 못했습니다",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz에서 더 이상 이 토큰을 사용할 수 없습니다. 탭하여 새 토큰을 입력하세요",
+  "Listening history, scrobbling, music": "감상 기록, 스크로블, 음악",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "꺼짐. 들은 노래를 ListenBrainz 감상 기록에 추가할 수 있으며, 다른 동영상은 전송되지 않습니다",
+  "Open ListenBrainz settings": "ListenBrainz 설정 열기",
+  "Scrobble songs to ListenBrainz": "노래를 ListenBrainz에 스크로블",
+  "User token": "사용자 토큰"
 }

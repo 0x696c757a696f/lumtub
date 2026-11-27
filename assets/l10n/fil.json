@@ -4262,5 +4262,21 @@
   "Length {0}": "Haba {0}",
   "{0}% watched": "{0}% napanood na",
   "Scroll left": "I-scroll pakaliwa",
-  "Scroll right": "I-scroll pakanan"
+  "Scroll right": "I-scroll pakanan",
+  "Connect": "Kumonekta",
+  "Connect ListenBrainz": "Ikonekta ang ListenBrainz",
+  "Connected as {0}": "Nakakonekta bilang {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Nakakonekta bilang {0} · {1} pakikinig ang naghihintay na maipadala",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Nakakonekta bilang {0}. Mabibilang ang isang kanta kapag napakinggan mo na ang kalahati nito o apat na minuto, alinman ang mauna. Walang ipinapadala sa incognito mode.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopyahin ang iyong user token mula sa pahina ng mga setting ng ListenBrainz at i-paste ito rito. Naka-encrypt itong nakaimbak sa device na ito.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Hindi maabot ang ListenBrainz. Tingnan ang iyong network at subukan muli",
+  "Couldn't save the token": "Hindi nai-save ang token",
+  "Disconnect": "Idiskonekta",
+  "ListenBrainz did not accept this token": "Hindi tinanggap ng ListenBrainz ang token na ito",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "Hindi na tinatanggap ng ListenBrainz ang token. I-tap para maglagay ng bago",
+  "Listening history, scrobbling, music": "Kasaysayan ng pakikinig, scrobbling, musika",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Naka-off. Maaaring idagdag ang mga kantang pinakikinggan mo sa iyong kasaysayan ng pakikinig sa ListenBrainz; hindi kailanman ipinapadala ang ibang video",
+  "Open ListenBrainz settings": "Buksan ang mga setting ng ListenBrainz",
+  "Scrobble songs to ListenBrainz": "I-scrobble ang mga kanta sa ListenBrainz",
+  "User token": "User token"
 }

@@ -4262,5 +4262,21 @@
   "Length {0}": "ความยาว {0}",
   "{0}% watched": "ดูแล้ว {0}%",
   "Scroll left": "เลื่อนไปทางซ้าย",
-  "Scroll right": "เลื่อนไปทางขวา"
+  "Scroll right": "เลื่อนไปทางขวา",
+  "Connect": "เชื่อมต่อ",
+  "Connect ListenBrainz": "เชื่อมต่อ ListenBrainz",
+  "Connected as {0}": "เชื่อมต่อในชื่อ {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "เชื่อมต่อในชื่อ {0} · การฟัง {1} รายการรอส่ง",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "เชื่อมต่อในชื่อ {0} เพลงจะถูกนับเมื่อคุณฟังไปครึ่งเพลงหรือสี่นาที แล้วแต่อย่างใดจะถึงก่อน ในโหมดไม่ระบุตัวตนจะไม่มีการส่งข้อมูลใด ๆ",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "คัดลอกโทเคนผู้ใช้จากหน้าการตั้งค่า ListenBrainz แล้ววางที่นี่ โทเคนจะถูกจัดเก็บแบบเข้ารหัสในอุปกรณ์นี้",
+  "Couldn't reach ListenBrainz. Check your network and try again": "เข้าถึง ListenBrainz ไม่ได้ ตรวจสอบเครือข่ายแล้วลองอีกครั้ง",
+  "Couldn't save the token": "บันทึกโทเคนไม่ได้",
+  "Disconnect": "ยกเลิกการเชื่อมต่อ",
+  "ListenBrainz did not accept this token": "ListenBrainz ไม่ยอมรับโทเคนนี้",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ไม่ยอมรับโทเคนนี้อีกต่อไป แตะเพื่อป้อนโทเคนใหม่",
+  "Listening history, scrobbling, music": "ประวัติการฟัง, scrobbling, เพลง",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ปิด เพลงที่คุณฟังสามารถเพิ่มลงในประวัติการฟัง ListenBrainz ของคุณได้ ส่วนวิดีโออื่นจะไม่ถูกส่งเลย",
+  "Open ListenBrainz settings": "เปิดการตั้งค่า ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble เพลงไปยัง ListenBrainz",
+  "User token": "โทเคนผู้ใช้"
 }

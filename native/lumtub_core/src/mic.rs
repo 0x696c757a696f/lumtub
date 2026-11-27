@@ -1,4 +1,4 @@
-//! 跟读录音: records the microphone while the person repeats a subtitle
+//! Shadowing: records the microphone while the person repeats a subtitle
 //! line, as 16-bit mono, and writes the take as a WAV file.
 //!
 //! Windows, macOS and iOS record through cpal. Linux and Android load

@@ -146,7 +146,7 @@ struct Settings {
     /// or the `*_PROXY` variables) instead of connecting directly.
     #[serde(default)]
     system: bool,
-    /// 加密 DNS for direct connections.
+    /// Encrypted DNS for direct connections.
     #[serde(default)]
     dns: crate::dns::Settings,
     /// The certificate authorities every connection trusts.
@@ -425,7 +425,7 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
     *POST.write().expect("lock poisoned by a panic") = Some(post);
 }
 
-/// Sets the proxy and 加密 DNS from JSON `{"proxy": "socks5://…" | null,
+/// Sets the proxy and encrypted DNS from JSON `{"proxy": "socks5://…" | null,
 /// "system": bool, "dns": {"url", "bootstrap"}, "roots": "system" |
 /// "mozilla" | "google", "quantum": "prefer" | "off" | "require"}`;
 /// connections already open finish on the old route.

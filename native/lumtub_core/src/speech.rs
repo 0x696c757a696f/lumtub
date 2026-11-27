@@ -1,4 +1,4 @@
-//! 读这个词: the system's own voice reads a word or a line into a WAV
+//! Read aloud: the system's own voice reads a word or a line into a WAV
 //! file, which the app plays. Windows speaks with its OneCore voices
 //! (Windows.Media.SpeechSynthesis), macOS with `say`, Linux with
 //! espeak-ng when it is installed. No voice for the language is an

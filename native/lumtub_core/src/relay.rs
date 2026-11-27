@@ -131,7 +131,7 @@ impl Web {
             .no_brotli()
             .no_deflate()
             .redirect(crate::redirect::policy())
-            // 加密 DNS, when it is on, finds YouTube's stream servers too.
+            // Encrypted DNS, when it is on, finds YouTube's stream servers too.
             .dns_resolver(Arc::new(crate::dns::LiveResolver));
         builder = match proxy {
             Some(p) => builder.proxy(reqwest::Proxy::all(p).map_err(|e| e.to_string())?),

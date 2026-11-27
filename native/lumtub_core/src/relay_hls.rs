@@ -1,6 +1,6 @@
 //! HLS through the relay: a live stream's playlists and every address in
 //! them (other playlists, segments, keys) are fetched by the core, with
-//! its TLS (证书来源, 抗量子加密), its proxy and its DNS, instead of by
+//! its TLS (certificate authorities, post-quantum encryption), its proxy and its DNS, instead of by
 //! libmpv's own HTTPS. A playlist is served with each address in it
 //! replaced by a loopback address of the relay; libmpv asks for the
 //! playlist again as the stream grows, and every time it is fetched anew.

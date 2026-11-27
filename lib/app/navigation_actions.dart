@@ -484,7 +484,7 @@ extension NavigationActions on AppController {
     return following;
   }
 
-  /// 换一批.
+  /// Shuffles the home feed (换一批).
   void shuffleHomeFeed() {
     homeFeed?.mix = preferences.feedMix;
     homeFeed?.shuffle(filter: visible);

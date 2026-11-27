@@ -94,6 +94,11 @@ code, and where Lumtub reads the guide in its own way. The safety rules in
 - `///` on items, `//!` at the top of a module, `//` inside code. Full
   sentences that say what the code does not. Public functions of the crate
   are documented.
+- Code, comments, `expect` and error messages are in English. Chinese may
+  follow the English, such as an interface name in brackets, but never
+  stands alone. Other text in other languages appears only as data:
+  examples of what a parser reads (view counts, titles, subtitles) and the
+  strings it matches.
 
 ## Where Lumtub differs
 

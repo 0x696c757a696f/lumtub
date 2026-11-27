@@ -24,7 +24,7 @@ windows-sys = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 windows = { version = "0.62.2", features = [
-  # 读这个词 (speech.rs): the system's OneCore voices.
+  # Read aloud (speech.rs): the system's OneCore voices.
   "Foundation",
   "Foundation_Collections",
   "Media",
@@ -55,7 +55,7 @@ libc = "0.2.191"
 # The system's certificates as a file, for yt-dlp (roots::pem).
 rustls-native-certs = "0.8.5"
 
-# 跟读录音 (mic.rs); Linux and Android load their audio library themselves.
+# Shadowing recordings (mic.rs); Linux and Android load their audio library themselves.
 [target.'cfg(any(windows, target_os = "macos", target_os = "ios"))'.dependencies]
 cpal = "0.18"
 

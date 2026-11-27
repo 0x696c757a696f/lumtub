@@ -11,7 +11,7 @@ import '../theme.dart';
 import '../app_icons.dart';
 import '../skin_paint.dart';
 
-/// [seconds] as 1 小时 5 分 or 12 分钟.
+/// [seconds] as a duration, such as 1 小时 5 分 or 12 分钟.
 String watchDuration(int seconds) {
   final minutes = seconds ~/ 60;
   if (minutes < 1) return seconds > 0 ? tr('Under 1 min') : tr('0 min');

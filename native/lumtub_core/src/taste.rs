@@ -319,7 +319,7 @@ struct Suggested {
     /// Its source's weight times its seed's.
     s: f64,
     /// Taken off for kinds the settings want less of, and for channels
-    /// marked 不感兴趣.
+    /// marked "Not interested".
     #[serde(default)]
     p: f64,
     /// Hours since it was published.

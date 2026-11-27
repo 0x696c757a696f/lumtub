@@ -4,7 +4,7 @@
 //! computer as long as either half holds; servers that do not know it pick
 //! X25519 or an elliptic curve instead. TLS 1.2 has no such exchange.
 //!
-//! The setting (抗量子加密) chooses: prefer the hybrid (the default), never
+//! The post-quantum encryption setting chooses: prefer the hybrid (the default), never
 //! offer it, or require it, which leaves out TLS 1.2 and classic groups so
 //! a server without it cannot be reached. The group each host agreed on is
 //! kept and shown in the settings (lumtub_tls_seen).

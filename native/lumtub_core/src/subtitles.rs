@@ -1,5 +1,5 @@
-//! Subtitle lines for 字幕列表 and the script-based language guess that lets
-//! 翻译 skip text already in the target language.
+//! Subtitle lines for the subtitle list and the script-based language guess that lets
+//! translation skip text already in the target language.
 
 use std::collections::HashSet;
 use std::ffi::c_char;

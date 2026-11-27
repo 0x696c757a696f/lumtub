@@ -523,11 +523,84 @@ pub fn same_script(language: Language) -> Vec<Language> {
         .map_or_else(|| vec![language], |group| group.to_vec())
 }
 
+/// Every language, in the order of its number ([Language::Any] is 0).
+const LANGUAGES: [Language; 71] = [
+    Language::Any,
+    Language::Zh,
+    Language::Ja,
+    Language::Ko,
+    Language::En,
+    Language::Es,
+    Language::Fr,
+    Language::De,
+    Language::Pt,
+    Language::Ru,
+    Language::Ar,
+    Language::Hi,
+    Language::Th,
+    Language::Vi,
+    Language::It,
+    Language::Nl,
+    Language::Tr,
+    Language::Id,
+    Language::Ms,
+    Language::Tl,
+    Language::Pl,
+    Language::Uk,
+    Language::Cs,
+    Language::Ro,
+    Language::Hu,
+    Language::El,
+    Language::Sv,
+    Language::No,
+    Language::Da,
+    Language::Fi,
+    Language::He,
+    Language::Fa,
+    Language::Ur,
+    Language::Bn,
+    Language::Ta,
+    Language::Te,
+    Language::Af,
+    Language::Am,
+    Language::Az,
+    Language::Be,
+    Language::Bg,
+    Language::Eo,
+    Language::Et,
+    Language::Eu,
+    Language::Gl,
+    Language::Gu,
+    Language::Hy,
+    Language::Is,
+    Language::Jv,
+    Language::Ka,
+    Language::Km,
+    Language::Kn,
+    Language::La,
+    Language::Lo,
+    Language::Lt,
+    Language::Lv,
+    Language::Mk,
+    Language::Ml,
+    Language::Mn,
+    Language::Mr,
+    Language::My,
+    Language::Ne,
+    Language::Pa,
+    Language::Si,
+    Language::Sk,
+    Language::Sq,
+    Language::Su,
+    Language::Sw,
+    Language::Ti,
+    Language::Tk,
+    Language::Uz,
+];
+
 /// The language at explore's index [index].
 pub fn language_at(index: u32) -> Option<Language> {
-    // SAFETY: `index` is at most the last variant, and `Language` is `repr(u32)` with consecutive
-    // discriminants from 0.
-    (index <= Language::Uz as u32).then(|| unsafe { std::mem::transmute::<u32, Language>(index) })
+    LANGUAGES.get(usize::try_from(index).ok()?).copied()
 }
 
 /// Whether [language] is written in Latin letters.
@@ -1108,6 +1181,15 @@ pub unsafe extern "C" fn lumtub_blocks_free(blocks: *mut Blocks) {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn languages_are_listed_in_the_order_of_their_numbers() {
+        for (index, language) in super::LANGUAGES.iter().enumerate() {
+            assert_eq!(*language as usize, index, "{language:?} is out of place");
+        }
+        assert_eq!(super::language_at(super::LANGUAGES.len() as u32), None);
+    }
+
     #[test]
     fn no_small_word_marks_two_languages() {
         // The first seven lists (das, que, como, ...) shared a few words

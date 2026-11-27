@@ -412,7 +412,8 @@ class _DownloadDialogState extends State<DownloadDialog> {
     ]);
   }
 
-  /// 当前选择: `VP9 · 1080p · 自动封装（WebM） · 约 850 MB`.
+  /// The summary of the selection, such as
+  /// `当前选择: VP9 · 1080p · 自动封装（WebM） · 约 850 MB`.
   String _summary(DownloadSelection s) {
     final parts = s.audioOnly
         ? [tr('Audio only')]

@@ -1,4 +1,4 @@
-//! Chat messages flying across the picture (弹幕), laid out here. The app
+//! Chat messages flying across the picture (bullet chat), laid out here. The app
 //! moves them at every frame of the display ([Danmaku::visible]);
 //! [Danmaku::frame] writes them as ASS for libass.
 //!

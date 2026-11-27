@@ -1,4 +1,4 @@
-//! lumtub.db: the library (favorites, 稍后观看, playlists, followed
+//! lumtub.db: the library (favorites, watch later, playlists, followed
 //! channels, watch progress) and the watch history, in SQLite. Texts
 //! made for a video, such as recognized subtitles and AI summaries, are
 //! kept in the same file (store_texts.rs).

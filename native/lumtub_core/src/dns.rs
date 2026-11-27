@@ -1,4 +1,4 @@
-//! 加密 DNS: host names looked up over DNS-over-HTTPS (RFC 8484) instead of
+//! Encrypted DNS: host names looked up over DNS-over-HTTPS (RFC 8484) instead of
 //! the system resolver, for the app's requests and the stream relay. The
 //! query goes through the same pooled client and system TLS as everything
 //! else; hickory-proto only builds and reads the DNS messages. Answers are
@@ -242,7 +242,7 @@ impl reqwest::dns::Resolve for Resolver {
     }
 }
 
-/// Whichever 加密 DNS is on at each lookup, else the system's, for the
+/// Whichever encrypted DNS is on at each lookup, else the system's, for the
 /// relay's clients, which outlive a change of the setting.
 #[derive(Debug, Default)]
 pub struct LiveResolver;

@@ -197,7 +197,7 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched, this.layout, this.numberOf});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
@@ -209,29 +209,36 @@ class SliverVideoGrid extends StatelessWidget {
   final Map<String, String>? reasons;
   /// When each video was watched, by id, as a line under its card.
   final Map<String, String>? watched;
+  /// Shown in place of the chosen [videoLayout], such as a playlist's rows
+  /// on a phone.
+  final VideoLayout? layout;
+  /// The number shown before each row, such as its place in a playlist.
+  final int Function(int index)? numberOf;
 
   @override
   Widget build(BuildContext context) {
+    final shown = layout ?? videoLayout;
     // Room for the watched line only when some card has one.
     final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
     // Room for the reason line only when some card has a reason.
     final reasoned = reasons != null && items.any((item) => (reasons![item.id] ?? '').isNotEmpty);
     return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: videoLayout != VideoLayout.grid
+        sliver: shown != VideoLayout.grid
             ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(videoLayout) + (watched == null ? 0 : _reasonHeight),
+                itemExtent: VideoRow.heightFor(shown) + (watched == null ? 0 : _reasonHeight),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => VideoRow(
                     key: ValueKey(items[i].id),
                     item: items[i],
-                    layout: videoLayout,
+                    layout: shown,
                     thumbnails: thumbnails,
                     onOpen: () => onOpen(items[i]),
                     onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                     removeLabel: removeLabel,
                     reason: reasons == null ? null : reasons![items[i].id] ?? '',
                     watched: watched?[items[i].id],
+                    number: numberOf?.call(i),
                   ),
                   childCount: items.length,
                 ),
@@ -418,7 +425,7 @@ class _TitleTextState extends State<TitleText> {
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
 class VideoRow extends StatelessWidget {
-  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
+  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched, this.number});
   final VideoItem item;
   final VideoLayout layout;
   final VoidCallback onOpen;
@@ -427,6 +434,8 @@ class VideoRow extends StatelessWidget {
   final String? removeLabel;
   final String? reason;
   final String? watched;
+  /// Its place in the list, shown before it.
+  final int? number;
 
   static const _thumbWidth = 168.0;
 
@@ -456,6 +465,12 @@ class VideoRow extends StatelessWidget {
         child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (number case final number?)
+            SizedBox(
+              width: 28,
+              height: text ? 20 : _thumbWidth * 9 / 16,
+              child: Center(child: Text('$number', maxLines: 1, style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]))),
+            ),
           if (!text) ...[
             SizedBox(
               width: _thumbWidth,

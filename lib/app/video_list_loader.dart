@@ -13,7 +13,7 @@ import '../friendly_error.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.gather = 1.5, this.pages = 25, this.name, this.dropped});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.gather = 1.5, this.pages = 25, this.name, this.dropped, this.trickle = false});
 
   final Listing Function() _open;
   final int pageSize;
@@ -48,6 +48,11 @@ class VideoListLoader extends ChangeNotifier {
   /// left out.
   final String? name;
   final Map<String, int>? dropped;
+  /// Shows the videos read so far while a page is still being read, at
+  /// most a few times a second, for a source slow enough that waiting for
+  /// a whole page looks like nothing came (yt-dlp on a phone, which reads
+  /// a playlist page by page). Only without [rank].
+  final bool trickle;
 
   List<VideoItem> items = const [];
   /// Set while the list is put away: it reads no further pages by itself.
@@ -159,6 +164,7 @@ class VideoListLoader extends ChangeNotifier {
     final pendingVideos = <VideoItem>[];
     final pendingChannels = <ChannelResult>[];
     final pendingPlaylists = <PlaylistResult>[];
+    final sinceShown = Stopwatch()..start();
     _subscription = listing.next(count).listen(
       (entry) {
         fresh++;
@@ -177,6 +183,12 @@ class VideoListLoader extends ChangeNotifier {
           if (limit != null && items.length + pendingVideos.length >= limit!) return;
           pendingVideos.add(entry);
           shown++;
+          if (trickle && rank == null && sinceShown.elapsedMilliseconds >= 300) {
+            sinceShown.reset();
+            items = [...items, ...pendingVideos];
+            pendingVideos.clear();
+            _notify();
+          }
         }
       },
       onError: (Object e) {

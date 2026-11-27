@@ -193,10 +193,9 @@ extension NavigationActions on AppController {
     channel = ref;
     channelQuery = null;
     channelTab = ChannelTab.videos;
-    channelSort = ChannelSort.latest;
-    channelVideos = VideoListLoader(() => repository.channelVideos(ref))
-      ..addListener(_passOn('channel'))
-      ..loadMore();
+    channelSort = _sortFor(ref, ChannelTab.videos);
+    channelLength = SearchDuration.any;
+    channelVideos = _channelLoader(repository, ref, ChannelTab.videos, channelSort);
     _go(PageMode.channel);
   }
 
@@ -207,7 +206,7 @@ extension NavigationActions on AppController {
     if (repository == null || ref == null) return;
     _update(() {
       channelTab = tab;
-      channelSort = ChannelSort.latest;
+      channelSort = _sortFor(ref, tab);
       channelQuery = null;
       channelVideos?.dispose();
       channelVideos = null;
@@ -217,11 +216,17 @@ extension NavigationActions on AppController {
         channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
         unawaited(channelPosts!.loadMore());
       } else {
-        channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
-          ..addListener(_passOn('channel'))
-          ..loadMore();
+        channelVideos = _channelLoader(repository, ref, tab, channelSort);
       }
     });
+  }
+
+  /// The order last picked on [ref], where it fits [tab]; newest first
+  /// otherwise.
+  ChannelSort _sortFor(ChannelRef ref, ChannelTab tab) {
+    final sort = preferences.channelSorts[ref.id];
+    final sortable = tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live;
+    return sort != null && sortable && sort.fits(tab) ? sort : ChannelSort.latest;
   }
 
   /// Lists the open channel tab in [sort] order.
@@ -233,10 +238,54 @@ extension NavigationActions on AppController {
       channelSort = sort;
       final tab = channelTab;
       channelVideos?.dispose();
-      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
-        ..addListener(_passOn('channel'))
-        ..loadMore();
+      channelVideos = _channelLoader(repository, ref, tab, sort);
     });
+    // Kept for the next time the channel opens; the latest picked last, so
+    // the oldest go first once there are too many.
+    final sorts = {...preferences.channelSorts}..remove(ref.id);
+    if (sort != ChannelSort.latest) sorts[ref.id] = sort;
+    while (sorts.length > AppPreferences.channelSortsKept) {
+      sorts.remove(sorts.keys.first);
+    }
+    unawaited(savePreferences(preferences.copyWith(channelSorts: sorts)));
+  }
+
+  /// Shows only the open channel tab's videos of [length].
+  void setChannelLength(SearchDuration length) {
+    final repository = _repository;
+    final ref = channel;
+    if (repository == null || ref == null || length == channelLength || channelTab == ChannelTab.posts) return;
+    _update(() {
+      channelLength = length;
+      channelVideos?.dispose();
+      channelVideos = _channelLoader(repository, ref, channelTab, channelSort);
+    });
+  }
+
+  /// One channel tab's videos in [sort] order, of [channelLength] only. An
+  /// order YouTube does not offer is made by [ChannelLengths], which reads
+  /// the tab newest first and keeps it, so the next time only new uploads
+  /// are read.
+  VideoListLoader _channelLoader(VideoRepository repository, ChannelRef ref, ChannelTab tab, ChannelSort sort) {
+    channelLengths = null;
+    Listing Function() open = () => repository.channelTab(ref, tab, sort: sort);
+    if (sort.rank != null && sort.fits(tab)) {
+      final root = cacheRoot;
+      final lengths = channelLengths = ChannelLengths(
+        newest: () => repository.channelTab(ref, tab),
+        channel: ref,
+        tab: tab,
+        sort: sort,
+        folder: root == null ? null : '${root.path}${Platform.pathSeparator}${CacheManager.channelsFolder}',
+      );
+      lengths.read.addListener(_passOn('channel'));
+      open = lengths.listing;
+    }
+    final length = channelLength;
+    final strict = length != SearchDuration.any;
+    return VideoListLoader(open, where: strict ? (item) => length.admits(item.duration) : null, fill: strict ? 20 : 1)
+      ..addListener(_passOn('channel'))
+      ..loadMore();
   }
 
   /// Opens a YouTube playlist's page.
@@ -273,10 +322,7 @@ extension NavigationActions on AppController {
           channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
           unawaited(channelPosts!.loadMore());
         } else {
-          final tab = channelTab;
-          channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: channelSort))
-            ..addListener(_passOn('channel'))
-            ..loadMore();
+          channelVideos = _channelLoader(repository, ref, channelTab, channelSort);
         }
         return;
       }
@@ -380,14 +426,12 @@ extension NavigationActions on AppController {
     final repository = _repository;
     final ref = channel;
     if (repository == null || ref == null) return;
+    if (channelTab == ChannelTab.posts) return setChannelTab(channelTab);
     final sort = channelSort;
-    if (channelTab == ChannelTab.posts || sort == ChannelSort.latest) return setChannelTab(channelTab);
     final tab = channelTab;
     _update(() {
       channelVideos?.dispose();
-      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
-        ..addListener(_passOn('channel'))
-        ..loadMore();
+      channelVideos = _channelLoader(repository, ref, tab, sort);
     });
   }
 

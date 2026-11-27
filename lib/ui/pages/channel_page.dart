@@ -18,6 +18,7 @@ import '../../models.dart';
 import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
+import '../sort_menu.dart' show LengthMenu;
 import '../common.dart';
 import '../motion.dart';
 import '../haptics.dart';
@@ -170,8 +171,9 @@ class _ChannelPageState extends State<ChannelPage> {
                     // start higher.
                     if (Device.tv && sortable) ...[
                       const SizedBox(width: 8),
-                      for (final value in ChannelSort.values)
+                      for (final value in ChannelSort.values.where((v) => v.fits(tab)))
                         FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
+                      if (tab != ChannelTab.shorts) LengthMenu(value: controller.channelLength, onSelected: controller.setChannelLength),
                     ],
                   ])),
             const SizedBox(width: 12),
@@ -181,9 +183,11 @@ class _ChannelPageState extends State<ChannelPage> {
         if (sortable && !Device.tv)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-            child: Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final value in ChannelSort.values)
+            child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              for (final value in ChannelSort.values.where((v) => v.fits(tab)))
                 ChoiceChip(label: Text(value.label), selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
+              // Every Short is short.
+              if (tab != ChannelTab.shorts) LengthMenu(value: controller.channelLength, onSelected: controller.setChannelLength),
             ]),
           )),
         if (posts != null) ..._postSlivers(context, posts, wide, shown) else ..._listingSlivers(context, loader!, tab, searching),
@@ -205,6 +209,12 @@ class _ChannelPageState extends State<ChannelPage> {
       if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
       if (loader.loading) ...[
         if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+        // An order made here waits for the whole tab: how far it got.
+        if (controller.channelLengths case final lengths? when items.isEmpty && !searching && lengths.read.value > 0)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+            child: Text(tr('Reading all videos to sort them by length: {0} so far', [lengths.read.value]), style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
+          )),
         SliverSkeletonGrid(rows: empty ? 3 : 1),
       ],
       if (error != null)

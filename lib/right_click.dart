@@ -20,3 +20,22 @@ enum RightClick {
   static RightClick parse(Object? raw, Object? oldBack) =>
       values.where((v) => v.name == raw).firstOrNull ?? (oldBack == true ? back : fillWindow);
 }
+
+/// What a middle click (pressing the wheel) on the video does.
+enum MiddleClick {
+  off,
+  playPause,
+  mute,
+  fillWindow,
+  pip;
+
+  String get label => switch (this) {
+        off => tr('Off'),
+        playPause => tr('Play or pause'),
+        mute => tr('Mute or unmute'),
+        fillWindow => tr('Fill the window'),
+        pip => tr('Picture in picture'),
+      };
+
+  static MiddleClick parse(Object? raw) => values.where((v) => v.name == raw).firstOrNull ?? off;
+}

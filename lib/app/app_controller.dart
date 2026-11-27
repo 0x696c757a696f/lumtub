@@ -83,6 +83,7 @@ import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
 import '../channel_avatar_lookup.dart';
 import '../channel_playback.dart';
+import '../channel_lengths.dart';
 import '../channel_sort.dart';
 import '../list_order.dart';
 import '../speech_subtitles.dart';
@@ -276,6 +277,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
   ChannelSort channelSort = ChannelSort.latest;
+  /// The length of video the open channel tab shows.
+  SearchDuration channelLength = SearchDuration.any;
+  /// The reading behind a Longest or Shortest order (最长, 最短), for its
+  /// progress.
+  ChannelLengths? channelLengths;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 

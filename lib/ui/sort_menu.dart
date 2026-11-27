@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
+import '../search_options.dart' show SearchDuration;
 import 'app_icons.dart';
 import 'common.dart';
 import 'theme.dart';
@@ -143,6 +144,38 @@ class _ArrangeDialogState<T extends Object> extends State<_ArrangeDialog<T>> {
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
         FilledButton(onPressed: () => Navigator.pop(context, _items), child: Text(tr('Save'))),
       ],
+    );
+  }
+}
+
+/// A button naming the length of video a list shows, with a menu of the
+/// others, as YouTube's search filter has them.
+class LengthMenu extends StatelessWidget {
+  const LengthMenu({super.key, required this.value, required this.onSelected});
+
+  final SearchDuration value;
+  final ValueChanged<SearchDuration> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = value != SearchDuration.any;
+    final color = on ? context.colors.primary : context.colors.onSurface;
+    return PopupMenuButton<SearchDuration>(
+      tooltip: tr('Duration'),
+      onSelected: (picked) {
+        if (picked != value) onSelected(picked);
+      },
+      itemBuilder: (context) => [
+        for (final length in SearchDuration.values) CheckedPopupMenuItem(value: length, checked: length == value, child: Text(length.label)),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(AppIcons.timer, size: 18, color: color),
+          const SizedBox(width: 6),
+          Text(value.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+        ]),
+      ),
     );
   }
 }

@@ -69,7 +69,9 @@ void main() {
       if (url.startsWith('https://proxy.example/')) return http.Response.bytes(List.filled(1024, 0), 206);
       if (url.endsWith('/streams/${RelayServers.probeVideo}')) {
         if (url.startsWith('https://down.example')) return http.Response('no', 503);
-        if (url.startsWith('https://slow.example')) await Future<void>.delayed(const Duration(milliseconds: 60));
+        // Far slower than a busy CI machine's scheduling jitter, which beat
+        // 60 ms once and swapped the ranking.
+        if (url.startsWith('https://slow.example')) await Future<void>.delayed(const Duration(milliseconds: 400));
         if (PipedStreams.knownServers.any(url.startsWith)) return http.Response('no', 503);
         return http.Response.bytes(utf8.encode(jsonEncode(_streams())), 200);
       }

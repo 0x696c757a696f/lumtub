@@ -485,6 +485,7 @@ pub fn split_like(text: &str, weights: &[i64]) -> Vec<String> {
 /// [vtt] must point to [len] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_vtt_plan(vtt: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: `vtt` points to `len` readable bytes, per this function's `# Safety`.
     let plan = plan(unsafe { outside(vtt, len) });
     let cues: Vec<(&str, &str)> = plan
         .cues
@@ -524,6 +525,7 @@ pub unsafe extern "C" fn lumtub_vtt_cues(json: *const u8, len: usize) -> *mut c_
     fn ninety() -> usize {
         90
     }
+    // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { outside(json, len) }) else {
         return std::ptr::null_mut();
     };
@@ -545,6 +547,7 @@ pub unsafe extern "C" fn lumtub_vtt_cues(json: *const u8, len: usize) -> *mut c_
 /// [json] must point to [len] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_vtt_split(json: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
     match serde_json::from_str::<Vec<(String, Vec<i64>)>>(unsafe { outside(json, len) }) {
         Ok(asks) => {
             let out: Vec<Vec<String>> = asks.iter().map(|(t, w)| split_like(t, w)).collect();

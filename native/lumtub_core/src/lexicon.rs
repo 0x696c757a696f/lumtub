@@ -204,6 +204,7 @@ pub unsafe extern "C" fn lumtub_lexicon_open(json: *const u8, length: usize) -> 
     struct Opened {
         words: i64,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {
@@ -235,6 +236,7 @@ pub unsafe extern "C" fn lumtub_lexicon_close(json: *const u8, length: usize) ->
     struct Ask {
         language: String,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     if let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         && let Ok(mut open) = open_lexicons().lock()
     {
@@ -260,6 +262,7 @@ pub unsafe extern "C" fn lumtub_lexicon_find(json: *const u8, length: usize) -> 
     struct Answer {
         found: Vec<Vec<Found>>,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {

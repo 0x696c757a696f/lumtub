@@ -168,6 +168,7 @@ pub unsafe extern "C" fn lumtub_roots_pem(
     name: *const u8,
     len: usize,
 ) -> *mut std::os::raw::c_char {
+    // SAFETY: `name` points to `len` readable bytes, per this function's `# Safety`.
     let name = unsafe { crate::taste::text(name, len) };
     match serde_json::from_value::<Roots>(serde_json::Value::String(name.to_string()))
         .ok()

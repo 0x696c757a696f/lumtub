@@ -763,7 +763,7 @@ pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String
                         .records
                         .iter()
                         .find(|r| r.slug == record.slug)
-                        .unwrap();
+                        .expect("the record was found in the previous snapshot");
                     if was.status != record.status {
                         lines.push(format!(
                             "~ {key} status {:?} -> {:?}",

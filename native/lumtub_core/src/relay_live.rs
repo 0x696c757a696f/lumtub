@@ -208,11 +208,12 @@ fn boxes(b: &[u8], from: usize, to: usize) -> Vec<([u8; 4], usize, usize)> {
     let mut found = Vec::new();
     let mut at = from;
     while at + 8 <= to {
-        let size = u32::from_be_bytes(b[at..at + 4].try_into().unwrap()) as u64;
-        let kind: [u8; 4] = b[at + 4..at + 8].try_into().unwrap();
+        let size =
+            u32::from_be_bytes(b[at..at + 4].try_into().expect("the slice is 4 bytes")) as u64;
+        let kind: [u8; 4] = b[at + 4..at + 8].try_into().expect("the slice is 4 bytes");
         let (size, body) = match size {
             1 if at + 16 <= to => (
-                u64::from_be_bytes(b[at + 8..at + 16].try_into().unwrap()),
+                u64::from_be_bytes(b[at + 8..at + 16].try_into().expect("the slice is 8 bytes")),
                 at + 16,
             ),
             0 => ((to - at) as u64, at + 8),
@@ -236,11 +237,11 @@ fn mp4_time(b: &[u8]) -> Option<f64> {
     };
     let be32 = |at: usize| {
         b.get(at..at + 4)
-            .map(|x| u32::from_be_bytes(x.try_into().unwrap()) as u64)
+            .map(|x| u32::from_be_bytes(x.try_into().expect("the slice is 4 bytes")) as u64)
     };
     let be64 = |at: usize| {
         b.get(at..at + 8)
-            .map(|x| u64::from_be_bytes(x.try_into().unwrap()))
+            .map(|x| u64::from_be_bytes(x.try_into().expect("the slice is 8 bytes")))
     };
     let (_, moov, moov_end) = find(0, b.len(), b"moov")?;
     let (_, trak, trak_end) = find(moov, moov_end, b"trak")?;

@@ -72,7 +72,7 @@ impl Player {
         uri: &str,
         body: Option<&Value>,
     ) -> Result<super::conn::Response, String> {
-        let mut control = self.control.lock().unwrap();
+        let mut control = self.control.lock().expect("lock poisoned by a panic");
         let cseq = control.cseq;
         control.cseq += 1;
         let mut headers = vec![
@@ -105,7 +105,7 @@ impl Player {
         ];
         self.control
             .lock()
-            .unwrap()
+            .expect("lock poisoned by a panic")
             .conn
             .request(method, uri, "HTTP/1.1", &headers, body)
     }
@@ -273,7 +273,7 @@ impl Player {
                 if stop.load(Ordering::Relaxed) {
                     break;
                 }
-                let mut c = control.lock().unwrap();
+                let mut c = control.lock().expect("lock poisoned by a panic");
                 let cseq = c.cseq;
                 c.cseq += 1;
                 let headers = vec![
@@ -344,7 +344,11 @@ impl Player {
 
     pub fn close(&self) {
         self.stop.store(true, Ordering::Relaxed);
-        self.control.lock().unwrap().conn.shutdown();
+        self.control
+            .lock()
+            .expect("lock poisoned by a panic")
+            .conn
+            .shutdown();
     }
 }
 

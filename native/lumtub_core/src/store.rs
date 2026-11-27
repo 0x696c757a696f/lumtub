@@ -624,6 +624,7 @@ fn write_json(ask: &str) -> String {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_store_read(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     give(read_json(unsafe { text(json, length) }))
 }
 
@@ -638,6 +639,7 @@ pub unsafe extern "C" fn lumtub_store_read(json: *const u8, length: usize) -> *m
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_store_write(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     give(write_json(unsafe { text(json, length) }))
 }
 

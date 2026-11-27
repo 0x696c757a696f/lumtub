@@ -39,6 +39,8 @@ pub fn probe() -> Option<Decoders> {
     };
     use windows::core::{GUID, Interface};
 
+    // SAFETY: Direct3D 11 and DXGI calls on COM objects owned in this block; the out-parameters
+    // point at live locals and every result is checked before use.
     unsafe {
         // The adapter the app draws and decodes on: the runner passes the
         // graphics card setting on, and Flutter picks the same adapter.
@@ -137,12 +139,15 @@ struct Library(*mut std::ffi::c_void);
 
 #[cfg(target_os = "linux")]
 unsafe fn open(name: &std::ffi::CStr) -> Option<Library> {
+    // SAFETY: `name` is a NUL-terminated `CStr`, so `dlopen` reads a valid C string.
     let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
     (!library.is_null()).then_some(Library(library))
 }
 
 #[cfg(target_os = "linux")]
 unsafe fn symbol<T>(library: &Library, name: &std::ffi::CStr) -> Option<T> {
+    // SAFETY: `library.0` is a live `dlopen` handle (never closed) and `name` is a NUL-terminated
+    // `CStr`.
     let found = unsafe { libc::dlsym(library.0, name.as_ptr()) };
     // SAFETY: T is the function pointer type of [name].
     (!found.is_null())

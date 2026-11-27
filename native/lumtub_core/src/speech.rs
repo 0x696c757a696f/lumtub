@@ -63,6 +63,7 @@ mod system {
 
     fn voice(language: &str) -> Option<VoiceInformation> {
         // Already set up on this thread (perhaps single-threaded) is fine.
+        // SAFETY: RoInitialize takes a valid apartment type and has no other preconditions.
         let _ = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
         let voices = SpeechSynthesizer::AllVoices().ok()?;
         let count = voices.Size().ok()?;
@@ -241,6 +242,8 @@ pub unsafe extern "C" fn lumtub_speak(json: *const u8, length: usize) -> *mut c_
         language: String,
         out: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| speak(&ask.text, &ask.language, Path::new(&ask.out)));
@@ -260,6 +263,8 @@ pub unsafe extern "C" fn lumtub_speech_voice(json: *const u8, length: usize) -> 
     struct Ask {
         language: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let voice = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map(|ask| has_voice(&ask.language))
         .unwrap_or(false);

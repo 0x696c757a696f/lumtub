@@ -325,6 +325,8 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
 /// [id] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_quick_request(id: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `id` pointing at `len` readable bytes, per this function's `#
+    // Safety`.
     let id = unsafe { crate::taste::text(id, len) };
     crate::taste::give_json(&json!({
         "body": request(id),
@@ -356,9 +358,13 @@ pub unsafe extern "C" fn lumtub_quick_info(
     settings: *const u8,
     settings_len: usize,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `settings` pointing at `settings_len` readable bytes, per this
+    // function's `# Safety`.
     let settings: Settings =
         serde_json::from_str(unsafe { crate::taste::text(settings, settings_len) })
             .unwrap_or_default();
+    // SAFETY: The caller passes `player` pointing at `player_len` readable bytes, per this
+    // function's `# Safety`.
     let Ok(player) =
         serde_json::from_str::<Value>(unsafe { crate::taste::outside(player, player_len) })
     else {

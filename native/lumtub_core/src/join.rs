@@ -284,6 +284,8 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
         #[serde(flatten)]
         extra: Extra,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Request>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|r| join(&r.video, &r.audio, &r.out, &r.container, &r.extra));

@@ -237,6 +237,7 @@ pub fn lines(contents: &str) -> Vec<Message> {
 /// [contents] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_live_chat(contents: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `contents` points to `length` readable bytes, per this function's `# Safety`.
     give_json(&lines(unsafe { text(contents, length) }))
 }
 
@@ -629,6 +630,7 @@ fn send_body(send: &Send) -> Value {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_live_chat_composer(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let answer = serde_json::from_str::<Value>(unsafe { crate::taste::outside(json, length) })
         .unwrap_or(Value::Null);
     give_json(&composer(&answer))
@@ -640,6 +642,7 @@ pub unsafe extern "C" fn lumtub_live_chat_composer(json: *const u8, length: usiz
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_live_chat_send_body(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     match serde_json::from_str::<Send>(unsafe { text(json, length) }) {
         Ok(send) if !send.text.trim().is_empty() => give_json(&send_body(&send)),
         _ => std::ptr::null_mut(),

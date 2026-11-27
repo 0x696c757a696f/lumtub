@@ -276,8 +276,12 @@ pub unsafe extern "C" fn lumtub_dns_test(
     host: *const u8,
     host_length: usize,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let settings: Settings =
         serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    // SAFETY: The caller passes `host` pointing at `host_length` readable bytes, per this
+    // function's `# Safety`.
     let host = unsafe { text(host, host_length) }.to_string();
     let answer = match Doh::new(&settings) {
         None => serde_json::json!({"ok": false, "error": "not an https:// address"}),
@@ -327,7 +331,7 @@ mod tests {
                 ),
                 Record::from_rdata(name.clone(), 120, RData::A(A::new(142, 250, 1, 1))),
                 Record::from_rdata(
-                    name.clone(),
+                    name,
                     5,
                     RData::AAAA(AAAA::new(0x2404, 0x6800, 0, 0, 0, 0, 0, 1)),
                 ),

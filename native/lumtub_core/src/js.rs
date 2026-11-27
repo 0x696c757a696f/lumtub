@@ -413,6 +413,8 @@ fn compile(player: &str) -> Result<Vec<u8>, String> {
                 flags,
             )
         };
+        // SAFETY: `function` is the live value JS_Eval just returned; JS_IsException only inspects
+        // it.
         if unsafe { qjs::JS_IsException(function) } {
             return Err(format!("The player did not compile: {}", exception(&ctx)));
         }
@@ -503,6 +505,8 @@ fn answer(context: &Context, requests: &[SolveRequest]) -> Result<Value, String>
 /// [input] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_js_solve(input: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `input` pointing at `len` readable bytes, as this function
+    // requires.
     give_json(&solve(unsafe { text(input, len) }))
 }
 
@@ -515,6 +519,8 @@ pub unsafe extern "C" fn lumtub_js_solve(input: *const u8, len: usize) -> *mut c
 /// [source] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_js_run(source: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `source` pointing at `len` readable bytes, as this function
+    // requires.
     give_json(&run(unsafe { text(source, len) }))
 }
 

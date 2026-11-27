@@ -3,8 +3,6 @@
 //! then the rest is ordered by the playback strategy. A fallback only ever
 //! goes to another allowed codec.
 
-#![allow(clippy::missing_safety_doc)]
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::c_char;
@@ -394,8 +392,13 @@ impl Settings {
 
 /// The policy for the settings in [json], as JSON; null when it does not
 /// parse. Free it with `lumtub_string_free`.
+///
+/// # Safety
+/// [json] must be null or point to [len] readable bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_format_policy(json: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, per this function's `#
+    // Safety`.
     match serde_json::from_str::<Settings>(unsafe { crate::taste::text(json, len) }) {
         Ok(settings) => crate::taste::give_json(&settings.policy()),
         Err(_) => std::ptr::null_mut(),

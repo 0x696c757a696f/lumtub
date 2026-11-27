@@ -407,6 +407,8 @@ unsafe fn bytes<'a>(ptr: *const u8, len: usize) -> &'a [u8] {
     if ptr.is_null() || len == 0 {
         &[]
     } else {
+        // SAFETY: `ptr` is non-null and `len` is non-zero here, and the caller of `bytes`
+        // guarantees `len` readable bytes.
         unsafe { std::slice::from_raw_parts(ptr, len) }
     }
 }
@@ -423,6 +425,8 @@ fn answer(value: Value) -> *mut c_char {
 /// [data] must point to [length] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_cast_frames(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(match cast_frames(unsafe { bytes(data, length) }) {
         Ok((messages, used)) => json!({"messages": messages, "used": used}),
         Err(error) => json!({"error": error}),
@@ -436,6 +440,8 @@ pub unsafe extern "C" fn lumtub_cast_frames(data: *const u8, length: usize) -> *
 /// [data] must point to [length] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_cast_message(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(match cast_message(unsafe { bytes(data, length) }) {
         Ok(message) => serde_json::to_value(message).unwrap_or_default(),
         Err(error) => json!({"error": error}),
@@ -448,6 +454,8 @@ pub unsafe extern "C" fn lumtub_cast_message(data: *const u8, length: usize) -> 
 /// [data] must point to [length] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_mdns_records(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(serde_json::to_value(mdns_records(unsafe { bytes(data, length) })).unwrap_or_default())
 }
 
@@ -457,6 +465,8 @@ pub unsafe extern "C" fn lumtub_mdns_records(data: *const u8, length: usize) -> 
 /// [data] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_ssdp(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(serde_json::to_value(ssdp(unsafe { text(data, length) })).unwrap_or_default())
 }
 
@@ -466,6 +476,8 @@ pub unsafe extern "C" fn lumtub_ssdp(data: *const u8, length: usize) -> *mut c_c
 /// [data] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_upnp_description(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(description(unsafe { text(data, length) }))
 }
 
@@ -475,6 +487,8 @@ pub unsafe extern "C" fn lumtub_upnp_description(data: *const u8, length: usize)
 /// [data] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_soap_response(data: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `data` pointing at `length` readable bytes, as this function
+    // requires.
     answer(soap(unsafe { text(data, length) }))
 }
 

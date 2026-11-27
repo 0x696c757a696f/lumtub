@@ -269,6 +269,8 @@ pub unsafe extern "C" fn lumtub_relay_video(
     if len > MAX_ANSWER || body.is_null() {
         return std::ptr::null_mut();
     }
+    // SAFETY: `body` was just checked non-null and `len` is within `MAX_ANSWER`; the caller
+    // guarantees `len` readable bytes, per this function's `# Safety`.
     let bytes = unsafe { std::slice::from_raw_parts(body, len) };
     let Ok(Value::Object(json)) = serde_json::from_slice::<Value>(bytes) else {
         return std::ptr::null_mut();

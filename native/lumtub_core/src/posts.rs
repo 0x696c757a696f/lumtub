@@ -267,6 +267,7 @@ pub fn section_token(data: &Value) -> Option<String> {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_posts(body: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let body = unsafe { outside(body, length) };
     let data = if body.trim_start().starts_with('{') {
         serde_json::from_str(body).ok()
@@ -286,6 +287,7 @@ pub unsafe extern "C" fn lumtub_youtube_post_comments(
     html: *const u8,
     length: usize,
 ) -> *mut c_char {
+    // SAFETY: `html` points to `length` readable bytes, per this function's `# Safety`.
     give_json(&initial_data(unsafe { outside(html, length) }).and_then(|data| section_token(&data)))
 }
 

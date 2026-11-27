@@ -4,8 +4,6 @@
 //! format list, the stream for a codec and height, the audio track and the
 //! container they are copied into. Streams are never re-encoded.
 
-#![allow(clippy::missing_safety_doc)]
-
 use std::ffi::c_char;
 
 use serde::{Deserialize, Serialize};
@@ -442,8 +440,12 @@ struct Answer<'a> {
 }
 
 /// The download formats of yt-dlp's JSON [info]: `{video, audio}`.
+///
+/// # Safety
+/// [info] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_download_formats(info: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `info` points to `length` readable bytes, per this function's `# Safety`.
     let info = serde_json::from_str::<Value>(unsafe { crate::taste::outside(info, length) })
         .unwrap_or(Value::Null);
     give_json(&Formats::parse(&info))
@@ -453,8 +455,12 @@ pub unsafe extern "C" fn lumtub_download_formats(info: *const u8, length: usize)
 /// height, container, audioOnly}`, the codecs, the automatic codec, the
 /// heights, the picked stream, the audio tracks best first and the plan.
 /// Null when the JSON does not read.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_download_choose(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };
@@ -476,6 +482,9 @@ pub unsafe extern "C" fn lumtub_download_choose(json: *const u8, length: usize) 
 
 /// The container for JSON `{container, codec, audio}` (audio best first):
 /// `{container, audio, problem}`. Null when the JSON does not read.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_download_container(json: *const u8, length: usize) -> *mut c_char {
     #[derive(Deserialize)]
@@ -486,6 +495,7 @@ pub unsafe extern "C" fn lumtub_download_container(json: *const u8, length: usiz
         #[serde(default)]
         audio: Vec<AudioFormat>,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };

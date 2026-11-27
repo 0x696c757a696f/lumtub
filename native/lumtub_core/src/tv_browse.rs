@@ -444,6 +444,8 @@ pub unsafe extern "C" fn lumtub_tv_browse(
     length: usize,
     shorts: bool,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `body` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };

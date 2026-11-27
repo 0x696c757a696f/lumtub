@@ -307,6 +307,8 @@ fn translation_code(lang: whatlang::Lang) -> Option<&'static str> {
 /// [source] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_subtitle_cues(source: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `source` pointing at `length` readable bytes, as this function
+    // requires.
     let list: Vec<serde_json::Value> = cues(unsafe { text(source, length) })
         .into_iter()
         .map(|c| serde_json::json!([c.start, c.end, c.text]))
@@ -325,6 +327,8 @@ pub unsafe extern "C" fn lumtub_looks_like(
     target: *const u8,
     target_length: usize,
 ) -> bool {
+    // SAFETY: The caller passes `source` and `target` pointing at `length` and `target_length`
+    // readable bytes, as this function requires.
     looks_like(unsafe { text(source, length) }, unsafe {
         text(target, target_length)
     })

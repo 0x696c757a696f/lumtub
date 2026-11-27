@@ -263,6 +263,7 @@ impl Danmaku {
 /// [settings] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_danmaku_new(settings: *const u8, length: usize) -> *mut Danmaku {
+    // SAFETY: `settings` points to `length` readable bytes, per this function's `# Safety`.
     let settings = serde_json::from_str(unsafe { text(settings, length) }).unwrap_or_default();
     Box::into_raw(Box::new(Danmaku::new(settings)))
 }
@@ -280,10 +281,13 @@ pub unsafe extern "C" fn lumtub_danmaku_add(
     messages: *const u8,
     length: usize,
 ) -> u32 {
+    // SAFETY: `danmaku` is null (handled below) or came from `lumtub_danmaku_new` and is not freed
+    // yet, per this function's `# Safety`.
     let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
         return 0;
     };
     let messages: Vec<Message> =
+        // SAFETY: `messages` points to `length` readable bytes, per this function's `# Safety`.
         serde_json::from_str(unsafe { text(messages, length) }).unwrap_or_default();
     messages.into_iter().map(|m| danmaku.add(m) as u32).sum()
 }
@@ -299,6 +303,8 @@ pub unsafe extern "C" fn lumtub_danmaku_frame(
     now_ms: f64,
     forget: bool,
 ) -> *mut c_char {
+    // SAFETY: `danmaku` is null (handled below) or came from `lumtub_danmaku_new` and is not freed
+    // yet, per this function's `# Safety`.
     let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
         return give(String::new());
     };
@@ -321,6 +327,8 @@ pub unsafe extern "C" fn lumtub_danmaku_visible(
     to_ms: f64,
     forget: bool,
 ) -> *mut c_char {
+    // SAFETY: `danmaku` is null (handled below) or came from `lumtub_danmaku_new` and is not freed
+    // yet, per this function's `# Safety`.
     let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
         return give("[]".into());
     };
@@ -335,6 +343,8 @@ pub unsafe extern "C" fn lumtub_danmaku_visible(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_danmaku_free(danmaku: *mut Danmaku) {
     if !danmaku.is_null() {
+        // SAFETY: `danmaku` was just checked non-null and came from `lumtub_danmaku_new`
+        // (`Box::into_raw`); the caller frees it once and does not use it after.
         drop(unsafe { Box::from_raw(danmaku) });
     }
 }

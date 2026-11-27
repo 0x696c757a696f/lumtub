@@ -44,7 +44,11 @@ fn packet(data: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
                 (tag, ((n as usize - 192) << 8) + low as usize + 192, 3)
             }
             255 => {
-                let bytes: [u8; 4] = b.get(1..5).ok_or("Truncated packet")?.try_into().unwrap();
+                let bytes: [u8; 4] = b
+                    .get(1..5)
+                    .ok_or("Truncated packet")?
+                    .try_into()
+                    .expect("the slice has the length of the array");
                 (tag, u32::from_be_bytes(bytes) as usize, 6)
             }
             _ => return Err("Partial packet lengths are not supported".into()),
@@ -58,7 +62,7 @@ fn packet(data: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
                     .get(1..3)
                     .ok_or("Truncated packet")?
                     .try_into()
-                    .unwrap();
+                    .expect("the slice has the length of the array");
                 (tag, u16::from_be_bytes(bytes) as usize, 3)
             }
             2 => {
@@ -66,7 +70,7 @@ fn packet(data: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
                     .get(1..5)
                     .ok_or("Truncated packet")?
                     .try_into()
-                    .unwrap();
+                    .expect("the slice has the length of the array");
                 (tag, u32::from_be_bytes(bytes) as usize, 5)
             }
             _ => return Err("Indeterminate packet lengths are not supported".into()),
@@ -80,7 +84,11 @@ fn packet(data: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
 /// An OpenPGP multiprecision integer at the start of [data], without its
 /// leading zero bytes, and the rest.
 fn mpi(data: &[u8]) -> Result<(&[u8], &[u8]), String> {
-    let bits: [u8; 2] = data.get(..2).ok_or("Truncated number")?.try_into().unwrap();
+    let bits: [u8; 2] = data
+        .get(..2)
+        .ok_or("Truncated number")?
+        .try_into()
+        .expect("the slice has the length of the array");
     let length = (u16::from_be_bytes(bits) as usize).div_ceil(8);
     let value = data.get(2..2 + length).ok_or("Truncated number")?;
     let start = value.iter().position(|&b| b != 0).unwrap_or(value.len());
@@ -161,7 +169,7 @@ pub fn verify(sums: &[u8], signature: &[u8], tag: Option<&str>) -> Result<i64, S
         body.get(hashed_end..hashed_end + 2)
             .ok_or("Truncated signature")?
             .try_into()
-            .unwrap(),
+            .expect("the slice has the length of the array"),
     ) as usize;
     let after_unhashed = hashed_end + 2 + unhashed_length;
     // Two bytes of the digest, then the signature value.
@@ -214,7 +222,7 @@ fn created_time(mut subpackets: &[u8]) -> Result<i64, String> {
                     .get(1..5)
                     .ok_or("Truncated subpacket")?
                     .try_into()
-                    .unwrap();
+                    .expect("the slice has the length of the array");
                 (u32::from_be_bytes(bytes) as usize, 5)
             }
         };
@@ -272,6 +280,8 @@ pub unsafe extern "C" fn lumtub_ytdlp_sums_verify(json: *const u8, length: usize
         #[serde(skip_serializing_if = "Option::is_none")]
         error: Option<String>,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let result = serde_json::from_str::<Ask>(unsafe { outside(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {
@@ -346,13 +356,19 @@ mod tests {
     fn the_ffi_answers_json() {
         let signature: String = SIGNATURE.iter().map(|b| format!("{b:02x}")).collect();
         let ask = serde_json::json!({"sums": std::str::from_utf8(SUMS).unwrap(), "signature": signature, "tag": "2026.11.24.232900"}).to_string();
+        // SAFETY: `ask` is a live String, so its pointer is readable for `ask.len()` bytes.
         let answer = unsafe { lumtub_ytdlp_sums_verify(ask.as_ptr(), ask.len()) };
+        // SAFETY: `answer` came from `lumtub_ytdlp_sums_verify`, which gives a CString::into_raw
+        // pointer, freed once here.
         let text = unsafe { std::ffi::CString::from_raw(answer) }
             .into_string()
             .unwrap();
         assert_eq!(text, r#"{"ok":true,"created":1795563123}"#);
         let bad = serde_json::json!({"sums": "x", "signature": signature}).to_string();
+        // SAFETY: `bad` is a live String, so its pointer is readable for `bad.len()` bytes.
         let answer = unsafe { lumtub_ytdlp_sums_verify(bad.as_ptr(), bad.len()) };
+        // SAFETY: `answer` came from `lumtub_ytdlp_sums_verify`, which gives a CString::into_raw
+        // pointer, freed once here.
         let text = unsafe { std::ffi::CString::from_raw(answer) }
             .into_string()
             .unwrap();

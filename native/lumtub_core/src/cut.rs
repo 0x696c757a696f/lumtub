@@ -268,7 +268,14 @@ fn mp4_box(file: &mut impl ReadSeek, at: u64, total: u64) -> Result<([u8; 4], u6
     let kind = [h[4], h[5], h[6], h[7]];
     let (header, size) = match size {
         0 => (8, total.saturating_sub(at)),
-        1 if h.len() >= 16 => (16, u64::from_be_bytes(h[8..16].try_into().unwrap())),
+        1 if h.len() >= 16 => (
+            16,
+            u64::from_be_bytes(
+                h[8..16]
+                    .try_into()
+                    .expect("the slice has the length of the array"),
+            ),
+        ),
         n => (8, n),
     };
     if size < header {
@@ -297,7 +304,11 @@ fn decode_times(moof: &[u8]) -> Vec<(usize, usize)> {
         let mut list = Vec::new();
         let mut at = from;
         while at + 8 <= to {
-            let size = u32::from_be_bytes(moof[at..at + 4].try_into().unwrap()) as usize;
+            let size = u32::from_be_bytes(
+                moof[at..at + 4]
+                    .try_into()
+                    .expect("the slice has the length of the array"),
+            ) as usize;
             if size < 8 || size > to - at {
                 break;
             }
@@ -353,7 +364,7 @@ fn mp4<W: Write>(
                     moov.get(field..field + 4)
                         .ok_or("damaged mdhd")?
                         .try_into()
-                        .unwrap(),
+                        .expect("the slice has the length of the array"),
                 );
             }
             b"moof" => {
@@ -424,6 +435,8 @@ pub unsafe extern "C" fn lumtub_cut_audio(json: *const u8, length: usize) -> *mu
         stem: String,
         every: f64,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Request>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|r| cut(&r.input, &r.stem, r.every));

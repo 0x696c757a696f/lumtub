@@ -434,6 +434,8 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(settings) = serde_json::from_str::<Settings>(unsafe { text(json, length) }) else {
         eprintln!("lumtub: the network settings could not be read; requests will fail");
         *CLIENT.write().expect("lock poisoned by a panic") = blocked();
@@ -487,8 +489,12 @@ pub unsafe extern "C" fn lumtub_http_send(
     let body = if body.is_null() || body_length == 0 {
         Vec::new()
     } else {
+        // SAFETY: `body` is non-null and the caller passes it pointing at `body_length` readable
+        // bytes, per this function's `# Safety`.
         unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec()
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     start(id, port, unsafe { text(json, length) }, body)
 }
 
@@ -506,6 +512,8 @@ pub extern "C" fn lumtub_http_body(length: usize) -> *mut u8 {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_body_free(body: *mut u8, length: usize) {
     if !body.is_null() {
+        // SAFETY: `body` is non-null and, with `length`, is the allocation `lumtub_http_body` gave;
+        // the caller frees it only once.
         drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, length)) });
     }
 }
@@ -528,8 +536,12 @@ pub unsafe extern "C" fn lumtub_http_send_owned(
     let body = if body.is_null() {
         Vec::new()
     } else {
+        // SAFETY: `body` is non-null and, with `body_length`, is the allocation `lumtub_http_body`
+        // gave; the caller does not use it again.
         unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_length)) }.into_vec()
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     start(id, port, unsafe { text(json, length) }, body)
 }
 

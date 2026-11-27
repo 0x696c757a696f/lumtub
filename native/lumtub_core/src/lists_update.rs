@@ -191,6 +191,8 @@ pub unsafe extern "C" fn lumtub_lists_in(json: *const u8, length: usize) -> *mut
     struct Ask {
         folder: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let folder = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map(|a| a.folder)
         .unwrap_or_default();
@@ -234,6 +236,8 @@ pub unsafe extern "C" fn lumtub_lists_take(json: *const u8, length: usize) -> *m
     struct Failed {
         error: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {

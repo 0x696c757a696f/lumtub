@@ -652,6 +652,7 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
         text: Option<Localized>,
         facts: Facts,
     }
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
@@ -1041,6 +1042,7 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
         #[serde(skip_serializing_if = "Vec::is_empty")]
         alike: Vec<u32>,
     }
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };
@@ -1121,6 +1123,7 @@ pub unsafe extern "C" fn lumtub_ai_label(body: *const u8, length: usize) -> *mut
     struct Label {
         ai: Option<bool>,
     }
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let ai = serde_json::from_str::<Value>(unsafe { outside(body, length) })
         .ok()
         .and_then(|data| ai_label(&data));
@@ -1172,6 +1175,7 @@ pub fn listed_channel_ids(list: &str) -> Vec<String> {
 /// `body` must point to `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_ai_channels(body: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let body = unsafe { outside(body, length) };
     let channels = match serde_json::from_str::<Value>(body) {
         Ok(data) => ai_channels(&data),

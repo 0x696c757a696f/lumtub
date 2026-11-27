@@ -525,6 +525,8 @@ pub fn same_script(language: Language) -> Vec<Language> {
 
 /// The language at explore's index [index].
 pub fn language_at(index: u32) -> Option<Language> {
+    // SAFETY: `index` is at most the last variant, and `Language` is `repr(u32)` with consecutive
+    // discriminants from 0.
     (index <= Language::Uz as u32).then(|| unsafe { std::mem::transmute::<u32, Language>(index) })
 }
 
@@ -1026,6 +1028,8 @@ pub fn name_starts_with(name: &str, word: &str) -> bool {
 /// `title` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_title_language(title: *const u8, length: usize) -> u32 {
+    // SAFETY: The caller passes `title` pointing at `length` readable bytes, as this function
+    // requires.
     title_language(unsafe { text(title, length) }) as u32
 }
 
@@ -1035,6 +1039,8 @@ pub unsafe extern "C" fn lumtub_title_language(title: *const u8, length: usize) 
 /// `title` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_looks_like_bait(title: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `title` pointing at `length` readable bytes, as this function
+    // requires.
     looks_like_bait(unsafe { text(title, length) })
 }
 
@@ -1044,6 +1050,8 @@ pub unsafe extern "C" fn lumtub_looks_like_bait(title: *const u8, length: usize)
 /// `json` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_is_short(json: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     serde_json::from_str::<ShortInfo>(unsafe { text(json, length) })
         .is_ok_and(|info| is_short(&info))
 }
@@ -1055,6 +1063,8 @@ pub unsafe extern "C" fn lumtub_is_short(json: *const u8, length: usize) -> bool
 /// `json` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_blocks_new(json: *const u8, length: usize) -> *mut Blocks {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     match serde_json::from_str::<Blocks>(unsafe { text(json, length) }) {
         Ok(blocks) if !blocks.is_empty() => Box::into_raw(Box::new(blocks)),
         _ => std::ptr::null_mut(),
@@ -1072,9 +1082,13 @@ pub unsafe extern "C" fn lumtub_blocks_match(
     json: *const u8,
     length: usize,
 ) -> bool {
+    // SAFETY: `blocks` is null (`as_ref` gives None) or a live pointer from `lumtub_blocks_new`
+    // that Dart has not freed.
     let Some(blocks) = (unsafe { blocks.as_ref() }) else {
         return false;
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     serde_json::from_str::<Channel>(unsafe { text(json, length) })
         .is_ok_and(|channel| blocks.matches(&channel))
 }
@@ -1086,6 +1100,8 @@ pub unsafe extern "C" fn lumtub_blocks_match(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_blocks_free(blocks: *mut Blocks) {
     if !blocks.is_null() {
+        // SAFETY: `blocks` is non-null here and, per this function's `# Safety`, came from
+        // `lumtub_blocks_new` and is freed once.
         drop(unsafe { Box::from_raw(blocks) });
     }
 }

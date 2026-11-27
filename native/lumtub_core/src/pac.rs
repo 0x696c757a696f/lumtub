@@ -91,6 +91,8 @@ pub fn fetch(url: &str) -> Result<String, String> {
 /// [url] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_pac_proxy(url: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `url` pointing at `length` readable bytes, as this function
+    // requires.
     let url = unsafe { text(url, length) }.trim().to_string();
     let answer = match fetch(&url) {
         Ok(script) => serde_json::json!({ "proxy": proxy_in(&script) }),

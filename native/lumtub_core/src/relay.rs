@@ -344,7 +344,7 @@ impl Relay {
             target.mime = query(&target.url, "mime");
         }
         let token = token(&target.url);
-        let mut shared = self.shared.lock().unwrap();
+        let mut shared = self.shared.lock().expect("lock poisoned by a panic");
         shared.targets.insert(token.clone(), target);
         shared.order.push_back(token.clone());
         while shared.order.len() > KEEP {
@@ -358,7 +358,13 @@ impl Relay {
 
     /// The log lines since the last call.
     pub fn take_log(&self) -> Vec<String> {
-        let mut lines: Vec<String> = self.shared.lock().unwrap().log.drain(..).collect();
+        let mut lines: Vec<String> = self
+            .shared
+            .lock()
+            .expect("lock poisoned by a panic")
+            .log
+            .drain(..)
+            .collect();
         lines.extend(crate::backup::take_log());
         lines.extend(crate::netwatch::take_log());
         lines
@@ -372,7 +378,7 @@ const PARTS_KEPT: usize = 4096;
 /// The loopback address on [port] that serves [part], an address an HLS
 /// playlist named; the same one each time the playlist names it.
 fn register_part(shared: &Mutex<Shared>, port: u16, part: Target) -> String {
-    let mut shared = shared.lock().unwrap();
+    let mut shared = shared.lock().expect("lock poisoned by a panic");
     let shared = &mut *shared;
     let key = format!("{:?} {}", part.hls, part.url);
     let token = match shared.part_tokens.get(&key) {
@@ -426,13 +432,13 @@ fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64, behind: &dyn Fn() -
             .find(|(name, _)| name == pair)
             .map(|(_, start)| *start)
     };
-    if let Some(start) = known(&shared.lock().unwrap()) {
+    if let Some(start) = known(&shared.lock().expect("lock poisoned by a panic")) {
         return start;
     }
     // Measured unlocked, as it asks YouTube; the other stream may have
     // started meanwhile, and then its start stands.
     let start = head.saturating_sub(behind());
-    let mut shared = shared.lock().unwrap();
+    let mut shared = shared.lock().expect("lock poisoned by a panic");
     if let Some(start) = known(&shared) {
         return start;
     }
@@ -444,7 +450,7 @@ fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64, behind: &dyn Fn() -
 }
 
 fn log(shared: &Mutex<Shared>, line: String) {
-    let mut shared = shared.lock().unwrap();
+    let mut shared = shared.lock().expect("lock poisoned by a panic");
     if shared.log.len() >= LOG_KEEP {
         shared.log.pop_front();
     }
@@ -590,7 +596,7 @@ fn answer(
             .get("connection")
             .is_some_and(|v| v.eq_ignore_ascii_case("close"));
         let target = {
-            let shared = shared.lock().unwrap();
+            let shared = shared.lock().expect("lock poisoned by a panic");
             let token = path.trim_start_matches('/');
             shared
                 .targets
@@ -1139,6 +1145,8 @@ pub unsafe extern "C" fn lumtub_relay_register(json: *const u8, len: usize) -> *
     let Some(relay) = RELAY.get() else {
         return std::ptr::null_mut();
     };
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, per this function's `#
+    // Safety`.
     match serde_json::from_str::<Target>(unsafe { crate::taste::text(json, len) })
         .ok()
         .and_then(|t| relay.register(t))

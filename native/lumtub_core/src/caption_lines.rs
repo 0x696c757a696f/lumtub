@@ -244,6 +244,8 @@ fn json(lines: Vec<Line>) -> String {
 /// [source] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_caption_lines(source: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `source` pointing at `length` readable bytes, per this function's
+    // `# Safety`.
     give(json(lines_of(&cues(unsafe { text(source, length) }))))
 }
 
@@ -258,7 +260,11 @@ pub unsafe extern "C" fn lumtub_caption_translation_lines(
     translated: *const u8,
     translated_length: usize,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `original` pointing at `original_length` readable bytes, per this
+    // function's `# Safety`.
     let original = cues(unsafe { text(original, original_length) });
+    // SAFETY: The caller passes `translated` pointing at `translated_length` readable bytes, per
+    // this function's `# Safety`.
     let translated = cues(unsafe { text(translated, translated_length) });
     give(json(translation_lines(&original, &translated)))
 }

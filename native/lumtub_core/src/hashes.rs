@@ -168,6 +168,8 @@ pub fn sha256_of(file: &mut impl std::io::Read) -> std::io::Result<String> {
 /// [path] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_file_sha256(path: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `path` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     file_sha256(unsafe { text(path, length) }).map_or(std::ptr::null_mut(), give)
 }
 
@@ -177,6 +179,8 @@ pub unsafe extern "C" fn lumtub_file_sha256(path: *const u8, length: usize) -> *
 /// [video_id] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_hash_prefix(video_id: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `video_id` pointing at `length` readable bytes, per this function's
+    // `# Safety`.
     give(hash_prefix(unsafe { text(video_id, length) }))
 }
 
@@ -194,6 +198,8 @@ pub unsafe extern "C" fn lumtub_sponsor_segments(json: *const u8, length: usize)
         video_id: String,
         categories: Vec<String>,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { crate::taste::outside(json, length) })
     else {
         return std::ptr::null_mut();
@@ -215,6 +221,8 @@ pub unsafe extern "C" fn lumtub_dearrow_branding(json: *const u8, length: usize)
         answer: String,
         video_id: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let input = unsafe { crate::taste::outside(json, length) };
     // The video id, a newline and the answer as it came, which spares the
     // app escaping the answer into JSON; or the older JSON object.
@@ -309,11 +317,15 @@ mod tests {
     #[test]
     fn branding_takes_the_id_line_and_the_json_object_alike() {
         let read = |input: &str| {
+            // SAFETY: `input` is a live `&str`, so its pointer and length are readable.
             let out = unsafe { lumtub_dearrow_branding(input.as_ptr(), input.len()) };
+            // SAFETY: `out` is the NUL-terminated string just returned by
+            // `lumtub_dearrow_branding`, not yet freed.
             let text = unsafe { std::ffi::CStr::from_ptr(out) }
                 .to_str()
                 .unwrap()
                 .to_owned();
+            // SAFETY: `out` came from `lumtub_dearrow_branding` and is freed only here.
             unsafe { crate::taste::lumtub_string_free(out) };
             text
         };

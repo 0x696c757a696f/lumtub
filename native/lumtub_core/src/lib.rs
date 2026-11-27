@@ -2,6 +2,15 @@
 //!
 //! Every export is a plain C function. Lumtub needs the library for its
 //! recommendations; the process tree is used when the platform has one.
+//!
+//! The code follows Google's Rust style guide; see docs/RUST-STYLE.md.
+
+#![warn(
+    clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
+    clippy::needless_for_each,
+    clippy::redundant_clone
+)]
 
 pub mod airplay;
 pub mod anki;

@@ -71,6 +71,17 @@ jobs:
       - name: Rust formatting
         run: cargo fmt --manifest-path native/lumtub_core/Cargo.toml --check
 
+      # rustfmt.toml's import, hex and macro options exist only in nightly
+      # rustfmt; stable ignores them. Nightly is used for this check only.
+      - name: Rust formatting (Google's rustfmt options)
+        env:
+          # Pinned so formatting only changes when this date does.
+          RUSTFMT_NIGHTLY: nightly-2026-11-26
+        run: |
+          rustup toolchain install "$RUSTFMT_NIGHTLY" --profile minimal --component rustfmt --no-self-update
+          cargo "+$RUSTFMT_NIGHTLY" fmt --manifest-path native/lumtub_core/Cargo.toml --check
+          cargo "+$RUSTFMT_NIGHTLY" fmt --manifest-path native/lumtub_core/fuzz/Cargo.toml --check
+
       - name: Get packages
         run: flutter pub get
 

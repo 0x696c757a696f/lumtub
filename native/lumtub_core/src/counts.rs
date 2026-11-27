@@ -370,6 +370,8 @@ pub fn has_unit(text: &str) -> bool {
 /// [hl] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_set_language(hl: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `hl` pointing at `length` readable bytes, as this function
+    // requires.
     set_language(unsafe { text(hl, length) });
     std::ptr::null_mut()
 }

@@ -47,7 +47,10 @@ pub fn public_keys(secret: &[u8; 64]) -> Vec<u8> {
 
 fn split(secret: &[u8; 64]) -> (&[u8; 32], &[u8; 32]) {
     let (ed, ml) = secret.split_at(32);
-    (ed.try_into().unwrap(), ml.try_into().unwrap())
+    (
+        ed.try_into().expect("the first half of 64 bytes is 32"),
+        ml.try_into().expect("the second half of 64 bytes is 32"),
+    )
 }
 
 /// The `.sig` contents for the package [name] with SHA-256 [sha256].
@@ -61,7 +64,7 @@ pub fn sign(secret: &[u8; 64], name: &str, sha256: &str) -> Vec<u8> {
     signature.extend_from_slice(
         &ml_dsa_key(ml)
             .sign_deterministic(&message, CONTEXT)
-            .unwrap()
+            .expect("the context is short enough for ML-DSA")
             .encode(),
     );
     signature
@@ -76,10 +79,15 @@ pub fn verify_with(keys: &[u8], name: &str, sha256: &str, signature: &[u8]) -> b
     let (ed_key, ml_key) = keys.split_at(32);
     let (ed_signature, ml_signature) = signature.split_at(ED25519_LENGTH);
     let message = message(name, sha256);
-    let Ok(ed_key) = ed25519_dalek::VerifyingKey::from_bytes(ed_key.try_into().unwrap()) else {
+    let ed_key = ed_key.try_into().expect("the key length was checked above");
+    let Ok(ed_key) = ed25519_dalek::VerifyingKey::from_bytes(ed_key) else {
         return false;
     };
-    let ed_signature = ed25519_dalek::Signature::from_bytes(ed_signature.try_into().unwrap());
+    let ed_signature = ed25519_dalek::Signature::from_bytes(
+        ed_signature
+            .try_into()
+            .expect("the signature length was checked above"),
+    );
     let ed_ok = ed_key.verify_strict(&message, &ed_signature).is_ok();
     let Ok(ml_key) = EncodedVerifyingKey::<MlDsa65>::try_from(ml_key) else {
         return false;
@@ -171,6 +179,8 @@ pub unsafe extern "C" fn lumtub_update_verify(json: *const u8, length: usize) ->
         #[serde(skip_serializing_if = "Option::is_none")]
         error: Option<String>,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = match serde_json::from_str::<Ask>(unsafe { text(json, length) }) {
         Ok(ask) => match (|| {
             if let (Some(version), Some(current)) = (&ask.version, &ask.current) {

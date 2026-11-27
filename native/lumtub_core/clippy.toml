@@ -1,0 +1,2 @@
+# Tests may unwrap; library code says why with `expect` (docs/RUST-STYLE.md).
+allow-unwrap-in-tests = true

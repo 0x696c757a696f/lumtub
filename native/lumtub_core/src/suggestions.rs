@@ -44,6 +44,8 @@ pub unsafe extern "C" fn lumtub_search_suggestions(body: *const u8, len: usize) 
     if body.is_null() || len > MAX_ANSWER {
         return give_json(&Vec::<String>::new());
     }
+    // SAFETY: `body` is non-null here and, per this function's `# Safety`, points at `len` readable
+    // bytes.
     give_json(&suggestions(unsafe {
         std::slice::from_raw_parts(body, len)
     }))

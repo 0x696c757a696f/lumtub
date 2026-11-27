@@ -152,6 +152,7 @@ pub unsafe extern "C" fn lumtub_playlist_moves(json: *const u8, len: usize) -> *
         #[serde(default)]
         per_request: Option<usize>,
     }
+    // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
     match serde_json::from_str::<Full>(unsafe { crate::taste::text(json, len) }) {
         Ok(full) => crate::taste::give_json(&Value::Array(requests(
             &full.ask.current,

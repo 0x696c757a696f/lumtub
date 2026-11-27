@@ -1103,7 +1103,7 @@ impl Address {
     }
 
     fn get(&self) -> String {
-        self.url.lock().unwrap().clone()
+        self.url.lock().expect("lock poisoned by a panic").clone()
     }
 }
 
@@ -2230,7 +2230,13 @@ impl Session {
         fetch: &Arc<dyn Fetch>,
         index: usize,
     ) -> Result<Arc<Vec<u8>>, String> {
-        if let Some((_, made)) = self.made.lock().unwrap().iter().find(|(i, _)| *i == index) {
+        if let Some((_, made)) = self
+            .made
+            .lock()
+            .expect("lock poisoned by a panic")
+            .iter()
+            .find(|(i, _)| *i == index)
+        {
             return Ok(made.clone());
         }
         let (start, length) = self.hls_span(index).ok_or("no such segment")?;
@@ -2334,7 +2340,7 @@ impl Session {
             }
         }
         let made = Arc::new(out);
-        let mut cache = self.made.lock().unwrap();
+        let mut cache = self.made.lock().expect("lock poisoned by a panic");
         cache.push_back((index, made.clone()));
         while cache.len() > 3 {
             cache.pop_front();
@@ -2406,7 +2412,7 @@ impl Session {
     pub fn renew(&self, old: &str, new: &str) -> bool {
         let mut renewed = false;
         for address in &self.addresses {
-            let mut url = address.url.lock().unwrap();
+            let mut url = address.url.lock().expect("lock poisoned by a panic");
             if *url == old {
                 *url = new.to_string();
                 address.expired.store(false, Ordering::SeqCst);
@@ -2812,18 +2818,25 @@ struct Gate {
 
 impl Gate {
     fn touch(&self) {
-        *self.last.lock().unwrap() = Instant::now();
+        *self.last.lock().expect("lock poisoned by a panic") = Instant::now();
     }
 
     /// Closes the listener when no connection is open and nothing happened
     /// for the idle time; the sessions go with it. Whether it was closed.
     fn close_if_idle(&self, shared: &Mutex<Shared>) -> bool {
-        let mut running = self.running.lock().unwrap();
+        let mut running = self.running.lock().expect("lock poisoned by a panic");
         let Some((port, stop)) = running.as_ref() else {
             return false;
         };
-        let mut shared = shared.lock().unwrap();
-        if self.open.load(Ordering::SeqCst) > 0 || self.last.lock().unwrap().elapsed() < self.idle {
+        let mut shared = shared.lock().expect("lock poisoned by a panic");
+        if self.open.load(Ordering::SeqCst) > 0
+            || self
+                .last
+                .lock()
+                .expect("lock poisoned by a panic")
+                .elapsed()
+                < self.idle
+        {
             return false;
         }
         shared.sessions.clear();
@@ -2846,7 +2859,7 @@ pub struct Server {
 }
 
 fn log(shared: &Mutex<Shared>, line: String) {
-    let mut shared = shared.lock().unwrap();
+    let mut shared = shared.lock().expect("lock poisoned by a panic");
     if shared.log.len() >= LOG_KEEP {
         shared.log.pop_front();
     }
@@ -2884,7 +2897,7 @@ impl Server {
 
     /// The port, opening the listener again when it was closed for being idle.
     pub fn listen(&self) -> std::io::Result<u16> {
-        let mut running = self.gate.running.lock().unwrap();
+        let mut running = self.gate.running.lock().expect("lock poisoned by a panic");
         if let Some((port, _)) = running.as_ref() {
             return Ok(*port);
         }
@@ -2944,7 +2957,7 @@ impl Server {
         self.gate
             .running
             .lock()
-            .unwrap()
+            .expect("lock poisoned by a panic")
             .as_ref()
             .map_or(0, |(port, _)| *port)
     }
@@ -2956,7 +2969,7 @@ impl Server {
         let session = Session::new(ask, &self.fetch)?;
         let start = session.starts_at();
         let token = token().ok_or("no randomness")?;
-        let mut shared = self.shared.lock().unwrap();
+        let mut shared = self.shared.lock().expect("lock poisoned by a panic");
         self.gate.touch();
         shared.sessions.insert(token.clone(), Arc::new(session));
         shared.order.push_back(token.clone());
@@ -2983,7 +2996,7 @@ impl Server {
     pub fn expired(&self) -> bool {
         self.shared
             .lock()
-            .unwrap()
+            .expect("lock poisoned by a panic")
             .sessions
             .values()
             .any(|s| s.expired())
@@ -2994,7 +3007,7 @@ impl Server {
     pub fn renew(&self, old: &str, new: &str) -> usize {
         self.shared
             .lock()
-            .unwrap()
+            .expect("lock poisoned by a panic")
             .sessions
             .values()
             .filter(|s| s.renew(old, new))
@@ -3002,7 +3015,12 @@ impl Server {
     }
 
     pub fn take_log(&self) -> Vec<String> {
-        self.shared.lock().unwrap().log.drain(..).collect()
+        self.shared
+            .lock()
+            .expect("lock poisoned by a panic")
+            .log
+            .drain(..)
+            .collect()
     }
 }
 
@@ -3029,7 +3047,12 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
         .next()
         .unwrap_or("")
         .to_string();
-    let session = shared.lock().unwrap().sessions.get(&token).cloned();
+    let session = shared
+        .lock()
+        .expect("lock poisoned by a panic")
+        .sessions
+        .get(&token)
+        .cloned();
     let asked = describe_request(&peer, &method, &path, &headers);
     let Some(session) = session.filter(|_| method == "GET" || method == "HEAD") else {
         log(shared, format!("{asked}: answered 404"));
@@ -3194,6 +3217,7 @@ pub unsafe extern "C" fn lumtub_cast_register(json: *const u8, len: usize) -> *m
     let answer = match SERVER.get() {
         None => Err("not started".to_string()),
         Some(server) if server.port() == 0 => Err("not started".to_string()),
+        // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
         Some(server) => match serde_json::from_str::<Ask>(unsafe { crate::taste::text(json, len) })
         {
             Ok(ask) => server.register(ask),
@@ -3228,6 +3252,7 @@ struct Renewal {
 pub unsafe extern "C" fn lumtub_cast_renew(json: *const u8, len: usize) -> u32 {
     let (Some(server), Ok(renewals)) = (
         SERVER.get(),
+        // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
         serde_json::from_str::<Vec<Renewal>>(unsafe { crate::taste::text(json, len) }),
     ) else {
         return 0;
@@ -3534,7 +3559,7 @@ mod tests {
         session.stream(&cutting, &mut out).expect("stream");
         assert_eq!(out, reference);
         let expiring: Arc<dyn Fetch> = Arc::new(Files {
-            data: both.clone(),
+            data: both,
             cut: None,
             expired: Some("old=1"),
         });

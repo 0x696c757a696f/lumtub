@@ -47,7 +47,7 @@ struct Log(Mutex<Vec<String>>);
 
 impl Log {
     fn add(&self, line: String) {
-        let mut lines = self.0.lock().unwrap();
+        let mut lines = self.0.lock().expect("lock poisoned by a panic");
         if lines.len() < 200 {
             lines.push(line);
         }
@@ -118,7 +118,7 @@ fn record(
             if stop.load(Ordering::Relaxed) {
                 return Ok(());
             }
-            let url = stream.url.lock().unwrap().clone();
+            let url = stream.url.lock().expect("lock poisoned by a panic").clone();
             if url != old {
                 target.url = url;
                 break;
@@ -185,7 +185,7 @@ fn start(ask: Start, fetch: Arc<dyn Fetch>) -> Result<u64, String> {
             );
             // One stream over ends the other: a file needs both.
             stop.store(true, Ordering::SeqCst);
-            let mut ended = ended.lock().unwrap();
+            let mut ended = ended.lock().expect("lock poisoned by a panic");
             if ended.is_none() {
                 *ended = Some(result.as_ref().err().cloned().unwrap_or_default());
             }
@@ -196,17 +196,20 @@ fn start(ask: Start, fetch: Arc<dyn Fetch>) -> Result<u64, String> {
     static NEXT: AtomicU64 = AtomicU64::new(1);
     let id = NEXT.fetch_add(1, Ordering::SeqCst);
     let streams: [Arc<Stream>; 2] = [streams.remove(0), streams.remove(0)];
-    recordings().lock().unwrap().insert(
-        id,
-        Recording {
-            stop,
-            streams,
-            threads,
-            started: Instant::now(),
-            ended,
-            log,
-        },
-    );
+    recordings()
+        .lock()
+        .expect("lock poisoned by a panic")
+        .insert(
+            id,
+            Recording {
+                stop,
+                streams,
+                threads,
+                started: Instant::now(),
+                ended,
+                log,
+            },
+        );
     Ok(id)
 }
 
@@ -218,6 +221,7 @@ fn start(ask: Start, fetch: Arc<dyn Fetch>) -> Result<u64, String> {
 /// [json] points at [length] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_record_start(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let answer = serde_json::from_str::<Start>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| start(ask, Arc::new(Web::default())));
@@ -232,17 +236,17 @@ pub unsafe extern "C" fn lumtub_record_start(json: *const u8, length: usize) -> 
 /// `error` when it stopped on one; `{}` for no such recording.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_record_state(id: u64) -> *mut c_char {
-    let all = recordings().lock().unwrap();
+    let all = recordings().lock().expect("lock poisoned by a panic");
     let Some(r) = all.get(&id) else {
         return give("{}".into());
     };
-    let ended = r.ended.lock().unwrap().clone();
+    let ended = r.ended.lock().expect("lock poisoned by a panic").clone();
     let mut state = serde_json::json!({
         "bytes": r.streams.iter().map(|s| s.bytes.load(Ordering::Relaxed)).sum::<u64>(),
         "seconds": r.started.elapsed().as_secs_f64(),
         "running": ended.is_none(),
         "renew": r.streams.iter().any(|s| s.refused.load(Ordering::SeqCst)),
-        "log": std::mem::take(&mut *r.log.0.lock().unwrap()),
+        "log": std::mem::take(&mut *r.log.0.lock().expect("lock poisoned by a panic")),
     });
     if let Some(error) = ended.filter(|e| !e.is_empty()) {
         state["error"] = error.into();
@@ -262,15 +266,16 @@ pub unsafe extern "C" fn lumtub_record_renew(json: *const u8, length: usize) -> 
         video: String,
         audio: String,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(ask) = serde_json::from_str::<Renew>(unsafe { text(json, length) }) else {
         return false;
     };
-    let all = recordings().lock().unwrap();
+    let all = recordings().lock().expect("lock poisoned by a panic");
     let Some(r) = all.get(&ask.id) else {
         return false;
     };
-    *r.streams[0].url.lock().unwrap() = ask.video;
-    *r.streams[1].url.lock().unwrap() = ask.audio;
+    *r.streams[0].url.lock().expect("lock poisoned by a panic") = ask.video;
+    *r.streams[1].url.lock().expect("lock poisoned by a panic") = ask.audio;
     true
 }
 
@@ -278,7 +283,11 @@ pub unsafe extern "C" fn lumtub_record_renew(json: *const u8, length: usize) -> 
 /// `{}` or `{"error": …}` from a stream that failed.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_record_stop(id: u64) -> *mut c_char {
-    let Some(r) = recordings().lock().unwrap().remove(&id) else {
+    let Some(r) = recordings()
+        .lock()
+        .expect("lock poisoned by a panic")
+        .remove(&id)
+    else {
         return give("{}".into());
     };
     r.stop.store(true, Ordering::SeqCst);
@@ -749,6 +758,8 @@ mod tests {
             let size = |i: usize| std::fs::metadata(&files[i]).map_or(0, |m| m.len() as usize);
             let state = || -> serde_json::Value {
                 serde_json::from_str(
+                    // SAFETY: `lumtub_record_state` returns a string made by `give`
+                    // (`CString::into_raw`) that nothing else owns, so it is reclaimed once here.
                     &unsafe { std::ffi::CString::from_raw(lumtub_record_state(id)) }
                         .into_string()
                         .unwrap(),
@@ -768,6 +779,8 @@ mod tests {
                 now["bytes"].as_u64().unwrap() as usize,
                 expected[0] + expected[1]
             );
+            // SAFETY: `lumtub_record_stop` returns a string made by `give` (`CString::into_raw`)
+            // that nothing else owns, so it is reclaimed once here.
             let stopped = unsafe { std::ffi::CString::from_raw(lumtub_record_stop(id)) }
                 .into_string()
                 .unwrap();

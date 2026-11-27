@@ -210,6 +210,8 @@ pub fn coverage(
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_review_next(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
     let state = input.get("state").and_then(state_of);
     let now = input.get("now").and_then(Value::as_i64).unwrap_or(0);
@@ -232,6 +234,8 @@ pub unsafe extern "C" fn lumtub_review_next(json: *const u8, length: usize) -> *
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_word_coverage(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
     let lines: Vec<Vec<String>> = input
         .get("lines")

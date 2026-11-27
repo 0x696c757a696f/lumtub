@@ -296,7 +296,7 @@ class _SelectRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), maxLines: 2, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), about: aboutOf(item), maxLines: 2, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),

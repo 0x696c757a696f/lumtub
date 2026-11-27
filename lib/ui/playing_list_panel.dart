@@ -49,7 +49,7 @@ List<Widget> playingListSlivers(BuildContext context, {required AppController co
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(Space.xs, 0, Space.xs, 0),
-          child: TitleText(list.title, maxLines: 2, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600) ?? const TextStyle(fontWeight: FontWeight.w600)),
+          child: TitleText(list.title, about: [for (final item in list.items.take(20)) item.title].join('\n'), maxLines: 2, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600) ?? const TextStyle(fontWeight: FontWeight.w600)),
         ),
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(Space.xs, Space.xxs, 0, Space.xs),

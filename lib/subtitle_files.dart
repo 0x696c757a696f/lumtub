@@ -29,13 +29,19 @@ import 'scripts.dart';
 /// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
   SubtitleFiles(this._client, this._folder, this._translator,
-      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.wording, this.onUpdated, this.poll = const Duration(seconds: 5)})
       : _position = position ?? _start,
         _playing = playing ?? _nothing;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
   final Translator Function() _translator;
+
+  /// Last words on a translation into [target] before it is shown, given
+  /// the [original] where it is known (each cue's own, for the tracks
+  /// translated here): the Church's wording for a Catholic video
+  /// ([ChurchWording]).
+  final String Function(String text, String target, String original)? wording;
   final List<Duration> pauses;
 
   /// Pauses before asking a translation service again that answered it
@@ -115,6 +121,12 @@ class SubtitleFiles {
     final handedOut = Completer<DateTime>();
     // More of a translation following playback: written, and the track
     // reloaded; false once it is no longer shown.
+    // YouTube's own translations, which come without their original line
+    // by line, get their last words as a whole; the tracks translated here
+    // got them cue by cue.
+    final target = source?.target;
+    var fromYoutube = false;
+    String worded(String text) => !fromYoutube || target == null || wording == null ? text : wording!(text, target, '');
     Future<bool> save(String text) async {
       final since = await handedOut.future;
       await file.writeAsString(text);
@@ -139,6 +151,7 @@ class SubtitleFiles {
         }
         // In the lines of the original, so the two still go together.
         result = (text: _isAsr(option.url) ? WebVtt.asLinesOf(original, text) : text, rest: null);
+        fromYoutube = true;
       }
     } else {
       try {
@@ -146,12 +159,13 @@ class SubtitleFiles {
         // Automatic captions roll on fragment by fragment; they are shown
         // as sentences, as their translation is.
         result = (text: _isAsr(option.url) ? WebVtt.asLines(text) : text, rest: null);
+        fromYoutube = true;
       } on _Refused {
         if (source == null) rethrow;
         result = await _translate(await _get(source.url), source.target, _translator(), key, save, asr: _isAsr(source.url));
       }
     }
-    final text = result.text;
+    final text = worded(result.text);
     // Files of earlier launches: their addresses have expired anyway. Every
     // fetch waits for this, so a file written meanwhile is not deleted.
     await (_cleared ??= () async {
@@ -287,7 +301,10 @@ class SubtitleFiles {
           final (start, end) = groups[i];
           // The sentences just before the piece go along for AI to read.
           final before = [for (final cue in cues.sublist(start > context ? start - context : 0, start)) cue.text];
-          translated[i] = await _patiently(() => _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before));
+          final originals = [for (final cue in cues.sublist(start, end)) cue.text];
+          final lines = await _patiently(() => _translateLines(originals, target, translator, before));
+          final last = wording;
+          translated[i] = last == null ? lines : [for (final (k, line) in lines.indexed) last(line, target, k < originals.length ? originals[k] : '')];
         }
       }
 

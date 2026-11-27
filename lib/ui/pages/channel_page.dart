@@ -10,6 +10,7 @@ import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
+import '../../church_wording.dart';
 import '../../channel_avatar_lookup.dart';
 import '../../channel_sort.dart';
 import '../../community_posts.dart';
@@ -394,7 +395,7 @@ class PostCard extends StatelessWidget {
         ]),
         if (post.text.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Translatable(controller: controller, text: post.text, builder: (context, text) => SelectableText(text, style: const TextStyle(height: 1.5))),
+          Translatable(controller: controller, rite: ChurchWording.riteOf(channel.name) ?? (controller.channel?.id == channel.id ? controller.channelRite : null), text: post.text, builder: (context, text) => SelectableText(text, style: const TextStyle(height: 1.5))),
         ],
         if (post.images.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -599,7 +600,7 @@ class ChannelHeader extends StatelessWidget {
           if (channel.name.isEmpty)
             nameText(name)
           else
-            Translatable(controller: controller, text: name, builder: (context, text) => nameText(text)),
+            Translatable(controller: controller, rite: controller.channel?.id == channel.id ? controller.channelRite : null, text: name, builder: (context, text) => nameText(text)),
           const SizedBox(height: 2),
           Text(tr('YouTube channels'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant)),
         ]);

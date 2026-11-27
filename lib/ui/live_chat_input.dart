@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
+import '../church_wording.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart';
 import '../live_chat.dart';
@@ -143,7 +144,7 @@ class ChatMessageTranslation extends StatelessWidget {
     if (text.split('\n').every(done)) return null;
     try {
       final result = await translateForeignLines(controller.textTranslator, text, language, done);
-      return result.trim() == text ? null : result;
+      return result.trim() == text ? null : ChurchWording.apply(result, language, rite: controller.playingRite, original: text);
     } catch (_) {
       return null;
     }

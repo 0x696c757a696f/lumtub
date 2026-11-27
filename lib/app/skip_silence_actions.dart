@@ -11,7 +11,7 @@ extension SkipSilenceActions on AppController {
     final want = settings.skipSilence && playing?.isLive != true;
     try {
       // Setting `af` replaces the chain, so the filter is put in again.
-      await platform.command(['af', 'remove', '@${SilenceSkipper.label}']).catchError((_) {});
+      await _removeAudioFilter(platform, SilenceSkipper.label);
       if (want) {
         final back = _silence.boosted ? _silence.userRate : null;
         if (back != null) await platform.setProperty('speed', '$back');
@@ -33,5 +33,13 @@ extension SkipSilenceActions on AppController {
     final platform = player.platform;
     if (rate == null || platform is! NativePlayer || this.player != player) return;
     scheduleMicrotask(() => unawaited(platform.setProperty('speed', '$rate').catchError((Object e) => logWarn('Could not change the speed for silence: $e'))));
+  }
+
+  /// Takes the filter labelled [label] out of libmpv's audio chain when it
+  /// is there; asking for one that is not makes libmpv warn in the log.
+  Future<void> _removeAudioFilter(NativePlayer platform, String label) async {
+    final chain = await platform.getProperty('af').catchError((_) => '');
+    if (!chain.contains('@$label:')) return;
+    await platform.command(['af', 'remove', '@$label']).catchError((_) {});
   }
 }

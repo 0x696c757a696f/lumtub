@@ -282,6 +282,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The reading behind a Longest or Shortest order (最长, 最短), for its
   /// progress.
   ChannelLengths? channelLengths;
+  /// When the system last said it is short of memory.
+  DateTime? _lastMemoryPressure;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 

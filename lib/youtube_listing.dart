@@ -74,7 +74,11 @@ class YoutubeListing {
     // not read: the next may still have videos. A few such pages in a row
     // end it.
     var empty = 0;
+    // A playlist logs each page it reads, as one opened on a phone stayed
+    // loading with nothing in the log (2026-11-27).
+    final traced = '${first['browseId'] ?? ''}'.startsWith('VL') ? first['browseId'] : null;
     for (var page = 0; page < 50; page++) {
+      final asked = Stopwatch()..start();
       final response = await _client
           .post(
             Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
@@ -97,6 +101,9 @@ class YoutubeListing {
       if (response.statusCode != 200) throw StateError('YouTube $endpoint returned HTTP ${response.statusCode}');
       final read = await _readInBackground(response.bodyBytes, chips: sort != null && page == 0);
       if (read is! Map<String, dynamic>) throw const FormatException('Unexpected YouTube response');
+      if (traced != null) {
+        logInfo('YouTube $traced page ${page + 1}: ${(read['entries'] as List).length} entries, ${response.bodyBytes.length} bytes in ${asked.elapsedMilliseconds} ms${read['continuation'] is String ? ', more to read' : ''}');
+      }
       if (sort != null && page == 0) {
         // The sorted list is the chip's own; the default page is shown only
         // when YouTube offers no such chip.

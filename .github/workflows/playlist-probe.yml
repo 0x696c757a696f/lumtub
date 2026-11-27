@@ -13,7 +13,21 @@ jobs:
         with:
           persist-credentials: false
       - run: python3 .github/scripts/playlist_probe.py PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI
-      - uses: actions/upload-artifact@v4
-        with:
-          name: probe
-          path: probe-*.json
+      - name: Parse with the core
+        run: |
+          cat >> native/lumtub_core/src/listing.rs <<'RS'
+          #[cfg(test)]
+          mod probe {
+              #[test]
+              fn probe_files() {
+                  for entry in std::fs::read_dir(std::env::var("PROBE").unwrap()).unwrap() {
+                      let path = entry.unwrap().path();
+                      if !path.to_string_lossy().ends_with(".json") || !path.file_name().unwrap().to_string_lossy().starts_with("probe-") { continue; }
+                      let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+                      let p = super::page(&v);
+                      println!("PARSED {:?} entries {} continuation {:?}", path, p.entries.len(), p.continuation.is_some());
+                  }
+              }
+          }
+          RS
+          PROBE=$PWD cargo test --manifest-path native/lumtub_core/Cargo.toml --lib probe_files -- --nocapture 2>&1 | grep -E "PARSED|test result|error" 

@@ -645,6 +645,115 @@
         "路济亚"
       ],
       "c": "路济亚"
+    },
+    {
+      "src": [
+        "archangel michael",
+        "saint michael",
+        "st. michael",
+        "st michael",
+        "michael the archangel",
+        "angel michael",
+        "san michele",
+        "arcangelo michele",
+        "san miguel",
+        "arcángel miguel",
+        "arcangel miguel",
+        "são miguel",
+        "sao miguel",
+        "arcanjo miguel",
+        "saint michel",
+        "saint-michel",
+        "archange michel",
+        "erzengel michael",
+        "heiliger michael",
+        "michał archanioł",
+        "michała archanioła",
+        "święty michał",
+        "świętego michała"
+      ],
+      "unless": [
+        "mont-saint-michel",
+        "mont saint-michel",
+        "mont saint michel",
+        "são miguel island",
+        "azores"
+      ],
+      "zh": [
+        "迈克尔",
+        "米迦勒",
+        "米凯莱",
+        "米格尔",
+        "米歇尔",
+        "米哈伊尔",
+        "米哈乌",
+        "米高"
+      ],
+      "c": "弥额尔"
+    },
+    {
+      "src": [
+        "archangel gabriel",
+        "saint gabriel",
+        "st. gabriel",
+        "st gabriel",
+        "angel gabriel",
+        "gabriel the archangel",
+        "san gabriele",
+        "arcangelo gabriele",
+        "san gabriel",
+        "arcángel gabriel",
+        "arcangel gabriel",
+        "são gabriel",
+        "arcanjo gabriel",
+        "archange gabriel",
+        "erzengel gabriel",
+        "archanioł gabriel",
+        "archanioła gabriela"
+      ],
+      "zh": [
+        "加布里埃尔",
+        "加百利",
+        "加百列",
+        "加布里尔",
+        "加夫列尔",
+        "加布里埃莱",
+        "加布里埃拉",
+        "加布里耶尔"
+      ],
+      "c": "加俾额尔"
+    },
+    {
+      "src": [
+        "archangel raphael",
+        "saint raphael",
+        "st. raphael",
+        "st raphael",
+        "angel raphael",
+        "raphael the archangel",
+        "san raffaele",
+        "arcangelo raffaele",
+        "san rafael",
+        "arcángel rafael",
+        "arcangel rafael",
+        "são rafael",
+        "arcanjo rafael",
+        "saint raphaël",
+        "archange raphaël",
+        "erzengel raphael",
+        "archanioł rafał",
+        "archanioła rafała",
+        "święty rafał"
+      ],
+      "zh": [
+        "拉斐尔",
+        "拉法埃尔",
+        "拉法尔",
+        "拉斐埃莱",
+        "拉法埃莱",
+        "辣法耳"
+      ],
+      "c": "辣法耳"
     }
   ]
 }

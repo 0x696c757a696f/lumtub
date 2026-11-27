@@ -38,6 +38,31 @@ void main() {
     }
   });
 
+  test('the Pope in any language is Catholic', () {
+    for (final text in ['Le pape Léon XIV en Turquie', 'Papież Leon XIV w Turcji', 'O Papa Leão XIV na Turquia', 'Il Papa in Turchia', 'Leo XIV: first year', 'La Santa Sede risponde']) {
+      expect(ChurchWording.isCatholicText(text), isTrue, reason: text);
+    }
+    expect(ChurchWording.isCatholicText('La papa es una verdura'), isFalse);
+  });
+
+  test("a Catholic channel's videos are Catholic though their titles say nothing", () {
+    VideoItem item(String id, String title, String channel) => VideoItem(id: id, title: title, channel: channel, channelId: channel, url: 'https://www.youtube.com/watch?v=$id');
+    expect(ChurchWording.riteOfVideo(item('a', 'My morning routine', 'UCnoted')), isNull);
+    ChurchWording.noteChannel('UCnoted', ChurchRite.latin);
+    expect(ChurchWording.riteOfVideo(item('a', 'My morning routine', 'UCnoted')), ChurchRite.latin);
+    // Three Catholic videos of eight seen make a channel Catholic.
+    for (final (i, title) in ['Praying the rosary', 'Why I go to Holy Mass', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6'].indexed) {
+      ChurchWording.riteOfVideo(item('t$i', title, 'UCseen'));
+    }
+    expect(ChurchWording.riteOfChannel('UCseen'), isNull);
+    ChurchWording.riteOfVideo(item('t8', 'Our Lady of Fatima', 'UCseen'));
+    // Shown again, a video is not counted again.
+    ChurchWording.riteOfVideo(item('t8', 'Our Lady of Fatima', 'UCseen'));
+    expect(ChurchWording.riteOfChannel('UCseen'), ChurchRite.latin);
+    expect(ChurchWording.riteOfVideo(item('t9', 'Day 7', 'UCseen')), ChurchRite.latin);
+    expect(ChurchWording.riteOfChannel('UCother'), isNull);
+  });
+
   test('a video counts its channel and description', () {
     VideoItem item(String channel) => VideoItem(id: 'x', title: 'Sunday homily', channel: channel, url: 'https://www.youtube.com/watch?v=x');
     expect(ChurchWording.isCatholicVideo(item('Vatican News')), isTrue);

@@ -697,6 +697,18 @@ mod tests {
             "路济亚修女和若瑟·拉青格"
         );
         assert_eq!(beside("拉辛格枢机", "Kardinal Ratzinger"), "拉青格枢机");
+        assert_eq!(
+            beside(
+                "大天使迈克尔、加布里埃尔和拉斐尔",
+                "Archangels St. Michael, St. Gabriel and St. Raphael"
+            ),
+            "总领天使弥额尔、加俾额尔和辣法耳"
+        );
+        assert_eq!(
+            beside("拉斐尔的壁画", "Gli affreschi di Raffaello"),
+            "拉斐尔的壁画"
+        );
+        assert_eq!(simplified("天使拉斐尔陪伴多俾亚"), "天使辣法耳陪伴多俾亚");
         // An English assumption is only an assumption.
         assert_eq!(
             beside("这个假设是错的", "This assumption is wrong"),

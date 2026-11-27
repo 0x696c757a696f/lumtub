@@ -906,6 +906,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     return switch (cause) {
       'home feed' => page(PageMode.home),
       'channel' => page(PageMode.channel),
+      'youtube playlist' => page(PageMode.youtubePlaylist),
       'related' => onWatchPage,
       'search' || 'explore' => page(PageMode.explore),
       'youtube history' => page(PageMode.history),

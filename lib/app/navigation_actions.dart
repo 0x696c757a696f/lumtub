@@ -298,7 +298,7 @@ extension NavigationActions on AppController {
     final feed = accountFeed;
     final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
     youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id, signedIn: signedIn ? () => feed.lines('VL${playlist.id}', pages: 50) : null), pageSize: 50, trickle: true, name: 'YouTube playlist ${playlist.id}')
-      ..addListener(_passOn('channel'))
+      ..addListener(_passOn('youtube playlist'))
       ..loadMore();
     _go(PageMode.youtubePlaylist);
   }

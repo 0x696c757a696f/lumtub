@@ -1,0 +1,19 @@
+name: Playlist probe
+on:
+  push:
+    branches: [claude/project-thread-ya96ji]
+    paths: [.github/workflows/playlist-probe.yml, .github/scripts/playlist_probe.py]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: python3 .github/scripts/playlist_probe.py PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe
+          path: probe-*.json

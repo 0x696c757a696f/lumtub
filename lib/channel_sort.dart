@@ -1,17 +1,41 @@
 import 'l10n/l10n.dart';
+import 'models.dart';
+import 'video_repository.dart' show ChannelTab;
 
-/// The order of a channel's uploads, as YouTube's sort chips offer it.
+/// The order of a channel's uploads: YouTube's own sort chips, and by
+/// length, which YouTube does not offer: the whole tab is read and ordered
+/// here.
 enum ChannelSort {
   latest('Latest', 'Latest'),
   popular('Popular', 'Popular'),
-  oldest('Oldest', 'Oldest');
+  oldest('Oldest', 'Oldest'),
+  longest('Longest', null),
+  shortest('Shortest', null);
 
   const ChannelSort(this._label, this.chip);
   final String _label;
 
-  /// The chip's text in YouTube's English interface.
-  final String chip;
+  /// The chip's text in YouTube's English interface; null for an order
+  /// made here from the newest-first listing.
+  final String? chip;
   String get label => tr(_label);
+
+  /// How the videos rank, highest first, for an order made here. A video
+  /// of unknown length, such as an upcoming stream, comes last either way.
+  double Function(VideoItem item)? get rank => switch (this) {
+        longest => (item) => (item.duration ?? -1).toDouble(),
+        shortest => (item) => -(item.duration ?? _unknown).toDouble(),
+        _ => null,
+      };
+  static const _unknown = 1 << 40;
+
+  /// How many videos one reading of the tab takes in, for an order made
+  /// here; scrolling to the end reads on from there.
+  static const wholeTab = 2000;
+
+  /// Whether this order fits [tab]: every Short is about as short as the
+  /// next, so they are not ordered by length.
+  bool fits(ChannelTab tab) => rank == null || tab != ChannelTab.shorts;
 }
 
 /// The continuation token of each sort chip in a channel tab response, by

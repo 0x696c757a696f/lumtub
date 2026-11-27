@@ -169,7 +169,7 @@ class _ChannelPageState extends State<ChannelPage> {
                     // start higher.
                     if (Device.tv && sortable) ...[
                       const SizedBox(width: 8),
-                      for (final value in ChannelSort.values)
+                      for (final value in ChannelSort.values.where((v) => v.fits(tab)))
                         FilterChip(label: Text(value.label), showCheckmark: false, selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
                     ],
                   ])),
@@ -181,7 +181,7 @@ class _ChannelPageState extends State<ChannelPage> {
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final value in ChannelSort.values)
+              for (final value in ChannelSort.values.where((v) => v.fits(tab)))
                 ChoiceChip(label: Text(value.label), selected: controller.channelSort == value, onSelected: (_) => _sort(value)),
             ]),
           )),
@@ -204,6 +204,12 @@ class _ChannelPageState extends State<ChannelPage> {
       if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
       if (loader.loading) ...[
         if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+        // An order made here waits for the whole tab: how far it got.
+        if (items.isEmpty && !searching && controller.channelSort.rank != null)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+            child: Text(tr('Reading all videos to sort them by length: {0} so far', [loader.read]), style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
+          )),
         SliverSkeletonGrid(rows: empty ? 3 : 1),
       ],
       if (error != null)

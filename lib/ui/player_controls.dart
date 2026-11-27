@@ -11,6 +11,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
+import '../app_window.dart';
 import '../app_preferences.dart' show AppPreferences, rateText;
 import '../device.dart';
 import '../heatmap.dart';
@@ -58,6 +59,7 @@ import 'subtitle_style_panel.dart';
 import 'theater_mode.dart';
 import 'video_aspect.dart';
 import 'video_box.dart';
+import 'window_chrome.dart';
 
 part 'player_controls_widgets.dart';
 part 'player_controls_bottom.dart';
@@ -850,6 +852,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
+  /// Whether a mouse drag on the picture moves the window: only while the
+  /// video fills the window, not in fullscreen.
+  bool get _movesWindow => WindowFrame.supported && fillingWindow.value && !WindowChrome.fullscreen.value && !_c.pip;
+
   Widget _surface() => RawGestureDetector(
         behavior: HitTestBehavior.opaque,
         gestures: {
@@ -870,6 +876,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ..onLongPressEnd = ((_) => _releaseHold())
               ..onLongPressCancel = _releaseHold,
           ),
+          // With the video filling the window there is no title bar to
+          // hold, so the picture itself moves the window.
+          if (_movesWindow)
+            PanGestureRecognizer: GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+              () => PanGestureRecognizer(supportedDevices: const {PointerDeviceKind.mouse}, allowedButtonsFilter: (buttons) => buttons == kPrimaryButton),
+              (recognizer) => recognizer.onStart = (_) {
+                if (_movesWindow) AppWindow.startDrag();
+              },
+            ),
           if (!_locked) ...{
             VerticalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
               () => VerticalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),

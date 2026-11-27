@@ -208,6 +208,9 @@ class VideoListLoader extends ChangeNotifier {
           if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
             if (order != null) _showFromPool();
             _notify();
+          } else if (order != null) {
+            // Nothing new shows, but [read] tells how far the reading is.
+            _notify();
           }
           _page(listing, pageSize, skipped + 1, shown);
           return;

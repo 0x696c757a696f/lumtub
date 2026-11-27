@@ -233,10 +233,25 @@ extension NavigationActions on AppController {
       channelSort = sort;
       final tab = channelTab;
       channelVideos?.dispose();
-      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
-        ..addListener(_passOn('channel'))
-        ..loadMore();
+      channelVideos = _channelLoader(repository, ref, tab, sort);
     });
+  }
+
+  /// One channel tab's videos in [sort] order. An order YouTube does not
+  /// offer reads the whole tab, up to [ChannelSort.wholeTab] videos at a
+  /// time, before the first ones show.
+  VideoListLoader _channelLoader(VideoRepository repository, ChannelRef ref, ChannelTab tab, ChannelSort sort) {
+    final rank = sort.rank;
+    const pageSize = 20;
+    return VideoListLoader(
+      () => repository.channelTab(ref, tab, sort: sort),
+      pageSize: pageSize,
+      rank: rank,
+      gather: rank == null ? 1.5 : ChannelSort.wholeTab / pageSize,
+      pages: rank == null ? 25 : ChannelSort.wholeTab ~/ pageSize,
+    )
+      ..addListener(_passOn('channel'))
+      ..loadMore();
   }
 
   /// Opens a YouTube playlist's page.
@@ -273,10 +288,7 @@ extension NavigationActions on AppController {
           channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
           unawaited(channelPosts!.loadMore());
         } else {
-          final tab = channelTab;
-          channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: channelSort))
-            ..addListener(_passOn('channel'))
-            ..loadMore();
+          channelVideos = _channelLoader(repository, ref, channelTab, channelSort);
         }
         return;
       }
@@ -385,9 +397,7 @@ extension NavigationActions on AppController {
     final tab = channelTab;
     _update(() {
       channelVideos?.dispose();
-      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
-        ..addListener(_passOn('channel'))
-        ..loadMore();
+      channelVideos = _channelLoader(repository, ref, tab, sort);
     });
   }
 

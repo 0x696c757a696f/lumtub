@@ -4265,5 +4265,8 @@
   "Length {0}": "時長 {0}",
   "{0}% watched": "已觀看 {0}%",
   "Scroll left": "向左捲動",
-  "Scroll right": "向右捲動"
+  "Scroll right": "向右捲動",
+  "Longest": "最長",
+  "Shortest": "最短",
+  "Reading all videos to sort them by length: {0} so far": "正在讀取全部影片以按長度排序，已讀取 {0} 部"
 }

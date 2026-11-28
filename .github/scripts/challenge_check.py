@@ -5,6 +5,7 @@ file is downloaded.
 
     python challenge_check.py <cache folder> <lumtub_jsc.py>
 """
+
 import importlib.util
 import random
 import re
@@ -45,7 +46,9 @@ class Log:
         print(f"  error: {message}")
 
 
-request = urllib.request.Request("https://www.youtube.com/iframe_api", headers={"User-Agent": "Mozilla/5.0"})
+request = urllib.request.Request(
+    "https://www.youtube.com/iframe_api", headers={"User-Agent": "Mozilla/5.0"}
+)
 with urllib.request.urlopen(request, timeout=30) as reply:
     player_id = re.search(r"player\\?/([0-9a-fA-F]{8})\\?/", reply.read().decode())[1]
 player = f"https://www.youtube.com/s/player/{player_id}/player_ias.vflset/en_US/base.js"
@@ -78,7 +81,9 @@ for name, provider_class, cache in (
         got = {}
         for response in provider.bulk_solve(requests):
             if response.error:
-                sys.exit(f"{name} {attempt}: {response.request.type.value} failed: {response.error}")
+                sys.exit(
+                    f"{name} {attempt}: {response.request.type.value} failed: {response.error}"
+                )
             got[response.request.type.value] = response.response.output.results
         print(f"{name:7} {attempt}: {time.perf_counter() - start:.2f} s")
         answers.setdefault(name, got)

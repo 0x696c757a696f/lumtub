@@ -8,10 +8,10 @@ window frame, and an optional magnified callout of the detail that matters.
 
 import json
 import pathlib
+import subprocess
 import sys
 
 from PIL import Image
-import subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
 SHOTS = HERE.parent
@@ -59,7 +59,7 @@ p { margin: 14px auto 0; font-size: 26px; line-height: 1.45; color: #a1a1aa; max
   box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
 }
 :lang(zh) h1 { letter-spacing: .02em; }
-"""
+"""  # noqa: E501, the stylesheet lines stay as written.
 
 
 def card_html(card, lang):
@@ -71,7 +71,8 @@ def card_html(card, lang):
     win = card["window"]
     scale = win["width"] / sw
     parts = [
-        f'<div class="head"><div class="eyebrow"><img src="{(HERE / "icon.png").as_uri()}">{t["eyebrow"]}</div>',
+        f'<div class="head"><div class="eyebrow"><img '
+        f'src="{(HERE / "icon.png").as_uri()}">{t["eyebrow"]}</div>',
         f'<h1>{t["title"]}</h1><p>{t["text"]}</p></div>',
         f'<div class="win" style="left:{win["left"]}px;top:{win["top"]}px;width:{win["width"]}px">',
         f'<img src="{src.as_uri()}">',
@@ -90,11 +91,17 @@ def card_html(card, lang):
         x, y, w, h = z["crop"]
         f = z["factor"]
         parts.append(
-            f'<div class="zoom" style="left:{z["left"]}px;top:{z["top"]}px;width:{w * f}px;height:{h * f}px;'
+            f'<div class="zoom" style="left:{z["left"]}px;top:{z["top"]}px;width:{w * f}px;height:'
+            f'{h * f}px;'
             f"background-image:url('{src.as_uri()}');background-size:{sw * f}px {sh * f}px;"
             f'background-position:{-x * f}px {-y * f}px">'
             + "</div>"
-            + (f'<span class="tag" style="left:{z["left"] + 20}px;top:{z["top"]}px">{t["tag"]}</span>' if t.get("tag") else "")
+            + (
+                f'<span class="tag" style="left:{z["left"] + 20}px;top:{z["top"]}px">{t["tag"]}</sp'
+                f'an>'
+                if t.get("tag")
+                else ""
+            )
         )
     return page(lang, parts)
 
@@ -102,7 +109,8 @@ def card_html(card, lang):
 def grid_html(card, lang, t):
     g = card["grid"]
     parts = [
-        f'<div class="head"><div class="eyebrow"><img src="{(HERE / "icon.png").as_uri()}">{t["eyebrow"]}</div>',
+        f'<div class="head"><div class="eyebrow"><img '
+        f'src="{(HERE / "icon.png").as_uri()}">{t["eyebrow"]}</div>',
         f'<h1>{t["title"]}</h1><p>{t["text"]}</p></div>',
     ]
     w, gap = g["width"], g["gap"]
@@ -113,10 +121,15 @@ def grid_html(card, lang, t):
         x = left0 + (i % 2) * (w + gap)
         y = g["top"] + (i // 2) * (h + gap)
         parts.append(
-            f'<div class="win" style="left:{x}px;top:{y}px;width:{w}px;border-radius:12px;border-bottom:1px solid rgba(255,255,255,.16)">'
+            f'<div class="win" style="left:{x}px;top:{y}px;width:{w}px;border-radius:12px;border-bo'
+            f'ttom:1px solid rgba(255,255,255,.16)">'
             f'<img src="{(SHOTS / item["shot"]).as_uri()}"></div>'
-            +
-            (f'<span class="tag" style="left:{x + 16}px;top:{y + h - 6}px;transform:translateY(-100%)">{item[lang]}</span>' if item.get(lang) else "")
+            + (
+                f'<span class="tag" style="left:{x + 16}px;top:{y + h - 6}px;transform:translateY(-'
+                f'100%)">{item[lang]}</span>'
+                if item.get(lang)
+                else ""
+            )
         )
     return page(lang, parts)
 
@@ -151,6 +164,7 @@ def main():
         png.unlink()
         html.unlink()
         print("wrote", png.with_suffix(".jpg").name)
+
 
 if __name__ == "__main__":
     main()

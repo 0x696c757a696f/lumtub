@@ -27,31 +27,40 @@ source = {
     "website": f"https://github.com/{repo}",
     "iconURL": icon,
     "tintColor": "#55D4BA",
-    "apps": [{
-        "name": "Lumtub",
-        "bundleIdentifier": "io.github.lumtub.lumtub",
-        "developerName": "Lumtub",
-        "subtitle": "A YouTube player without ads or tracking.",
-        "localizedDescription": "Watch YouTube without ads or tracking: subscriptions without an account, downloads, bullet chat, casting and more.",
-        "iconURL": icon,
-        "tintColor": "#55D4BA",
-        "category": "entertainment",
-        "versions": [{
-            "version": name,
-            "buildVersion": build,
-            "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "localizedDescription": description or f"Lumtub {name}",
-            "downloadURL": f"https://github.com/{repo}/releases/download/{tag}/{os.path.basename(ipa)}",
-            "size": os.path.getsize(ipa),
-            "minOSVersion": "15.0",
-        }],
-        "appPermissions": {
-            "entitlements": [],
-            "privacy": {
-                "NSLocalNetworkUsageDescription": "Lumtub looks for TVs and speakers on your network to cast videos to.",
+    "apps": [
+        {
+            "name": "Lumtub",
+            "bundleIdentifier": "io.github.lumtub.lumtub",
+            "developerName": "Lumtub",
+            "subtitle": "A YouTube player without ads or tracking.",
+            "localizedDescription": (
+                "Watch YouTube without ads or tracking: subscriptions without an account, "
+                "downloads, bullet chat, casting and more."
+            ),
+            "iconURL": icon,
+            "tintColor": "#55D4BA",
+            "category": "entertainment",
+            "versions": [
+                {
+                    "version": name,
+                    "buildVersion": build,
+                    "date": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "localizedDescription": description or f"Lumtub {name}",
+                    "downloadURL": f"https://github.com/{repo}/releases/download/{tag}/{os.path.basename(ipa)}",
+                    "size": os.path.getsize(ipa),
+                    "minOSVersion": "15.0",
+                }
+            ],
+            "appPermissions": {
+                "entitlements": [],
+                "privacy": {
+                    "NSLocalNetworkUsageDescription": (
+                        "Lumtub looks for TVs and speakers on your network to cast videos to."
+                    ),
+                },
             },
-        },
-    }],
+        }
+    ],
     "news": [],
 }
 with open(out, "w", encoding="utf-8") as f:

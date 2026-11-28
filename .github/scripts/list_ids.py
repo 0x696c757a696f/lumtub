@@ -28,13 +28,17 @@ SPLIT = re.compile(r'(?<!\\)\|')
 
 
 def search(name):
-    body = json.dumps({'context': {'client': CLIENT}, 'query': name, 'params': CHANNELS_ONLY}).encode()
-    request = urllib.request.Request(SEARCH, data=body, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+    body = json.dumps(
+        {'context': {'client': CLIENT}, 'query': name, 'params': CHANNELS_ONLY}
+    ).encode()
+    request = urllib.request.Request(
+        SEARCH, data=body, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
+    )
     for attempt in range(3):
         try:
             with urllib.request.urlopen(request, timeout=30) as reply:
                 return json.load(reply)
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             if attempt == 2:
                 print(f'  search failed for {name!r}: {error}', file=sys.stderr)
                 return None
@@ -50,7 +54,11 @@ def channels(answer):
             channel = node.get('channelRenderer')
             if isinstance(channel, dict) and channel.get('channelId'):
                 title = channel.get('title', {}).get('simpleText', '')
-                url = channel.get('navigationEndpoint', {}).get('browseEndpoint', {}).get('canonicalBaseUrl', '')
+                url = (
+                    channel.get('navigationEndpoint', {})
+                    .get('browseEndpoint', {})
+                    .get('canonicalBaseUrl', '')
+                )
                 handle = url[2:] if url.startswith('/@') else ''
                 if not handle:
                     text = channel.get('subscriberCountText', {}).get('simpleText', '')
@@ -78,7 +86,9 @@ def main():
     cache = {}
     for path in sorted(lists.glob('*/*.txt')):
         lines = path.read_text(encoding='utf-8').split('\n')
-        list_id = next((l.split(':', 1)[1].strip() for l in lines if l.startswith('! id:')), path.stem)
+        list_id = next(
+            (ln.split(':', 1)[1].strip() for ln in lines if ln.startswith('! id:')), path.stem
+        )
         changed = False
         # Every channel id and @handle the list's records already name.
         taken = {}
@@ -91,7 +101,9 @@ def main():
             else:
                 word = line.split('#', 1)[0].strip()
                 if word.startswith('@') or re.fullmatch(r'UC[\w-]{22}', word):
-                    taken.setdefault(word.casefold(), re.sub(r'[^a-z0-9]+', '-', word.lower()).strip('-'))
+                    taken.setdefault(
+                        word.casefold(), re.sub(r'[^a-z0-9]+', '-', word.lower()).strip('-')
+                    )
         for i, line in enumerate(lines):
             if not line.startswith(':'):
                 continue
@@ -117,9 +129,14 @@ def main():
             key = f'{list_id}/{slug}'
             if len(ids) == 1:
                 channel_id, handle = next(iter(ids.items()))
-                other = taken.get(channel_id.casefold()) or (handle and taken.get(f'@{handle}'.casefold()))
+                other = taken.get(channel_id.casefold()) or (
+                    handle and taken.get(f'@{handle}'.casefold())
+                )
                 if other and other != slug:
-                    same.append(f'{key}: {", ".join(names)} → {channel_id} @{handle}, already {list_id}/{other}')
+                    same.append(
+                        f'{key}: {", ".join(names)} → {channel_id} @{handle}, already '
+                        f'{list_id}/{other}'
+                    )
                     continue
                 taken[channel_id.casefold()] = slug
                 if handle:
@@ -131,15 +148,19 @@ def main():
                 added.append(f'{key}: {" ".join(extra)} ({", ".join(names)})')
                 changed = True
             elif ids:
-                unclear.append(f'{key}: {", ".join(names)} → ' + ', '.join(f'{c} @{h}' for c, h in ids.items()))
+                unclear.append(
+                    f'{key}: {", ".join(names)} → ' + ', '.join(f'{c} @{h}' for c, h in ids.items())
+                )
             else:
                 none.append(f'{key}: {", ".join(names)}')
         if changed:
             path.write_text('\n'.join(lines), encoding='utf-8')
     report = [
-        f'# Channel ids for the block lists',
+        '# Channel ids for the block lists',
         '',
-        f'{asked} names searched. {len(added)} records got an id, {len(same)} are the same channel as another record, {len(unclear)} have several channels of that name, {len(none)} found no channel of that exact name.',
+        f'{asked} names searched. {len(added)} records got an id, {len(same)} are the same channel '
+        f'as another record, {len(unclear)} have several channels of that name, {len(none)} found '
+        f'no channel of that exact name.',
         '',
         '## Added',
         *[f'- {a}' for a in added],

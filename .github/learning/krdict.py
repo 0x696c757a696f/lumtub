@@ -16,6 +16,7 @@ Two columns are added to every line: the level (1 beginner, 2
 intermediate, 3 advanced: the dictionary's own 초급/중급/고급, not TOPIK)
 and where the meanings come from (`krdict`, or empty for Wiktionary).
 """
+
 import glob
 import json
 import os
@@ -25,9 +26,20 @@ import sys
 MAX_SENSES = 8
 LEVELS = {'초급': '1', '중급': '2', '고급': '3'}
 POS = {
-    '명사': 'n.', '의존 명사': 'n.', '동사': 'v.', '보조 동사': 'v.', '형용사': 'adj.', '보조 형용사': 'adj.',
-    '부사': 'adv.', '대명사': 'pron.', '수사': 'num.', '관형사': 'det.', '조사': 'part.', '어미': 'suf.',
-    '접사': 'affix', '감탄사': 'int.',
+    '명사': 'n.',
+    '의존 명사': 'n.',
+    '동사': 'v.',
+    '보조 동사': 'v.',
+    '형용사': 'adj.',
+    '보조 형용사': 'adj.',
+    '부사': 'adv.',
+    '대명사': 'pron.',
+    '수사': 'num.',
+    '관형사': 'det.',
+    '조사': 'part.',
+    '어미': 'suf.',
+    '접사': 'affix',
+    '감탄사': 'int.',
 }
 # The Chinese translation's '(无对应词汇)': no word for it, only the explanation.
 NO_EQUIVALENT = re.compile(r'^[(（]\s*无对应词汇\s*[)）]$')
@@ -52,7 +64,9 @@ def senses(tr, homograph):
     if not isinstance(tr, list):
         return []
     group = tr[homograph] if homograph < len(tr) else []
-    return [s for s in group if isinstance(s, list) and len(s) >= 1] if isinstance(group, list) else []
+    return (
+        [s for s in group if isinstance(s, list) and len(s) >= 1] if isinstance(group, list) else []
+    )
 
 
 def main():
@@ -63,16 +77,20 @@ def main():
         key = os.path.basename(path)
         zh = load(os.path.join(shards, 'tr', 'zh', key))
         en = load(os.path.join(shards, 'tr', 'en', key))
-        for word, entries in load(path).items():
-            word = clean(word)
+        for written, entries in load(path).items():
+            word = clean(written)
             if not word or not isinstance(entries, list) or '\t' in word:
                 continue
             record = {'reading': '', 'pos': [], 'zh': [], 'en': [], 'level': '', 'forms': []}
+
             # Homographs a learner meets first come first: 먹다 'eat'
             # (beginner) before 먹다 'be deaf' (no level).
             def rank(item):
                 h, entry = item
-                return (LEVELS.get(entry.get('lvk', ''), '9') if isinstance(entry, dict) else '9', h)
+                return (
+                    LEVELS.get(entry.get('lvk', ''), '9') if isinstance(entry, dict) else '9',
+                    h,
+                )
 
             for h, entry in sorted(enumerate(entries), key=rank):
                 if not isinstance(entry, dict):
@@ -85,8 +103,8 @@ def main():
                 level = LEVELS.get(entry.get('lvk', ''), '')
                 if level and (not record['level'] or level < record['level']):
                     record['level'] = level
-                for form in entry.get('fm') or []:
-                    form = clean(form)
+                for raw_form in entry.get('fm') or []:
+                    form = clean(raw_form)
                     if form and form != word and form not in record['forms']:
                         record['forms'].append(form)
                 prefix = f'{pos} ' if pos else ''
@@ -123,7 +141,19 @@ def main():
             lines.append(parts[:9])
     for word in sorted(set(words) - seen):
         record = words[word]
-        lines.append([word, record['reading'], '', '|'.join(record['pos']), '\\n'.join(record['zh']), '\\n'.join(record['en']), '', record['level'], 'krdict'])
+        lines.append(
+            [
+                word,
+                record['reading'],
+                '',
+                '|'.join(record['pos']),
+                '\\n'.join(record['zh']),
+                '\\n'.join(record['en']),
+                '',
+                record['level'],
+                'krdict',
+            ]
+        )
     # Its forms (가는, 갑니다) lead to the word; a form only, so no meanings.
     for word, record in sorted(words.items()):
         for form in record['forms'][:12]:
@@ -132,7 +162,11 @@ def main():
         for parts in lines:
             out.write('\t'.join(parts) + '\n')
     levels = {n: sum(1 for r in words.values() if r['level'] == n) for n in '123'}
-    print(f'ko: {len(words)} words from the Basic Dictionary ({len(words) - len(seen)} new), levels {levels}', flush=True)
+    print(
+        f'ko: {len(words)} words from the Basic Dictionary ({len(words) - len(seen)} new), '
+        f'levels {levels}',
+        flush=True,
+    )
 
 
 if __name__ == '__main__':

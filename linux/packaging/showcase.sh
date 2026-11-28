@@ -51,6 +51,6 @@ RUN
 chmod +x "$out/run.sh"
 xvfb-run -a -s "-screen 0 1920x1200x24" "$out/run.sh" "$out" "$appimage"
 cp "$out/home/.local/share/lumtub/logs/lumtub.log" "$out/" 2> /dev/null || true
-rm -rf "$out/home" "$out/run.sh"
+rm -rf "${out:?}/home" "${out:?}/run.sh"
 ls -l "$out"
 tail -n 40 "$out/stdout.txt"

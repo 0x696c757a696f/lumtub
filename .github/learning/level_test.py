@@ -33,6 +33,7 @@ JMdict both for Chinese and Japanese) and wordfreq, so it is no word,
 word form, or reversed word; Western ones are also not a common word with
 one letter changed, nor two words joined.
 """
+
 import gzip
 import math
 import os
@@ -48,6 +49,7 @@ from wordfreq import get_frequency_dict, top_n_list
 
 try:
     import opencc
+
     to_traditional = opencc.OpenCC('s2t').convert
     to_simplified = opencc.OpenCC('t2s').convert
 except ImportError:
@@ -66,7 +68,15 @@ VOWELS = {
     'it': 'aeiouàèéìíòóù',
     'pt': 'aeiouáâãàéêíóôõú',
 }
-LATIN = {'en': 'a-z', 'es': 'a-zñáéíóúü', 'fr': 'a-zàâäçéèêëîïôöùûüÿœæ', 'de': 'a-zäöüß', 'it': 'a-zàèéìíòóù', 'ru': 'а-яё', 'pt': 'a-záâãàçéêíóôõú'}
+LATIN = {
+    'en': 'a-z',
+    'es': 'a-zñáéíóúü',
+    'fr': 'a-zàâäçéèêëîïôöùûüÿœæ',
+    'de': 'a-zäöüß',
+    'it': 'a-zàèéìíòóù',
+    'ru': 'а-яё',
+    'pt': 'a-záâãàçéêíóôõú',
+}
 HAN = re.compile(r'^[一-鿿]+$')
 HIRAGANA = re.compile(r'^[ぁ-ゖー]+$')
 HANGUL = re.compile(r'^[가-힣]+$')
@@ -97,8 +107,8 @@ class Lexicon:
         self.lower = set()
         self.heads = set()
         con = sqlite3.connect(path)
-        for key, form in con.execute('SELECT key, form FROM term'):
-            key = nfc(key)
+        for raw, form in con.execute('SELECT key, form FROM term'):
+            key = nfc(raw)
             self.keys.add(key)
             self.lower.add(key.lower())
             if form == 0:
@@ -121,7 +131,7 @@ def weighted(counter):
 
 
 def deletions(word):
-    return {word[:i] + word[i + 1:] for i in range(len(word))}
+    return {word[:i] + word[i + 1 :] for i in range(len(word))}
 
 
 class NearWords:
@@ -151,6 +161,7 @@ def joined(word, heads, least):
 
 
 # Western languages ---------------------------------------------------------
+
 
 def groups(word, vowels):
     return re.findall(f'[{vowels}]+|[^{vowels}]+', word)
@@ -232,13 +243,13 @@ class CharModel:
         self.next = defaultdict(Counter)
         self.ends = set()
         for w in words:
-            units = ['^', '^'] + cut(w)
+            units = ['^', '^', *cut(w)]
             for i in range(2, len(units)):
                 self.next[self._key(i - 2, units[:i])][units[i]] += 1
-            self.ends.add(tuple(units[-self.before:]))
+            self.ends.add(tuple(units[-self.before :]))
 
     def _key(self, i, units):
-        return (min(i, 9), *units[-self.before:])
+        return (min(i, 9), *units[-self.before :])
 
     def made(self, length):
         for _ in range(200):
@@ -248,7 +259,13 @@ class CharModel:
                 if not choices:
                     break
                 if i == length - 1:
-                    choices = Counter({u: c for u, c in choices.items() if tuple((units + [u])[-self.before:]) in self.ends})
+                    choices = Counter(
+                        {
+                            u: c
+                            for u, c in choices.items()
+                            if tuple([*units, u][-self.before :]) in self.ends
+                        }
+                    )
                     if not choices:
                         break
                 units.append(weighted(choices))
@@ -292,21 +309,41 @@ def western(lang, bands, lexicon, english=False):
     known = set(common) | lexicon.lower
     heads = {h.lower() for h in lexicon.heads if len(h) >= 3}
     near = NearWords([w for w in common[:5000] if len(w) >= 3])
-    training = [w for w in common[:60000] if letters.match(w) and (w in lexicon.heads or w.capitalize() in lexicon.heads)]
+    training = [
+        w
+        for w in common[:60000]
+        if letters.match(w) and (w in lexicon.heads or w.capitalize() in lexicon.heads)
+    ]
     if lang == 'ru':
         model = CharModel(training)
-        make = lambda w: ''.join(model.made(len(w)) or [])
+
+        def make(w):
+            return ''.join(model.made(len(w)) or [])
+
     else:
         model = GroupModel(training, VOWELS[lang])
-        make = lambda w: model.made_from(w.lower())
+
+        def make(w):
+            return model.made_from(w.lower())
+
     made = defaultdict(list)
     seen = set()
     for level, words in reals.items():
         for word in take(words, MADE * 4):
             if len(made[level]) >= MADE:
                 break
-            x = next((x for x in (make(word) for _ in range(5)) if x and abs(len(x) - len(word)) <= 1), None)
-            if not x or x in seen or not letters.match(x) or x in known or near.near(x) or joined(x, heads, 3):
+            x = next(
+                (x for x in (make(word) for _ in range(5)) if x and abs(len(x) - len(word)) <= 1),
+                None,
+            )
+            if (
+                not x
+                or x in seen
+                or not letters.match(x)
+                or x in known
+                or near.near(x)
+                or joined(x, heads, 3)
+            ):
                 continue
             seen.add(x)
             made[level].append(x.capitalize() if word[0].isupper() else x)
@@ -317,7 +354,9 @@ def english_bands(path):
     """English headwords at the lowest exam list they are on."""
     bands = {}
     con = sqlite3.connect(path)
-    for word, line in con.execute('SELECT t.key, e.line FROM term t JOIN entry e ON e.id = t.entry WHERE t.form = 0'):
+    for word, line in con.execute(
+        'SELECT t.key, e.line FROM term t JOIN entry e ON e.id = t.entry WHERE t.form = 0'
+    ):
         tags = set(line.split('\t')[4].split()) if line.count('\t') >= 4 else set()
         for level, names in enumerate(ENGLISH, start=1):
             if tags & set(names):
@@ -329,6 +368,7 @@ def english_bands(path):
 
 
 # Chinese and Japanese ------------------------------------------------------
+
 
 def strokes_of(path):
     strokes = {}
@@ -355,7 +395,9 @@ def char_frequency(lang):
 
 
 # Grammar characters, which make a pair read as a phrase or as nonsense.
-GRAMMAR = set('的了着过是不没在有之于而以其也和与及或就都再更很最又所被把从对向为给让这那你我他她它们吗呢吧啊么个和乎者矣焉哉')
+GRAMMAR = set(
+    '的了着过是不没在有之于而以其也和与及或就都再更很最又所被把从对向为给让这那你我他她它们吗呢吧啊么个和乎者矣焉哉'
+)
 
 
 def han_pairs(words):
@@ -366,7 +408,10 @@ def han_pairs(words):
             first[w[0]] += 1
             second[w[1]] += 1
     # Each character only where it is mostly found: 化 ends words, 微 starts them.
-    return ({c for c, n in first.items() if n >= 5 and n >= second[c]}, {c for c, n in second.items() if n >= 5 and n >= first[c]})
+    return (
+        {c for c, n in first.items() if n >= 5 and n >= second[c]},
+        {c for c, n in second.items() if n >= 5 and n >= first[c]},
+    )
 
 
 def like(ch, pool, freq, strokes):
@@ -375,7 +420,14 @@ def like(ch, pool, freq, strokes):
     if f is None:
         return None
     s = strokes.get(ch)
-    choices = [c for c in pool if c != ch and c in freq and abs(freq[c] - f) <= 0.4 and (s is None or c not in strokes or abs(strokes[c] - s) <= 2)]
+    choices = [
+        c
+        for c in pool
+        if c != ch
+        and c in freq
+        and abs(freq[c] - f) <= 0.4
+        and (s is None or c not in strokes or abs(strokes[c] - s) <= 2)
+    ]
     return rng.choice(choices) if choices else None
 
 
@@ -416,18 +468,25 @@ def inside(words):
     runs = set()
     for w in words:
         for i in range(len(w) - 1):
-            runs.add(w[i:i + 2])
+            runs.add(w[i : i + 2])
     return runs
 
 
 def chinese(levels, cedict, strokes):
     reals = defaultdict(list)
     for word, level in levels.items():
-        if len(word) == 2 and HAN.match(word) and (to_simplified is None or to_simplified(word) == word):
+        if (
+            len(word) == 2
+            and HAN.match(word)
+            and (to_simplified is None or to_simplified(word) == word)
+        ):
             reals[level].append(word)
     common = set(common_words('zh', 300000))
     runs = inside(cedict) | inside(common)
-    taken = lambda x: x in cedict or x in common or x in runs or x in levels
+
+    def taken(x):
+        return x in cedict or x in common or x in runs or x in levels
+
     pools = han_pairs([w for w in cedict if to_simplified is None or to_simplified(w) == w])
     return reals, han_made(reals, pools, char_frequency('zh'), strokes, taken)
 
@@ -486,14 +545,22 @@ def japanese(levels, jmdict, cedict, strokes):
 
 # Korean --------------------------------------------------------------------
 
+
 def korean(levels, lexicon):
     reals = defaultdict(list)
     for word, level in levels.items():
         # Not verbs and adjectives: their 다 would tell them from made-up
         # words, which a chain of syllables leaves as stems.
-        if HANGUL.match(word) and 2 <= len(word) <= 4 and word in lexicon.heads and not word.endswith('다'):
+        if (
+            HANGUL.match(word)
+            and 2 <= len(word) <= 4
+            and word in lexicon.heads
+            and not word.endswith('다')
+        ):
             reals[level].append(word)
-    training = [w for w in lexicon.heads if HANGUL.match(w) and 2 <= len(w) <= 5 and not w.endswith('다')]
+    training = [
+        w for w in lexicon.heads if HANGUL.match(w) and 2 <= len(w) <= 5 and not w.endswith('다')
+    ]
     model = CharModel(training, before=1)
     common = set(common_words('ko', 300000))
     heads = {h for h in lexicon.heads if HANGUL.match(h) and len(h) >= 2}
@@ -507,7 +574,14 @@ def korean(levels, lexicon):
                 break
             x = ''.join(model.made(len(word)) or [])
             # Nor a word with a syllable added: 결산하 is 결산 and the stem of 하다.
-            if not x or x in seen or lexicon.knows(x) or x in common or x in levels or joined(x, heads, 2):
+            if (
+                not x
+                or x in seen
+                or lexicon.knows(x)
+                or x in common
+                or x in levels
+                or joined(x, heads, 2)
+            ):
                 continue
             if x[:-1] in heads or x[1:] in heads or x.endswith('하') or x in starts:
                 continue
@@ -518,11 +592,16 @@ def korean(levels, lexicon):
 
 # Output --------------------------------------------------------------------
 
+
 def write(out, lang, reals, made, least_levels, traditional=False):
     levels = sorted(set(reals) & set(made))
     short = [lv for lv in levels if len(reals[lv]) < 20 or len(made[lv]) < 10]
     if len(levels) < least_levels or short:
-        sys.exit(f'{lang}: too few items: real {dict((k, len(v)) for k, v in sorted(reals.items()))}, made {dict((k, len(v)) for k, v in sorted(made.items()))}')
+        sys.exit(
+            f'{lang}: too few items: '
+            f'real {dict((k, len(v)) for k, v in sorted(reals.items()))}, '
+            f'made {dict((k, len(v)) for k, v in sorted(made.items()))}'
+        )
     path = os.path.join(out, f'{lang}-leveltest.tsv.gz')
     lines = []
     for level in levels:
@@ -538,7 +617,10 @@ def write(out, lang, reals, made, least_levels, traditional=False):
         f.write(('# lumtub level test v1\n' + '\n'.join(lines) + '\n').encode('utf-8'))
     counts = {lv: f'{min(len(reals[lv]), REAL)}+{min(len(made[lv]), MADE)}' for lv in levels}
     samples = ' '.join(made[levels[len(levels) // 2]][:8])
-    print(f'{lang} level test: real+made by level {counts}; made-up words such as {samples}', flush=True)
+    print(
+        f'{lang} level test: real+made by level {counts}; made-up words such as {samples}',
+        flush=True,
+    )
 
 
 def main():
@@ -547,12 +629,22 @@ def main():
     strokes = strokes_of(given.get('unihan'))
     if 'unihan' in given and len(strokes) < 50000:
         sys.exit(f'only {len(strokes)} stroke counts')
-    level_file = lambda lang: os.path.join(levels_dir, f'{lang}-levels.tsv.gz')
+
+    def level_file(lang):
+        return os.path.join(levels_dir, f'{lang}-levels.tsv.gz')
+
     cedict = read_cedict(given['cedict']) if 'cedict' in given else set()
     if 'cedict' in given:
-        write(out, 'zh', *chinese(read_levels(level_file('zh')), cedict, strokes), 6, traditional=True)
+        write(
+            out, 'zh', *chinese(read_levels(level_file('zh')), cedict, strokes), 6, traditional=True
+        )
     if 'jmdict' in given:
-        write(out, 'ja', *japanese(read_levels(level_file('ja')), read_jmdict(given['jmdict']), cedict, strokes), 5)
+        write(
+            out,
+            'ja',
+            *japanese(read_levels(level_file('ja')), read_jmdict(given['jmdict']), cedict, strokes),
+            5,
+        )
     for key, path in given.items():
         if not key.startswith('lex:'):
             continue

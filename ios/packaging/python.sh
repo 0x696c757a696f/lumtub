@@ -39,7 +39,8 @@ export EXPANDED_CODE_SIGN_IDENTITY_NAME=ad-hoc
 source "$xcframework/build/utils.sh"
 rm -rf "$app/python"
 install_stdlib Python.xcframework
-version=$(cd "$app/python/lib" && ls -d python3.* | head -1)
+versions=("$app/python/lib"/python3.*)
+version=$(basename "${versions[0]}")
 stdlib="$app/python/lib/$version"
 # What yt-dlp never uses: tests, the IDE, Tk, pip's installer.
 rm -rf "$stdlib"/{test,idlelib,tkinter,turtledemo,turtle.py,ensurepip,pydoc_data,__phello__}

@@ -13,6 +13,7 @@ between them, empty where neither source has the word.
 A meaning goes to the JMdict entry written the same way; when several
 are, the one read as the Chinese Wiktionary says, else the common one.
 """
+
 import gzip
 import json
 import re
@@ -23,13 +24,25 @@ from collections import defaultdict
 # Simplified characters for the learners the meanings are for; without
 # the converter the pack would mix in Traditional ones, so it is required.
 import opencc
+
 simplified = opencc.OpenCC('t2s').convert
 
 MAX_SENSES = 6
 KANA = re.compile(r'^[ぁ-ゟ゠-ヿー]+$')
 POS = {
-    'noun': 'n.', 'verb': 'v.', 'adj': 'adj.', 'adv': 'adv.', 'pron': 'pron.', 'conj': 'conj.', 'intj': 'int.',
-    'num': 'num.', 'particle': 'part.', 'suffix': 'suf.', 'prefix': 'pref.', 'phrase': 'phr.', 'counter': 'cnt.',
+    'noun': 'n.',
+    'verb': 'v.',
+    'adj': 'adj.',
+    'adv': 'adv.',
+    'pron': 'pron.',
+    'conj': 'conj.',
+    'intj': 'int.',
+    'num': 'num.',
+    'particle': 'part.',
+    'suffix': 'suf.',
+    'prefix': 'pref.',
+    'phrase': 'phr.',
+    'counter': 'cnt.',
 }
 
 
@@ -40,7 +53,9 @@ def clean(text):
 # A dictionary line's own head: 属する【ぞくする】.
 HEAD = re.compile(r'^\S*【[^】]*】\s*')
 # Japanese dictionaries' part-of-speech marks: 自サ, 他五, 自他下一, 名, 形动…
-POS_MARK = re.compile(r'^(?:[自他]{1,2}(?:サ|カ|ザ|[五上下][一二]?|変)?|名|代|形|形动|形動|副|连体|連体|接|感|助|助动|助動|接头|接尾)(?:\s+|(?=[^\s\w]))')
+POS_MARK = re.compile(
+    r'^(?:[自他]{1,2}(?:サ|カ|ザ|[五上下][一二]?|変)?|名|代|形|形动|形動|副|连体|連体|接|感|助|助动|助動|接头|接尾)(?:\s+|(?=[^\s\w]))'
+)
 JAPANESE = re.compile(r'[ぁ-ゟ゠-ヿ]')
 
 
@@ -63,9 +78,11 @@ def tidy(gloss):
 
 def add(found, gloss):
     """Adds [gloss] unless it, or the same with other punctuation, is in."""
+
     def key(text):
         # Without a part of speech in front (v. 嘱托) or punctuation.
         return re.sub(r'[\s，,；;、。]', '', re.sub(r'^[a-z]+\.\s', '', text))
+
     if gloss and key(gloss) and all(key(g) != key(gloss) for g in found):
         found.append(gloss)
 
@@ -141,14 +158,22 @@ def main():
     from_wikdict = 0
     if wikdict:
         with sqlite3.connect(wikdict) as db:
-            for word, translations, score in db.execute('select written_rep, trans_list, max_score from simple_translation'):
-                word = clean(word)
+            for written, translations, score in db.execute(
+                'select written_rep, trans_list, max_score from simple_translation'
+            ):
+                word = clean(written)
                 if not word or not translations or float(score or 0) < 1:
                     continue
                 row = place(word, [])
                 if row is None or chinese.get(row):
                     continue
-                meaning = '；'.join(dict.fromkeys(t for t in (tidy(simplified(clean(t))) for t in str(translations).split('|')) if t))
+                meaning = '；'.join(
+                    dict.fromkeys(
+                        t
+                        for t in (tidy(simplified(clean(t))) for t in str(translations).split('|'))
+                        if t
+                    )
+                )
                 if meaning:
                     chinese[row] = [meaning]
                     from_wikdict += 1
@@ -159,8 +184,12 @@ def main():
             out.write('\t'.join(parts) + '\n')
     common = sum(1 for r in rows if r[4] == '1')
     common_zh = sum(1 for i, r in enumerate(rows) if r[4] == '1' and chinese.get(i))
-    print(f'ja: Chinese meanings for {len(chinese)} of {len(rows)} entries ({from_wiktionary} from the Chinese Wiktionary, '
-          f'{from_wikdict} from WikDict); common words {common_zh} of {common}', flush=True)
+    print(
+        f'ja: Chinese meanings for {len(chinese)} of {len(rows)} entries '
+        f'({from_wiktionary} from the Chinese Wiktionary, '
+        f'{from_wikdict} from WikDict); common words {common_zh} of {common}',
+        flush=True,
+    )
     if len(chinese) < 5000:
         sys.exit('too few Chinese meanings for Japanese')
 

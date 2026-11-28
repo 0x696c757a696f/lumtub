@@ -23,7 +23,9 @@ import urllib.request
 
 import opencc
 
-STCHARACTERS = "https://raw.githubusercontent.com/BYVoid/OpenCC/master/data/dictionary/STCharacters.txt"
+STCHARACTERS = (
+    "https://raw.githubusercontent.com/BYVoid/OpenCC/master/data/dictionary/STCharacters.txt"
+)
 
 here = pathlib.Path(__file__).parent
 terms = [
@@ -79,12 +81,14 @@ lines = [f"{to_tw.convert(c['in'])}\t{to_tw.convert(c['out'])}" for c in cases i
 sourced = json.loads((here / "sourced.json").read_text(encoding="utf-8"))["rules"]
 for name, convert, region in variants:
     lines = [
-        "\t".join((
-            "|".join(w.lower() for w in r["src"]),
-            "|".join(w.lower() for w in r.get("unless", [])),
-            "|".join(convert(z) for z in r["zh"]),
-            convert(r.get(region) or r["c"]),
-        ))
+        "\t".join(
+            (
+                "|".join(w.lower() for w in r["src"]),
+                "|".join(w.lower() for w in r.get("unless", [])),
+                "|".join(convert(z) for z in r["zh"]),
+                convert(r.get(region) or r["c"]),
+            )
+        )
         for r in sourced
     ]
     (here / f"sourced-{name}.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")

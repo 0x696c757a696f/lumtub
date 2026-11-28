@@ -12,6 +12,7 @@ SIMPLE_EXTRACT, kaikki.org's extract of the Simple English Wiktionary
 (CC BY-SA 4.0), written in plain words for learners, goes first where it
 has the word. The file is rewritten in place.
 """
+
 import gzip
 import json
 import re
@@ -19,12 +20,38 @@ import sys
 
 MAX_SENSES = 6
 POS = {
-    'noun': 'n.', 'verb': 'v.', 'adj': 'adj.', 'adv': 'adv.', 'pron': 'pron.', 'prep': 'prep.', 'conj': 'conj.',
-    'intj': 'int.', 'num': 'num.', 'det': 'det.', 'article': 'art.', 'particle': 'part.', 'phrase': 'phr.',
-    'contraction': 'contr.', 'prep_phrase': 'phr.',
+    'noun': 'n.',
+    'verb': 'v.',
+    'adj': 'adj.',
+    'adv': 'adv.',
+    'pron': 'pron.',
+    'prep': 'prep.',
+    'conj': 'conj.',
+    'intj': 'int.',
+    'num': 'num.',
+    'det': 'det.',
+    'article': 'art.',
+    'particle': 'part.',
+    'phrase': 'phr.',
+    'contraction': 'contr.',
+    'prep_phrase': 'phr.',
 }
 # Senses a learner meets rarely: left out while better ones remain.
-RARE = {'obsolete', 'archaic', 'rare', 'dated', 'historical', 'nonstandard', 'dialectal', 'misspelling', 'Internet', 'slang', 'vulgar', 'derogatory', 'offensive'}
+RARE = {
+    'obsolete',
+    'archaic',
+    'rare',
+    'dated',
+    'historical',
+    'nonstandard',
+    'dialectal',
+    'misspelling',
+    'Internet',
+    'slang',
+    'vulgar',
+    'derogatory',
+    'offensive',
+}
 
 
 def clean(text):
@@ -32,7 +59,11 @@ def clean(text):
 
 
 def opener(path):
-    return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
+    return (
+        gzip.open(path, 'rt', encoding='utf-8')
+        if path.endswith('.gz')
+        else open(path, encoding='utf-8')
+    )
 
 
 def senses_of(path, wanted, simple):
@@ -83,13 +114,19 @@ def main():
         for row in rows:
             while len(row) < 8:
                 row.append('')
-            senses = simple.get(row[0]) or (common.get(row[0], []) + rare.get(row[0], []))[:MAX_SENSES]
+            senses = (
+                simple.get(row[0]) or (common.get(row[0], []) + rare.get(row[0], []))[:MAX_SENSES]
+            )
             if senses:
                 row[7] = '\\n'.join(senses)
                 from_wiktionary += 1
             out.write('\t'.join(row) + '\n')
     with_english = sum(1 for row in rows if len(row) > 7 and row[7])
-    print(f'English meanings: {from_wiktionary} words from Wiktionary, {with_english} of {len(rows)} in all', flush=True)
+    print(
+        f'English meanings: {from_wiktionary} words from Wiktionary, '
+        f'{with_english} of {len(rows)} in all',
+        flush=True,
+    )
     if from_wiktionary < 20000:
         sys.exit(f'only {from_wiktionary} words from Wiktionary')
 

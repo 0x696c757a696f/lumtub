@@ -30,7 +30,9 @@ def get(url, raw=False):
     headers = {"User-Agent": "lumtub-upstream"}
     if url.startswith("https://api.github.com/") and os.environ.get("GH_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GH_TOKEN']}"
-    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=60) as response:
+    with urllib.request.urlopen(
+        urllib.request.Request(url, headers=headers), timeout=60
+    ) as response:
         data = response.read()
     return data if raw else json.loads(data)
 
@@ -58,7 +60,11 @@ def mpv_prebuilt(text, changes):
     releases = get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases?per_page=20")
     for release in releases:
         tag = release["tag_name"]
-        if release["draft"] or release["prerelease"] or not re.fullmatch(r"libmpv-\d{8}-[0-9a-f]+", tag):
+        if (
+            release["draft"]
+            or release["prerelease"]
+            or not re.fullmatch(r"libmpv-\d{8}-[0-9a-f]+", tag)
+        ):
             continue
         assets = {a["name"]: a for a in release["assets"]}
         names = {key: f"libmpv-linux-{flavor}-{tag}.tar.gz" for key, flavor in LINUX_MPV.items()}
@@ -71,7 +77,12 @@ def mpv_prebuilt(text, changes):
         return text
     text = text.replace(pinned[0], f"MPV_RELEASE={tag}")
     for key, name in names.items():
-        text = re.sub(rf"^(MPV_SHA256_{key}=)[0-9a-f]{{64}}$", rf"\g<1>{sha256(assets[name])}", text, flags=re.M)
+        text = re.sub(
+            rf"^(MPV_SHA256_{key}=)[0-9a-f]{{64}}$",
+            rf"\g<1>{sha256(assets[name])}",
+            text,
+            flags=re.M,
+        )
     changes.append(f"Linux libmpv {pinned[1]} -> {tag}")
     return text
 
@@ -83,7 +94,11 @@ def angle_prebuilt(text, changes):
         return text
     for release in get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases?per_page=30"):
         tag = release["tag_name"]
-        if release["draft"] or release["prerelease"] or not re.fullmatch(r"angle-arm64-windows-[0-9A-Za-z._-]+", tag):
+        if (
+            release["draft"]
+            or release["prerelease"]
+            or not re.fullmatch(r"angle-arm64-windows-[0-9A-Za-z._-]+", tag)
+        ):
             continue
         assets = {a["name"]: a for a in release["assets"]}
         if f"{tag}.tar.gz" in assets:
@@ -94,7 +109,12 @@ def angle_prebuilt(text, changes):
     if tag == pinned[1]:
         return text
     text = text.replace(pinned[0], f"ANGLE_ARM64_RELEASE={tag}")
-    text = re.sub(r"^(ANGLE_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}", text, flags=re.M)
+    text = re.sub(
+        r"^(ANGLE_ARM64_SHA256=)[0-9a-f]{64}$",
+        rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}",
+        text,
+        flags=re.M,
+    )
     changes.append(f"ANGLE arm64 {pinned[1]} -> {tag}")
     return text
 
@@ -126,7 +146,12 @@ def windows_mpv(text, changes):
         return text
     text = text.replace(pinned[0], f"WINDOWS_MPV_RELEASE={tag}")
     for key, digest in sums.items():
-        text = re.sub(rf"^(WINDOWS_MPV_SHA256_{key}=)(none|[0-9a-f]{{64}})$", rf"\g<1>{digest}", text, flags=re.M)
+        text = re.sub(
+            rf"^(WINDOWS_MPV_SHA256_{key}=)(none|[0-9a-f]{{64}})$",
+            rf"\g<1>{digest}",
+            text,
+            flags=re.M,
+        )
     changes.append(f"Windows libmpv {pinned[1]} -> {tag}")
     return text
 
@@ -141,7 +166,11 @@ def ios_libmpv_tag():
     release = re.search(r"^Libmpv \S+ \S*/releases/download/([^/]+)/", lock, re.M)
     digest = hashlib.sha256()
     patches = sorted(glob.glob(os.path.join(IOS_RECIPE, "patch", "*.patch")))
-    for path in [os.path.join(IOS_RECIPE, "mpvkit.lock"), os.path.join(IOS_RECIPE, "build_libmpv.sh")] + patches:
+    for path in [
+        os.path.join(IOS_RECIPE, "mpvkit.lock"),
+        os.path.join(IOS_RECIPE, "build_libmpv.sh"),
+        *patches,
+    ]:
         with open(path, "rb") as f:
             digest.update(f.read())
     return f"libmpv-ios-{release[1]}-{digest.hexdigest()[:10]}"
@@ -168,7 +197,12 @@ def ios_libmpv(changes):
         print(f"{tag} has no {tag}.tar.gz; skipped.")
         return
     text = text.replace(pinned[0], f"IOS_LIBMPV_RELEASE={tag}")
-    text = re.sub(r"^(IOS_LIBMPV_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}", text, flags=re.M)
+    text = re.sub(
+        r"^(IOS_LIBMPV_SHA256=)[0-9a-f]{64}$",
+        rf"\g<1>{sha256(assets[f'{tag}.tar.gz'])}",
+        text,
+        flags=re.M,
+    )
     with open(BUILD, "w", encoding="utf-8") as f:
         f.write(text)
     changes.append(f"iOS libmpv {pinned[1]} -> {tag}")
@@ -180,8 +214,17 @@ def ffmpeg(text, changes):
     if not pinned:
         return text
     tags = subprocess.run(
-        ["git", "ls-remote", "--tags", "--refs", "https://github.com/FFmpeg/FFmpeg.git", "refs/tags/n*"],
-        check=True, capture_output=True, text=True,
+        [
+            "git",
+            "ls-remote",
+            "--tags",
+            "--refs",
+            "https://github.com/FFmpeg/FFmpeg.git",
+            "refs/tags/n*",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout
     releases = [t for t in re.findall(r"refs/tags/(n\d+\.\d+(?:\.\d+)?)$", tags, re.M)]
     newest = max(releases, key=version)
@@ -192,13 +235,18 @@ def ffmpeg(text, changes):
 
 
 def ffmpeg_prebuilt(text, changes):
-    """macOS FFmpeg for the smoke test, from dfloresc/ffmpeg-macos-builds, pinned by release and checksum."""
+    """macOS FFmpeg for the smoke test, from dfloresc/ffmpeg-macos-builds, pinned by release
+    and checksum."""
     pinned = re.search(r"^FFMPEG_RELEASE=(v[\w.-]+)$", text, re.M)
     if not pinned:
         return text
     release = get("https://api.github.com/repos/dfloresc/ffmpeg-macos-builds/releases/latest")
     tag = release["tag_name"]
-    if tag == pinned[1] or not re.fullmatch(r"v\d+(\.\d+)*(-\d+)?", tag) or version(tag) <= version(pinned[1]):
+    if (
+        tag == pinned[1]
+        or not re.fullmatch(r"v\d+(\.\d+)*(-\d+)?", tag)
+        or version(tag) <= version(pinned[1])
+    ):
         return text
     sums = {}
     for asset in release["assets"]:
@@ -208,7 +256,9 @@ def ffmpeg_prebuilt(text, changes):
         print(f"ffmpeg-macos-builds {tag} lacks the LGPL arm64 archive; skipped.")
         return text
     text = text.replace(pinned[0], f"FFMPEG_RELEASE={tag}")
-    text = re.sub(r"^(FFMPEG_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sums['arm64']}", text, flags=re.M)
+    text = re.sub(
+        r"^(FFMPEG_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sums['arm64']}", text, flags=re.M
+    )
     changes.append(f"macOS FFmpeg {pinned[1]} -> {tag}")
     return text
 
@@ -219,7 +269,11 @@ def appimagetool(text, changes):
     if not pinned:
         return text
     releases = get("https://api.github.com/repos/AppImage/appimagetool/releases?per_page=30")
-    stable = [r for r in releases if re.fullmatch(r"\d+\.\d+(\.\d+)?", r["tag_name"]) and not r["prerelease"]]
+    stable = [
+        r
+        for r in releases
+        if re.fullmatch(r"\d+\.\d+(\.\d+)?", r["tag_name"]) and not r["prerelease"]
+    ]
     if not stable:
         return text
     newest = max(stable, key=lambda r: version(r["tag_name"]))
@@ -235,7 +289,12 @@ def appimagetool(text, changes):
         return text
     text = text.replace(pinned[0], f"APPIMAGETOOL_VERSION={newest['tag_name']}")
     for arch, digest in sums.items():
-        text = re.sub(rf"^(APPIMAGETOOL_SHA256_{arch.upper()}=)[0-9a-f]{{64}}$", rf"\g<1>{digest}", text, flags=re.M)
+        text = re.sub(
+            rf"^(APPIMAGETOOL_SHA256_{arch.upper()}=)[0-9a-f]{{64}}$",
+            rf"\g<1>{digest}",
+            text,
+            flags=re.M,
+        )
     changes.append(f"appimagetool {pinned[1]} -> {newest['tag_name']}")
     return text
 
@@ -258,9 +317,12 @@ def rewrite(path, update):
 
 def android_libmpv(changes):
     """Android libmpv jars from Predidit/libmpv-android-video-build, pinned by release and MD5."""
+
     def update(text):
         pinned = re.search(r'def libmpvRelease = "(v[\d.]+)"', text)
-        release = get("https://api.github.com/repos/Predidit/libmpv-android-video-build/releases/latest")
+        release = get(
+            "https://api.github.com/repos/Predidit/libmpv-android-video-build/releases/latest"
+        )
         tag = release["tag_name"]
         if not re.fullmatch(r"v\d+(\.\d+)*", tag) or version(tag) <= version(pinned[1]):
             return text
@@ -271,33 +333,53 @@ def android_libmpv(changes):
             return text
         for abi in abis:
             md5 = hashlib.md5(get(urls[f"default-{abi}.jar"], raw=True)).hexdigest()
-            text = re.sub(rf'^( *"{re.escape(abi)}": ")[0-9a-f]{{32}}(",)$', rf"\g<1>{md5}\g<2>", text, flags=re.M)
+            text = re.sub(
+                rf'^( *"{re.escape(abi)}": ")[0-9a-f]{{32}}(",)$',
+                rf"\g<1>{md5}\g<2>",
+                text,
+                flags=re.M,
+            )
         changes.append(f"Android libmpv {pinned[1]} -> {tag}")
         return text.replace(pinned[0], f'def libmpvRelease = "{tag}"')
+
     rewrite(ANDROID_GRADLE, update)
 
 
 def mpvkit(changes):
-    """macOS and iOS libmpv linked from MPVKit's static libraries, pinned by the checksums in its Package.swift."""
+    """macOS and iOS libmpv linked from MPVKit's static libraries, pinned by the checksums in
+    its Package.swift."""
+
     def update(text, platform):
         pinned = re.search(r"^# MPVKit release (\S+):", text, re.M)
         tags = subprocess.run(
             ["git", "ls-remote", "--tags", "--refs", "https://github.com/mpvkit/MPVKit.git"],
-            check=True, capture_output=True, text=True,
+            check=True,
+            capture_output=True,
+            text=True,
         ).stdout
         releases = re.findall(r"refs/tags/(\d+\.\d+\.\d+(?:-n[\d.]+)?)$", tags, re.M)
         newest = max(releases, key=lambda t: version(t.split("-")[0]))
         if version(newest.split("-")[0]) <= version(pinned[1].split("-")[0]):
             return text
-        package = get(f"https://raw.githubusercontent.com/mpvkit/MPVKit/{newest}/Package.swift", raw=True).decode()
-        targets = dict(re.findall(
-            r'\.binaryTarget\(\s*name: "([^"]+)",\s*url: "([^"]+)",\s*checksum: "[0-9a-f]{64}"', package))
-        sums = dict(re.findall(r'name: "([^"]+)",\s*url: "[^"]+",\s*checksum: "([0-9a-f]{64})"', package))
+        package = get(
+            f"https://raw.githubusercontent.com/mpvkit/MPVKit/{newest}/Package.swift", raw=True
+        ).decode()
+        targets = dict(
+            re.findall(
+                r'\.binaryTarget\(\s*name: "([^"]+)",\s*url: "([^"]+)",\s*checksum: "[0-9a-f]{64}"',
+                package,
+            )
+        )
+        sums = dict(
+            re.findall(r'name: "([^"]+)",\s*url: "[^"]+",\s*checksum: "([0-9a-f]{64})"', package)
+        )
         lines = []
         for line in text.splitlines():
             m = re.fullmatch(r"(\S+) [0-9a-f]{64} \S+", line)
             if not m:
-                lines.append(line.replace(pinned[1], newest) if line.startswith("# MPVKit release") else line)
+                lines.append(
+                    line.replace(pinned[1], newest) if line.startswith("# MPVKit release") else line
+                )
                 continue
             if m[1] not in targets:
                 print(f"MPVKit {newest} has no {m[1]}; skipped.")
@@ -305,8 +387,9 @@ def mpvkit(changes):
             lines.append(f"{m[1]} {sums[m[1]]} {targets[m[1]]}")
         changes.append(f"{platform} libmpv (MPVKit) {pinned[1]} -> {newest}")
         return "\n".join(lines) + "\n"
-    for lock, platform in zip(MPVKIT_LOCKS, ("macOS", "iOS")):
-        rewrite(lock, lambda text: update(text, platform))
+
+    for lock, platform in zip(MPVKIT_LOCKS, ("macOS", "iOS"), strict=True):
+        rewrite(lock, lambda text, platform=platform: update(text, platform))
 
 
 IOS_PYTHON_LOCK = "ios/packaging/python.lock"
@@ -315,21 +398,33 @@ IOS_PYTHON_LOCK = "ios/packaging/python.lock"
 def ios_python(changes, notes):
     """Python for iOS (BeeWare Python-Apple-support): newer builds of the same
     Python are taken; a newer Python is noted, since yt-dlp runs in it."""
+
     def update(text):
         line = re.search(r"^(\d+)\.(\d+)-b(\d+) [0-9a-f]{64} \S+$", text, re.M)
         if not line:
             return text
         major, minor, build = map(int, line.groups())
         tags = subprocess.run(
-            ["git", "ls-remote", "--tags", "--refs", "https://github.com/beeware/Python-Apple-support.git"],
-            check=True, capture_output=True, text=True,
+            [
+                "git",
+                "ls-remote",
+                "--tags",
+                "--refs",
+                "https://github.com/beeware/Python-Apple-support.git",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
         ).stdout
-        stable = [tuple(map(int, t)) for t in re.findall(r"refs/tags/(\d+)\.(\d+)-b(\d+)$", tags, re.M)]
+        stable = [
+            tuple(map(int, t)) for t in re.findall(r"refs/tags/(\d+)\.(\d+)-b(\d+)$", tags, re.M)
+        ]
         newer_python = sorted({(a, b) for a, b, _ in stable if (a, b) > (major, minor)})
         if newer_python:
             a, b = newer_python[-1]
             notes.append(
-                f"- Python for iOS: BeeWare has Python {a}.{b} (ios/packaging/python.lock pins {major}.{minor}). "
+                f"- Python for iOS: BeeWare has Python {a}.{b} (ios/packaging/python.lock pins "
+                f"{major}.{minor}). "
                 "Move to it once yt-dlp supports it, and test on an iPhone."
             )
         same = max(n for a, b, n in stable if (a, b) == (major, minor))
@@ -337,13 +432,16 @@ def ios_python(changes, notes):
             return text
         tag = f"{major}.{minor}-b{same}"
         name = f"Python-{major}.{minor}-iOS-support.b{same}.tar.gz"
-        release = get(f"https://api.github.com/repos/beeware/Python-Apple-support/releases/tags/{tag}")
+        release = get(
+            f"https://api.github.com/repos/beeware/Python-Apple-support/releases/tags/{tag}"
+        )
         asset = next((a for a in release["assets"] if a["name"] == name), None)
         if asset is None:
             print(f"Python-Apple-support {tag} has no {name}; skipped.")
             return text
         changes.append(f"iOS Python {major}.{minor}-b{build} -> {tag}")
         return text.replace(line[0], f"{tag} {sha256(asset)} {asset['browser_download_url']}")
+
     rewrite(IOS_PYTHON_LOCK, update)
 
 
@@ -365,7 +463,8 @@ def vendored(notes):
         if version(latest) > version(ours):
             notes.append(
                 f"- `{name}`: vendor/{folder} is a patched copy of {ours}; pub.dev has {latest} "
-                f"([changes](https://pub.dev/packages/{name}/changelog)). Move Lumtub's changes onto it."
+                f"([changes](https://pub.dev/packages/{name}/changelog)). Move Lumtub's changes "
+                f"onto it."
             )
 
 

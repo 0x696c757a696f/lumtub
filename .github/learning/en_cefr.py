@@ -9,6 +9,7 @@ Foreign Studies) and OCTANOVE_CSV the Octanove Vocabulary Profile C1/C2
 The word list gets a ninth column: the lowest level a word is listed at
 (any part of speech), empty for words neither lists. Rewritten in place.
 """
+
 import csv
 import sys
 
@@ -25,9 +26,11 @@ def main():
                 if level not in ORDER:
                     continue
                 # "a.m./A.M./am/AM": every spelling.
-                for word in (row.get('headword') or '').split('/'):
-                    word = word.strip().lower()
-                    if word and (word not in levels or ORDER.index(level) < ORDER.index(levels[word])):
+                for spelling in (row.get('headword') or '').split('/'):
+                    word = spelling.strip().lower()
+                    if word and (
+                        word not in levels or ORDER.index(level) < ORDER.index(levels[word])
+                    ):
                         levels[word] = level
     with open(tsv, encoding='utf-8') as f:
         rows = [line.rstrip('\n').split('\t') for line in f]

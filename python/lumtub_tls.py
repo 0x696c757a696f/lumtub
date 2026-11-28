@@ -44,7 +44,9 @@ def _setting(name, default=None):
 def _quantum(context):
     mode = _setting('LUMTUB_PQ', 'prefer')
     if mode == 'require' and ssl.OPENSSL_VERSION_INFO < (3, 5):
-        raise ssl.SSLError(f'{ssl.OPENSSL_VERSION} cannot offer X25519MLKEM768, which Lumtub is set to require')
+        raise ssl.SSLError(
+            f'{ssl.OPENSSL_VERSION} cannot offer X25519MLKEM768, which Lumtub is set to require'
+        )
     groups = _GROUPS.get(mode)
     if groups and hasattr(context, 'set_groups'):
         context.set_groups(groups)

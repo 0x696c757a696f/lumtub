@@ -42,11 +42,11 @@ adb pull /sdcard/phone.mp4 "$out/phone.mp4" > /dev/null 2>&1
 
 adb shell settings put system accelerometer_rotation 0
 for form in "tablet 2560x1600 320" "tv 1920x1080 240"; do
-  set -- $form
-  adb shell wm size "$2"; adb shell wm density "$3"; sleep 12
-  shot "$1-home"
+  read -r name size density <<< "$form"
+  adb shell wm size "$size"; adb shell wm density "$density"; sleep 12
+  shot "$name-home"
   adb shell input keyevent KEYCODE_DPAD_DOWN; sleep 1
-  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 2; shot "$1-focus"
+  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 2; shot "$name-focus"
 done
 adb shell screenrecord --time-limit 25 --bit-rate 6000000 /sdcard/tv.mp4 &
 rec=$!

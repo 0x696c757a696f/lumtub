@@ -12,7 +12,15 @@ import struct
 import sys
 
 FINGERPRINT = "AC0CBBE6848D6A873464AF4E57CF65933B5A7581"
-KEY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "native", "lumtub_core", "keys", "yt-dlp.pub")
+KEY = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "..",
+    "native",
+    "lumtub_core",
+    "keys",
+    "yt-dlp.pub",
+)
 # DER prefixes of the DigestInfo for EMSA-PKCS1-v1_5 (RFC 8017, 9.2).
 HASHES = {
     8: ("sha256", bytes.fromhex("3031300d060960864801650304020105000420")),
@@ -45,17 +53,17 @@ def packet(data):
             length, start = struct.unpack(">I", data[1:5])[0], 5
         else:
             raise ValueError("indeterminate lengths are not supported")
-    body = data[start:start + length]
+    body = data[start : start + length]
     if len(body) != length:
         raise ValueError("truncated packet")
-    return tag, body, data[start + length:]
+    return tag, body, data[start + length :]
 
 
 def mpi(data):
     length = (struct.unpack(">H", data[:2])[0] + 7) // 8
     if len(data) < 2 + length:
         raise ValueError("truncated number")
-    return int.from_bytes(data[2:2 + length], "big"), data[2 + length:]
+    return int.from_bytes(data[2 : 2 + length], "big"), data[2 + length :]
 
 
 def public_key():
@@ -81,19 +89,23 @@ def verify(sums, signature):
     if version != 4 or kind != 0 or algorithm != 1 or hash_id not in HASHES:
         raise ValueError("not a v4 RSA signature over a binary document")
     hashed_end = 6 + struct.unpack(">H", body[4:6])[0]
-    unhashed_end = hashed_end + 2 + struct.unpack(">H", body[hashed_end:hashed_end + 2])[0]
-    value, rest = mpi(body[unhashed_end + 2:])
+    unhashed_end = hashed_end + 2 + struct.unpack(">H", body[hashed_end : hashed_end + 2])[0]
+    value, rest = mpi(body[unhashed_end + 2 :])
     if rest:
         raise ValueError("the signature has extra data")
     name, prefix = HASHES[hash_id]
     signed = body[:hashed_end]
-    digest = hashlib.new(name, sums + signed + b"\x04\xff" + struct.pack(">I", len(signed))).digest()
+    digest = hashlib.new(
+        name, sums + signed + b"\x04\xff" + struct.pack(">I", len(signed))
+    ).digest()
     n, e = public_key()
     size = (n.bit_length() + 7) // 8
     if value >= n:
         raise ValueError("the signature value is out of range")
     encoded = pow(value, e, n).to_bytes(size, "big")
-    expected = b"\x00\x01" + b"\xff" * (size - 3 - len(prefix) - len(digest)) + b"\x00" + prefix + digest
+    expected = (
+        b"\x00\x01" + b"\xff" * (size - 3 - len(prefix) - len(digest)) + b"\x00" + prefix + digest
+    )
     if encoded != expected:
         raise ValueError("the signature does not match")
 

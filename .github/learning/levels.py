@@ -14,6 +14,7 @@ easiest, each word at the lowest level it is listed at.
 - es, fr, de, it, ru: about CEFR A1 (1) to C2 (6), by how often the word
   is used (wordfreq, data CC BY-SA 4.0): a guide, not an official list.
 """
+
 import gzip
 import json
 import os
@@ -39,7 +40,7 @@ def hsk(path):
         tags = entry.get('level') or entry.get('l') or []
         new = [int(t[4:]) for t in tags if t.startswith('new-') and t[4:].isdigit()]
         old = [int(t[4:]) for t in tags if t.startswith('old-') and t[4:].isdigit()]
-        level = min(min(new), 7) if new else (min(old) if old else None)
+        level = min(*new, 7) if new else (min(old) if old else None)
         if level is None:
             continue
         keep(levels, entry.get('simplified') or entry.get('s') or '', level)
@@ -76,6 +77,7 @@ def korean(path):
 
 def by_frequency(lang):
     from wordfreq import top_n_list
+
     levels = {}
     words = top_n_list(lang, BANDS[-1][0], wordlist='best')
     for rank, word in enumerate(words, start=1):
@@ -97,7 +99,9 @@ def write(out, lang, levels, least):
     counts = {}
     for level in levels.values():
         counts[level] = counts.get(level, 0) + 1
-    print(f'{lang} levels: {len(levels)} words, by level {dict(sorted(counts.items()))}', flush=True)
+    print(
+        f'{lang} levels: {len(levels)} words, by level {dict(sorted(counts.items()))}', flush=True
+    )
 
 
 def main():

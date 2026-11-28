@@ -34,9 +34,9 @@ def read_png(path):
     idat = b""
     width = height = depth = kind = interlace = None
     while pos < len(data):
-        length, = struct.unpack(">I", data[pos:pos + 4])
-        tag = data[pos + 4:pos + 8]
-        body = data[pos + 8:pos + 8 + length]
+        (length,) = struct.unpack(">I", data[pos : pos + 4])
+        tag = data[pos + 4 : pos + 8]
+        body = data[pos + 8 : pos + 8 + length]
         pos += 12 + length
         if tag == b"IHDR":
             width, height, depth, kind, _, _, interlace = struct.unpack(">IIBBBBB", body)
@@ -45,7 +45,9 @@ def read_png(path):
         elif tag == b"IEND":
             break
     if depth != 8 or kind not in (2, 6) or interlace:
-        raise ValueError(f"{path}: 8-bit RGB or RGBA without interlacing only (depth {depth}, type {kind})")
+        raise ValueError(
+            f"{path}: 8-bit RGB or RGBA without interlacing only (depth {depth}, type {kind})"
+        )
     channels = 3 if kind == 2 else 4
     stride = width * channels
     raw = zlib.decompress(idat)
@@ -54,7 +56,7 @@ def read_png(path):
     i = 0
     for _ in range(height):
         kind_of_filter = raw[i]
-        line = bytearray(raw[i + 1:i + 1 + stride])
+        line = bytearray(raw[i + 1 : i + 1 + stride])
         i += 1 + stride
         for x in range(stride):
             a = line[x - channels] if x >= channels else 0
@@ -70,7 +72,7 @@ def read_png(path):
                 p = a + b - c
                 pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
                 line[x] = (line[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 0xFF
-        rows.append([tuple(line[x:x + 3]) for x in range(0, stride, channels)])
+        rows.append([tuple(line[x : x + 3]) for x in range(0, stride, channels)])
         previous = line
     return width, height, rows
 
@@ -96,24 +98,69 @@ PAGES = (0.55, 0.5, 0.9, 0.8)
 
 def main(folder):
     folder = Path(folder)
-    state = json.loads((folder / "glass-state.json").read_text()) if (folder / "glass-state.json").exists() else {}
+    state = (
+        json.loads((folder / "glass-state.json").read_text())
+        if (folder / "glass-state.json").exists()
+        else {}
+    )
     measured = {}
-    for name in ["glass-off", "glass-frame", "glass-whole", "glass-blur", "glass-dark-off", "glass-dark-frame"]:
+    for name in [
+        "glass-off",
+        "glass-frame",
+        "glass-whole",
+        "glass-blur",
+        "glass-dark-off",
+        "glass-dark-frame",
+    ]:
         path = folder / f"{name}.png"
         if not path.exists():
             print(f"{name}: no picture")
             continue
         width, height, rows = read_png(path)
         measured[name] = (magenta(rows, width, height, FRAME), magenta(rows, width, height, PAGES))
-        print(f"{name}: {width}x{height}, magenta on the frame {measured[name][0]:.1f}, on the pages {measured[name][1]:.1f}, runner said {state.get(name)}")
+        print(
+            f"{name}: {width}x{height}, magenta on the frame {measured[name][0]:.1f}, on the pages "
+            f"{measured[name][1]:.1f}, runner said {state.get(name)}"
+        )
         # A coarse map of the picture, for reading in the log.
         for row in range(12):
-            print("  " + " ".join(f"{magenta(rows, width, height, (col / 24, row / 12, (col + 1) / 24, (row + 1) / 12)):4.0f}" for col in range(24)))
+            print(
+                "  "
+                + " ".join(
+                    format(
+                        magenta(
+                            rows,
+                            width,
+                            height,
+                            (col / 24, row / 12, (col + 1) / 24, (row + 1) / 12),
+                        ),
+                        "4.0f",
+                    )
+                    for col in range(24)
+                )
+            )
     if (folder / "screen.png").exists():
         width, height, rows = read_png(folder / "screen.png")
-        print(f"the whole screen: {width}x{height}, magenta {magenta(rows, width, height, (0, 0, 1, 1)):.1f}")
+        print(
+            f"the whole screen: {width}x{height}, magenta "
+            f"{magenta(rows, width, height, (0, 0, 1, 1)):.1f}"
+        )
         for row in range(6):
-            print("  " + " ".join(f"{magenta(rows, width, height, (col / 12, row / 6, (col + 1) / 12, (row + 1) / 6)):4.0f}" for col in range(12)))
+            print(
+                "  "
+                + " ".join(
+                    format(
+                        magenta(
+                            rows,
+                            width,
+                            height,
+                            (col / 12, row / 6, (col + 1) / 12, (row + 1) / 6),
+                        ),
+                        "4.0f",
+                    )
+                    for col in range(12)
+                )
+            )
     ok = True
 
     def check(what, passed):
@@ -121,23 +168,38 @@ def main(folder):
         print(f"{'PASS' if passed else 'FAIL'}: {what}")
         ok = ok and passed
 
-    for off, frame, whole in [("glass-off", "glass-frame", "glass-whole"), ("glass-dark-off", "glass-dark-frame", None)]:
+    for off, frame, whole in [
+        ("glass-off", "glass-frame", "glass-whole"),
+        ("glass-dark-off", "glass-dark-frame", None),
+    ]:
         if off not in measured or frame not in measured:
             check(f"pictures {off} and {frame} taken", False)
             continue
         (frame_off, pages_off), (frame_on, pages_on) = measured[off], measured[frame]
-        check(f"{frame}: the desktop shows through the frame ({frame_on - frame_off:+.1f})", frame_on - frame_off >= 12)
+        check(
+            f"{frame}: the desktop shows through the frame ({frame_on - frame_off:+.1f})",
+            frame_on - frame_off >= 12,
+        )
         # Thumbnails on the pages bring magenta of their own, so the pages
         # are measured against the same pages without glass.
-        check(f"{frame}: the pages stay solid ({pages_on - pages_off:+.1f})", pages_on - pages_off <= 8)
+        check(
+            f"{frame}: the pages stay solid ({pages_on - pages_off:+.1f})",
+            pages_on - pages_off <= 8,
+        )
         if whole and whole in measured:
             _, pages_whole = measured[whole]
-            check(f"{whole}: the desktop shows through the pages too ({pages_whole - pages_on:+.1f})", pages_whole - pages_on >= 6)
+            check(
+                f"{whole}: the desktop shows through the pages too ({pages_whole - pages_on:+.1f})",
+                pages_whole - pages_on >= 6,
+            )
     # The system's blur, where the system draws one: machines without a
     # graphics card (CI) draw it solid, so it is reported, not required.
     if "glass-off" in measured and "glass-blur" in measured:
         through = measured["glass-blur"][0] - measured["glass-off"][0]
-        print(f"{'SEEN' if through >= 12 else 'NOT SEEN'} (not required): the desktop through the system's blur ({through:+.1f})")
+        print(
+            f"{'SEEN' if through >= 12 else 'NOT SEEN'} (not required): the desktop through the "
+            f"system's blur ({through:+.1f})"
+        )
     return 0 if ok else 1
 
 

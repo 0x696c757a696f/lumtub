@@ -53,6 +53,7 @@ for path in "$mpv" $(needed "$mpv") $(needed "$core"); do
     [[ -e "$lib/fallback/$name/$name" ]] && continue
     mkdir -p "$lib/fallback/$name"
     cp -L "$path" "$lib/fallback/$name/$name"
+    # shellcheck disable=SC2016 # $ORIGIN is for the loader, not the shell.
     patchelf --set-rpath '$ORIGIN/../..' "$lib/fallback/$name/$name"
     spare=$((spare + 1))
     continue
@@ -76,6 +77,7 @@ fi
 # libapp.so is the compiled Dart program and is left as Flutter built it.
 for file in "$lib"/*.so*; do
   [[ "$(basename "$file")" == libapp.so ]] && continue
+  # shellcheck disable=SC2016 # $ORIGIN is for the loader, not the shell.
   patchelf --set-rpath '$ORIGIN' "$file"
 done
 

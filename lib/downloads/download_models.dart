@@ -14,6 +14,7 @@ enum DownloadQuality {
   const DownloadQuality(this._label, this.maxHeight, {this.audioOnly = false});
   final String _label;
   String get label => tr(_label);
+
   /// The tallest video to take, or null for the best there is.
   final int? maxHeight;
   final bool audioOnly;
@@ -37,16 +38,20 @@ enum DownloadStatus { queued, downloading, paused, done, failed, cancelled }
 
 /// One progress line of yt-dlp, printed with [progressTemplate].
 class DownloadProgress {
-  const DownloadProgress({this.downloaded = 0, this.total, this.speed, this.eta, this.finished = false});
+  const DownloadProgress(
+      {this.downloaded = 0, this.total, this.speed, this.eta, this.finished = false});
   final int downloaded;
   final int? total;
+
   /// Bytes per second.
   final double? speed;
   final int? eta;
+
   /// The current stream is complete (a video may have several).
   final bool finished;
 
-  double? get fraction => total == null || total == 0 ? null : (downloaded / total!).clamp(0.0, 1.0);
+  double? get fraction =>
+      total == null || total == 0 ? null : (downloaded / total!).clamp(0.0, 1.0);
 
   static const progressTemplate =
       'download:lumtub|%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s';
@@ -93,11 +98,14 @@ class DownloadTask {
 
   /// A recorded live stream's becomes the finished video's.
   VideoItem item;
+
   /// The simple choice; for a task with a [selection] only whether it is audio.
   final DownloadQuality quality;
+
   /// The formats picked in the download dialog; null for a task added with
   /// just a [quality], such as one saved by an earlier version.
   final DownloadSelection? selection;
+
   /// The folder it is saved in, as chosen when it was added.
   final String directory;
   DownloadStatus status;
@@ -115,7 +123,8 @@ class DownloadTask {
 
   String get id => item.id;
 
-  double? get fraction => total == null || total == 0 ? null : (downloaded / total!).clamp(0.0, 1.0);
+  double? get fraction =>
+      total == null || total == 0 ? null : (downloaded / total!).clamp(0.0, 1.0);
 
   /// The quality or selection as the downloads list shows it.
   String get qualityLabel => selection?.label ?? quality.label;
@@ -142,10 +151,12 @@ class DownloadTask {
       final selection = DownloadSelection.fromJson(raw['selection']);
       return DownloadTask(
         item: item,
-        quality: DownloadQuality.values.where((q) => q.name == raw['quality']).firstOrNull ?? DownloadQuality.best,
+        quality: DownloadQuality.values.where((q) => q.name == raw['quality']).firstOrNull ??
+            DownloadQuality.best,
         selection: selection,
         directory: directory,
-        status: DownloadStatus.values.where((s) => s.name == raw['status']).firstOrNull ?? DownloadStatus.failed,
+        status: DownloadStatus.values.where((s) => s.name == raw['status']).firstOrNull ??
+            DownloadStatus.failed,
         filePath: raw['file']?.toString(),
         error: raw['error']?.toString(),
         added: DateTime.tryParse(raw['added']?.toString() ?? ''),

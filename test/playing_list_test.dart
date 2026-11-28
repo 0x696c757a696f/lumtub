@@ -5,7 +5,9 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/playing_list.dart';
 
 void main() {
-  final items = [for (final id in ['a', 'b', 'c']) VideoItem(id: id, title: id, channel: '', url: '')];
+  final items = [
+    for (final id in ['a', 'b', 'c']) VideoItem(id: id, title: id, channel: '', url: '')
+  ];
 
   test('a reversed playlist plays last to first', () {
     final list = PlayingList(id: 'p', title: 'P', items: items);
@@ -29,10 +31,13 @@ void main() {
   test('up next follows the video playing and the queue, a repeated video by its first place', () {
     VideoItem video(String id) => VideoItem(id: id, title: id, channel: '', url: '');
     final controller = AppController()
-      ..queue = List.unmodifiable([for (final id in ['a', 'b', 'c', 'b', 'd']) video(id)])
+      ..queue = List.unmodifiable([
+        for (final id in ['a', 'b', 'c', 'b', 'd']) video(id)
+      ])
       ..playing = video('b');
     expect([for (final item in controller.upNext) item.id], ['c', 'b', 'd']);
-    expect(identical(controller.upNext, controller.upNext), isTrue, reason: 'made once per queue and video');
+    expect(identical(controller.upNext, controller.upNext), isTrue,
+        reason: 'made once per queue and video');
     expect(controller.previousInQueue?.id, 'a');
     expect(controller.upNextHas('d'), isTrue);
     expect(controller.upNextHas('b'), isTrue);

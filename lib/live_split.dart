@@ -15,9 +15,11 @@ class LiveSplit {
   String get videoUrl => video['url'] as String;
   String get audioUrl => audio['url'] as String;
   int get height => video['height'] as int;
+
   /// The User-Agent the addresses were issued for.
   String? get userAgent => (video['http_headers'] as Map?)?['User-Agent'] as String?;
-  String get label => '${video['format_id']}+${audio['format_id']} (${height}p${video['fps'] ?? ''} ${video['vcodec']})';
+  String get label =>
+      '${video['format_id']}+${audio['format_id']} (${height}p${video['fps'] ?? ''} ${video['vcodec']})';
 
   /// The tallest picture above [above] (1080p) within [settings]' cap in a
   /// codec they allow, with the AAC sound (140) or else the best other; null
@@ -25,7 +27,10 @@ class LiveSplit {
   static LiveSplit? pick(Map<String, dynamic> info, PlayerSettings settings, {int above = 1080}) {
     final cap = settings.maxHeight;
     if (cap > 0 && cap <= above) return null;
-    final formats = [for (final f in (info['formats'] as List? ?? const [])) if (f is Map<String, dynamic> && _fragmented(f)) f];
+    final formats = [
+      for (final f in (info['formats'] as List? ?? const []))
+        if (f is Map<String, dynamic> && _fragmented(f)) f
+    ];
     final order = FormatPolicy.codecOrder(settings);
     int rank(VideoCodec? codec) {
       final i = codec == null ? -1 : order.indexOf(codec);
@@ -34,14 +39,20 @@ class LiveSplit {
 
     final videos = [
       for (final f in formats)
-        if (f['acodec'] == 'none' && f['height'] is int && (f['height'] as int) > above && (cap <= 0 || (f['height'] as int) <= cap))
-          if (VideoCodec.of(f['vcodec']) case final codec? when FormatPolicy.allows(settings, codec)) f,
+        if (f['acodec'] == 'none' &&
+            f['height'] is int &&
+            (f['height'] as int) > above &&
+            (cap <= 0 || (f['height'] as int) <= cap))
+          if (VideoCodec.of(f['vcodec']) case final codec?
+              when FormatPolicy.allows(settings, codec))
+            f,
     ]..sort((a, b) {
         final byHeight = (b['height'] as int).compareTo(a['height'] as int);
         if (byHeight != 0) return byHeight;
         final byFps = _number(b['fps']).compareTo(_number(a['fps']));
         if (byFps != 0) return byFps;
-        final byCodec = rank(VideoCodec.of(a['vcodec'])).compareTo(rank(VideoCodec.of(b['vcodec'])));
+        final byCodec =
+            rank(VideoCodec.of(a['vcodec'])).compareTo(rank(VideoCodec.of(b['vcodec'])));
         if (byCodec != 0) return byCodec;
         return _number(b['tbr']).compareTo(_number(a['tbr']));
       });
@@ -72,11 +83,22 @@ class LiveSplit {
     int height(Map<String, dynamic> f) => f['height'] is int ? f['height'] as int : 0;
     final muxed = [
       for (final f in (info['formats'] as List? ?? const []))
-        if (f is Map<String, dynamic> && '${f['protocol']}'.startsWith('m3u8') && f['url'] is String)
-          if (f['vcodec'] is String && f['vcodec'] != 'none' && f['acodec'] != 'none' && FormatPolicy.allowsName(settings, f['vcodec'])) f,
+        if (f is Map<String, dynamic> &&
+            '${f['protocol']}'.startsWith('m3u8') &&
+            f['url'] is String)
+          if (f['vcodec'] is String &&
+              f['vcodec'] != 'none' &&
+              f['acodec'] != 'none' &&
+              FormatPolicy.allowsName(settings, f['vcodec']))
+            f,
     ];
-    final within = [for (final f in muxed) if (cap <= 0 || height(f) <= cap) f];
-    final candidates = within.isNotEmpty ? within : (muxed..sort((a, b) => height(a).compareTo(height(b)))).take(1).toList();
+    final within = [
+      for (final f in muxed)
+        if (cap <= 0 || height(f) <= cap) f
+    ];
+    final candidates = within.isNotEmpty
+        ? within
+        : (muxed..sort((a, b) => height(a).compareTo(height(b)))).take(1).toList();
     candidates.sort((a, b) {
       final byHeight = height(b).compareTo(height(a));
       if (byHeight != 0) return byHeight;
@@ -97,7 +119,8 @@ class LiveSplit {
 
   /// Whether yt-dlp, asked with [FormatPolicy.liveExpression], would join
   /// an HLS picture taller than [muxed] and above 1080p with its sound.
-  static bool tallerSplitHls(Map<String, dynamic> info, PlayerSettings settings, Map<String, dynamic> muxed) {
+  static bool tallerSplitHls(
+      Map<String, dynamic> info, PlayerSettings settings, Map<String, dynamic> muxed) {
     final cap = settings.maxHeight;
     if (cap > 0 && cap <= 1080) return false;
     final mine = muxed['height'] is int ? muxed['height'] as int : 0;
@@ -118,7 +141,12 @@ class LiveSplit {
   /// manifest, no fragment list.
   static bool _fragmented(Map<String, dynamic> format) {
     final url = format['url'];
-    if (format['protocol'] != 'https' || url is! String || format['manifest_url'] != null || format['fragments'] != null) return false;
+    if (format['protocol'] != 'https' ||
+        url is! String ||
+        format['manifest_url'] != null ||
+        format['fragments'] != null) {
+      return false;
+    }
     return Uri.tryParse(url)?.queryParameters['live'] == '1';
   }
 

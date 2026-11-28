@@ -11,24 +11,45 @@ void main() {
   final lookup = VideoFactsLookup.instance;
   tearDown(lookup.reset);
 
-  VideoItem feedItem(String id) => VideoItem(id: id, title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=$id', published: DateTime.utc(2026, 11));
+  VideoItem feedItem(String id) => VideoItem(
+      id: id,
+      title: 'T',
+      channel: 'C',
+      url: 'https://www.youtube.com/watch?v=$id',
+      published: DateTime.utc(2026, 11));
 
   test('reads length, views and day from a /player answer', () {
-    final facts = VideoFacts.ofPlayer('{"videoDetails":{"videoId":"x","lengthSeconds":"754","viewCount":"12345"},"microformat":{"playerMicroformatRenderer":{"publishDate":"2026-10-30T05:00:00-07:00"}}}', DateTime.utc(2026, 11, 11))!;
+    final facts = VideoFacts.ofPlayer(
+        '{"videoDetails":{"videoId":"x","lengthSeconds":"754","viewCount":"12345"},"microformat":{"playerMicroformatRenderer":{"publishDate":"2026-10-30T05:00:00-07:00"}}}',
+        DateTime.utc(2026, 11, 11))!;
     expect(facts.length, 754);
     expect(facts.views, 12345);
     expect(facts.published, DateTime.parse('2026-10-30T05:00:00-07:00'));
-    expect(VideoFacts.ofPlayer('{"videoDetails":{"lengthSeconds":"0","viewCount":"9"}}', DateTime.now())!.length, isNull);
+    expect(
+        VideoFacts.ofPlayer(
+                '{"videoDetails":{"lengthSeconds":"0","viewCount":"9"}}', DateTime.now())!
+            .length,
+        isNull);
     expect(VideoFacts.ofPlayer('{"playabilityStatus":{"status":"ERROR"}}', DateTime.now()), isNull);
-    expect(VideoFactsLookup.playerWhy('{"responseContext":{},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}'), 'LOGIN_REQUIRED: Sign in to confirm you’re not a bot');
+    expect(
+        VideoFactsLookup.playerWhy(
+            '{"responseContext":{},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}'),
+        'LOGIN_REQUIRED: Sign in to confirm you’re not a bot');
     expect(VideoFactsLookup.playerWhy('HTTP 403'), 'HTTP 403');
   });
 
-  test('a live the feed did not mark becomes one, and a live just ended takes its length from its streams', () async {
-    final live = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"itag":136}]},"videoDetails":{"lengthSeconds":"0","isLive":true,"viewCount":"40"}}', DateTime.now())!;
+  test(
+      'a live the feed did not mark becomes one, and a live just ended takes its length from its streams',
+      () async {
+    final live = VideoFacts.ofPlayer(
+        '{"streamingData":{"adaptiveFormats":[{"itag":136}]},"videoDetails":{"lengthSeconds":"0","isLive":true,"viewCount":"40"}}',
+        DateTime.now())!;
     expect((live.length, live.liveStatus), (null, 'is_live'));
-    expect(VideoFacts.ofPlayer('{"videoDetails":{"isUpcoming":true}}', DateTime.now())!.liveStatus, 'is_upcoming');
-    final ended = VideoFacts.ofPlayer('{"streamingData":{"adaptiveFormats":[{"approxDurationMs":"3605120"},{"approxDurationMs":"3605201"}]},"videoDetails":{"lengthSeconds":"0","isLiveContent":true,"viewCount":"9"}}', DateTime.now())!;
+    expect(VideoFacts.ofPlayer('{"videoDetails":{"isUpcoming":true}}', DateTime.now())!.liveStatus,
+        'is_upcoming');
+    final ended = VideoFacts.ofPlayer(
+        '{"streamingData":{"adaptiveFormats":[{"approxDurationMs":"3605120"},{"approxDurationMs":"3605201"}]},"videoDetails":{"lengthSeconds":"0","isLiveContent":true,"viewCount":"9"}}',
+        DateTime.now())!;
     expect((ended.length, ended.liveStatus), (3605, null));
     expect(VideoFacts.fromJson(live.toJson())!.liveStatus, 'is_live');
 
@@ -55,14 +76,16 @@ void main() {
     expect((done.durationLabel, done.isLive), ('1:00:05', false));
   });
 
-  test('fills in what a card lacks once, keeps it on disk and never overrides the listing', () async {
+  test('fills in what a card lacks once, keeps it on disk and never overrides the listing',
+      () async {
     final dir = await Directory.systemTemp.createTemp('facts');
     addTearDown(() => dir.delete(recursive: true));
     final file = File('${dir.path}/video_facts.json');
     final asked = <String>[];
     lookup.use((id) async {
       asked.add(id);
-      return VideoFacts(length: 125, views: 99, published: DateTime.utc(2020), asked: DateTime.now());
+      return VideoFacts(
+          length: 125, views: 99, published: DateTime.utc(2020), asked: DateTime.now());
     }, file);
     final item = feedItem('aaaaaaaaaaa');
     expect(lookup.needs(item), isTrue);
@@ -76,7 +99,8 @@ void main() {
     expect(filled.published, DateTime.utc(2026, 11));
     expect(asked, ['aaaaaaaaaaa']);
 
-    final live = const VideoItem(id: 'bbbbbbbbbbb', title: 'T', channel: 'C', url: '', liveStatus: 'is_live');
+    final live = const VideoItem(
+        id: 'bbbbbbbbbbb', title: 'T', channel: 'C', url: '', liveStatus: 'is_live');
     expect(lookup.needs(live), isFalse);
     expect(identical(lookup.of(live), live), isTrue);
 
@@ -95,18 +119,27 @@ void main() {
   });
 
   test('languages never translated are kept, unknown codes dropped', () {
-    final read = AppPreferences.fromJson(const AppPreferences(neverTranslate: ['ja', 'de']).toJson()..['neverTranslate'] = ['ja', 'de', 'xx']);
+    final read = AppPreferences.fromJson(const AppPreferences(neverTranslate: ['ja', 'de']).toJson()
+      ..['neverTranslate'] = ['ja', 'de', 'xx']);
     expect(read.neverTranslate, ['ja', 'de']);
     expect(AppPreferences.fromJson(const <String, dynamic>{}).neverTranslate, isEmpty);
   });
 
   test('a search for the id gives the facts when /player wants sign-in', () {
     final asked = DateTime.utc(2026, 11, 12);
-    const line = '{"_type": "url", "id": "LRvSRV4WeOg", "duration": 151.0, "view_count": 28000, "timestamp": 1794400000}';
+    const line =
+        '{"_type": "url", "id": "LRvSRV4WeOg", "duration": 151.0, "view_count": 28000, "timestamp": 1794400000}';
     final facts = VideoFactsLookup.factsOfListing(line, 'LRvSRV4WeOg', asked)!;
-    expect((facts.length, facts.views, facts.published), (151, 28000, DateTime.fromMillisecondsSinceEpoch(1794400000 * 1000, isUtc: true)));
+    expect((facts.length, facts.views, facts.published),
+        (151, 28000, DateTime.fromMillisecondsSinceEpoch(1794400000 * 1000, isUtc: true)));
     expect(VideoFactsLookup.factsOfListing(line, 'otherVideo1', asked), isNull);
-    expect(VideoFactsLookup.factsOfListing('{"id": "LRvSRV4WeOg", "live_status": "is_live", "duration": 0}', 'LRvSRV4WeOg', asked)!.liveStatus, 'is_live');
+    expect(
+        VideoFactsLookup.factsOfListing(
+                '{"id": "LRvSRV4WeOg", "live_status": "is_live", "duration": 0}',
+                'LRvSRV4WeOg',
+                asked)!
+            .liveStatus,
+        'is_live');
     expect(VideoFactsLookup.factsOfListing('not json', 'LRvSRV4WeOg', asked), isNull);
   });
 

@@ -54,7 +54,9 @@ class IosPython {
     // Lumtub's challenge solver (the core's QuickJS) is registered once for
     // every run, not loaded as a plugin by each.
     final plugins = await JsChallengePlugin.install(temporary);
-    final solver = plugins == null ? null : [plugins, 'lumtub', 'yt_dlp_plugins', 'extractor', 'lumtub_jsc.py'].join('/');
+    final solver = plugins == null
+        ? null
+        : [plugins, 'lumtub', 'yt_dlp_plugins', 'extractor', 'lumtub_jsc.py'].join('/');
     final config = utf8.encode(jsonEncode({
       'library': library,
       'home': home,
@@ -72,7 +74,8 @@ class IosPython {
   }
 
   /// Whether [executable] is a yt-dlp to run in Python.
-  static bool runs(String executable) => current != null && (executable.endsWith('/yt-dlp') || executable.endsWith('/yt-dlp-bundled'));
+  static bool runs(String executable) =>
+      current != null && (executable.endsWith('/yt-dlp') || executable.endsWith('/yt-dlp-bundled'));
 
   /// Starts the zip app [app] with [arguments]. A proxy the caller put in
   /// [environment] goes back into the arguments: the run shares the app's
@@ -84,7 +87,8 @@ class IosPython {
       ...arguments,
     ];
     final process = IosPythonProcess._(_bindings);
-    final request = utf8.encode(jsonEncode({'app': app, 'argv': argv, 'environment': YtDlpTls.inProcess}));
+    final request =
+        utf8.encode(jsonEncode({'app': app, 'argv': argv, 'environment': YtDlpTls.inProcess}));
     if (!_withBytes(request, (p, n) => _bindings.start(process._port.sendPort.nativePort, p, n))) {
       process._fail('yt-dlp could not be started in Python');
     }
@@ -164,8 +168,10 @@ class IosPythonProcess implements Process {
 
 class _Bindings {
   _Bindings(DynamicLibrary library)
-      : configure = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_py_configure'),
-        start = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_py_start'),
+      : configure = library.lookupFunction<Bool Function(Pointer<Uint8>, Size),
+            bool Function(Pointer<Uint8>, int)>('lumtub_py_configure'),
+        start = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+            bool Function(int, Pointer<Uint8>, int)>('lumtub_py_start'),
         kill = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_py_kill');
 
   final bool Function(Pointer<Uint8>, int) configure;

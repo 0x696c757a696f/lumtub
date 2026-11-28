@@ -13,21 +13,31 @@ sealed class YoutubeLink {
   /// `AppController.parseYoutubeId`'s.
   static YoutubeLink? parse(String input) {
     final text = input.trim();
-    final url = Uri.tryParse(RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
+    final url = Uri.tryParse(
+        RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
     if (url == null || url.scheme != 'https') return null;
-    if (!const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}.contains(url.host)) return null;
+    if (!const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}
+        .contains(url.host)) {
+      return null;
+    }
     final path = url.pathSegments.where((part) => part.isNotEmpty).toList();
     if (path.isEmpty) return null;
     if (path.first == 'playlist') {
       final id = url.queryParameters['list'] ?? '';
       return PlaylistResult.isValidId(id) ? PlaylistLink(id) : null;
     }
-    if (path.first == 'post' && path.length >= 2 && _postId.hasMatch(path[1])) return PostLink(path[1]);
+    if (path.first == 'post' && path.length >= 2 && _postId.hasMatch(path[1])) {
+      return PostLink(path[1]);
+    }
     // The old address of a post: the channel's community tab with `lb`.
     final lb = url.queryParameters['lb'] ?? '';
     if (_postId.hasMatch(lb) && path.contains('community')) return PostLink(lb);
-    if (path.first == 'channel' && path.length >= 2 && ChannelRef.isValidId(path[1])) return ChannelLink(path[1]);
-    if (path.first.startsWith('@') && RegExp(r'^@[^\s/?#&]{1,100}$').hasMatch(path.first)) return HandleLink(path.first);
+    if (path.first == 'channel' && path.length >= 2 && ChannelRef.isValidId(path[1])) {
+      return ChannelLink(path[1]);
+    }
+    if (path.first.startsWith('@') && RegExp(r'^@[^\s/?#&]{1,100}$').hasMatch(path.first)) {
+      return HandleLink(path.first);
+    }
     return null;
   }
 }
@@ -60,14 +70,19 @@ class PlaylistLink extends YoutubeLink {
 
 /// The title and owner of playlist [id] from YouTube's oEmbed answer, or
 /// null.
-Future<PlaylistResult?> linkPlaylist(http.Client client, String id, {Duration timeout = const Duration(seconds: 4)}) async {
+Future<PlaylistResult?> linkPlaylist(http.Client client, String id,
+    {Duration timeout = const Duration(seconds: 4)}) async {
   try {
-    final address = Uri.https('www.youtube.com', '/oembed', {'url': 'https://www.youtube.com/playlist?list=$id', 'format': 'json'});
+    final address = Uri.https('www.youtube.com', '/oembed',
+        {'url': 'https://www.youtube.com/playlist?list=$id', 'format': 'json'});
     final reply = await client.get(address).timeout(timeout);
     if (reply.statusCode != 200) return null;
     final answer = jsonDecode(utf8.decode(reply.bodyBytes));
     if (answer is! Map || answer['title'] is! String) return null;
-    return PlaylistResult(id: id, title: (answer['title'] as String).trim(), channel: answer['author_name'] is String ? (answer['author_name'] as String).trim() : '');
+    return PlaylistResult(
+        id: id,
+        title: (answer['title'] as String).trim(),
+        channel: answer['author_name'] is String ? (answer['author_name'] as String).trim() : '');
   } catch (_) {
     return null;
   }
@@ -75,18 +90,25 @@ Future<PlaylistResult?> linkPlaylist(http.Client client, String id, {Duration ti
 
 /// What a pasted youtube.com or youtu.be link to [id] is, before anything
 /// else is known: a card that names the video by its id.
-VideoItem linkPlaceholder(String id) => VideoItem(id: id, title: tr('YouTube video · {0}', [id]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$id');
+VideoItem linkPlaceholder(String id) => VideoItem(
+    id: id,
+    title: tr('YouTube video · {0}', [id]),
+    channel: 'YouTube',
+    url: 'https://www.youtube.com/watch?v=$id');
 
 /// Whether [item] is still only [linkPlaceholder]: no channel known and
 /// the id for a title.
-bool isLinkPlaceholder(VideoItem item) => item.channelId == null && item.channel == 'YouTube' && item.title.contains(item.id);
+bool isLinkPlaceholder(VideoItem item) =>
+    item.channelId == null && item.channel == 'YouTube' && item.title.contains(item.id);
 
 /// The title and channel name of video [id] from YouTube's oEmbed answer,
 /// which comes back in well under a second; null when YouTube does not
 /// answer (private or removed video, no network).
-Future<VideoItem?> linkVideo(http.Client client, String id, {Duration timeout = const Duration(seconds: 4)}) async {
+Future<VideoItem?> linkVideo(http.Client client, String id,
+    {Duration timeout = const Duration(seconds: 4)}) async {
   try {
-    final address = Uri.https('www.youtube.com', '/oembed', {'url': 'https://www.youtube.com/watch?v=$id', 'format': 'json'});
+    final address = Uri.https('www.youtube.com', '/oembed',
+        {'url': 'https://www.youtube.com/watch?v=$id', 'format': 'json'});
     final reply = await client.get(address).timeout(timeout);
     if (reply.statusCode != 200) return null;
     return linkVideoOf(id, jsonDecode(utf8.decode(reply.bodyBytes)));
@@ -118,8 +140,13 @@ VideoItem filledFromDetails(VideoItem item, VideoDetails details, {int? length})
   final placeholder = isLinkPlaceholder(item);
   return VideoItem(
     id: item.id,
-    title: (placeholder || item.title.trim().isEmpty) && details.title.isNotEmpty ? details.title : item.title,
-    channel: (placeholder || item.channel.trim().isEmpty || item.channel == 'YouTube') && details.channel.isNotEmpty ? details.channel : item.channel,
+    title: (placeholder || item.title.trim().isEmpty) && details.title.isNotEmpty
+        ? details.title
+        : item.title,
+    channel: (placeholder || item.channel.trim().isEmpty || item.channel == 'YouTube') &&
+            details.channel.isNotEmpty
+        ? details.channel
+        : item.channel,
     duration: item.duration ?? (item.isLive ? null : length),
     url: item.url,
     viewCount: item.viewCount ?? (item.isLive ? null : details.viewCount),
@@ -130,7 +157,10 @@ VideoItem filledFromDetails(VideoItem item, VideoDetails details, {int? length})
     scheduledStart: item.scheduledStart ?? details.scheduledStart,
     width: item.width,
     height: item.height,
-    description: item.description ?? (details.description.isEmpty ? null : details.description.substring(0, details.description.length.clamp(0, 300))),
+    description: item.description ??
+        (details.description.isEmpty
+            ? null
+            : details.description.substring(0, details.description.length.clamp(0, 300))),
     isShortListing: item.isShortListing,
     membersOnly: item.membersOnly,
     age: item.age,

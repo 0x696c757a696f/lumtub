@@ -16,42 +16,70 @@ class DanmakuSettings {
   factory DanmakuSettings.fromJson(Object? raw) {
     const d = DanmakuSettings();
     if (raw is! Map) return d;
-    double number(String key, double fallback, double min, double max) => raw[key] is num ? (raw[key] as num).toDouble().clamp(min, max) : fallback;
+    double number(String key, double fallback, double min, double max) =>
+        raw[key] is num ? (raw[key] as num).toDouble().clamp(min, max) : fallback;
     return DanmakuSettings(
       enabled: raw['enabled'] is bool ? raw['enabled'] as bool : d.enabled,
       opacity: number('opacity', d.opacity, 0.2, 1),
       // Before version 3 the default was 44, which read too small.
-      size: (raw['version'] is! int || (raw['version'] as int) < 3) && raw['size'] == 44 ? d.size : number('size', d.size, 24, 96),
+      size: (raw['version'] is! int || (raw['version'] as int) < 3) && raw['size'] == 44
+          ? d.size
+          : number('size', d.size, 24, 96),
       // Before version 2 the default crossed in 8 s, before version 4 in
       // 12 s; both read too fast.
-      seconds: raw['version'] is! int || (raw['version'] as int) < 2 || ((raw['version'] as int) < 4 && raw['seconds'] == 12) ? d.seconds : number('seconds', d.seconds, 4, 20),
+      seconds: raw['version'] is! int ||
+              (raw['version'] as int) < 2 ||
+              ((raw['version'] as int) < 4 && raw['seconds'] == 12)
+          ? d.seconds
+          : number('seconds', d.seconds, 4, 20),
       area: number('area', d.area, 0.25, 1),
       paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
       comments: raw['comments'] is bool ? raw['comments'] as bool : d.comments,
     );
   }
 
-  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 52, this.seconds = 16, this.area = 0.5, this.paid = true, this.comments = true});
+  const DanmakuSettings(
+      {this.enabled = false,
+      this.opacity = 0.85,
+      this.size = 52,
+      this.seconds = 16,
+      this.area = 0.5,
+      this.paid = true,
+      this.comments = true});
 
   /// The chat flies across the picture.
   final bool enabled;
+
   /// 0.2 to 1.
   final double opacity;
+
   /// Text height for a 1080-line picture.
   final double size;
+
   /// How long a message takes to cross: the speed.
   final double seconds;
+
   /// The share of the picture from the top: 0.25, 0.5 or 1.
   final double area;
+
   /// Super Chats, stickers and memberships too.
   final bool paid;
+
   /// On a video without a chat, the comments that name a moment of it fly
   /// at that moment.
   final bool comments;
 
   static const areas = [0.25, 0.5, 1.0];
 
-  DanmakuSettings copyWith({bool? enabled, double? opacity, double? size, double? seconds, double? area, bool? paid, bool? comments}) => DanmakuSettings(
+  DanmakuSettings copyWith(
+          {bool? enabled,
+          double? opacity,
+          double? size,
+          double? seconds,
+          double? area,
+          bool? paid,
+          bool? comments}) =>
+      DanmakuSettings(
         enabled: enabled ?? this.enabled,
         opacity: opacity ?? this.opacity,
         size: size ?? this.size,
@@ -61,13 +89,29 @@ class DanmakuSettings {
         comments: comments ?? this.comments,
       );
 
-  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'comments': comments, 'version': 4};
+  Map<String, Object> toJson() => {
+        'enabled': enabled,
+        'opacity': opacity,
+        'size': size,
+        'seconds': seconds,
+        'area': area,
+        'paid': paid,
+        'comments': comments,
+        'version': 4
+      };
 
   /// What the layout in lumtub_core needs.
-  String get layoutJson => jsonEncode({'font_size': size, 'duration_ms': seconds * 1000, 'area': area, 'opacity': opacity, 'font': PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont)});
+  String get layoutJson => jsonEncode({
+        'font_size': size,
+        'duration_ms': seconds * 1000,
+        'area': area,
+        'opacity': opacity,
+        'font': PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont)
+      });
 
   @override
-  bool operator ==(Object other) => other is DanmakuSettings && jsonEncode(toJson()) == jsonEncode(other.toJson());
+  bool operator ==(Object other) =>
+      other is DanmakuSettings && jsonEncode(toJson()) == jsonEncode(other.toJson());
 
   @override
   int get hashCode => jsonEncode(toJson()).hashCode;
@@ -81,6 +125,7 @@ class DanmakuSettings {
 class LiveDanmakuTiming {
   double? _onTime;
   double _delay = 0;
+
   /// Later than this past on time, a message flies at once.
   static const mostBehind = 15000.0;
 
@@ -113,8 +158,10 @@ class DanmakuOverlay extends ChangeNotifier {
   DanmakuOverlay(this.player);
 
   final Player player;
+
   /// Bookkeeping: messages given to the layout ahead, old ones forgotten.
   static const _tickEvery = Duration(milliseconds: 250);
+
   /// Live messages with emoji kept to draw: more than can be on screen.
   static const _keptLive = 500;
 
@@ -130,8 +177,10 @@ class DanmakuOverlay extends ChangeNotifier {
   bool _live = false;
   final _liveClock = Stopwatch();
   final _added = <String>{};
+
   /// The ids a live keeps to tell new messages from those already shown.
   static const _liveIds = 5000;
+
   /// A replay's messages not given to the layout yet, by start: each is
   /// laid out a little before it flies, not all when danmaku starts.
   final _waiting = <(double, LiveChatMessage)>[];
@@ -139,6 +188,7 @@ class DanmakuOverlay extends ChangeNotifier {
   static const _ahead = 30000.0;
   var _timing = LiveDanmakuTiming();
   Timer? _timer;
+
   /// Bumped whenever the layout takes messages: [visibleAt] asks again.
   int _revision = 0;
   int get revision => _revision;
@@ -161,7 +211,10 @@ class DanmakuOverlay extends ChangeNotifier {
     _settings = settings;
     _live = live;
     _layout = core.withText(settings.layoutJson, core.danmakuNew);
-    _painter = DanmakuPainter(font: PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont), size: settings.size, opacity: settings.opacity);
+    _painter = DanmakuPainter(
+        font: PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont),
+        size: settings.size,
+        opacity: settings.opacity);
     _liveClock
       ..reset()
       ..start();
@@ -187,7 +240,8 @@ class DanmakuOverlay extends ChangeNotifier {
       if (!state.playing && _liveClock.isRunning) _liveClock.stop();
       return _liveClock.elapsedMicroseconds / 1000;
     }
-    return _replayClock.at(state.position.inMicroseconds / 1000, playing: state.playing, rate: state.rate);
+    return _replayClock.at(state.position.inMicroseconds / 1000,
+        playing: state.playing, rate: state.rate);
   }
 
   /// How long a message takes to cross, in ms.
@@ -208,7 +262,13 @@ class DanmakuOverlay extends ChangeNotifier {
       final paid = row[4] == true;
       final parts = picture == null ? [DanmakuText('${row[3]}')] : _pictureParts[picture]?.$1;
       if (parts == null) continue;
-      items.add(DanmakuItem(start: (row[0] as num).toDouble(), width: (row[1] as num).toDouble(), lane: (row[2] as num).toInt(), parts: parts, paid: paid, key: picture == null ? 't${row[0]}:${row[2]}:${row[3]}' : 'p$picture'));
+      items.add(DanmakuItem(
+          start: (row[0] as num).toDouble(),
+          width: (row[1] as num).toDouble(),
+          lane: (row[2] as num).toInt(),
+          parts: parts,
+          paid: paid,
+          key: picture == null ? 't${row[0]}:${row[2]}:${row[3]}' : 'p$picture'));
     }
     return items;
   }
@@ -289,7 +349,8 @@ class DanmakuOverlay extends ChangeNotifier {
     }
   }
 
-  static String _textOf(LiveChatMessage message) => message.text.trim().isNotEmpty ? message.text : message.amount ?? '';
+  static String _textOf(LiveChatMessage message) =>
+      message.text.trim().isNotEmpty ? message.text : message.amount ?? '';
 
   Map<String, Object> _entry(double start, LiveChatMessage message) {
     final paid = message.kind != LiveChatKind.message;
@@ -431,7 +492,13 @@ class ReplayClock {
 /// A message on screen: [start] is when it came in at the right edge, at
 /// the top of [lane], [width] wide in a 1920-wide picture.
 class DanmakuItem {
-  const DanmakuItem({required this.start, required this.width, required this.lane, required this.parts, required this.paid, required this.key});
+  const DanmakuItem(
+      {required this.start,
+      required this.width,
+      required this.lane,
+      required this.parts,
+      required this.paid,
+      required this.key});
   final double start;
   final double width;
   final int lane;

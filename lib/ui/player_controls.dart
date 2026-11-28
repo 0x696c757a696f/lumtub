@@ -134,11 +134,15 @@ const _sponsorColors = {
   'filler': Color(0xFF7300FF),
 };
 
-bool _isTouch(PointerDeviceKind? kind) => kind == PointerDeviceKind.touch || kind == PointerDeviceKind.stylus || kind == PointerDeviceKind.invertedStylus;
+bool _isTouch(PointerDeviceKind? kind) =>
+    kind == PointerDeviceKind.touch ||
+    kind == PointerDeviceKind.stylus ||
+    kind == PointerDeviceKind.invertedStylus;
 
 /// The controls over the video: bars, gestures, keys and the panels they open.
 class PlayerControls extends StatefulWidget {
-  const PlayerControls({super.key, required this.player, required this.state, required this.controller});
+  const PlayerControls(
+      {super.key, required this.player, required this.state, required this.controller});
   final Player player;
   final VideoState? state;
   final AppController controller;
@@ -148,7 +152,8 @@ class PlayerControls extends StatefulWidget {
 }
 
 class _PlayerControlsState extends State<PlayerControls> with SingleTickerProviderStateMixin {
-  late final AnimationController _bars = AnimationController(vsync: this, duration: Motion.of(Ease.fade), value: 1);
+  late final AnimationController _bars =
+      AnimationController(vsync: this, duration: Motion.of(Ease.fade), value: 1);
   final _focus = FocusNode(debugLabel: 'player controls', skipTraversal: true);
   final _bottomKey = GlobalKey();
   late final PictureTransform _picture = PictureTransform(widget.player);
@@ -159,9 +164,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Timer? _feedbackTimer;
   int _menus = 0;
   bool _overBar = false;
+
   /// Round each bar, to see the focus come into it.
   final _topBarFocus = FocusNode(canRequestFocus: false, skipTraversal: true);
   final _bottomBarFocus = FocusNode(canRequestFocus: false, skipTraversal: true);
+
   /// The keyboard has moved the focus into the bars, which hold open.
   bool _keysInBars = false;
   final _sinceHover = Stopwatch();
@@ -199,7 +206,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   AppController get _c => widget.controller;
   Player get _player => widget.player;
 
-  bool get _barsShown => _bars.status == AnimationStatus.forward || _bars.status == AnimationStatus.completed;
+  bool get _barsShown =>
+      _bars.status == AnimationStatus.forward || _bars.status == AnimationStatus.completed;
 
   @override
   void initState() {
@@ -365,13 +373,22 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _autoHide() {
     // A screen reader finds buttons by moving through them: bars that
     // slip away under it leave nothing to find.
-    if (!mounted || !_player.state.playing || _menus > 0 || _overBar || _keysInBars || Accessibility.screenReader(context)) return;
+    if (!mounted ||
+        !_player.state.playing ||
+        _menus > 0 ||
+        _overBar ||
+        _keysInBars ||
+        Accessibility.screenReader(context)) {
+      return;
+    }
     _bars.duration = Motion.of(Ease.fade);
     _bars.reverse();
     _leaveBars();
     if (isFullscreen(context) && WindowFrame.supported && !Device.tv) {
       final box = context.findRenderObject();
-      if (box is RenderBox && box.hasSize) unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
+      if (box is RenderBox && box.hasSize) {
+        unawaited(WindowFrame.hidePointer(box.localToGlobal(Offset.zero) & box.size));
+      }
     }
   }
 
@@ -397,7 +414,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         _keysInBars = false;
         _restartHide();
       }
-    } else if (!_keysInBars && !Device.tv && HardwareKeyboard.instance.logicalKeysPressed.isNotEmpty) {
+    } else if (!_keysInBars &&
+        !Device.tv &&
+        HardwareKeyboard.instance.logicalKeysPressed.isNotEmpty) {
       _keysInBars = true;
       _showBars();
       _hideTimer?.cancel();
@@ -459,7 +478,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       Haptics.select();
       unawaited(_player.playOrPause().then((_) {
         final playing = _player.state.playing;
-        _showFeedback(playing ? AppIcons.pauseFill : AppIcons.playFill, playing ? tr('Pause') : tr('Play'));
+        _showFeedback(
+            playing ? AppIcons.pauseFill : AppIcons.playFill, playing ? tr('Pause') : tr('Play'));
       }));
     } else {
       unawaited(toggleFullscreenFrom(widget.state));
@@ -495,7 +515,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         unawaited(_c.toggleMute().then((_) {
           if (!mounted) return;
           final muted = _player.state.volume == 0;
-          _showFeedback(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${_player.state.volume.round()}%');
+          _showFeedback(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill,
+              muted ? tr('Mute') : '${_player.state.volume.round()}%');
         }));
       case MiddleClick.fillWindow:
         unawaited(toggleFillWindow(widget.state));
@@ -619,13 +640,24 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _onHorizontalUpdate(DragUpdateDetails details) {
     final from = _seekFrom;
     final duration = _player.state.duration;
-    if (!_dragLive || _pinching || from == null || duration <= Duration.zero || _lastBox.width <= 0) return;
+    if (!_dragLive ||
+        _pinching ||
+        from == null ||
+        duration <= Duration.zero ||
+        _lastBox.width <= 0) {
+      return;
+    }
     _horizontalTotal += details.primaryDelta ?? 0;
     final span = duration < const Duration(minutes: 3) ? duration : const Duration(minutes: 3);
     final raw = from + span * (_horizontalTotal / _lastBox.width);
-    final target = raw < Duration.zero ? Duration.zero : raw > duration ? duration : raw;
+    final target = raw < Duration.zero
+        ? Duration.zero
+        : raw > duration
+            ? duration
+            : raw;
     _seekTo = target;
-    _showFeedback(_horizontalTotal >= 0 ? AppIcons.fastForwardFill : AppIcons.rewindFill, '${formatPlaybackTime(target)} / ${formatPlaybackTime(duration)}');
+    _showFeedback(_horizontalTotal >= 0 ? AppIcons.fastForwardFill : AppIcons.rewindFill,
+        '${formatPlaybackTime(target)} / ${formatPlaybackTime(duration)}');
   }
 
   void _onHorizontalEnd(DragEndDetails details) {
@@ -649,7 +681,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   Future<void> _stepBrightness(int delta) async {
     final value = await _c.changeBrightness(delta);
-    _showFeedback(value < 0 ? AppIcons.sunDim : AppIcons.sun, tr('Brightness {0}', [value > 0 ? '+$value' : '$value']));
+    _showFeedback(value < 0 ? AppIcons.sunDim : AppIcons.sun,
+        tr('Brightness {0}', [value > 0 ? '+$value' : '$value']));
   }
 
   void _onSignal(PointerSignalEvent event) {
@@ -658,7 +691,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final modifier = keyboard.isControlPressed || (Platform.isMacOS && keyboard.isMetaPressed);
     final mode = _c.preferences.wheelGesture;
     if (!modifier && mode == WheelGesture.off) return;
-    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) => _scroll(resolved as PointerScrollEvent, modifier));
+    GestureBinding.instance.pointerSignalResolver
+        .register(event, (resolved) => _scroll(resolved as PointerScrollEvent, modifier));
   }
 
   void _scroll(PointerScrollEvent event, bool modifier) {
@@ -690,7 +724,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final prefs = _c.preferences;
     if (_bindings == null || !identical(_bindingsFor, prefs)) {
       _bindingsFor = prefs;
-      _bindings = playerShortcuts(_c, () => widget.state, onFeedback: _showFeedback, onScreenshot: _screenshot);
+      _bindings = playerShortcuts(_c, () => widget.state,
+          onFeedback: _showFeedback, onScreenshot: _screenshot);
     }
     return _bindings!;
   }
@@ -700,7 +735,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (!Device.tv || event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    final ok = key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.gameButtonA;
+    final ok = key == LogicalKeyboardKey.select ||
+        key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.gameButtonA;
     final direction = switch (key) {
       LogicalKeyboardKey.arrowUp => TraversalDirection.up,
       LogicalKeyboardKey.arrowDown => TraversalDirection.down,
@@ -733,11 +771,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _focusBottomBar() {
     final nodes = [
       for (final node in _focus.descendants)
-        if (node is! FocusScopeNode && node.canRequestFocus && !node.skipTraversal && node.context != null && node.context!.mounted) node,
+        if (node is! FocusScopeNode &&
+            node.canRequestFocus &&
+            !node.skipTraversal &&
+            node.context != null &&
+            node.context!.mounted)
+          node,
     ];
     if (nodes.isEmpty) return;
     final lowest = nodes.map((n) => n.rect.bottom).reduce(math.max);
-    final row = nodes.where((n) => n.rect.bottom >= lowest - 4).toList()..sort((a, b) => a.rect.left.compareTo(b.rect.left));
+    final row = nodes.where((n) => n.rect.bottom >= lowest - 4).toList()
+      ..sort((a, b) => a.rect.left.compareTo(b.rect.left));
     row.first.requestFocus();
   }
 
@@ -751,14 +795,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     return switch (paints.last) {
       SolidPaint(:final color) => (color, null),
       final LinearPaint paint when paint.colors.isNotEmpty => (paint.colors.last, paint.gradient),
-      RadialPaint(:final colors, :final stops) when colors.isNotEmpty => (colors.last, LinearGradient(colors: colors, stops: stops)),
+      RadialPaint(:final colors, :final stops) when colors.isNotEmpty => (
+          colors.last,
+          LinearGradient(colors: colors, stops: stops)
+        ),
       _ => (fallback, null),
     };
   }
 
   ({double side, double above}) _letterbox(Size box) {
     final fit = videoFit.value;
-    if (fit != VideoFit.contain && fit.aspectRatio == null || box.isEmpty) return (side: 0, above: 0);
+    if (fit != VideoFit.contain && fit.aspectRatio == null || box.isEmpty) {
+      return (side: 0, above: 0);
+    }
     final state = _player.state;
     final ratio = videoAspectFor(fit.aspectRatio, state.width, state.height);
     var width = box.width;
@@ -796,7 +845,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               WidgetsBinding.instance.addPostFrameCallback((_) => _updateLift());
             }
             final letter = _letterbox(box);
-            final extra = fullscreen ? math.max(0.0, letter.side - math.max(padding.left, padding.right)) : 0.0;
+            final extra = fullscreen
+                ? math.max(0.0, letter.side - math.max(padding.left, padding.right))
+                : 0.0;
             return AnimatedBuilder(
               animation: _bars,
               child: Listener(
@@ -820,13 +871,26 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       child: IgnorePointer(
                         child: FadeTransition(
                           opacity: ReverseAnimation(_bars),
-                          child: MiniProgressLine(player: _player, color: Theme.of(context).colorScheme.inversePrimary),
+                          child: MiniProgressLine(
+                              player: _player, color: Theme.of(context).colorScheme.inversePrimary),
                         ),
                       ),
                     ),
                   if (!locked) ...[
-                    Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen, phone, extra, box))),
-                    Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen, phone, extra, color, gradient, box))),
+                    Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        child: _bar(
+                            top: true, child: _topBar(context, fullscreen, phone, extra, box))),
+                    Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _bar(
+                            top: false,
+                            child: _bottomBar(
+                                context, fullscreen, phone, extra, color, gradient, box))),
                   ],
                   if (!locked && _c.playing != null)
                     PositionedDirectional(
@@ -848,7 +912,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                             child: LearningDrawerHandle(controller: _c),
                             builder: (context, child) => IgnorePointer(
                               ignoring: _bars.value < 0.5,
-                              child: FractionalTranslation(translation: Offset(1 - Ease.out.transform(_bars.value), 0), child: child),
+                              child: FractionalTranslation(
+                                  translation: Offset(1 - Ease.out.transform(_bars.value), 0),
+                                  child: child),
                             ),
                           ),
                         ),
@@ -863,7 +929,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                   if (event.kind != PointerDeviceKind.mouse) return;
                   // A moving mouse sends many events; the hide timer needs
                   // starting again only now and then.
-                  if (_barsShown && _sinceHover.isRunning && _sinceHover.elapsedMilliseconds < 250) return;
+                  if (_barsShown &&
+                      _sinceHover.isRunning &&
+                      _sinceHover.elapsedMilliseconds < 250) {
+                    return;
+                  }
                   _sinceHover
                     ..reset()
                     ..start();
@@ -880,7 +950,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Whether a mouse drag on the picture moves the window: only while the
   /// video fills the window, not in fullscreen.
-  bool get _movesWindow => WindowFrame.supported && fillingWindow.value && !WindowChrome.fullscreen.value && !_c.pip;
+  bool get _movesWindow =>
+      WindowFrame.supported && fillingWindow.value && !WindowChrome.fullscreen.value && !_c.pip;
 
   Widget _surface() => RawGestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -892,11 +963,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ..onSecondaryTap = _onSecondaryTap
               ..onTertiaryTapUp = _onTertiaryTapUp,
           ),
-          DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+          DoubleTapGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
             DoubleTapGestureRecognizer.new,
             (recognizer) => recognizer.onDoubleTap = _onDoubleTap,
           ),
-          LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
             LongPressGestureRecognizer.new,
             (recognizer) => recognizer
               ..onLongPressStart = ((_) => _holdStart())
@@ -907,21 +980,33 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           // hold, so the picture itself moves the window.
           if (_movesWindow)
             PanGestureRecognizer: GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
-              () => PanGestureRecognizer(supportedDevices: const {PointerDeviceKind.mouse}, allowedButtonsFilter: (buttons) => buttons == kPrimaryButton),
+              () => PanGestureRecognizer(
+                  supportedDevices: const {PointerDeviceKind.mouse},
+                  allowedButtonsFilter: (buttons) => buttons == kPrimaryButton),
               (recognizer) => recognizer.onStart = (_) {
                 if (_movesWindow) AppWindow.startDrag();
               },
             ),
           if (!_locked) ...{
-            VerticalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
-              () => VerticalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),
+            VerticalDragGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
+              () => VerticalDragGestureRecognizer(supportedDevices: const {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.invertedStylus
+              }),
               (recognizer) => recognizer
                 ..onStart = _onVerticalStart
                 ..onUpdate = _onVerticalUpdate
                 ..onEnd = _onVerticalEnd,
             ),
-            HorizontalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
-              () => HorizontalDragGestureRecognizer(supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}),
+            HorizontalDragGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
+              () => HorizontalDragGestureRecognizer(supportedDevices: const {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.invertedStylus
+              }),
               (recognizer) => recognizer
                 ..onStart = _onHorizontalStart
                 ..onUpdate = _onHorizontalUpdate
@@ -962,15 +1047,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         builder: (context, child) {
           final hidden = 1 - Ease.out.transform(_bars.value);
-          return FractionalTranslation(translation: Offset(0, top ? -hidden : 1.2 * hidden), child: child);
+          return FractionalTranslation(
+              translation: Offset(0, top ? -hidden : 1.2 * hidden), child: child);
         },
       ),
     );
   }
 
-  Widget _statsOverlay(Size box, ({double side, double above}) letter, bool fullscreen, EdgeInsets padding) {
+  Widget _statsOverlay(
+      Size box, ({double side, double above}) letter, bool fullscreen, EdgeInsets padding) {
     final start = math.max(letter.side, padding.left) + 12;
-    final top = math.max(letter.above + 8, math.max(fullscreen ? padding.top : 0.0, fullscreen ? 64.0 : 52.0));
+    final top = math.max(
+        letter.above + 8, math.max(fullscreen ? padding.top : 0.0, fullscreen ? 64.0 : 52.0));
     final maxWidth = math.max(0.0, box.width - start - math.max(letter.side, 12));
     final maxHeight = math.max(0.0, box.height - top - math.max(letter.above, 8));
     return Positioned(
@@ -982,7 +1070,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           initialData: _player.state.width,
           builder: (context, _) => ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
-            child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.topLeft, child: PlayerStats(player: _player)),
+            child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.topLeft,
+                child: PlayerStats(player: _player)),
           ),
         ),
       ),
@@ -996,11 +1087,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final details = c.details;
     final item = c.playing;
     final title = details != null && details.title.isNotEmpty ? details.title : item?.title ?? '';
-    final channel = details != null && details.channel.isNotEmpty ? details.channel : item?.channel ?? '';
+    final channel =
+        details != null && details.channel.isNotEmpty ? details.channel : item?.channel ?? '';
     final accent = Theme.of(context).colorScheme.inversePrimary;
     final narrow = box.width < 600;
     final row = Padding(
-      padding: EdgeInsetsDirectional.fromSTEB((fullscreen ? 8 : 4) + extra, fullscreen ? 8 : 4, 8 + extra, 16),
+      padding: EdgeInsetsDirectional.fromSTEB(
+          (fullscreen ? 8 : 4) + extra, fullscreen ? 8 : 4, 8 + extra, 16),
       child: Row(children: [
         _IconBtn(
           icon: AppIcons.arrowLeft,
@@ -1027,16 +1120,32 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           ),
         const SizedBox(width: 4),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
-            if (fullscreen && channel.isNotEmpty)
-              Text(channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: fullscreen ? 16 : 14,
+                        fontWeight: FontWeight.w500)),
+                if (fullscreen && channel.isNotEmpty)
+                  Text(channel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ]),
         ),
-        if (phone && fullscreen && item != null && !narrow) ...[..._countButtons(accent), const SizedBox(width: 8)],
+        if (phone && fullscreen && item != null && !narrow) ...[
+          ..._countButtons(accent),
+          const SizedBox(width: 8)
+        ],
         if (c.pinned) _status(AppIcons.pushPinFill, tr('Window pinned on top'), accent),
         if (c.audioOnly) _status(AppIcons.headphonesFill, tr('Playing audio only'), accent),
-        if (c.sleepAt != null || c.sleepAfterCurrent) _status(AppIcons.moonStars, tr('Sleep timer on'), Colors.white, size: 18),
+        if (c.sleepAt != null || c.sleepAfterCurrent)
+          _status(AppIcons.moonStars, tr('Sleep timer on'), Colors.white, size: 18),
         if (!fullscreen && !phone)
           ValueListenableBuilder<bool>(
             valueListenable: lightsOff,
@@ -1074,7 +1183,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               c.setPip(true);
             },
           ),
-        _IconBtn(icon: AppIcons.slidersHorizontal, size: 20, tooltip: tr('More settings'), onTap: () => _openMore(context)),
+        _IconBtn(
+            icon: AppIcons.slidersHorizontal,
+            size: 20,
+            tooltip: tr('More settings'),
+            onTap: () => _openMore(context)),
       ]),
     );
     return fullscreen ? SafeArea(bottom: false, child: row) : row;
@@ -1082,7 +1195,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   Widget _status(IconData icon, String tooltip, Color color, {double size = 17}) => Tooltip(
         message: tooltip,
-        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Icon(icon, size: size, color: color)),
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Icon(icon, size: size, color: color)),
       );
 
   List<Widget> _countButtons(Color accent) {
@@ -1092,7 +1207,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final account = c.account;
     final liked = account?.ratingOf(item.id) == VideoRating.like;
     final base = c.details?.likeCount ?? c.dislikes?.likes;
-    final likes = base == null ? null : math.max(0, base + (account?.ratingChange(item.id, VideoRating.like) ?? 0));
+    final likes = base == null
+        ? null
+        : math.max(0, base + (account?.ratingChange(item.id, VideoRating.like) ?? 0));
     final library = c.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     return [
@@ -1106,7 +1223,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (account != null && account.active && !account.ratingOff(item.id)) {
             unawaited(account.rate(item, VideoRating.like));
           } else if (account != null && account.active) {
-            _showFeedback(AppIcons.thumbsUp, tr('The uploader turned off likes and dislikes for this video'));
+            _showFeedback(
+                AppIcons.thumbsUp, tr('The uploader turned off likes and dislikes for this video'));
           } else {
             _showFeedback(AppIcons.thumbsUp, tr('Sign in to YouTube to {0}', [tr('Like')]));
           }
@@ -1169,7 +1287,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     tooltip: _locked ? tr('Unlock') : tr('Lock'),
                     onTap: () {
                       setState(() => _locked = !_locked);
-                      _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('Locked') : tr('Unlocked'));
+                      _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen,
+                          _locked ? tr('Locked') : tr('Unlocked'));
                       _showBars();
                     },
                   ),
@@ -1177,7 +1296,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     const SizedBox(height: 12),
                     _CircleButton(
                       icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
-                      tooltip: _orientationLocked ? tr('Rotate with the phone') : tr('Lock screen rotation'),
+                      tooltip: _orientationLocked
+                          ? tr('Rotate with the phone')
+                          : tr('Lock screen rotation'),
                       active: _orientationLocked,
                       accent: accent,
                       onTap: () => _toggleOrientation(context),
@@ -1197,8 +1318,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     setState(() => _orientationLocked = !_orientationLocked);
     _showBars();
     if (_orientationLocked) {
-      unawaited(SystemChrome.setPreferredOrientations(landscape ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : const [DeviceOrientation.portraitUp]));
-      _showFeedback(AppIcons.deviceRotate, landscape ? tr('Locked to landscape') : tr('Locked to portrait'));
+      unawaited(SystemChrome.setPreferredOrientations(landscape
+          ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
+          : const [DeviceOrientation.portraitUp]));
+      _showFeedback(
+          AppIcons.deviceRotate, landscape ? tr('Locked to landscape') : tr('Locked to portrait'));
     } else {
       unawaited(SystemChrome.setPreferredOrientations(const []));
       _showFeedback(AppIcons.deviceRotate, tr('Rotate with the phone'));
@@ -1209,14 +1333,21 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// A choice among [rows]: a sheet on a phone, else a dark popup over or
   /// above the button whose [anchor] context is given.
-  Future<void> _pick<T>(BuildContext anchor, {required String title, required List<(T, String)> rows, required T? current, required void Function(T value) onSelected}) async {
+  Future<void> _pick<T>(BuildContext anchor,
+      {required String title,
+      required List<(T, String)> rows,
+      required T? current,
+      required void Function(T value) onSelected}) async {
     _menuOpened();
     try {
       T? picked;
       if (isPhone(anchor)) {
         picked = await pickFromSheet<T>(
           anchor,
-          [for (final (value, label) in rows) (value: value, icon: null, label: label, selected: value == current)],
+          [
+            for (final (value, label) in rows)
+              (value: value, icon: null, label: label, selected: value == current)
+          ],
           title: title,
         );
       } else {
@@ -1231,7 +1362,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         picked = await showMenu<T>(
           context: anchor,
           useRootNavigator: true,
-          position: RelativeRect.fromLTRB(origin.dx, top, size.width - origin.dx - box.size.width, size.height - top),
+          position: RelativeRect.fromLTRB(
+              origin.dx, top, size.width - origin.dx - box.size.width, size.height - top),
           color: const Color(0xEB1F1F1F),
           elevation: 6,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1244,8 +1376,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 height: touch ? 48 : 36,
                 padding: const EdgeInsets.only(left: 12, right: 16),
                 child: Row(children: [
-                  SizedBox(width: 22, child: value == current ? Icon(AppIcons.check, size: 16, color: accent) : null),
-                  Flexible(child: Text(label, style: TextStyle(color: value == current ? accent : Colors.white, fontSize: 12, fontWeight: value == current ? FontWeight.w600 : FontWeight.normal))),
+                  SizedBox(
+                      width: 22,
+                      child:
+                          value == current ? Icon(AppIcons.check, size: 16, color: accent) : null),
+                  Flexible(
+                      child: Text(label,
+                          style: TextStyle(
+                              color: value == current ? accent : Colors.white,
+                              fontSize: 12,
+                              fontWeight: value == current ? FontWeight.w600 : FontWeight.normal))),
                 ]),
               ),
           ],

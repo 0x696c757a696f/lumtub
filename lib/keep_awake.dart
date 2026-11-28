@@ -19,8 +19,10 @@ class KeepAwake {
   /// Replaced in tests.
   static void Function(int flags)? apply = _systemApply;
 
-  static final _setThreadExecutionState =
-      Platform.isWindows ? DynamicLibrary.open('kernel32.dll').lookupFunction<Uint32 Function(Uint32), int Function(int)>('SetThreadExecutionState') : null;
+  static final _setThreadExecutionState = Platform.isWindows
+      ? DynamicLibrary.open('kernel32.dll')
+          .lookupFunction<Uint32 Function(Uint32), int Function(int)>('SetThreadExecutionState')
+      : null;
 
   static bool? _shellAwake;
 
@@ -32,7 +34,9 @@ class KeepAwake {
     final awake = flags & _displayRequired != 0;
     if (awake == _shellAwake) return;
     _shellAwake = awake;
-    unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setKeepAwake', awake).catchError((Object _) {}));
+    unawaited(const MethodChannel('lumtub/windows_shell')
+        .invokeMethod<void>('setKeepAwake', awake)
+        .catchError((Object _) {}));
   }
 
   static bool _hidden = false;
@@ -51,5 +55,6 @@ class KeepAwake {
     if (changed) _apply();
   }
 
-  static void _apply() => apply?.call(_holders.isEmpty || _hidden ? _continuous : _continuous | _displayRequired);
+  static void _apply() =>
+      apply?.call(_holders.isEmpty || _hidden ? _continuous : _continuous | _displayRequired);
 }

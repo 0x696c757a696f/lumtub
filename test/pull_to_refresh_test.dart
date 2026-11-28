@@ -9,7 +9,9 @@ void main() {
             enabled: enabled,
             onRefresh: onRefresh,
             child: CustomScrollView(slivers: [
-              SliverList.builder(itemCount: 60, itemBuilder: (context, i) => SizedBox(height: 50, child: Text('row $i'))),
+              SliverList.builder(
+                  itemCount: 60,
+                  itemBuilder: (context, i) => SizedBox(height: 50, child: Text('row $i'))),
             ]),
           ),
         ),

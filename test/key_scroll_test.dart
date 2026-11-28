@@ -5,16 +5,20 @@ import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/key_scroll.dart';
 import 'package:material_ui/material_ui.dart';
 
-Widget _twoLists(ScrollController left, ScrollController right, {List<FocusNode>? leftNodes}) => MaterialApp(
+Widget _twoLists(ScrollController left, ScrollController right, {List<FocusNode>? leftNodes}) =>
+    MaterialApp(
       home: Row(children: [
-        Expanded(child: ListView.builder(
+        Expanded(
+            child: ListView.builder(
           key: const Key('left'),
           controller: left,
           itemCount: 100,
           itemExtent: 50,
-          itemBuilder: (context, i) => TextButton(focusNode: leftNodes?[i], onPressed: () {}, child: Text('L$i')),
+          itemBuilder: (context, i) =>
+              TextButton(focusNode: leftNodes?[i], onPressed: () {}, child: Text('L$i')),
         )),
-        Expanded(child: ListView.builder(
+        Expanded(
+            child: ListView.builder(
           key: const Key('right'),
           controller: right,
           itemCount: 100,
@@ -42,7 +46,8 @@ void main() {
     await mouse.removePointer();
   });
 
-  testWidgets('the focus moved by the keyboard since then wins, and is kept in sight', (tester) async {
+  testWidgets('the focus moved by the keyboard since then wins, and is kept in sight',
+      (tester) async {
     final left = ScrollController();
     final right = ScrollController();
     final nodes = List.generate(100, (i) => FocusNode(debugLabel: 'L$i'));
@@ -96,12 +101,31 @@ void main() {
     // narrow list in its middle and empty room on both sides.
     Widget app(ScrollController main, ScrollController side) => MaterialApp(
           home: Row(children: [
-            SizedBox(width: 100, child: ListView(key: const Key('nav'), children: [for (var i = 0; i < 3; i++) SizedBox(height: 40, child: Text('N$i'))])),
-            Expanded(child: KeyedSubtree(key: KeyScroll.area, child: Row(children: [
-              const Expanded(child: SizedBox.expand(key: Key('gap'))),
-              SizedBox(width: 300, child: ListView.builder(controller: main, itemCount: 100, itemExtent: 50, itemBuilder: (context, i) => Text('M$i'))),
-              SizedBox(width: 80, child: ListView.builder(controller: side, itemCount: 100, itemExtent: 50, itemBuilder: (context, i) => Text('S$i'))),
-            ]))),
+            SizedBox(
+                width: 100,
+                child: ListView(key: const Key('nav'), children: [
+                  for (var i = 0; i < 3; i++) SizedBox(height: 40, child: Text('N$i'))
+                ])),
+            Expanded(
+                child: KeyedSubtree(
+                    key: KeyScroll.area,
+                    child: Row(children: [
+                      const Expanded(child: SizedBox.expand(key: Key('gap'))),
+                      SizedBox(
+                          width: 300,
+                          child: ListView.builder(
+                              controller: main,
+                              itemCount: 100,
+                              itemExtent: 50,
+                              itemBuilder: (context, i) => Text('M$i'))),
+                      SizedBox(
+                          width: 80,
+                          child: ListView.builder(
+                              controller: side,
+                              itemCount: 100,
+                              itemExtent: 50,
+                              itemBuilder: (context, i) => Text('S$i'))),
+                    ]))),
           ]),
         );
 
@@ -150,7 +174,9 @@ void main() {
       below.dispose();
       text.dispose();
     });
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Column(children: [
       LeavesByKeys(child: TextField(focusNode: field, controller: text)),
       TextButton(focusNode: below, onPressed: () {}, child: const Text('below')),
     ]))));
@@ -187,16 +213,19 @@ void main() {
     expect(kept, [null, 'picked']);
   });
 
-  testWidgets('a search field in a page list leaves the list its place, coming back twice', (tester) async {
+  testWidgets('a search field in a page list leaves the list its place, coming back twice',
+      (tester) async {
     final list = ScrollController();
-    Widget page(bool shown) => MaterialApp(home: Scaffold(body: shown
-        ? ListView(key: const PageStorageKey('list'), controller: list, children: [
-            for (var i = 0; i < 20; i++) SizedBox(height: 50, child: Text('$i')),
-            // In sight at the place kept.
-            const LeavesByKeys(child: TextField()),
-            for (var i = 20; i < 100; i++) SizedBox(height: 50, child: Text('$i')),
-          ])
-        : const SizedBox()));
+    Widget page(bool shown) => MaterialApp(
+        home: Scaffold(
+            body: shown
+                ? ListView(key: const PageStorageKey('list'), controller: list, children: [
+                    for (var i = 0; i < 20; i++) SizedBox(height: 50, child: Text('$i')),
+                    // In sight at the place kept.
+                    const LeavesByKeys(child: TextField()),
+                    for (var i = 20; i < 100; i++) SizedBox(height: 50, child: Text('$i')),
+                  ])
+                : const SizedBox()));
     await tester.pumpWidget(page(true));
     list.jumpTo(800);
     await tester.pump();
@@ -212,12 +241,13 @@ void main() {
   testWidgets('a sideways strip in a page list keeps its own scroll position', (tester) async {
     final strip = ScrollController();
     final list = ScrollController();
-    Widget page(bool shown) => MaterialApp(home: shown
-        ? ListView(key: const PageStorageKey('list'), controller: list, children: [
-            SizedBox(height: 40, child: FilterFlowStrip(controller: strip)),
-            for (var i = 0; i < 100; i++) SizedBox(height: 50, child: Text('$i')),
-          ])
-        : const SizedBox());
+    Widget page(bool shown) => MaterialApp(
+        home: shown
+            ? ListView(key: const PageStorageKey('list'), controller: list, children: [
+                SizedBox(height: 40, child: FilterFlowStrip(controller: strip)),
+                for (var i = 0; i < 100; i++) SizedBox(height: 50, child: Text('$i')),
+              ])
+            : const SizedBox());
     await tester.pumpWidget(page(true));
     strip.jumpTo(30);
     await tester.pump();

@@ -26,12 +26,16 @@ void main() {
 
   test('automatic codecs follow the hardware and the quality', () {
     const soft = DecoderStatus.software();
-    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': soft}).disabledCodecs, {VideoCodec.av1});
+    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': soft}).disabledCodecs,
+        {VideoCodec.av1});
     expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw}).disabledCodecs, isEmpty);
-    expect(const PlayerSettings(decoderResults: {'vp9': soft, 'av1': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(const PlayerSettings(decoderResults: {'vp9': soft, 'av1': soft}).disabledCodecs,
+        {VideoCodec.av1, VideoCodec.vp9});
     // H.264 stops at 1080p: above it VP9 stays enabled, even in software.
-    expect(const PlayerSettings(maxHeight: 2160, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1});
-    expect(const PlayerSettings(maxHeight: 1080, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(const PlayerSettings(maxHeight: 2160, decoderResults: {'vp9': soft}).disabledCodecs,
+        {VideoCodec.av1});
+    expect(const PlayerSettings(maxHeight: 1080, decoderResults: {'vp9': soft}).disabledCodecs,
+        {VideoCodec.av1, VideoCodec.vp9});
   });
 
   test('a choice equal to the automatic one stays automatic', () {
@@ -61,33 +65,47 @@ void main() {
   test('H.264 can be disabled only with VP9 or AV1 in hardware', () {
     expect(FormatPolicy.canDisableH264(const PlayerSettings()), isFalse);
     expect(FormatPolicy.canDisableH264(const PlayerSettings(decoderResults: {'av1': _hw})), isTrue);
-    expect(FormatPolicy.canDisableH264(const PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw})), isFalse);
+    expect(
+        FormatPolicy.canDisableH264(
+            const PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw})),
+        isFalse);
   });
 
   test('knows when VP9 or AV1 can only be decoded in software', () {
     const soft = DecoderStatus.software();
-    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': soft}), VideoCodec.vp9), isTrue);
-    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': _hw}), VideoCodec.vp9), isFalse);
+    expect(
+        FormatPolicy.softwareOnly(
+            const PlayerSettings(decoderResults: {'vp9': soft}), VideoCodec.vp9),
+        isTrue);
+    expect(
+        FormatPolicy.softwareOnly(
+            const PlayerSettings(decoderResults: {'vp9': _hw}), VideoCodec.vp9),
+        isFalse);
     expect(FormatPolicy.softwareOnly(const PlayerSettings(), VideoCodec.av1), isFalse);
     expect(FormatPolicy.softwareOnly(const PlayerSettings(hwdec: 'no'), VideoCodec.av1), isTrue);
   });
 
   group('auto', () {
     test('uses H.264 until a hardware codec was actually verified', () {
-      expect(_order(const PlayerSettings(disabledCodecs: {})), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
-      expect(_expression(const PlayerSettings(disabledCodecs: {})), startsWith('bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/'));
+      expect(_order(const PlayerSettings(disabledCodecs: {})),
+          [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
+      expect(_expression(const PlayerSettings(disabledCodecs: {})),
+          startsWith('bestvideo+bestaudio[format_note*=original]/bestvideo+bestaudio/'));
     });
 
     test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
-      const settings = PlayerSettings(disabledCodecs: {}, hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
+      const settings =
+          PlayerSettings(disabledCodecs: {}, hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
       expect(_order(settings).take(3), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
       expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:avc');
     });
 
     test('uses AV1, then VP9, then H.264 when AV1 hardware decoding is verified', () {
-      const all = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
+      const all =
+          PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
       expect(_order(all).take(3), [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264]);
-      const vp9Only = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': DecoderStatus.unverified()});
+      const vp9Only = PlayerSettings(
+          disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': DecoderStatus.unverified()});
       expect(_order(vp9Only).take(2), [VideoCodec.vp9, VideoCodec.h264]);
     });
 
@@ -97,25 +115,30 @@ void main() {
     });
 
     test('never exceeds the user-selected default quality', () {
-      const settings = PlayerSettings(disabledCodecs: {}, maxHeight: 720, decoderResults: {'av1': _hw});
-      expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio[format_note*=original]/'));
+      const settings =
+          PlayerSettings(disabledCodecs: {}, maxHeight: 720, decoderResults: {'av1': _hw});
+      expect(_expression(settings),
+          startsWith('bestvideo[height<=?720]+bestaudio[format_note*=original]/'));
       expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:av01');
     });
 
     test('puts AV1 before H.264 only with verified hardware decoding', () {
       final plain = _order(const PlayerSettings(disabledCodecs: {}, maxHeight: 1080));
       expect(plain.indexOf(VideoCodec.av1), greaterThan(plain.indexOf(VideoCodec.h264)));
-      expect(_order(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})).first, VideoCodec.av1);
+      expect(_order(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})).first,
+          VideoCodec.av1);
     });
 
     test('caps every alternative at the chosen height and ends with plain fallbacks', () {
       final expression = _expression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720));
-      expect(expression.split('/').where((a) => a.startsWith('bestvideo')), everyElement(contains('[height<=?720]')));
+      expect(expression.split('/').where((a) => a.startsWith('bestvideo')),
+          everyElement(contains('[height<=?720]')));
       expect(expression, endsWith('/best[height<=?720]/best'));
     });
 
     test('keeps the audio cap on the alternatives', () {
-      final expression = _expression(const PlayerSettings(disabledCodecs: {}, audioQuality: AudioQuality.low));
+      final expression =
+          _expression(const PlayerSettings(disabledCodecs: {}, audioQuality: AudioQuality.low));
       expect(expression, startsWith('bestvideo+bestaudio[format_note*=original][abr<=?64]/'));
       expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
     });
@@ -123,12 +146,17 @@ void main() {
 
   group('lowResource', () {
     test('H.264 first, then verified hardware codecs, then the rest', () {
-      const settings = PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.lowResource, decoderResults: {'av1': _hw});
+      const settings = PlayerSettings(
+          disabledCodecs: {}, strategy: PlaybackStrategy.lowResource, decoderResults: {'av1': _hw});
       expect(_order(settings), [VideoCodec.h264, VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8]);
     });
 
     test('goes to verified codecs first above 1080p', () {
-      const settings = PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.lowResource, maxHeight: 2160, decoderResults: {'vp9': _hw});
+      const settings = PlayerSettings(
+          disabledCodecs: {},
+          strategy: PlaybackStrategy.lowResource,
+          maxHeight: 2160,
+          decoderResults: {'vp9': _hw});
       expect(_order(settings).take(2), [VideoCodec.vp9, VideoCodec.h264]);
     });
   });
@@ -138,7 +166,10 @@ void main() {
       const settings = PlayerSettings(disabledCodecs: {});
       expect(settings.dubbedAudio, DubbedAudio.original);
       expect(settings.dubLanguage, '');
-      expect((jsonDecode(FormatPolicy.settingsJson(settings)) as Map<String, Object?>)['audioLanguage'], '');
+      expect(
+          (jsonDecode(FormatPolicy.settingsJson(settings))
+              as Map<String, Object?>)['audioLanguage'],
+          '');
       expect(FormatPolicy.dubLanguage(settings), '');
     });
 
@@ -146,14 +177,21 @@ void main() {
       final settings = const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage);
       expect(settings.toJson()['dubbedAudio'], 'myLanguage');
       expect(PlayerSettings.fromJson(settings.toJson()).dubbedAudio, DubbedAudio.myLanguage);
-      expect(PlayerSettings.fromJson({'dubbedAudio': 'nonsense'}).dubbedAudio, DubbedAudio.original);
+      expect(
+          PlayerSettings.fromJson({'dubbedAudio': 'nonsense'}).dubbedAudio, DubbedAudio.original);
       expect(PlayerSettings.fromJson(const {}).dubbedAudio, DubbedAudio.original);
     });
 
     test("asks for the first subtitle language's language, else the interface's", () {
-      final it = const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.it);
+      final it = const PlayerSettings()
+          .copyWith(dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.it);
       expect(it.dubLanguage, 'it');
-      expect(const PlayerSettings().copyWith(dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.zhHant).dubLanguage, 'zh');
+      expect(
+          const PlayerSettings()
+              .copyWith(
+                  dubbedAudio: DubbedAudio.myLanguage, subtitleLanguage: SubtitleLanguage.zhHant)
+              .dubLanguage,
+          'zh');
       expect(FormatPolicy.dubLanguage(it, pick: ''), '');
       expect(FormatPolicy.dubLanguage(it, pick: 'es-US'), 'es-US');
       expect(FormatPolicy.dubLanguage(it), 'it');
@@ -166,21 +204,31 @@ void main() {
       final dub = FormatPolicy.expression(settings, audioLanguage: 'it');
       expect(dub, startsWith('bestvideo+bestaudio[language^=it][language!*=desc]/'));
       expect(dub, endsWith(plain));
-      expect((jsonDecode(FormatPolicy.settingsJson(settings, audioLanguage: 'it')) as Map<String, Object?>)['audioLanguage'], 'it');
+      expect(
+          (jsonDecode(FormatPolicy.settingsJson(settings, audioLanguage: 'it'))
+              as Map<String, Object?>)['audioLanguage'],
+          'it');
     });
   });
 
   group('quality', () {
     test("is yt-dlp's own ranking", () {
-      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), 'ytdl');
-      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, maxHeight: 480)), 'bestvideo[height<=?480]+bestaudio[format_note*=original]/bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
+      expect(
+          _expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)),
+          'ytdl');
+      expect(
+          _expression(const PlayerSettings(
+              disabledCodecs: {}, strategy: PlaybackStrategy.quality, maxHeight: 480)),
+          'bestvideo[height<=?480]+bestaudio[format_note*=original]/bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
     });
   });
 
   group('disabled codecs', () {
     test('filters disabled codecs before sorting by the verified decoder ladder', () {
-      const settings = PlayerSettings(disabledCodecs: {VideoCodec.av1}, decoderResults: {'vp9': _hw});
-      expect(_expression(settings), startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/'));
+      const settings =
+          PlayerSettings(disabledCodecs: {VideoCodec.av1}, decoderResults: {'vp9': _hw});
+      expect(_expression(settings),
+          startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio[format_note*=original]/'));
       expect(FormatPolicy.formatSort(settings), 'res,fps,hdr:sdr,vcodec:vp9');
     });
 
@@ -194,19 +242,26 @@ void main() {
         ]) {
           for (final height in [0, 720, 2160]) {
             for (final audio in AudioQuality.values) {
-              final settings = PlayerSettings(strategy: strategy, disabledCodecs: disabled, maxHeight: height, audioQuality: audio, decoderResults: const {'vp9': _hw, 'av1': _hw});
+              final settings = PlayerSettings(
+                  strategy: strategy,
+                  disabledCodecs: disabled,
+                  maxHeight: height,
+                  audioQuality: audio,
+                  decoderResults: const {'vp9': _hw, 'av1': _hw});
               expect(_order(settings).toSet().intersection(disabled), isEmpty);
               final expression = _expression(settings);
               for (final alternative in expression.split('/')) {
                 if (alternative.contains("vcodec~='")) {
                   for (final codec in disabled) {
-                    expect(alternative, isNot(contains(codec.onlyFilter)), reason: '$strategy $expression');
+                    expect(alternative, isNot(contains(codec.onlyFilter)),
+                        reason: '$strategy $expression');
                   }
                 } else if (alternative.startsWith('best')) {
                   // Every other alternative drops each disabled codec.
                   for (final codec in disabled) {
                     if (alternative.startsWith('bestaudio')) continue;
-                    expect(alternative, contains(codec.excludeFilter), reason: '$strategy $expression');
+                    expect(alternative, contains(codec.excludeFilter),
+                        reason: '$strategy $expression');
                   }
                 }
               }
@@ -217,22 +272,41 @@ void main() {
     });
 
     test('quality strategy excludes them too, without the ytdl shortcut', () {
-      const settings = PlayerSettings(strategy: PlaybackStrategy.quality, disabledCodecs: {VideoCodec.av1});
+      const settings =
+          PlayerSettings(strategy: PlaybackStrategy.quality, disabledCodecs: {VideoCodec.av1});
       const exclude = '[vcodec!^=av01][vcodec!^=av1]';
-      expect(_expression(settings), 'bestvideo$exclude+bestaudio[format_note*=original]/bestvideo$exclude+bestaudio/best$exclude/best$exclude');
+      expect(_expression(settings),
+          'bestvideo$exclude+bestaudio[format_note*=original]/bestvideo$exclude+bestaudio/best$exclude/best$exclude');
     });
 
     test('sorts highest resolution and frame rate before the hardware decoder preference', () {
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})), 'res,fps,hdr:sdr,vcodec:avc');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})), 'res,fps,hdr:sdr,vcodec:vp9');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})), 'res,fps,hdr:sdr,vcodec:av01');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})),
+          'res,fps,hdr:sdr,vcodec:avc');
+      expect(
+          FormatPolicy.formatSort(
+              const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})),
+          'res,fps,hdr:sdr,vcodec:vp9');
+      expect(
+          FormatPolicy.formatSort(
+              const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})),
+          'res,fps,hdr:sdr,vcodec:av01');
       // Quality first keeps yt-dlp's ranking, with VP9 over software AV1.
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), 'res,fps,hdr:12,vcodec:vp9.2');
-      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, decoderResults: {'av1': _hw})), isNull);
+      expect(
+          FormatPolicy.formatSort(
+              const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)),
+          'res,fps,hdr:12,vcodec:vp9.2');
+      expect(
+          FormatPolicy.formatSort(const PlayerSettings(
+              disabledCodecs: {},
+              strategy: PlaybackStrategy.quality,
+              decoderResults: {'av1': _hw})),
+          isNull);
     });
 
     test('automatic quality stays within what the hardware decoders measured', () {
-      const phone = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': DecoderStatus.hardware('mediacodec', height: 1440)});
+      const phone = PlayerSettings(
+          disabledCodecs: {},
+          decoderResults: {'vp9': DecoderStatus.hardware('mediacodec', height: 1440)});
       expect(FormatPolicy.forDisplay(phone, 2160).maxHeight, 1440);
       const unmeasured = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw});
       expect(FormatPolicy.forDisplay(unmeasured, 2160).maxHeight, 2160);
@@ -242,7 +316,8 @@ void main() {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.vp9, VideoCodec.av1});
       expect(FormatPolicy.disabledNames(settings), 'AV1, VP9');
       expect(FormatPolicy.summary(settings), contains('disabled: AV1, VP9'));
-      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('disabled')));
+      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})),
+          isNot(contains('disabled')));
     });
   });
 
@@ -254,15 +329,35 @@ void main() {
     const hardwareVp9 = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw});
     expect(FormatPolicy.forDisplay(hardwareVp9, 1600).maxHeight, 2160);
     expect(FormatPolicy.forDisplay(hardwareVp9, 0).maxHeight, 0);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, maxHeight: 2160), 1080).maxHeight, 2160);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality), 1080).maxHeight, 0);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600).maxHeight, 0);
+    expect(
+        FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, maxHeight: 2160), 1080)
+            .maxHeight,
+        2160);
+    expect(
+        FormatPolicy.forDisplay(
+                const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality), 1080)
+            .maxHeight,
+        0);
+    expect(
+        FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600)
+            .maxHeight,
+        0);
   });
 
-  test('a live stream takes one stream with picture and sound up to 1080p, split streams above', () {
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8][height<=?1440]+ba[protocol^=m3u8]/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'), 'bv*[height>1080][protocol^=m3u8][vcodec!*=av01]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
+  test('a live stream takes one stream with picture and sound up to 1080p, split streams above',
+      () {
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'),
+        'bv*[height>1080][protocol^=m3u8]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv+ba');
+    expect(
+        FormatPolicy.liveExpression(
+            const PlayerSettings(disabledCodecs: {}, maxHeight: 720), 'bv+ba'),
+        'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
+    expect(
+        FormatPolicy.liveExpression(
+            const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'),
+        'bv*[height>1080][protocol^=m3u8][height<=?1440]+ba[protocol^=m3u8]/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
+    expect(
+        FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'),
+        'bv*[height>1080][protocol^=m3u8][vcodec!*=av01]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
   });
 }

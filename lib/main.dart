@@ -80,7 +80,8 @@ Future<void> main() async {
   installLearningPack();
   unawaited(Accessibility.readSystemSettings());
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
-  unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
+  unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) =>
+      logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }
 
 class LumtubApp extends StatefulWidget {
@@ -137,7 +138,9 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
     );
     if (key == _themeKey) return;
     _themeKey = key;
-    ThemeData build(Brightness brightness, {bool highContrast = false}) => _glazed(glass ? appearance : null, buildAppTheme(
+    ThemeData build(Brightness brightness, {bool highContrast = false}) => _glazed(
+        glass ? appearance : null,
+        buildAppTheme(
           accent,
           brightness,
           variant: appearance.schemeVariant,
@@ -152,7 +155,8 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
           plain: appearance.lowResource,
         ));
     _useFilledIcons(skin?.icons.filled ?? false);
-    _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(SkinGlass.min, 1).toDouble() : 1);
+    _useGlass(
+        skin?.glass ?? false ? appearance.glassOpacity.clamp(SkinGlass.min, 1).toDouble() : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
@@ -161,8 +165,10 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
 
   /// [theme] for a window the desktop shows through, when [appearance]
   /// is given.
-  static ThemeData _glazed(AppearanceSettings? appearance, ThemeData theme) =>
-      appearance == null ? theme : withGlass(theme, transparency: appearance.windowGlassClarity, whole: appearance.windowGlassWhole);
+  static ThemeData _glazed(AppearanceSettings? appearance, ThemeData theme) => appearance == null
+      ? theme
+      : withGlass(theme,
+          transparency: appearance.windowGlassClarity, whole: appearance.windowGlassWhole);
 
   void _glassChanged() {
     if (mounted) setState(() => _themeKey = null);
@@ -184,7 +190,8 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       final appearance = controller.appearance;
       final now = DateTime.now();
-      if (appearance.themeModeAt(now) != appearance.themeModeAt(_now) || appearance.warmthAt(now) != appearance.warmthAt(_now)) {
+      if (appearance.themeModeAt(now) != appearance.themeModeAt(_now) ||
+          appearance.warmthAt(now) != appearance.warmthAt(_now)) {
         setState(() => _now = now);
       } else {
         _now = now;
@@ -192,7 +199,10 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
     });
     // Google sign-in returns to a server in the app; on Android the app is
     // kept running while the browser is in front.
-    if (Platform.isAndroid) GoogleAuth.keepAlive = (waiting) => const MethodChannel('lumtub/windows_shell').invokeMethod<void>('holdForSignIn', waiting);
+    if (Platform.isAndroid) {
+      GoogleAuth.keepAlive = (waiting) =>
+          const MethodChannel('lumtub/windows_shell').invokeMethod<void>('holdForSignIn', waiting);
+    }
     // On iOS the page opens in a sheet over the app, which iOS does not
     // suspend, and closes once the app has its answer.
     if (Platform.isIOS) {
@@ -202,7 +212,13 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
         if (!waiting) await shell.invokeMethod<void>('closeSignInPage');
       };
     }
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid || Platform.isIOS) _shell = WindowsShellSync(controller, WindowsShell());
+    if (Platform.isWindows ||
+        Platform.isLinux ||
+        Platform.isMacOS ||
+        Platform.isAndroid ||
+        Platform.isIOS) {
+      _shell = WindowsShellSync(controller, WindowsShell());
+    }
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.
@@ -233,7 +249,11 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
         // A TV left for another app does not play on behind it.
-        if (!(controller.preferences.pauseOnMinimize || Device.tv) || player == null || !player.state.playing) return;
+        if (!(controller.preferences.pauseOnMinimize || Device.tv) ||
+            player == null ||
+            !player.state.playing) {
+          return;
+        }
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
@@ -251,7 +271,10 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
       },
       onShow: () {
         // “Show animations in Windows” may have changed meanwhile.
-        if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
+        if (widget.controller.appearance.motion == MotionPreference.system &&
+            Motion.systemPrefersReduced() != Motion.reduced) {
+          setState(() => _themeKey = null);
+        }
         controller.cast.windowHidden = false;
         KeepAwake.hidden = false;
         YoutubePlayerProbe.appHidden = false;
@@ -270,7 +293,8 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
   /// notifies on every list and player change, which the shell listens to
   /// itself, so the app around it rebuilds only when one of these changes.
   Object? _shown;
-  static Object _shownOf(AppController controller) => (controller.appearance, controller.accentColor, currentLanguage);
+  static Object _shownOf(AppController controller) =>
+      (controller.appearance, controller.accentColor, currentLanguage);
 
   void _rebuildIfShownChanged() {
     final shown = _shownOf(widget.controller);
@@ -303,7 +327,10 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
             // Material's own text (tooltips, dialogs) in the language chosen
             // at start.
             locale: _materialLocale(currentLanguage.locale),
-            supportedLocales: {for (final l in AppLanguage.selectable) if (_materialLocale(l.locale) case final locale?) locale}.toList(),
+            supportedLocales: {
+              for (final l in AppLanguage.selectable)
+                if (_materialLocale(l.locale) case final locale?) locale
+            }.toList(),
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
@@ -317,14 +344,18 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
               final media = MediaQuery.of(context);
               _matchTitleBar(Theme.of(context));
               _matchGlass(appearance, Theme.of(context));
-              final chrome = WindowChrome(controller: widget.controller, title: appName, child: child!);
+              final chrome =
+                  WindowChrome(controller: widget.controller, title: appName, child: child!);
               return ThemeCrossFade(
                 // A video is a texture, which a picture of the window may
                 // leave out.
                 instant: _videoShown,
                 child: MediaQuery(
                   // A TV is read from across the room: text a size larger.
-                  data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
+                  data: media.copyWith(
+                      textScaler: _ScaledTextScaler(
+                          media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)),
+                      disableAnimations: media.disableAnimations || Motion.reduced),
                   child: SmoothWheel(child: Device.tv ? _TvFrame(child: chrome) : chrome),
                 ),
               );
@@ -343,7 +374,9 @@ class _LumtubAppState extends State<LumtubApp> with WidgetsBindingObserver {
 /// in it, else English for those; Lumtub's own text still follows the
 /// chosen language.
 Locale? _materialLocale(Locale? locale) =>
-    locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale) ? locale : const Locale('en');
+    locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale)
+        ? locale
+        : const Locale('en');
 
 Object? _titleBar;
 
@@ -384,7 +417,8 @@ void _matchGlass(AppearanceSettings appearance, ThemeData theme) {
   // to see-through (Windows 11 and other systems blur well and ignore it).
   final frost = 0.9 - 0.65 * appearance.windowGlassClarity.clamp(0.0, 1.0);
   final tint = glassTint(theme).withValues(alpha: frost);
-  WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(WindowGlass.apply(on: on, dark: dark, blur: blur, tint: tint)));
+  WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(WindowGlass.apply(on: on, dark: dark, blur: blur, tint: tint)));
 }
 
 /// The Windows title bar in the page's own colours, so the window reads as
@@ -393,7 +427,9 @@ void _matchTitleBar(ThemeData theme) {
   if (!Platform.isWindows) return;
   final scheme = theme.colorScheme;
   // Under glass the system's bar, which shows the glass too.
-  final caption = theme.extension<GlassLook>() != null ? Colors.transparent : theme.extension<AppTones>()?.chrome ?? scheme.surface;
+  final caption = theme.extension<GlassLook>() != null
+      ? Colors.transparent
+      : theme.extension<AppTones>()?.chrome ?? scheme.surface;
   final key = (caption, scheme.onSurface, scheme.brightness);
   if (key == _titleBar) return;
   _titleBar = key;
@@ -416,10 +452,16 @@ class _TvFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ColoredBox(
         // A skin's window paints itself, veiled page by page.
-        color: Theme.of(context).extension<SkinTheme>()?.skin != null ? Colors.transparent : Theme.of(context).scaffoldBackgroundColor,
+        color: Theme.of(context).extension<SkinTheme>()?.skin != null
+            ? Colors.transparent
+            : Theme.of(context).scaffoldBackgroundColor,
         child: ValueListenableBuilder<bool>(
           valueListenable: WindowChrome.fullscreen,
-          builder: (context, fullscreen, child) => Padding(padding: fullscreen ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 48, vertical: 27), child: child),
+          builder: (context, fullscreen, child) => Padding(
+              padding: fullscreen
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(horizontal: 48, vertical: 27),
+              child: child),
           child: child,
         ),
       );
@@ -437,7 +479,8 @@ class _ScaledTextScaler extends TextScaler {
   double get textScaleFactor => base.scale(1) * factor;
 
   @override
-  bool operator ==(Object other) => other is _ScaledTextScaler && other.base == base && other.factor == factor;
+  bool operator ==(Object other) =>
+      other is _ScaledTextScaler && other.base == base && other.factor == factor;
 
   @override
   int get hashCode => Object.hash(base, factor);

@@ -7,9 +7,27 @@ import 'package:lumtub/channel_handle.dart';
 
 void main() {
   test('reads the channel id of a resolved handle', () {
-    expect(browseIdOfResolved({'endpoint': {'browseEndpoint': {'browseId': 'UCBR8-60-B28hp2BmDPdntcQ'}}}), 'UCBR8-60-B28hp2BmDPdntcQ');
-    expect(browseIdOfResolved({'endpoint': {'urlEndpoint': {'url': 'https://example.com'}}}), isNull);
-    expect(browseIdOfResolved({'endpoint': {'browseEndpoint': {'browseId': 'FEwhat_to_watch'}}}), isNull);
+    expect(
+        browseIdOfResolved({
+          'endpoint': {
+            'browseEndpoint': {'browseId': 'UCBR8-60-B28hp2BmDPdntcQ'}
+          }
+        }),
+        'UCBR8-60-B28hp2BmDPdntcQ');
+    expect(
+        browseIdOfResolved({
+          'endpoint': {
+            'urlEndpoint': {'url': 'https://example.com'}
+          }
+        }),
+        isNull);
+    expect(
+        browseIdOfResolved({
+          'endpoint': {
+            'browseEndpoint': {'browseId': 'FEwhat_to_watch'}
+          }
+        }),
+        isNull);
     expect(browseIdOfResolved(null), isNull);
   });
 
@@ -19,7 +37,13 @@ void main() {
       asked++;
       expect(request.url.path, '/youtubei/v1/navigation/resolve_url');
       expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/@ThuyVanDo-v4p');
-      return http.Response(jsonEncode({'endpoint': {'browseEndpoint': {'browseId': 'UCaaaaaaaaaaaaaaaaaaaaaa'}}}), 200);
+      return http.Response(
+          jsonEncode({
+            'endpoint': {
+              'browseEndpoint': {'browseId': 'UCaaaaaaaaaaaaaaaaaaaaaa'}
+            }
+          }),
+          200);
     });
     expect(await channelIdOfHandle(client, '@ThuyVanDo-v4p'), 'UCaaaaaaaaaaaaaaaaaaaaaa');
     expect(await channelIdOfHandle(client, '@ThuyVanDo-v4p'), 'UCaaaaaaaaaaaaaaaaaaaaaa');
@@ -31,8 +55,15 @@ void main() {
 
   test('handles in other scripts are looked up', () async {
     final client = MockClient((request) async {
-      expect((jsonDecode(request.body) as Map)['url'], 'https://www.youtube.com/@${Uri.encodeComponent('黄总-🙂')}');
-      return http.Response(jsonEncode({'endpoint': {'browseEndpoint': {'browseId': 'UCbbbbbbbbbbbbbbbbbbbbbb'}}}), 200);
+      expect((jsonDecode(request.body) as Map)['url'],
+          'https://www.youtube.com/@${Uri.encodeComponent('黄总-🙂')}');
+      return http.Response(
+          jsonEncode({
+            'endpoint': {
+              'browseEndpoint': {'browseId': 'UCbbbbbbbbbbbbbbbbbbbbbb'}
+            }
+          }),
+          200);
     });
     expect(await channelIdOfHandle(client, '@黄总-🙂'), 'UCbbbbbbbbbbbbbbbbbbbbbb');
   });

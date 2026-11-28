@@ -39,11 +39,13 @@ void main() {
     expect(find.byType(PostCommentsPanel), findsOneWidget);
     expect(find.byType(Dialog), findsNothing);
     // The posts stay on the left, next to the panel.
-    expect(tester.getTopLeft(find.byType(PostCommentsPanel)).dx, greaterThan(tester.getTopRight(find.text('第一条帖子').first).dx));
+    expect(tester.getTopLeft(find.byType(PostCommentsPanel)).dx,
+        greaterThan(tester.getTopRight(find.text('第一条帖子').first).dx));
     // Another post's button switches the panel; its own closes it.
     await tester.tap(find.text('3'));
     await tester.pump();
-    expect(find.descendant(of: find.byType(PostCommentsPanel), matching: find.text('第二条帖子')), findsOneWidget);
+    expect(find.descendant(of: find.byType(PostCommentsPanel), matching: find.text('第二条帖子')),
+        findsOneWidget);
     await tester.tap(find.text('3'));
     await tester.pump();
     expect(find.byType(PostCommentsPanel), findsNothing);

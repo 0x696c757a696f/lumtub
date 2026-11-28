@@ -67,6 +67,7 @@ abstract final class UpscaleShaders {
     tier = usable(tier);
     final folder = _folder;
     if (folder == null || !_ready.contains(tier)) return '';
-    return [for (final name in files(tier)) '${folder.path}${Platform.pathSeparator}$name'].join(Platform.isWindows ? ';' : ':');
+    return [for (final name in files(tier)) '${folder.path}${Platform.pathSeparator}$name']
+        .join(Platform.isWindows ? ';' : ':');
   }
 }

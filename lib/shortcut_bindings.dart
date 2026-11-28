@@ -63,7 +63,8 @@ enum PlayerAction {
 
 /// One key with the modifiers held with it, saved as `ctrl+shift+<key id>`.
 class KeyCombo {
-  const KeyCombo(this.key, {this.control = false, this.shift = false, this.alt = false, this.meta = false});
+  const KeyCombo(this.key,
+      {this.control = false, this.shift = false, this.alt = false, this.meta = false});
   final LogicalKeyboardKey key;
   final bool control;
   final bool shift;
@@ -76,7 +77,11 @@ class KeyCombo {
     if (id == null) return null;
     final key = LogicalKeyboardKey.findKeyByKeyId(id) ?? LogicalKeyboardKey(id);
     final mods = parts.sublist(0, parts.length - 1).toSet();
-    return KeyCombo(key, control: mods.contains('ctrl'), shift: mods.contains('shift'), alt: mods.contains('alt'), meta: mods.contains('meta'));
+    return KeyCombo(key,
+        control: mods.contains('ctrl'),
+        shift: mods.contains('shift'),
+        alt: mods.contains('alt'),
+        meta: mods.contains('meta'));
   }
 
   /// The key pressed in [event] with the modifiers [keyboard] holds; null
@@ -92,9 +97,16 @@ class KeyCombo {
     );
   }
 
-  SingleActivator get activator => SingleActivator(key, control: control, shift: shift, alt: alt, meta: meta);
+  SingleActivator get activator =>
+      SingleActivator(key, control: control, shift: shift, alt: alt, meta: meta);
 
-  String get id => [if (control) 'ctrl', if (shift) 'shift', if (alt) 'alt', if (meta) 'meta', '${key.keyId}'].join('+');
+  String get id => [
+        if (control) 'ctrl',
+        if (shift) 'shift',
+        if (alt) 'alt',
+        if (meta) 'meta',
+        '${key.keyId}'
+      ].join('+');
 
   /// As written on the key cap: `Ctrl + Shift + K`, `←`, `Space`; ⌘ and ⌥
   /// on a Mac.
@@ -163,16 +175,42 @@ final _modifiers = {
 /// Keys that always do the same thing and cannot be given to an action:
 /// 0-9 jump to tenths of the video, the media keys play, pause and skip.
 bool fixedKey(KeyCombo combo) =>
-    !combo.control && !combo.alt && !combo.meta && !combo.shift && (_digits.contains(combo.key) || _media.contains(combo.key));
+    !combo.control &&
+    !combo.alt &&
+    !combo.meta &&
+    !combo.shift &&
+    (_digits.contains(combo.key) || _media.contains(combo.key));
 
 final _digits = {
-  LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4,
-  LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9,
-  LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4,
-  LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9,
+  LogicalKeyboardKey.digit0,
+  LogicalKeyboardKey.digit1,
+  LogicalKeyboardKey.digit2,
+  LogicalKeyboardKey.digit3,
+  LogicalKeyboardKey.digit4,
+  LogicalKeyboardKey.digit5,
+  LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
+  LogicalKeyboardKey.digit9,
+  LogicalKeyboardKey.numpad0,
+  LogicalKeyboardKey.numpad1,
+  LogicalKeyboardKey.numpad2,
+  LogicalKeyboardKey.numpad3,
+  LogicalKeyboardKey.numpad4,
+  LogicalKeyboardKey.numpad5,
+  LogicalKeyboardKey.numpad6,
+  LogicalKeyboardKey.numpad7,
+  LogicalKeyboardKey.numpad8,
+  LogicalKeyboardKey.numpad9,
 };
 
-final _media = {LogicalKeyboardKey.mediaPlayPause, LogicalKeyboardKey.mediaPlay, LogicalKeyboardKey.mediaPause, LogicalKeyboardKey.mediaTrackNext, LogicalKeyboardKey.mediaTrackPrevious};
+final _media = {
+  LogicalKeyboardKey.mediaPlayPause,
+  LogicalKeyboardKey.mediaPlay,
+  LogicalKeyboardKey.mediaPause,
+  LogicalKeyboardKey.mediaTrackNext,
+  LogicalKeyboardKey.mediaTrackPrevious
+};
 
 /// The keys each action has out of the box.
 Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
@@ -181,7 +219,11 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
   // to the controls, as the TV sets the volume itself.
   final android = Platform.isAndroid;
   return {
-    PlayerAction.playPause: [const KeyCombo(LogicalKeyboardKey.space), const KeyCombo(LogicalKeyboardKey.keyK), if (android) const KeyCombo(LogicalKeyboardKey.select)],
+    PlayerAction.playPause: [
+      const KeyCombo(LogicalKeyboardKey.space),
+      const KeyCombo(LogicalKeyboardKey.keyK),
+      if (android) const KeyCombo(LogicalKeyboardKey.select)
+    ],
     PlayerAction.seekBack: const [KeyCombo(LogicalKeyboardKey.arrowLeft)],
     PlayerAction.seekForward: const [KeyCombo(LogicalKeyboardKey.arrowRight)],
     PlayerAction.longSeekBack: const [KeyCombo(LogicalKeyboardKey.keyJ)],
@@ -193,8 +235,14 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
     PlayerAction.faster: const [KeyCombo(LogicalKeyboardKey.period, shift: true)],
     PlayerAction.fullscreen: const [KeyCombo(LogicalKeyboardKey.keyF)],
     PlayerAction.exitFullscreen: const [KeyCombo(LogicalKeyboardKey.escape)],
-    PlayerAction.previous: const [KeyCombo(LogicalKeyboardKey.keyP, shift: true), KeyCombo(LogicalKeyboardKey.bracketLeft)],
-    PlayerAction.next: const [KeyCombo(LogicalKeyboardKey.keyN, shift: true), KeyCombo(LogicalKeyboardKey.bracketRight)],
+    PlayerAction.previous: const [
+      KeyCombo(LogicalKeyboardKey.keyP, shift: true),
+      KeyCombo(LogicalKeyboardKey.bracketLeft)
+    ],
+    PlayerAction.next: const [
+      KeyCombo(LogicalKeyboardKey.keyN, shift: true),
+      KeyCombo(LogicalKeyboardKey.bracketRight)
+    ],
     PlayerAction.frameBack: const [KeyCombo(LogicalKeyboardKey.comma)],
     PlayerAction.frameForward: const [KeyCombo(LogicalKeyboardKey.period)],
     PlayerAction.start: const [KeyCombo(LogicalKeyboardKey.home)],
@@ -219,19 +267,39 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
     // From here on as YouTube has them, and Bilibili's bullet chat key
     // with Shift, as A and D step through subtitle lines.
     PlayerAction.captions: const [KeyCombo(LogicalKeyboardKey.keyC)],
-    PlayerAction.captionsBigger: const [KeyCombo(LogicalKeyboardKey.equal, shift: true), KeyCombo(LogicalKeyboardKey.numpadAdd)],
-    PlayerAction.captionsSmaller: const [KeyCombo(LogicalKeyboardKey.minus), KeyCombo(LogicalKeyboardKey.numpadSubtract)],
+    PlayerAction.captionsBigger: const [
+      KeyCombo(LogicalKeyboardKey.equal, shift: true),
+      KeyCombo(LogicalKeyboardKey.numpadAdd)
+    ],
+    PlayerAction.captionsSmaller: const [
+      KeyCombo(LogicalKeyboardKey.minus),
+      KeyCombo(LogicalKeyboardKey.numpadSubtract)
+    ],
     PlayerAction.miniPlayer: const [KeyCombo(LogicalKeyboardKey.keyI)],
     PlayerAction.danmaku: const [KeyCombo(LogicalKeyboardKey.keyD, shift: true)],
     PlayerAction.chapterBack: [KeyCombo(LogicalKeyboardKey.arrowLeft, control: !mac, alt: mac)],
     PlayerAction.chapterNext: [KeyCombo(LogicalKeyboardKey.arrowRight, control: !mac, alt: mac)],
-    PlayerAction.search: [KeyCombo(LogicalKeyboardKey.keyK, control: !mac, meta: mac), const KeyCombo(LogicalKeyboardKey.slash)],
-    PlayerAction.incognito: [KeyCombo(LogicalKeyboardKey.keyN, control: !mac, meta: mac, shift: true)],
-    PlayerAction.back: [const KeyCombo(LogicalKeyboardKey.arrowLeft, alt: true), if (mac) const KeyCombo(LogicalKeyboardKey.bracketLeft, meta: true)],
+    PlayerAction.search: [
+      KeyCombo(LogicalKeyboardKey.keyK, control: !mac, meta: mac),
+      const KeyCombo(LogicalKeyboardKey.slash)
+    ],
+    PlayerAction.incognito: [
+      KeyCombo(LogicalKeyboardKey.keyN, control: !mac, meta: mac, shift: true)
+    ],
+    PlayerAction.back: [
+      const KeyCombo(LogicalKeyboardKey.arrowLeft, alt: true),
+      if (mac) const KeyCombo(LogicalKeyboardKey.bracketLeft, meta: true)
+    ],
     PlayerAction.top: const [KeyCombo(LogicalKeyboardKey.home)],
     PlayerAction.bottom: const [KeyCombo(LogicalKeyboardKey.end)],
-    PlayerAction.pageDown: const [KeyCombo(LogicalKeyboardKey.pageDown), KeyCombo(LogicalKeyboardKey.space)],
-    PlayerAction.pageUp: const [KeyCombo(LogicalKeyboardKey.pageUp), KeyCombo(LogicalKeyboardKey.space, shift: true)],
+    PlayerAction.pageDown: const [
+      KeyCombo(LogicalKeyboardKey.pageDown),
+      KeyCombo(LogicalKeyboardKey.space)
+    ],
+    PlayerAction.pageUp: const [
+      KeyCombo(LogicalKeyboardKey.pageUp),
+      KeyCombo(LogicalKeyboardKey.space, shift: true)
+    ],
     PlayerAction.help: const [KeyCombo(LogicalKeyboardKey.slash, shift: true)],
   };
 }
@@ -241,23 +309,41 @@ Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
 Map<PlayerAction, List<KeyCombo>> shortcutKeys(Map<String, List<String>> saved) {
   final chosen = <PlayerAction, List<KeyCombo>>{
     for (final MapEntry(:key, :value) in saved.entries)
-      if (PlayerAction.parse(key) case final action?) action: [for (final text in value) if (KeyCombo.parse(text) case final combo? when !fixedKey(combo)) combo],
+      if (PlayerAction.parse(key) case final action?)
+        action: [
+          for (final text in value)
+            if (KeyCombo.parse(text) case final combo? when !fixedKey(combo)) combo
+        ],
   };
-  Set<KeyCombo> taken(bool page) => {for (final MapEntry(:key, :value) in chosen.entries) if (key.page == page) ...value};
+  Set<KeyCombo> taken(bool page) => {
+        for (final MapEntry(:key, :value) in chosen.entries)
+          if (key.page == page) ...value
+      };
   final takenBy = {false: taken(false), true: taken(true)};
   return {
-    for (final MapEntry(:key, :value) in defaultShortcutKeys().entries) key: chosen[key] ?? [for (final combo in value) if (!takenBy[key.page]!.contains(combo)) combo],
+    for (final MapEntry(:key, :value) in defaultShortcutKeys().entries)
+      key: chosen[key] ??
+          [
+            for (final combo in value)
+              if (!takenBy[key.page]!.contains(combo)) combo
+          ],
   };
 }
 
 /// [saved] with [action] given [keys], which are taken off any other
 /// action of its kind (player or page); actions back at their defaults are
 /// left out.
-Map<String, List<String>> withShortcutKeys(Map<String, List<String>> saved, PlayerAction action, List<KeyCombo> keys) {
+Map<String, List<String>> withShortcutKeys(
+    Map<String, List<String>> saved, PlayerAction action, List<KeyCombo> keys) {
   final now = shortcutKeys(saved);
   now[action] = keys;
   for (final other in now.keys) {
-    if (other != action && other.page == action.page) now[other] = [for (final combo in now[other]!) if (!keys.contains(combo)) combo];
+    if (other != action && other.page == action.page) {
+      now[other] = [
+        for (final combo in now[other]!)
+          if (!keys.contains(combo)) combo
+      ];
+    }
   }
   return _saved(now);
 }
@@ -274,12 +360,18 @@ Map<String, List<String>> _saved(Map<PlayerAction, List<KeyCombo>> keys) {
     for (final MapEntry(:key, :value) in keys.entries)
       // An action left with its defaults less those others hold reads back
       // the same without being written out.
-      if (!same(value, [for (final combo in defaults[key]!) if (!keys.entries.any((e) => e.key != key && e.key.page == key.page && e.value.contains(combo))) combo]))
+      if (!same(value, [
+        for (final combo in defaults[key]!)
+          if (!keys.entries
+              .any((e) => e.key != key && e.key.page == key.page && e.value.contains(combo)))
+            combo
+      ]))
         key.name: [for (final combo in value) combo.id],
   };
 }
 
 /// The action of the kind [page] says that [combo] belongs to in [keys],
 /// if any.
-PlayerAction? actionOfKey(Map<PlayerAction, List<KeyCombo>> keys, KeyCombo combo, {required bool page}) =>
+PlayerAction? actionOfKey(Map<PlayerAction, List<KeyCombo>> keys, KeyCombo combo,
+        {required bool page}) =>
     keys.entries.where((e) => e.key.page == page && e.value.contains(combo)).firstOrNull?.key;

@@ -70,14 +70,22 @@ extension LearningActions on AppController {
 
   String get _learningKey {
     String source(String id) => _subtitleCopies[id]?.source ?? id;
-    return [playing?.id, source(_mainTrackId), source(secondaryTrackId), secondarySubtitle?.label, _cueGeneration, preferences.subtitleListMode.name].join('|');
+    return [
+      playing?.id,
+      source(_mainTrackId),
+      source(secondaryTrackId),
+      secondarySubtitle?.label,
+      _cueGeneration,
+      preferences.subtitleListMode.name
+    ].join('|');
   }
 
   void _refreshLearningLines() {
     final key = _learningKey;
     // Lines not there yet (still being fetched) are asked for again now
     // and then.
-    final retry = _learningLines.isEmpty && DateTime.now().difference(_learningLinesAsked) > const Duration(seconds: 5);
+    final retry = _learningLines.isEmpty &&
+        DateTime.now().difference(_learningLinesAsked) > const Duration(seconds: 5);
     if (key == _learningLinesKey && !retry) return;
     if (key != _learningLinesKey) {
       _learningLines = const [];
@@ -98,10 +106,18 @@ extension LearningActions on AppController {
   void _rememberDifficulty(String key) {
     final id = playing?.id;
     final book = learning.book;
-    if (id == null || book == null || !learningOn || !learning.unlocked || _learningLines.isEmpty || (playing?.isLive ?? false)) return;
+    if (id == null ||
+        book == null ||
+        !learningOn ||
+        !learning.unlocked ||
+        _learningLines.isEmpty ||
+        (playing?.isLive ?? false)) {
+      return;
+    }
     unawaited(Future<void>.delayed(const Duration(seconds: 4), () async {
       if (_learningLinesKey != key || playing?.id != id) return;
-      final words = await videoWordsOf(learning, knownWordsOf(book), id, [for (final l in _learningLines) l.text]);
+      final words = await videoWordsOf(
+          learning, knownWordsOf(book), id, [for (final l in _learningLines) l.text]);
       if (words != null && words.words >= 20) videoDifficulty.remember(id, words.known);
       // The words being learnt that this video says, for "heard in N videos".
       final known = knownWordsOf(book);
@@ -161,7 +177,9 @@ extension LearningActions on AppController {
       return true;
     }
     final platform = player.platform;
-    if (lines.isNotEmpty || platform is! NativePlayer || player.state.track.subtitle.id == 'no') return false;
+    if (lines.isNotEmpty || platform is! NativePlayer || player.state.track.subtitle.id == 'no') {
+      return false;
+    }
     try {
       await platform.command(['sub-seek', '$skip']);
       if (!player.state.playing) await player.play();
@@ -194,7 +212,8 @@ extension LearningActions on AppController {
   /// [note] says, once a run, that Edge's voices failed and the computer's
   /// voice read it instead.
   Future<({String? problem, String? note})> sayAloud(String text, String language) async {
-    language = WordVoice.variantOf(language, [player?.state.track.subtitle.language, secondarySubtitle?.language]);
+    language = WordVoice.variantOf(
+        language, [player?.state.track.subtitle.language, secondarySubtitle?.language]);
     final voice = learning.voice;
     if (voice == null) return (problem: tr('Not ready yet'), note: null);
     final service = learning.voiceService;
@@ -215,7 +234,8 @@ extension LearningActions on AppController {
       final unsupported = edgeFailure is VoiceException && edgeFailure.noVoice;
       if (!unsupported) {
         try {
-          file = await voice.read(text, language, VoiceService.lumtub, translationKeys, server: learning.speechServer);
+          file = await voice.read(text, language, VoiceService.lumtub, translationKeys,
+              server: learning.speechServer);
           failure = null;
         } catch (e) {
           logInfo('Lumtub\'s server did not read "$text" either: $e');
@@ -228,7 +248,9 @@ extension LearningActions on AppController {
           if (!unsupported && !_edgeFallbackTold) {
             _edgeFallbackTold = true;
             final why = edgeFailure is VoiceException ? edgeFailure.detail : '$edgeFailure';
-            note = tr("Edge's online voices can't be reached right now ({0}), so this computer's voice read it.", [why]);
+            note = tr(
+                "Edge's online voices can't be reached right now ({0}), so this computer's voice read it.",
+                [why]);
           }
         } catch (e) {
           failure = e;
@@ -238,18 +260,32 @@ extension LearningActions on AppController {
     }
     if (file == null) {
       final e = failure;
-      if (e is VoiceException && e.noVoice && (service == VoiceService.system || service == VoiceService.edge)) {
-        return (problem: tr('This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.'), note: null);
+      if (e is VoiceException &&
+          e.noVoice &&
+          (service == VoiceService.system || service == VoiceService.edge)) {
+        return (
+          problem: tr(
+              'This computer has no voice for this language. Add one in the system settings, or pick an online voice in the learning pack settings.'),
+          note: null
+        );
       }
-      if (e is VoiceException && e.noVoice) return (problem: tr('This voice service has no voice for this language'), note: null);
-      return (problem: tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']), note: null);
+      if (e is VoiceException && e.noVoice) {
+        return (problem: tr('This voice service has no voice for this language'), note: null);
+      }
+      return (
+        problem: tr('Could not read it aloud: {0}', [e is VoiceException ? e.detail : '$e']),
+        note: null
+      );
     }
     try {
       final size = await file.length();
       if (size < 100) {
         await file.delete();
         logWarn('Reading "$text" ($language) aloud gave an empty sound ($size bytes)');
-        return (problem: tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]), note: null);
+        return (
+          problem: tr('Could not read it aloud: {0}', [tr('the voice gave no sound')]),
+          note: null
+        );
       }
       final player = this.player;
       if (player != null && player.state.playing) await player.pause();
@@ -263,11 +299,13 @@ extension LearningActions on AppController {
       final String problem;
       try {
         await sound.open(Media(file.uri.toString()));
-        problem = await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
+        problem =
+            await failed.future.timeout(const Duration(milliseconds: 800), onTimeout: () => '');
       } finally {
         await watch.cancel();
       }
-      logInfo('Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
+      logInfo(
+          'Read "$text" ($language) aloud: $size bytes${problem.isEmpty ? '' : ', mpv: $problem'}');
       if (problem.isNotEmpty) {
         await file.delete();
         return (problem: tr('Could not read it aloud: {0}', [problem]), note: null);
@@ -355,7 +393,8 @@ extension LearningActions on AppController {
 
   /// Whether the second subtitle is blurred now: 模糊翻译 is on, it has not
   /// been asked to show, and there is one.
-  bool get secondBlurred => settings.blurSecondary && !translationShown.value && secondaryTrackId != 'no';
+  bool get secondBlurred =>
+      settings.blurSecondary && !translationShown.value && secondaryTrackId != 'no';
 
   /// The pointer is over the second subtitle, or left it.
   void hoverTranslation(bool over) {
@@ -419,13 +458,17 @@ extension LearningActions on AppController {
       return;
     }
     if (player.state.playing) await player.pause();
-    final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub shadowing');
-    final shadowing = _shadowing ??= Shadowing(folder, microphone: CoreMicrophone(mixWithOthers: settings.mixWithOthers));
+    final folder =
+        Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub shadowing');
+    final shadowing = _shadowing ??=
+        Shadowing(folder, microphone: CoreMicrophone(mixWithOthers: settings.mixWithOthers));
     try {
       await shadowing.start(onTooLong: () => unawaited(_stopShadowing()));
     } on ShadowException catch (e) {
       logWarn('Could not record: $e');
-      _notice(e.denied ? tr("Lumtub can't use the microphone. Allow it in the system settings.") : tr('Could not start recording: {0}', [e.detail]));
+      _notice(e.denied
+          ? tr("Lumtub can't use the microphone. Allow it in the system settings.")
+          : tr('Could not start recording: {0}', [e.detail]));
       return;
     }
     _shadowLine = lines[index];
@@ -445,7 +488,8 @@ extension LearningActions on AppController {
     // libmpv opens its audio output again in the session iOS has back.
     final platform = player?.platform;
     if (Platform.isIOS && platform is NativePlayer) {
-      await platform.command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e'));
+      await platform.command(['ao-reload']).catchError(
+          (Object e) => logDebug(() => 'Could not reopen the audio output: $e'));
     }
     if (take == null) {
       _notice(tr('Nothing was recorded. Check the microphone.'));
@@ -472,10 +516,15 @@ extension LearningActions on AppController {
       await seek(lineStart(line));
       await player.play();
       final end = LinePause.pauseAt(line, rate: player.state.rate);
-      final deadline = DateTime.now().add((line.end - line.start) * (2 / player.state.rate.clamp(0.25, 4.0)) + const Duration(seconds: 3));
+      final deadline = DateTime.now().add(
+          (line.end - line.start) * (2 / player.state.rate.clamp(0.25, 4.0)) +
+              const Duration(seconds: 3));
       while (current() && DateTime.now().isBefore(deadline)) {
         await Future<void>.delayed(const Duration(milliseconds: 30));
-        if (player.state.position >= end || !player.state.playing && player.state.position > line.start) break;
+        if (player.state.position >= end ||
+            !player.state.playing && player.state.position > line.start) {
+          break;
+        }
       }
       if (!current()) return;
       if (player.state.playing) await player.pause();
@@ -483,7 +532,9 @@ extension LearningActions on AppController {
       final mine = _shadowPlayer ??= Player();
       await mine.setVolume(player.state.volume);
       await mine.open(Media(take.file.uri.toString()));
-      await mine.stream.completed.firstWhere((done) => done).timeout(take.length + const Duration(seconds: 2), onTimeout: () => true);
+      await mine.stream.completed
+          .firstWhere((done) => done)
+          .timeout(take.length + const Duration(seconds: 2), onTimeout: () => true);
     } catch (e) {
       logWarn('Could not play the recording back: $e');
     } finally {
@@ -502,7 +553,8 @@ extension LearningActions on AppController {
     if (shadowing == null) return false;
     final line = take.line;
     final sound = shadowing.fileFor(line, 'line', 'wav');
-    final seconds = await _cutLine(line, shadowing.folder, shadowing.fileFor(line, 'video', 'mkv'), sound);
+    final seconds =
+        await _cutLine(line, shadowing.folder, shadowing.fileFor(line, 'video', 'mkv'), sound);
     if (seconds == null) return false;
     take.original = sound;
     take.originalSeconds = seconds;
@@ -515,7 +567,8 @@ extension LearningActions on AppController {
   /// second, silent libmpv decodes them as fast as it can. The seconds
   /// at the file's end that are the line, or null when the cache no
   /// longer holds it.
-  Future<double?> _cutLine(SubtitleCue line, Directory folder, File packets, File sound, {int? sampleRate}) async {
+  Future<double?> _cutLine(SubtitleCue line, Directory folder, File packets, File sound,
+      {int? sampleRate}) async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer || (playing?.isLive ?? false)) return null;
@@ -526,7 +579,13 @@ extension LearningActions on AppController {
     try {
       final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
       final ranges = cache is Map ? cache['seekable-ranges'] : null;
-      final held = ranges is List && ranges.any((r) => r is Map && r['start'] is num && r['end'] is num && (r['start'] as num) <= start && (r['end'] as num) >= end);
+      final held = ranges is List &&
+          ranges.any((r) =>
+              r is Map &&
+              r['start'] is num &&
+              r['end'] is num &&
+              (r['start'] as num) <= start &&
+              (r['end'] as num) >= end);
       if (!held) {
         logDebug(() => 'The line at ${line.start} is no longer in the cache');
         return null;
@@ -552,7 +611,9 @@ extension LearningActions on AppController {
         await silent.setProperty(name, value);
       }
       await decoder.open(Media(packets.uri.toString()));
-      await decoder.stream.completed.firstWhere((done) => done).timeout(const Duration(seconds: 20));
+      await decoder.stream.completed
+          .firstWhere((done) => done)
+          .timeout(const Duration(seconds: 20));
       await decoder.dispose();
       decoder = null;
       if (!await sound.exists() || await sound.length() <= 44) return null;
@@ -576,7 +637,8 @@ extension LearningActions on AppController {
     if (line == null) return;
     final sound = book.soundOf(key);
     final whole = File('${sound.path}.part');
-    final seconds = await _cutLine(line, sound.parent, File('${sound.path}.mkv'), whole, sampleRate: 22050);
+    final seconds =
+        await _cutLine(line, sound.parent, File('${sound.path}.mkv'), whole, sampleRate: 22050);
     if (seconds == null) return;
     try {
       await whole.writeAsBytes(wavTail(await whole.readAsBytes(), seconds), flush: true);
@@ -598,8 +660,10 @@ extension LearningActions on AppController {
     final at = last.line.start.inSeconds;
     final id = playing?.id ?? 'video';
     final name = switch (what) {
-      ShadowExport.mine => 'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s.wav',
-      ShadowExport.withLine => 'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s-with-line.wav',
+      ShadowExport.mine =>
+        'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s.wav',
+      ShadowExport.withLine =>
+        'lumtub-shadowing-$id-${at ~/ 60}m${(at % 60).toString().padLeft(2, '0')}s-with-line.wav',
       ShadowExport.all => 'lumtub-shadowing-$id-${takes.length}-lines.wav',
     };
     try {
@@ -611,7 +675,9 @@ extension LearningActions on AppController {
           if (take.original == null) await _keepOriginal(take);
         }
         if (takes.any((take) => take.original == null)) {
-          _notice(what == ShadowExport.withLine ? tr('The line is no longer buffered. Play it once more, then save.') : tr('Some lines are no longer buffered, so only your recording is saved for them.'));
+          _notice(what == ShadowExport.withLine
+              ? tr('The line is no longer buffered. Play it once more, then save.')
+              : tr('Some lines are no longer buffered, so only your recording is saved for them.'));
           if (what == ShadowExport.withLine) return false;
         }
         final out = shadowing.fileFor(last.line, 'export', 'wav').path;
@@ -621,7 +687,9 @@ extension LearningActions on AppController {
         bytes = await File(out).readAsBytes();
         await File(out).delete();
       }
-      if (!await saveFileAs(name, bytes, mime: 'audio/wav', label: 'WAV', extension: 'wav')) return false;
+      if (!await saveFileAs(name, bytes, mime: 'audio/wav', label: 'WAV', extension: 'wav')) {
+        return false;
+      }
       _notice(tr('Recording saved'));
       return true;
     } catch (e) {

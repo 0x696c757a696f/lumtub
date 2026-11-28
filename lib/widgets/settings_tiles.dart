@@ -18,7 +18,14 @@ Widget _cancelButton(BuildContext context) => TextButton(
     );
 
 class NormalItem extends StatelessWidget {
-  const NormalItem({super.key, required this.title, this.subtitle, this.leading, this.trailing, this.onTap, this.enabled = true});
+  const NormalItem(
+      {super.key,
+      required this.title,
+      this.subtitle,
+      this.leading,
+      this.trailing,
+      this.onTap,
+      this.enabled = true});
   final String title;
   final String? subtitle;
   final Widget? leading;
@@ -38,7 +45,15 @@ class NormalItem extends StatelessWidget {
 }
 
 class SwitchItem extends StatelessWidget {
-  const SwitchItem({super.key, required this.title, required this.value, required this.onChanged, this.subtitle, this.leading, this.onTap, this.enabled = true});
+  const SwitchItem(
+      {super.key,
+      required this.title,
+      required this.value,
+      required this.onChanged,
+      this.subtitle,
+      this.leading,
+      this.onTap,
+      this.enabled = true});
   final String title;
   final String? subtitle;
   final Widget? leading;
@@ -58,7 +73,9 @@ class SwitchItem extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final split = onTap != null;
     final subtitleText = subtitle == null ? null : Text(subtitle!, style: _subtitleStyle(context));
-    final titleStyle = split && !value ? _titleStyle(context)?.copyWith(color: colors.outline) : _titleStyle(context);
+    final titleStyle = split && !value
+        ? _titleStyle(context)?.copyWith(color: colors.outline)
+        : _titleStyle(context);
     final tile = ListTile(
       enabled: enabled,
       leading: leading,
@@ -72,14 +89,24 @@ class SwitchItem extends StatelessWidget {
     if (!split) return MergeSemantics(child: tile);
     return Row(children: [
       Expanded(child: tile),
-      SizedBox(height: 25, width: 1, child: ColoredBox(color: colors.outline.withValues(alpha: 0.3))),
-      Padding(padding: const EdgeInsets.only(left: 4, right: 24), child: Semantics(label: title, child: _switch())),
+      SizedBox(
+          height: 25, width: 1, child: ColoredBox(color: colors.outline.withValues(alpha: 0.3))),
+      Padding(
+          padding: const EdgeInsets.only(left: 4, right: 24),
+          child: Semantics(label: title, child: _switch())),
     ]);
   }
 }
 
 class PopupItem<T> extends StatelessWidget {
-  const PopupItem({super.key, required this.title, required this.value, required this.values, required this.onSelected, this.leading, this.enabled = true});
+  const PopupItem(
+      {super.key,
+      required this.title,
+      required this.value,
+      required this.values,
+      required this.onSelected,
+      this.leading,
+      this.enabled = true});
   final String title;
   final Widget? leading;
   final T value;
@@ -104,7 +131,8 @@ class PopupItem<T> extends StatelessWidget {
       initialValue: value,
       position: RelativeRect.fromLTRB(left, origin.dy + 5, left, 0),
       items: [
-        for (final (v, label) in values) CheckedPopupMenuItem<T>(value: v, checked: v == value, child: Text(label)),
+        for (final (v, label) in values)
+          CheckedPopupMenuItem<T>(value: v, checked: v == value, child: Text(label)),
       ],
     );
     if (picked != null && picked != value) onSelected(picked);
@@ -119,7 +147,8 @@ class PopupItem<T> extends StatelessWidget {
       title: Text(title, style: theme.textTheme.titleMedium),
       subtitle: Text(
         _currentLabel,
-        style: theme.textTheme.labelMedium?.copyWith(color: enabled ? theme.colorScheme.secondary : theme.disabledColor),
+        style: theme.textTheme.labelMedium
+            ?.copyWith(color: enabled ? theme.colorScheme.secondary : theme.disabledColor),
       ),
       onTap: () => _open(context),
     );
@@ -127,7 +156,8 @@ class PopupItem<T> extends StatelessWidget {
 }
 
 class SelectDialog<T> extends StatelessWidget {
-  const SelectDialog({required this.values, required this.title, super.key, this.value, this.subtitleBuilder});
+  const SelectDialog(
+      {required this.values, required this.title, super.key, this.value, this.subtitleBuilder});
   final T? value;
   final List<(T, String)> values;
   final String title;
@@ -160,7 +190,15 @@ class SelectDialog<T> extends StatelessWidget {
 }
 
 class SliderDialog extends StatefulWidget {
-  const SliderDialog({super.key, required this.value, required this.title, required this.min, required this.max, this.divisions, this.suffix = '', this.precise = 1});
+  const SliderDialog(
+      {super.key,
+      required this.value,
+      required this.title,
+      required this.min,
+      required this.max,
+      this.divisions,
+      this.suffix = '',
+      this.precise = 1});
   final double value;
   final String title;
   final double min;
@@ -190,7 +228,8 @@ class _SliderDialogState extends State<SliderDialog> {
               max: widget.max,
               divisions: widget.divisions,
               label: '${_current.toStringAsFixed(widget.precise)}${widget.suffix}',
-              onChanged: (v) => setState(() => _current = double.parse(v.toStringAsFixed(widget.precise))),
+              onChanged: (v) =>
+                  setState(() => _current = double.parse(v.toStringAsFixed(widget.precise))),
             ),
           ),
         ),
@@ -208,7 +247,9 @@ Future<void> pickFromDialog<T>(
   required List<(T, String)> values,
   required ValueChanged<T> onSelected,
 }) async {
-  final choice = await showDialog<T>(context: context, builder: (_) => SelectDialog<T>(value: value, values: values, title: title));
+  final choice = await showDialog<T>(
+      context: context,
+      builder: (_) => SelectDialog<T>(value: value, values: values, title: title));
   if (choice != null && choice != value) onSelected(choice);
 }
 
@@ -218,13 +259,21 @@ Future<void> pickWithSlider(
   required double value,
   required double min,
   required double max,
-  required ValueChanged<double> onSelected, int? divisions,
+  required ValueChanged<double> onSelected,
+  int? divisions,
   String suffix = '',
   int precise = 0,
 }) async {
   final result = await showDialog<double>(
     context: context,
-    builder: (_) => SliderDialog(value: value, title: title, min: min, max: max, divisions: divisions, suffix: suffix, precise: precise),
+    builder: (_) => SliderDialog(
+        value: value,
+        title: title,
+        min: min,
+        max: max,
+        divisions: divisions,
+        suffix: suffix,
+        precise: precise),
   );
   if (result != null && result != value) onSelected(result);
 }
@@ -248,7 +297,9 @@ class ListEditorDialog extends StatefulWidget {
 
 class _ListEditorDialogState extends State<ListEditorDialog> {
   late final List<String> _items = List.of(widget.initialItems);
-  late final List<TextEditingController> _editors = [for (final s in _items) TextEditingController(text: s)];
+  late final List<TextEditingController> _editors = [
+    for (final s in _items) TextEditingController(text: s)
+  ];
   late final List<FocusNode> _nodes = [for (var i = 0; i < _items.length; i++) _nodeFor(i)];
   final _addController = TextEditingController();
 
@@ -305,7 +356,10 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
       _editors[index].text = _items[index];
       return true;
     }
-    final clash = [for (var i = 0; i < _items.length; i++) if (i != index) _items[i]].contains(text);
+    final clash = [
+      for (var i = 0; i < _items.length; i++)
+        if (i != index) _items[i]
+    ].contains(text);
     if (clash) {
       _duplicateNotice();
       return false;
@@ -378,11 +432,15 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                       controller: _editors[i],
                       focusNode: _nodes[i],
                       style: theme.textTheme.bodyMedium,
-                      decoration: const InputDecoration(isDense: true, border: InputBorder.none, filled: false),
+                      decoration: const InputDecoration(
+                          isDense: true, border: InputBorder.none, filled: false),
                       onSubmitted: (_) => _commitEdit(i),
                       onTapOutside: (_) => _nodes[i].unfocus(),
                     ),
-                    trailing: IconButton(tooltip: tr('Delete'), icon: Icon(AppIcons.trash, size: 20), onPressed: () => _remove(i)),
+                    trailing: IconButton(
+                        tooltip: tr('Delete'),
+                        icon: Icon(AppIcons.trash, size: 20),
+                        onPressed: () => _remove(i)),
                   ),
                 ),
               ),
@@ -407,7 +465,8 @@ class ColorPalette extends StatelessWidget {
         width: 50,
         height: 50,
         padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(color: colorScheme.onInverseSurface, borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(
+            color: colorScheme.onInverseSurface, borderRadius: BorderRadius.circular(10)),
         child: Stack(alignment: Alignment.center, children: [
           ClipOval(
             child: Column(children: [
@@ -415,7 +474,9 @@ class ColorPalette extends StatelessWidget {
               Expanded(
                 child: Row(children: [
                   Expanded(child: SizedBox.expand(child: ColoredBox(color: colorScheme.tertiary))),
-                  Expanded(child: SizedBox.expand(child: ColoredBox(color: colorScheme.primaryContainer))),
+                  Expanded(
+                      child:
+                          SizedBox.expand(child: ColoredBox(color: colorScheme.primaryContainer))),
                 ]),
               ),
             ]),
@@ -424,7 +485,8 @@ class ColorPalette extends StatelessWidget {
             Container(
               width: 23,
               height: 23,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: colorScheme.surfaceContainer),
+              decoration:
+                  BoxDecoration(shape: BoxShape.circle, color: colorScheme.surfaceContainer),
               child: Icon(AppIcons.check, size: 12, color: colorScheme.primary),
             ),
         ]),
@@ -480,7 +542,12 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(trackHeight: 10),
-            child: Slider(value: value.toDouble(), min: 0, max: 255, divisions: 255, onChanged: (v) => _moved(() => set(v.round()))),
+            child: Slider(
+                value: value.toDouble(),
+                min: 0,
+                max: 255,
+                divisions: 255,
+                onChanged: (v) => _moved(() => set(v.round()))),
           ),
         ),
         SizedBox(width: 40, child: Text('$value')),
@@ -496,7 +563,10 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
             child: TextField(
               controller: _hex,
               decoration: const InputDecoration(prefixText: '#', isDense: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9a-fA-F]')), LengthLimitingTextInputFormatter(6)],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[0-9a-fA-F]')),
+                LengthLimitingTextInputFormatter(6)
+              ],
               onChanged: _typed,
             ),
           ),
@@ -505,14 +575,17 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
           _channelRow('B', _b, (v) => _b = v),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             _cancelButton(context),
-            TextButton(onPressed: () => Navigator.pop(context, Color(0xFF000000 | _rgb)), child: Text(tr('OK'))),
+            TextButton(
+                onPressed: () => Navigator.pop(context, Color(0xFF000000 | _rgb)),
+                child: Text(tr('OK'))),
             const SizedBox(width: 16),
           ]),
         ]),
       );
 }
 
-Future<bool> confirmDialog(BuildContext context, {required String title, required String content, String confirm = 'OK'}) async {
+Future<bool> confirmDialog(BuildContext context,
+    {required String title, required String content, String confirm = 'OK'}) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -528,7 +601,12 @@ Future<bool> confirmDialog(BuildContext context, {required String title, require
 }
 
 class OrderedMultiSelectDialog<T> extends StatefulWidget {
-  const OrderedMultiSelectDialog({super.key, required this.title, required this.initValues, required this.values, this.ordered = true});
+  const OrderedMultiSelectDialog(
+      {super.key,
+      required this.title,
+      required this.initValues,
+      required this.values,
+      this.ordered = true});
   final String title;
   final Iterable<T> initValues;
   final List<(T, String, String?)> values;
@@ -557,7 +635,9 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
       child: !on
           ? null
           : widget.ordered
-              ? Text('${position + 1}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.onPrimary))
+              ? Text('${position + 1}',
+                  style:
+                      TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.onPrimary))
               : Icon(AppIcons.check, size: 16, color: colors.onPrimary),
     );
   }
@@ -579,7 +659,8 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
                 dense: true,
                 leading: _marker(theme.colorScheme, _chosen.indexOf(v)),
                 title: Text(name, style: theme.textTheme.titleSmall),
-                subtitle: description == null ? null : Text(description, style: _subtitleStyle(context)),
+                subtitle:
+                    description == null ? null : Text(description, style: _subtitleStyle(context)),
                 onTap: () => _toggle(v),
               ),
           ]),
@@ -587,7 +668,9 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
       ),
       actions: [
         _cancelButton(context),
-        TextButton(onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, List<T>.of(_chosen)), child: Text(tr('OK'))),
+        TextButton(
+            onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, List<T>.of(_chosen)),
+            child: Text(tr('OK'))),
       ],
     );
   }
@@ -605,7 +688,9 @@ class DialogTextFields extends StatefulWidget {
 }
 
 class _DialogTextFieldsState extends State<DialogTextFields> {
-  late final List<TextEditingController> _fields = [for (final text in widget.initial) TextEditingController(text: text)];
+  late final List<TextEditingController> _fields = [
+    for (final text in widget.initial) TextEditingController(text: text)
+  ];
 
   @override
   void dispose() {
@@ -654,22 +739,32 @@ class _TextEditDialogState extends State<TextEditDialog> {
         title: Text(widget.title),
         content: SizedBox(
           width: 520,
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              minLines: widget.maxLines > 1 ? 6 : 1,
-              maxLines: widget.maxLines,
-              style: widget.monospace ? const TextStyle(fontFamily: 'Consolas', fontSize: 13) : null,
-              decoration: InputDecoration(isDense: true, border: const OutlineInputBorder(), hintText: widget.hintText),
-              onChanged: (_) => setState(() {}),
-            ),
-            if (widget.helper != null) ...[const SizedBox(height: 8), widget.helper!(_controller.text)],
-          ]),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  minLines: widget.maxLines > 1 ? 6 : 1,
+                  maxLines: widget.maxLines,
+                  style: widget.monospace
+                      ? const TextStyle(fontFamily: 'Consolas', fontSize: 13)
+                      : null,
+                  decoration: InputDecoration(
+                      isDense: true, border: const OutlineInputBorder(), hintText: widget.hintText),
+                  onChanged: (_) => setState(() {}),
+                ),
+                if (widget.helper != null) ...[
+                  const SizedBox(height: 8),
+                  widget.helper!(_controller.text)
+                ],
+              ]),
         ),
         actions: [
           _cancelButton(context),
-          TextButton(onPressed: () => Navigator.pop(context, _controller.text), child: Text(tr('Save'))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, _controller.text), child: Text(tr('Save'))),
         ],
       );
 }

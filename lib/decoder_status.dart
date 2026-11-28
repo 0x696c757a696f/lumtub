@@ -11,7 +11,9 @@ class DecoderStatus {
 
   const DecoderStatus.unverified() : this._(DecoderKind.unverified);
   const DecoderStatus.software() : this._(DecoderKind.software);
-  const DecoderStatus.hardware(String hwdec, {int height = 0}) : this._(DecoderKind.hardware, hwdec, height);
+  const DecoderStatus.hardware(String hwdec, {int height = 0})
+      : this._(DecoderKind.hardware, hwdec, height);
+
   /// Reads libmpv's `hwdec-current` property after playback started.
   factory DecoderStatus.fromMpv(String hwdecCurrent) {
     final value = hwdecCurrent.trim();
@@ -31,7 +33,9 @@ class DecoderStatus {
   /// This status with the probe's [height] of [measured] kept, for a
   /// decoder libmpv reports (which says nothing of sizes).
   DecoderStatus keeping(DecoderStatus? measured) =>
-      isHardware && height == 0 && (measured?.height ?? 0) > 0 ? DecoderStatus.hardware(hwdec!, height: measured!.height) : this;
+      isHardware && height == 0 && (measured?.height ?? 0) > 0
+          ? DecoderStatus.hardware(hwdec!, height: measured!.height)
+          : this;
 
   static const codecs = ['h264', 'vp9', 'av1'];
 
@@ -44,7 +48,8 @@ class DecoderStatus {
       return switch (kind) {
         DecoderKind.unverified => const DecoderStatus.unverified(),
         DecoderKind.software => const DecoderStatus.software(),
-        DecoderKind.hardware when _validHwdec(hwdec) => DecoderStatus.hardware(hwdec!, height: height),
+        DecoderKind.hardware when _validHwdec(hwdec) =>
+          DecoderStatus.hardware(hwdec!, height: height),
         _ => null,
       };
     }
@@ -56,7 +61,8 @@ class DecoderStatus {
     return null;
   }
 
-  static bool _validHwdec(String? value) => value != null && RegExp(r'^[a-z0-9_-]{1,40}$').hasMatch(value);
+  static bool _validHwdec(String? value) =>
+      value != null && RegExp(r'^[a-z0-9_-]{1,40}$').hasMatch(value);
 
   /// The `video-crop` that keeps a hardware decoder's padding off the
   /// picture. Decoders hand over frames padded to whole blocks (1080 rows
@@ -77,6 +83,7 @@ class DecoderStatus {
       final padded = (size + 15) ~/ 16 * 16;
       return size * size ~/ padded - (padded == size ? margin : 0);
     }
+
     final w = side(width);
     final h = side(height);
     return w == width && h == height ? '' : '${w}x$h+0+0';
@@ -107,11 +114,16 @@ class DecoderStatus {
       };
 
   @override
-  bool operator ==(Object other) => other is DecoderStatus && other.kind == kind && other.hwdec == hwdec && other.height == height;
+  bool operator ==(Object other) =>
+      other is DecoderStatus &&
+      other.kind == kind &&
+      other.hwdec == hwdec &&
+      other.height == height;
 
   @override
   int get hashCode => Object.hash(kind, hwdec, height);
 
   @override
-  String toString() => 'DecoderStatus(${kind.name}${hwdec == null ? '' : ', $hwdec'}${height == 0 ? '' : ', ${height}p'})';
+  String toString() =>
+      'DecoderStatus(${kind.name}${hwdec == null ? '' : ', $hwdec'}${height == 0 ? '' : ', ${height}p'})';
 }

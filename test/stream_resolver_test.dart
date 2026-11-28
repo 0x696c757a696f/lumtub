@@ -23,8 +23,17 @@ Map<String, dynamic> _info({int? expire}) {
       {'format_id': '140', 'vcodec': 'none', 'acodec': 'mp4a'},
     ],
     'requested_formats': [
-      {'url': 'https://r1.googlevideo.com/videoplayback?expire=$exp&itag=137', 'protocol': 'https', 'vcodec': 'avc1', 'http_headers': {'User-Agent': 'UA/1'}},
-      {'url': 'https://r1.googlevideo.com/videoplayback?expire=$exp&itag=140&ü', 'protocol': 'https', 'acodec': 'mp4a'},
+      {
+        'url': 'https://r1.googlevideo.com/videoplayback?expire=$exp&itag=137',
+        'protocol': 'https',
+        'vcodec': 'avc1',
+        'http_headers': {'User-Agent': 'UA/1'}
+      },
+      {
+        'url': 'https://r1.googlevideo.com/videoplayback?expire=$exp&itag=140&ü',
+        'protocol': 'https',
+        'acodec': 'mp4a'
+      },
     ],
   };
 }
@@ -34,14 +43,16 @@ void main() {
 
   test('builds the EDL address mpv\'s ytdl_hook would', () {
     final video = ResolvedVideo(_info(), file, 'f');
-    final tracks = (video.info['requested_formats'] as List).map((t) => (t as Map)['url'] as String).toList();
+    final tracks =
+        (video.info['requested_formats'] as List).map((t) => (t as Map)['url'] as String).toList();
     expect(
       video.directUrl,
       'edl://!new_stream;!no_clip;!no_chapters;%${tracks[0].length}%${tracks[0]};'
       '!new_stream;!no_clip;!no_chapters;%${utf8.encode(tracks[1]).length}%${tracks[1]}',
     );
     expect(video.userAgent, 'UA/1');
-    final relayed = video.directAddress(relay: (url, size) => url.contains('itag=137') ? 'http://127.0.0.1:9/a' : null)!;
+    final relayed = video.directAddress(
+        relay: (url, size) => url.contains('itag=137') ? 'http://127.0.0.1:9/a' : null)!;
     expect(relayed, contains('%20%http://127.0.0.1:9/a;'));
     expect(relayed, contains(tracks[1]));
     expect(video.heights, [1080, 720]);
@@ -59,7 +70,14 @@ void main() {
     final video = ResolvedVideo(info, file, 'f');
     expect(video.frameRatesFor(const PlayerSettings(disabledCodecs: {})), {1440: 50, 1080: 60});
     expect(video.frameRatesFor(const PlayerSettings(disabledCodecs: {VideoCodec.vp9})), {1080: 60});
-    expect([for (final h in video.heightsFor(const PlayerSettings(disabledCodecs: {}))) heightLabel(h, video.frameRatesFor(const PlayerSettings(disabledCodecs: {}))[h])], ['1440p50', '1080p60', '720p']);
+    expect([
+      for (final h in video.heightsFor(const PlayerSettings(disabledCodecs: {})))
+        heightLabel(h, video.frameRatesFor(const PlayerSettings(disabledCodecs: {}))[h])
+    ], [
+      '1440p50',
+      '1080p60',
+      '720p'
+    ]);
     expect(heightLabel(1080, 29.97, 'P'), '1080P');
     expect(heightLabel(2160, 59.94, 'P'), '2160P60');
   });
@@ -74,7 +92,9 @@ void main() {
   test('leaves live and fragmented streams to ytdl_hook', () {
     expect(ResolvedVideo({..._info(), 'is_live': true}, file, 'f').directUrl, isNull);
     final fragmented = _info();
-    ((fragmented['requested_formats'] as List)[0] as Map)['fragments'] = [{'url': 'x'}];
+    ((fragmented['requested_formats'] as List)[0] as Map)['fragments'] = [
+      {'url': 'x'}
+    ];
     expect(ResolvedVideo(fragmented, file, 'f').directUrl, isNull);
     final hls = _info();
     ((hls['requested_formats'] as List)[0] as Map)['protocol'] = 'm3u8_native';
@@ -85,7 +105,10 @@ void main() {
     final soon = DateTime.now().add(const Duration(minutes: 10)).millisecondsSinceEpoch ~/ 1000;
     expect(ResolvedVideo(_info(expire: soon), file, 'f').fresh, isFalse);
     expect(ResolvedVideo(_info(), file, 'f').fresh, isTrue);
-    expect(ResolvedVideo(_info(), file, 'f', now: DateTime.now().subtract(const Duration(hours: 2))).fresh, isFalse);
+    expect(
+        ResolvedVideo(_info(), file, 'f', now: DateTime.now().subtract(const Duration(hours: 2)))
+            .fresh,
+        isFalse);
   });
 
   test('runs yt-dlp once per video and saves the info file', () async {
@@ -94,22 +117,36 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
     final count = File('${dir.path}/count');
     final script = File('${dir.path}/fake-yt-dlp');
-    await script.writeAsString('#!/bin/sh\necho x >> ${count.path}\nsleep 0.2\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await script.writeAsString(
+        '#!/bin/sh\necho x >> ${count.path}\nsleep 0.2\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
     final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
     resolver.prefetch('dQw4w9WgXcQ', 'ytdl');
-    final videos = await Future.wait([resolver.resolve('dQw4w9WgXcQ', 'ytdl'), resolver.resolve('dQw4w9WgXcQ', 'ytdl')]);
+    final videos = await Future.wait(
+        [resolver.resolve('dQw4w9WgXcQ', 'ytdl'), resolver.resolve('dQw4w9WgXcQ', 'ytdl')]);
     expect(identical(videos[0], videos[1]), isTrue);
     expect(count.readAsLinesSync(), hasLength(1));
-    expect((jsonDecode(videos[0].file.readAsStringSync()) as Map)['title'], 'Never Gonna Give You Up');
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--format', 'bestvideo+bestaudio/best', '--', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']));
-    expect(resolver.arguments('dQw4w9WgXcQ', 'bestvideo+bestaudio', formatSort: 'res,fps,vcodec:vp9'), containsAllInOrder(['--format', 'bestvideo+bestaudio', '--format-sort', 'res,fps,vcodec:vp9']));
+    expect(
+        (jsonDecode(videos[0].file.readAsStringSync()) as Map)['title'], 'Never Gonna Give You Up');
+    expect(
+        resolver.arguments('dQw4w9WgXcQ', 'ytdl'),
+        containsAllInOrder([
+          '--format',
+          'bestvideo+bestaudio/best',
+          '--',
+          'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        ]));
+    expect(
+        resolver.arguments('dQw4w9WgXcQ', 'bestvideo+bestaudio', formatSort: 'res,fps,vcodec:vp9'),
+        containsAllInOrder(
+            ['--format', 'bestvideo+bestaudio', '--format-sort', 'res,fps,vcodec:vp9']));
     resolver.forget('dQw4w9WgXcQ');
     await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
     expect(count.readAsLinesSync(), hasLength(2));
   });
 
-  test('a failed video is not prefetched again for a while, and a bot check pauses prefetching', () async {
+  test('a failed video is not prefetched again for a while, and a bot check pauses prefetching',
+      () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
     addTearDown(() => dir.delete(recursive: true));
@@ -140,18 +177,30 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
     final log = File('${dir.path}/log');
     final script = File('${dir.path}/fake-yt-dlp');
-    await script.writeAsString('#!/bin/sh\nfor last; do :; done\nif [ "\$last" = "-" ]; then echo standby >> ${log.path}; read url; echo "read \$url" >> ${log.path}; else echo "run \$last" >> ${log.path}; fi\n'
+    await script.writeAsString(
+        '#!/bin/sh\nfor last; do :; done\nif [ "\$last" = "-" ]; then echo standby >> ${log.path}; read url; echo "read \$url" >> ${log.path}; else echo "run \$last" >> ${log.path}; fi\n'
         'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
-    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..standbyEnabled = true;
-    expect(resolver.standbyArguments('ytdl', null).sublist(resolver.standbyArguments('ytdl', null).length - 2), ['--batch-file', '-']);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+      ..standbyEnabled = true;
+    expect(
+        resolver
+            .standbyArguments('ytdl', null)
+            .sublist(resolver.standbyArguments('ytdl', null).length - 2),
+        ['--batch-file', '-']);
     await resolver.resolve('aaaaaaaaaaa', 'ytdl');
-    for (var i = 0; i < 50 && !(log.existsSync() && log.readAsLinesSync().contains('standby')); i++) {
+    for (var i = 0;
+        i < 50 && !(log.existsSync() && log.readAsLinesSync().contains('standby'));
+        i++) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
     }
     final second = await resolver.resolve('bbbbbbbbbbb', 'ytdl');
     expect(second.info['title'], 'Never Gonna Give You Up');
-    expect(log.readAsLinesSync().take(3), ['run https://www.youtube.com/watch?v=aaaaaaaaaaa', 'standby', 'read https://www.youtube.com/watch?v=bbbbbbbbbbb']);
+    expect(log.readAsLinesSync().take(3), [
+      'run https://www.youtube.com/watch?v=aaaaaaaaaaa',
+      'standby',
+      'read https://www.youtube.com/watch?v=bbbbbbbbbbb'
+    ]);
     // Another format needs other arguments: it runs on its own.
     await resolver.resolve('ccccccccccc', 'bestvideo');
     expect(log.readAsLinesSync(), contains('run https://www.youtube.com/watch?v=ccccccccccc'));
@@ -163,7 +212,8 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
     final log = File('${dir.path}/log');
     final script = File('${dir.path}/fake-yt-dlp');
-    await script.writeAsString('#!/bin/sh\nfor last; do :; done\necho "\$last" >> ${log.path}\nsleep 0.3\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await script.writeAsString(
+        '#!/bin/sh\nfor last; do :; done\necho "\$last" >> ${log.path}\nsleep 0.3\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
     final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
     for (final id in ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc']) {
@@ -172,7 +222,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(log.readAsLinesSync(), hasLength(1));
     await resolver.resolve('ccccccccccc', 'ytdl');
-    expect(log.readAsLinesSync().map((line) => line.substring(line.length - 11)), ['aaaaaaaaaaa', 'ccccccccccc']);
+    expect(log.readAsLinesSync().map((line) => line.substring(line.length - 11)),
+        ['aaaaaaaaaaa', 'ccccccccccc']);
   });
 
   test('asks again signed in for a members-only video, and wipes the cookies', () async {
@@ -188,7 +239,8 @@ void main() {
         'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
     final cookies = _FakeCookies();
-    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..members = () => cookies;
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+      ..members = () => cookies;
     await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
     expect(log.readAsLinesSync(), ['none', 'SAPISID=x']);
     expect(cookies.written, hasLength(1));
@@ -224,33 +276,47 @@ void main() {
   });
 
   test('a live stream is also asked as the clients a phone can play', () {
-    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'))..liveClients = 'default,android_vr';
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete;player_client=default,android_vr']));
+    final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'))
+      ..liveClients = 'default,android_vr';
+    expect(
+        resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true),
+        containsAllInOrder(
+            ['--extractor-args', 'youtube:formats=incomplete;player_client=default,android_vr']));
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl').join(' '), isNot(contains('android_vr')));
     resolver.liveClients = null;
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true), containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete']));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true),
+        containsAllInOrder(['--extractor-args', 'youtube:formats=incomplete']));
   });
 
   test('leaves out the TV clients unless a run without them failed', () {
     final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'));
     expect(resolver.avoidingTv, isTrue);
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--extractor-args', StreamResolver.visionOnly]));
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', cookies: 'c.txt').join(' '), isNot(contains('visionos')), reason: 'signed in keeps its clients');
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true).join(' '), isNot(contains('visionos')), reason: 'live streams keep their own clients');
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'),
+        containsAllInOrder(['--extractor-args', StreamResolver.visionOnly]));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', cookies: 'c.txt').join(' '),
+        isNot(contains('visionos')),
+        reason: 'signed in keeps its clients');
+    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl', live: true).join(' '),
+        isNot(contains('visionos')),
+        reason: 'live streams keep their own clients');
   });
 
-  test('a video taken for a bot is asked again over the other address family, which is kept', () async {
+  test('a video taken for a bot is asked again over the other address family, which is kept',
+      () async {
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
     addTearDown(() => dir.delete(recursive: true));
     addTearDown(() => ProcessTree.switchFamily(null));
     final log = File('${dir.path}/log');
     final script = File('${dir.path}/yt-dlp');
-    await script.writeAsString('#!/bin/sh\necho "\$*" >> ${log.path}\ncase "\$*" in *--force-ipv4*) ;; *) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
+    await script.writeAsString(
+        '#!/bin/sh\necho "\$*" >> ${log.path}\ncase "\$*" in *--force-ipv4*) ;; *) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you\'re not a bot" >&2; exit 1;; esac\n'
         'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
     var both = false;
-    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..bothFamilies = (() => both);
-    await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()), reason: 'one family only: nothing to switch to');
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+      ..bothFamilies = (() => both);
+    await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()),
+        reason: 'one family only: nothing to switch to');
     expect(log.readAsLinesSync().where((l) => l.contains('--force-ipv4')), isEmpty);
     both = true;
     resolver.forget('dQw4w9WgXcQ');
@@ -262,7 +328,8 @@ void main() {
     expect(ProcessTree.familyArguments, isEmpty);
   }, skip: Platform.isWindows ? 'uses a shell script' : null);
 
-  test('asks again signed in when taken for a bot only with the setting on, in the foreground', () async {
+  test('asks again signed in when taken for a bot only with the setting on, in the foreground',
+      () async {
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
     addTearDown(() => dir.delete(recursive: true));
     final script = File('${dir.path}/fake-yt-dlp');
@@ -323,7 +390,8 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
     addTearDown(() => dir.delete(recursive: true));
     final script = File('${dir.path}/fake-yt-dlp');
-    await script.writeAsString('#!/bin/sh\ncase "\$*" in *player_client=visionos*) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you are not a bot" >&2; exit 1;; esac\necho \'{"id":"dQw4w9WgXcQ","formats":[]}\'\n');
+    await script.writeAsString(
+        '#!/bin/sh\ncase "\$*" in *player_client=visionos*) echo "ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you are not a bot" >&2; exit 1;; esac\necho \'{"id":"dQw4w9WgXcQ","formats":[]}\'\n');
     await Process.run('chmod', ['+x', script.path]);
     final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
     final video = await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
@@ -334,7 +402,8 @@ void main() {
     expect(resolver.avoidingTv, isTrue, reason: 'refused TV addresses leave it out again');
   }, skip: Platform.isWindows ? 'uses a shell script' : null);
 
-  test('visionOS addresses refused past 1 MiB turn quick starts off and bring the TV clients back', () async {
+  test('visionOS addresses refused past 1 MiB turn quick starts off and bring the TV clients back',
+      () async {
     final resolver = StreamResolver('yt-dlp', infoDirectory: Directory('x'));
     final asked = <http.Request>[];
     resolver.quickClient = MockClient((request) async {
@@ -343,8 +412,15 @@ void main() {
     });
     final info = {
       'requested_formats': [
-        {'url': 'https://r1.googlevideo.com/videoplayback?itag=137&c=VISIONOS', 'filesize': 9000000, 'http_headers': {'User-Agent': 'UA/1'}},
-        {'url': 'https://r1.googlevideo.com/videoplayback?itag=140&c=VISIONOS', 'filesize': 3000000},
+        {
+          'url': 'https://r1.googlevideo.com/videoplayback?itag=137&c=VISIONOS',
+          'filesize': 9000000,
+          'http_headers': {'User-Agent': 'UA/1'}
+        },
+        {
+          'url': 'https://r1.googlevideo.com/videoplayback?itag=140&c=VISIONOS',
+          'filesize': 3000000
+        },
       ],
     };
     await resolver.checkVisionCut(info);
@@ -369,16 +445,26 @@ void main() {
       asked.add(request);
       return http.Response('', 206);
     });
-    await resolver.checkVisionCut({'requested_formats': [{'url': 'https://r1.googlevideo.com/videoplayback?itag=18', 'filesize': 500000}]});
+    await resolver.checkVisionCut({
+      'requested_formats': [
+        {'url': 'https://r1.googlevideo.com/videoplayback?itag=18', 'filesize': 500000}
+      ]
+    });
     expect(asked, isEmpty);
-    await resolver.checkVisionCut({'requested_formats': [{'url': 'https://r1.googlevideo.com/videoplayback?itag=137', 'filesize': 9000000}]});
+    await resolver.checkVisionCut({
+      'requested_formats': [
+        {'url': 'https://r1.googlevideo.com/videoplayback?itag=137', 'filesize': 9000000}
+      ]
+    });
     expect(asked, hasLength(1));
     expect(resolver.visionCut, isFalse);
     expect(resolver.avoidingTv, isTrue);
   });
 
   test('points yt-dlp at Deno and retries a network error once', () async {
-    expect(StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x')).arguments('dQw4w9WgXcQ', 'ytdl'),
+    expect(
+        StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x'))
+            .arguments('dQw4w9WgXcQ', 'ytdl'),
         containsAllInOrder(['--js-runtimes', r'deno:C:\tools\deno.exe']));
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
@@ -390,7 +476,8 @@ void main() {
         'echo "WARNING: n challenge solving failed" >&2\n'
         'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
-    final video = await StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info')).resolve('dQw4w9WgXcQ', 'ytdl');
+    final video = await StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))
+        .resolve('dQw4w9WgXcQ', 'ytdl');
     expect(video.info['title'], 'Never Gonna Give You Up');
     expect(count.readAsLinesSync(), hasLength(2));
   });
@@ -401,7 +488,8 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
     final count = File('${dir.path}/count');
     final script = File('${dir.path}/fake-yt-dlp');
-    await script.writeAsString('#!/bin/sh\necho x >> ${count.path}\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await script.writeAsString(
+        '#!/bin/sh\necho x >> ${count.path}\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
     await Process.run('chmod', ['+x', script.path]);
     final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
     final first = await resolver.resolve('dQw4w9WgXcQ', 'best[height<=720]');

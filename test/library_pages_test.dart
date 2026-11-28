@@ -26,7 +26,13 @@ void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
   final videos = [
     for (var i = 0; i < 6; i++)
-      VideoItem(id: 'video${i}xxxxx', title: '视频 $i', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: 200, channelId: channel.id),
+      VideoItem(
+          id: 'video${i}xxxxx',
+          title: '视频 $i',
+          channel: 'Rick Astley',
+          url: 'https://www.youtube.com/watch?v=video${i}xxxxx',
+          duration: 200,
+          channelId: channel.id),
   ];
 
   late AppController controller;
@@ -80,7 +86,8 @@ void main() {
     expect(find.text('Show all 101'), findsOneWidget);
 
     await pump(tester, SubscriptionsPage(controller: controller), width: 900);
-    final strip = find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal);
+    final strip =
+        find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal);
     Finder inStrip(String text) => find.descendant(of: strip, matching: find.text(text));
     // The channel that just posted comes right after 全部, in the same row.
     final rick = tester.getTopLeft(inStrip('Rick Astley'));
@@ -121,7 +128,10 @@ void main() {
       'snippet': {
         'title': 'Rick Astley',
         'resourceId': {'channelId': channel.id},
-        'thumbnails': {'default': {'url': 'https://yt3.ggpht.com/a=s88'}, 'medium': {'url': 'https://yt3.ggpht.com/a=s240'}},
+        'thumbnails': {
+          'default': {'url': 'https://yt3.ggpht.com/a=s88'},
+          'medium': {'url': 'https://yt3.ggpht.com/a=s240'}
+        },
       },
     })!;
     expect(ref.avatar, 'https://yt3.ggpht.com/a=s240');
@@ -161,7 +171,9 @@ void main() {
 
   testWidgets('channel page lists uploads and follows the channel', (tester) async {
     controller.channel = channel;
-    controller.channelVideos = VideoListLoader(() => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))..loadMore();
+    controller.channelVideos = VideoListLoader(
+        () => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))
+      ..loadMore();
     addTearDown(controller.channelVideos!.dispose);
     await pump(tester, ChannelPage(controller: controller));
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
@@ -177,11 +189,15 @@ void main() {
     unawaited(library.flush());
   });
 
-  testWidgets("on a phone the channel's tabs are one row that stays at the top while the videos scroll", (tester) async {
+  testWidgets(
+      "on a phone the channel's tabs are one row that stays at the top while the videos scroll",
+      (tester) async {
     debugTouchFirst = true;
     addTearDown(() => debugTouchFirst = null);
     controller.channel = channel;
-    controller.channelVideos = VideoListLoader(() => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))..loadMore();
+    controller.channelVideos = VideoListLoader(
+        () => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))
+      ..loadMore();
     addTearDown(controller.channelVideos!.dispose);
     await pump(tester, ChannelPage(controller: controller), width: 412);
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
@@ -250,10 +266,19 @@ void main() {
     unawaited(library.flush());
   });
 
-  testWidgets('a playlist sorts its videos, turns around and takes a dragged order', (tester) async {
+  testWidgets('a playlist sorts its videos, turns around and takes a dragged order',
+      (tester) async {
     final playlist = library.createPlaylist('周末歌单');
     for (final (i, length) in [30, 300, 120].indexed) {
-      library.addToPlaylist(playlist, VideoItem(id: 'video${i}xxxxx', title: '视频 $i', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: length, channelId: channel.id));
+      library.addToPlaylist(
+          playlist,
+          VideoItem(
+              id: 'video${i}xxxxx',
+              title: '视频 $i',
+              channel: 'Rick Astley',
+              url: 'https://www.youtube.com/watch?v=video${i}xxxxx',
+              duration: length,
+              channelId: channel.id));
     }
     controller.openPlaylistId = playlist.id;
     await pump(tester, PlaylistDetailPage(controller: controller));
@@ -261,6 +286,7 @@ void main() {
       final at = tester.getTopLeft(find.text(title));
       return at.dy * 10000 + at.dx;
     }
+
     expect(y('视频 0'), lessThan(y('视频 1')));
 
     await tester.tap(byTooltip('Video order'));

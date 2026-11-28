@@ -36,7 +36,8 @@ void main() {
 
   double width(WidgetTester tester) => tester.getRect(find.byKey(card)).width;
 
-  testWidgets('sinks while held and springs back on release, without building the card again', (tester) async {
+  testWidgets('sinks while held and springs back on release, without building the card again',
+      (tester) async {
     await tester.pumpWidget(app());
     expect(width(tester), 200);
     final gesture = await tester.startGesture(tester.getCenter(find.byKey(card)));

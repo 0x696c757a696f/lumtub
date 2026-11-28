@@ -31,12 +31,17 @@ void main() {
     FlutterError.onError = errors.add;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: ListView(children: const [SizedBox(height: 50), _Broken(), SizedBox(height: 50, child: Text('after'))]),
+        body: ListView(children: const [
+          SizedBox(height: 50),
+          _Broken(),
+          SizedBox(height: 50, child: Text('after'))
+        ]),
       ),
     ));
     FlutterError.onError = report;
     expect(errors.single.exception, isA<StateError>());
-    expect(tester.getSize(find.byType(BuildErrorBox)).height, lessThanOrEqualTo(BuildErrorBox.maxHeight));
+    expect(tester.getSize(find.byType(BuildErrorBox)).height,
+        lessThanOrEqualTo(BuildErrorBox.maxHeight));
     expect(find.text('after'), findsOneWidget);
     expect(find.textContaining('could not be shown'), findsOneWidget);
   });

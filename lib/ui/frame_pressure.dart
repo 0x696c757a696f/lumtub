@@ -56,7 +56,8 @@ abstract final class FramePressure {
         ..reset()
         ..start();
       strained.value = true;
-      logInfo('Frames keep running late ($_late of the last $window): lighter drawing until they keep time');
+      logInfo(
+          'Frames keep running late ($_late of the last $window): lighter drawing until they keep time');
     } else if (strained.value && _late <= easedAt && _since.elapsed >= held) {
       strained.value = false;
       logInfo('Frames keep time again: full drawing');

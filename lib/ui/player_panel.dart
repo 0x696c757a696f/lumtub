@@ -12,7 +12,11 @@ import 'motion.dart';
 /// apply at once while the video keeps playing (更多设置, 字幕).
 /// A phone held upright gets a sheet under the player instead, as phone
 /// video apps open their panels, so the video stays in view.
-Future<void> showPlayerPanel(BuildContext context, {required String title, required WidgetBuilder builder, List<PanelAction> actions = const [], double width = 400}) {
+Future<void> showPlayerPanel(BuildContext context,
+    {required String title,
+    required WidgetBuilder builder,
+    List<PanelAction> actions = const [],
+    double width = 400}) {
   final size = MediaQuery.sizeOf(context);
   if (watchesLikePhone(context) && size.height > size.width) {
     final below = size.height - MediaQuery.paddingOf(context).top - size.width * 9 / 16;
@@ -39,21 +43,29 @@ Future<void> showPlayerPanel(BuildContext context, {required String title, requi
   return _sidePanel(context, title: title, actions: actions, width: width, builder: builder);
 }
 
-Future<void> _sidePanel(BuildContext context, {required String title, required List<PanelAction> actions, required double width, required WidgetBuilder builder}) => showGeneralDialog<void>(
+Future<void> _sidePanel(BuildContext context,
+        {required String title,
+        required List<PanelAction> actions,
+        required double width,
+        required WidgetBuilder builder}) =>
+    showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: tr('Close'),
       barrierColor: Colors.black26,
       transitionDuration: Motion.of(Ease.fade),
-      pageBuilder: (context, animation, secondary) => _Panel(title: title, actions: actions, width: width, builder: builder),
+      pageBuilder: (context, animation, secondary) =>
+          _Panel(title: title, actions: actions, width: width, builder: builder),
       transitionBuilder: (context, animation, secondary, child) => SlideTransition(
-        position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Ease.curve)),
+        position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(CurvedAnimation(parent: animation, curve: Ease.curve)),
         child: child,
       ),
     );
 
 class _Panel extends StatefulWidget {
-  const _Panel({required this.title, required this.actions, required this.width, required this.builder});
+  const _Panel(
+      {required this.title, required this.actions, required this.width, required this.builder});
   final String title;
   final List<PanelAction> actions;
   final double width;
@@ -74,7 +86,9 @@ class _PanelState extends State<_Panel> {
     final size = MediaQuery.sizeOf(context);
     final width = _width(size);
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final covers = rtl ? Rect.fromLTWH(0, 0, width, size.height) : Rect.fromLTWH(size.width - width, 0, width, size.height);
+    final covers = rtl
+        ? Rect.fromLTWH(0, 0, width, size.height)
+        : Rect.fromLTWH(size.width - width, 0, width, size.height);
     if (covers == _covers) return;
     _covers = covers;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,19 +156,29 @@ class PanelHeader extends StatelessWidget {
   static const minTitle = 120.0;
 
   /// Whether labelled [actions] fit beside [title] in [width].
-  static bool labelsFit(BuildContext context, {required String title, required List<PanelAction> actions, required double width, required bool closes}) {
+  static bool labelsFit(BuildContext context,
+      {required String title,
+      required List<PanelAction> actions,
+      required double width,
+      required bool closes}) {
     if (actions.isEmpty) return true;
     final theme = Theme.of(context);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     double measure(String text, TextStyle? style) {
-      final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: direction, textScaler: scaler, maxLines: 1)..layout();
+      final painter = TextPainter(
+          text: TextSpan(text: text, style: style),
+          textDirection: direction,
+          textScaler: scaler,
+          maxLines: 1)
+        ..layout();
       final width = painter.width;
       painter.dispose();
       return width;
     }
 
-    final labelStyle = theme.textButtonTheme.style?.textStyle?.resolve(const {}) ?? theme.textTheme.labelLarge;
+    final labelStyle =
+        theme.textButtonTheme.style?.textStyle?.resolve(const {}) ?? theme.textTheme.labelLarge;
     var needed = min(measure(title, theme.textTheme.titleMedium), minTitle) + (closes ? 48 : 0);
     for (final action in actions) {
       // TextButton.icon: padding, the 18 px icon, the gap, the label.
@@ -165,14 +189,30 @@ class PanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
-        final labelled = labelsFit(context, title: title, actions: actions, width: constraints.maxWidth, closes: closes);
+        final labelled = labelsFit(context,
+            title: title, actions: actions, width: constraints.maxWidth, closes: closes);
         return Row(children: [
-          Expanded(child: Text(title, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium)),
+          Expanded(
+              child: Text(title,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium)),
           for (final action in actions)
             labelled
-                ? TextButton.icon(onPressed: () => action.onPressed(context), icon: Icon(action.icon, size: 18), label: Text(action.label, maxLines: 1))
-                : IconButton(tooltip: action.label, onPressed: () => action.onPressed(context), icon: Icon(action.icon, size: 20)),
-          if (closes) IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).pop(), icon: Icon(AppIcons.x)),
+                ? TextButton.icon(
+                    onPressed: () => action.onPressed(context),
+                    icon: Icon(action.icon, size: 18),
+                    label: Text(action.label, maxLines: 1))
+                : IconButton(
+                    tooltip: action.label,
+                    onPressed: () => action.onPressed(context),
+                    icon: Icon(action.icon, size: 20)),
+          if (closes)
+            IconButton(
+                tooltip: tr('Close'),
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Icon(AppIcons.x)),
         ]);
       });
 }
@@ -185,7 +225,11 @@ class PanelHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Text(text, style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.primary)),
+        child: Text(text,
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge!
+                .copyWith(color: Theme.of(context).colorScheme.primary)),
       );
 }
 
@@ -193,7 +237,14 @@ class PanelHeading extends StatelessWidget {
 /// [collapsed] shows only the chosen value until 全部 is clicked, for
 /// long lists such as a video's audio tracks.
 class PanelChoices<T> extends StatefulWidget {
-  const PanelChoices({super.key, required this.label, required this.value, required this.values, required this.onSelected, this.icon, this.collapsed = false});
+  const PanelChoices(
+      {super.key,
+      required this.label,
+      required this.value,
+      required this.values,
+      required this.onSelected,
+      this.icon,
+      this.collapsed = false});
   final String label;
   final IconData? icon;
   final T value;
@@ -211,12 +262,20 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final shown = _open ? widget.values : [for (final entry in widget.values) if (entry.$1 == widget.value) entry];
+    final shown = _open
+        ? widget.values
+        : [
+            for (final entry in widget.values)
+              if (entry.$1 == widget.value) entry
+          ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: theme.colorScheme.onSurfaceVariant), const SizedBox(width: 8)],
+          if (widget.icon != null) ...[
+            Icon(widget.icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8)
+          ],
           Flexible(child: Text(widget.label, style: theme.textTheme.bodyMedium)),
         ]),
         const SizedBox(height: 4),
@@ -247,7 +306,12 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
 /// A tile that turns something on and off, for the switches at the top
 /// of 更多设置.
 class PanelToggle extends StatelessWidget {
-  const PanelToggle({super.key, required this.label, required this.icon, required this.value, required this.onChanged});
+  const PanelToggle(
+      {super.key,
+      required this.label,
+      required this.icon,
+      required this.value,
+      required this.onChanged});
   final String label;
   final IconData icon;
   final bool value;
@@ -270,16 +334,24 @@ class PanelToggle extends StatelessWidget {
           width: 116,
           child: Material(
             color: value ? colors.primaryContainer : Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: () => onChanged(!value),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 child: Column(children: [
-                  Icon(icon, size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
+                  Icon(icon,
+                      size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
                   const SizedBox(height: 4),
-                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: value ? colors.onPrimaryContainer : colors.onSurface)),
+                  Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: value ? colors.onPrimaryContainer : colors.onSurface)),
                 ]),
               ),
             ),
@@ -292,7 +364,13 @@ class PanelToggle extends StatelessWidget {
 
 /// A row with a switch.
 class PanelSwitch extends StatelessWidget {
-  const PanelSwitch({super.key, required this.label, required this.icon, required this.value, required this.onChanged, this.detail});
+  const PanelSwitch(
+      {super.key,
+      required this.label,
+      required this.icon,
+      required this.value,
+      required this.onChanged,
+      this.detail});
   final String label;
   final String? detail;
   final IconData icon;
@@ -312,11 +390,18 @@ class PanelSwitch extends StatelessWidget {
 
 /// A row that opens something else, or does something once.
 class PanelLink extends StatelessWidget {
-  const PanelLink({super.key, required this.label, required this.icon, required this.onTap, this.detail, this.opens = true});
+  const PanelLink(
+      {super.key,
+      required this.label,
+      required this.icon,
+      required this.onTap,
+      this.detail,
+      this.opens = true});
   final String label;
   final String? detail;
   final IconData icon;
   final VoidCallback onTap;
+
   /// Shows a chevron: the row leads to another page or dialog.
   final bool opens;
 
@@ -325,7 +410,10 @@ class PanelLink extends StatelessWidget {
         dense: true,
         leading: Icon(icon, size: 20),
         title: Text(label),
-        subtitle: detail == null ? null : Text(detail!, style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12)),
+        subtitle: detail == null
+            ? null
+            : Text(detail!,
+                style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12)),
         trailing: opens ? Icon(AppIcons.caretRight) : null,
         onTap: onTap,
       );

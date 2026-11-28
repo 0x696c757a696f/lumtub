@@ -10,7 +10,7 @@ meet beyond style (performance, network, design, usability and more) is in
 
 | Code | Guide | Checked by |
 | --- | --- | --- |
-| Dart and Flutter (`lib/`, `test/`) | [Effective Dart][dart] | `flutter analyze` with `analysis_options.yaml` |
+| Dart and Flutter (`lib/`, `test/`) | [Effective Dart][dart] | `flutter analyze` and `dart format` with `analysis_options.yaml` |
 | Rust (`native/lumtub_core`, `website/`) | [Google's Rust style guide][rust] | rustfmt, clippy ([RUST-STYLE.md](RUST-STYLE.md)) |
 | C++ (Windows and Linux runners) | [Google C++ Style Guide][cpp] | clang-format with `.clang-format` |
 | Kotlin (`android/`) | [Android Kotlin style guide][kotlin] | review; `.editorconfig` for editors and ktlint |
@@ -72,10 +72,9 @@ Checks fails on any finding.
   first, no positional `bool` parameters, super parameters, no redundant
   arguments or parentheses.
 - Doc comments use `///` and refer to names in scope with `[name]`.
-- **Formatting:** `dart format` is not run over the repository: its 80
-  columns would rewrap almost every file. Keep to the style of the file
-  being edited. New files may be formatted with
-  `dart format --page-width 160`.
+- **Formatting:** `dart format lib test`, 100 columns (`formatter` in
+  `analysis_options.yaml`); Checks fails on any change it would make. The
+  commit that formatted every file is in `.git-blame-ignore-revs`.
 - `BuildContext` is not used after an `await` unless `mounted` was checked
   (`use_build_context_synchronously`, from `flutter_lints`).
 - `unawaited(...)` only says nothing waits: the future still handles its

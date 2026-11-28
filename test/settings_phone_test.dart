@@ -17,11 +17,15 @@ void main() {
         final controller = AppController();
         await tester.pumpWidget(MaterialApp(
           theme: buildAppTheme(Colors.red, Brightness.light),
-          builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
+          builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!),
           // The group's rows as a phone shows them, on a page of their own.
           home: Scaffold(body: Builder(builder: (context) {
             final entries = settingEntries(category, controller);
-            return ListView.builder(itemCount: entries.length, itemBuilder: (context, i) => entries[i].builder(context));
+            return ListView.builder(
+                itemCount: entries.length,
+                itemBuilder: (context, i) => entries[i].builder(context));
           })),
         ));
         await tester.pump();

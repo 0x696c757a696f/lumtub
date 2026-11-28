@@ -25,22 +25,41 @@ enum ExploreSection {
   frontier('Frontier research', isAcademic: true),
   academicLive('Academic live', isLive: true, isAcademic: true);
 
-  const ExploreSection(this._label, {this.isLive = false, this.isFaith = false, this.isAcademic = false});
+  const ExploreSection(this._label,
+      {this.isLive = false, this.isFaith = false, this.isAcademic = false});
   final String _label;
   String get label => tr(_label);
+
   /// Shows streams rather than videos.
   final bool isLive;
+
   /// One of 宗教与信仰's tabs.
   final bool isFaith;
+
   /// One of 学术's tabs.
   final bool isAcademic;
 
   static const faithTabs = [faith, faithStudy, faithArts, faithLive];
-  static const academicTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, frontier, academicLive];
+  static const academicTabs = [
+    humanities,
+    socialSciences,
+    naturalSciences,
+    engineering,
+    medicine,
+    frontier,
+    academicLive
+  ];
 
   static const _faithVideoTabs = [faith, faithStudy, faithArts];
   static const _faithLiveTabs = [faithLive];
-  static const _academicVideoTabs = [humanities, socialSciences, naturalSciences, engineering, medicine, frontier];
+  static const _academicVideoTabs = [
+    humanities,
+    socialSciences,
+    naturalSciences,
+    engineering,
+    medicine,
+    frontier
+  ];
   static const _academicLiveTabs = [academicLive];
 
   /// The tabs this section is one of, shown as a row above its zones; null
@@ -57,11 +76,13 @@ enum ExploreSection {
 /// A sub-category of a zone: its name, the words searched for, and its own
 /// sub-categories, if it is split further.
 class ExploreSub {
-  const ExploreSub(this._label, this.query, {this.subs = const [], this.tradition, this.opensLearning = false});
+  const ExploreSub(this._label, this.query,
+      {this.subs = const [], this.tradition, this.opensLearning = false});
   final String _label;
   String get label => tr(_label);
   final String query;
   final List<ExploreSub> subs;
+
   /// The faith tradition its videos must belong to; null to keep the
   /// enclosing zone's.
   final FaithTradition? tradition;
@@ -74,20 +95,26 @@ class ExploreSub {
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false, this.tradition});
+  const ExploreTopic(this._label, this.icon, this.query,
+      {this.subs = const [], this.custom = false, this.opens, this.mix = false, this.tradition});
   final String _label;
+
   /// The faith tradition its videos must belong to (see [FaithTradition]).
   final FaithTradition? tradition;
+
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
   final IconData icon;
   final String query;
   final List<ExploreSub> subs;
+
   /// Added by the user; it can be removed.
   final bool custom;
+
   /// A zone that leads to another part of the page, as 宗教信仰 leads to
   /// the tabs of 宗教与信仰, rather than searching itself.
   final ExploreSection? opens;
+
   /// 全部: a mix of the other zones, with one of the history's interests
   /// when there is a history, rather than a search of its own.
   final bool mix;
@@ -184,7 +211,8 @@ class CustomTopic {
     final label = raw['label']?.toString().trim() ?? '';
     final query = raw['query']?.toString().trim() ?? '';
     if (label.isEmpty || query.isEmpty) return null;
-    final section = ExploreSection.values.where((s) => s.name == raw['section']).firstOrNull ?? ExploreSection.popular;
+    final section = ExploreSection.values.where((s) => s.name == raw['section']).firstOrNull ??
+        ExploreSection.popular;
     return CustomTopic(label, query, section);
   }
 }
@@ -305,7 +333,8 @@ final popularTopics = <ExploreTopic>[
     const ExploreSub('Debate', '辩论 debate'),
   ]),
   ExploreTopic('Religion & faith', AppIcons.church, '宗教 信仰', opens: ExploreSection.faith),
-  ExploreTopic('Academia', AppIcons.graduationCap, '学术 讲座 lecture', opens: ExploreSection.humanities),
+  ExploreTopic('Academia', AppIcons.graduationCap, '学术 讲座 lecture',
+      opens: ExploreSection.humanities),
   ExploreTopic('Science', AppIcons.flask, '科学', subs: [
     const ExploreSub('Universe', '宇宙 天文'),
     const ExploreSub('Physics', '物理'),
@@ -566,7 +595,8 @@ final liveTopics = <ExploreTopic>[
     ExploreSub('Dance workouts', 'dance workout live'),
   ]),
   ExploreTopic('Religion & faith', AppIcons.church, '宗教 直播', opens: ExploreSection.faithLive),
-  ExploreTopic('Academia', AppIcons.graduationCap, '学术 直播 lecture live', opens: ExploreSection.academicLive),
+  ExploreTopic('Academia', AppIcons.graduationCap, '学术 直播 lecture live',
+      opens: ExploreSection.academicLive),
   ExploreTopic('24/7 live', AppIcons.radio, '24/7 live', subs: [
     const ExploreSub('Radio for sleep', 'lofi radio 24/7', subs: [
       ExploreSub('Lo-Fi', 'lofi hip hop radio'),
@@ -594,7 +624,8 @@ final liveTopics = <ExploreTopic>[
 ];
 
 /// The built-in zones of [section], then the user's own.
-List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> custom = const []]) => [
+List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> custom = const []]) =>
+    [
       ...switch (section) {
         ExploreSection.popular => popularTopics,
         ExploreSection.live => liveTopics,
@@ -617,7 +648,8 @@ List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> cu
 /// [topics] in the user's [order] (zone keys, the first ones pinned), with
 /// [hidden] ones left out. Zones the order does not name keep their place
 /// after the ones it does.
-List<ExploreTopic> arrangeTopics(List<ExploreTopic> topics, List<String> order, Set<String> hidden) {
+List<ExploreTopic> arrangeTopics(
+    List<ExploreTopic> topics, List<String> order, Set<String> hidden) {
   final rank = {for (final (i, key) in order.indexed) key: i};
   final indexed = topics.indexed.toList()
     ..sort((a, b) {
@@ -628,7 +660,10 @@ List<ExploreTopic> arrangeTopics(List<ExploreTopic> topics, List<String> order, 
       if (rb != null) return 1;
       return a.$1.compareTo(b.$1);
     });
-  final shown = [for (final (_, topic) in indexed) if (!hidden.contains(topic.key)) topic];
+  final shown = [
+    for (final (_, topic) in indexed)
+      if (!hidden.contains(topic.key)) topic
+  ];
   // Never leave the strip empty.
   return shown.isEmpty ? [indexed.first.$2] : shown;
 }
@@ -653,8 +688,9 @@ enum ExploreMode {
   final bool live;
 
   /// The modes [section] offers; 精选 is only for 宗教与信仰 and 学术.
-  static List<ExploreMode> of(ExploreSection section) =>
-      values.where((m) => m.live == section.isLive && (m != curated || section.tabs != null)).toList();
+  static List<ExploreMode> of(ExploreSection section) => values
+      .where((m) => m.live == section.isLive && (m != curated || section.tabs != null))
+      .toList();
   static ExploreMode defaultOf(ExploreSection section) => section.isLive
       ? liveViewers
       : section.tabs != null
@@ -678,7 +714,13 @@ const gemMaxViews = 50000;
 const freshMaxViews = 5000;
 
 /// The periods popular videos can be counted over; [SearchUploadDate.any] is all time.
-const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year, SearchUploadDate.any];
+const explorePeriods = [
+  SearchUploadDate.today,
+  SearchUploadDate.week,
+  SearchUploadDate.month,
+  SearchUploadDate.year,
+  SearchUploadDate.any
+];
 
 /// YouTube's `sp` for a zone shown by [mode]: the most viewed of [period]
 /// (long videos too), the newest, the most relevant (of the year, or of all time for 精选;
@@ -694,14 +736,45 @@ String exploreParams(
 }) =>
     switch (mode) {
       // 前沿研究's 精选 is what is new: the most relevant of the past year.
-      ExploreMode.curated => searchParams(type: SearchFilter.videos, date: recent ? SearchUploadDate.year : SearchUploadDate.any, duration: duration, quality: quality)!,
-      ExploreMode.popular => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: period, duration: duration, quality: quality)!,
-      ExploreMode.latest => searchParams(type: SearchFilter.videos, sort: SearchSort.date, duration: duration, quality: quality)!,
-      ExploreMode.forYou => searchParams(type: SearchFilter.videos, date: SearchUploadDate.month, duration: duration, quality: quality)!,
-      ExploreMode.gems => searchParams(type: SearchFilter.videos, date: SearchUploadDate.year, duration: duration, quality: quality)!,
-      ExploreMode.fresh => searchParams(type: SearchFilter.videos, date: SearchUploadDate.week, duration: duration, quality: quality)!,
-      ExploreMode.long => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: period, duration: SearchDuration.long, quality: quality)!,
-      ExploreMode.liveViewers => searchParams(type: SearchFilter.live, sort: SearchSort.views, quality: quality)!,
-      ExploreMode.liveLatest => searchParams(type: SearchFilter.live, sort: SearchSort.date, quality: quality)!,
-      ExploreMode.liveUpcoming || ExploreMode.liveReplay => searchParams(type: SearchFilter.videos, sort: SearchSort.date, quality: quality)!,
+      ExploreMode.curated => searchParams(
+          type: SearchFilter.videos,
+          date: recent ? SearchUploadDate.year : SearchUploadDate.any,
+          duration: duration,
+          quality: quality)!,
+      ExploreMode.popular => searchParams(
+          type: SearchFilter.videos,
+          sort: SearchSort.views,
+          date: period,
+          duration: duration,
+          quality: quality)!,
+      ExploreMode.latest => searchParams(
+          type: SearchFilter.videos, sort: SearchSort.date, duration: duration, quality: quality)!,
+      ExploreMode.forYou => searchParams(
+          type: SearchFilter.videos,
+          date: SearchUploadDate.month,
+          duration: duration,
+          quality: quality)!,
+      ExploreMode.gems => searchParams(
+          type: SearchFilter.videos,
+          date: SearchUploadDate.year,
+          duration: duration,
+          quality: quality)!,
+      ExploreMode.fresh => searchParams(
+          type: SearchFilter.videos,
+          date: SearchUploadDate.week,
+          duration: duration,
+          quality: quality)!,
+      ExploreMode.long => searchParams(
+          type: SearchFilter.videos,
+          sort: SearchSort.views,
+          date: period,
+          duration: SearchDuration.long,
+          quality: quality)!,
+      ExploreMode.liveViewers =>
+        searchParams(type: SearchFilter.live, sort: SearchSort.views, quality: quality)!,
+      ExploreMode.liveLatest =>
+        searchParams(type: SearchFilter.live, sort: SearchSort.date, quality: quality)!,
+      ExploreMode.liveUpcoming ||
+      ExploreMode.liveReplay =>
+        searchParams(type: SearchFilter.videos, sort: SearchSort.date, quality: quality)!,
     };

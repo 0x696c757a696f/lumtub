@@ -33,7 +33,8 @@ class CoreLexicon implements LineSource {
 
   /// Opens [path] as [language]'s dictionary; throws when the core cannot.
   static CoreLexicon open(String language, String path) {
-    final answer = callCoreJson('lumtub_lexicon_open', jsonEncode({'language': language, 'path': path}));
+    final answer =
+        callCoreJson('lumtub_lexicon_open', jsonEncode({'language': language, 'path': path}));
     if (answer['error'] != null) throw StateError('${answer['error']}');
     return CoreLexicon._(language, (answer['words'] as num?)?.toInt() ?? 0);
   }
@@ -47,18 +48,25 @@ class CoreLexicon implements LineSource {
     return CoreLexicon._(language, (answer['words'] as num?)?.toInt() ?? 0);
   }
 
-  static void close(String language) => callCoreJson('lumtub_lexicon_close', jsonEncode({'language': language}));
+  static void close(String language) =>
+      callCoreJson('lumtub_lexicon_close', jsonEncode({'language': language}));
 
   @override
   List<FoundLine> find(String key) {
     final cached = _cache[key];
     if (cached != null) return cached;
-    final answer = callCoreJson('lumtub_lexicon_find', jsonEncode({'language': language, 'keys': [key]}));
+    final answer = callCoreJson(
+        'lumtub_lexicon_find',
+        jsonEncode({
+          'language': language,
+          'keys': [key]
+        }));
     final lists = answer['found'];
     final found = <FoundLine>[
       if (lists is List && lists.isNotEmpty && lists.first is List)
         for (final row in lists.first as List)
-          if (row is Map && row['line'] is String) (line: row['line'] as String, form: row['form'] == true),
+          if (row is Map && row['line'] is String)
+            (line: row['line'] as String, form: row['form'] == true),
     ];
     // Subtitles repeat words; a few thousand cached keep lookups cheap.
     if (_cache.length > 4000) _cache.clear();
@@ -133,7 +141,8 @@ class CoreWords {
   /// Opens the Lindera dictionary folder [path] for [language]; throws
   /// when the core cannot.
   static void open(String language, String path) {
-    final answer = callCoreJson('lumtub_words_open', jsonEncode({'language': language, 'path': path}));
+    final answer =
+        callCoreJson('lumtub_words_open', jsonEncode({'language': language, 'path': path}));
     if (answer['error'] != null) throw StateError('${answer['error']}');
     _open.add(language);
     _cache.clear();
@@ -161,14 +170,24 @@ class CoreWords {
     if (!available) return null;
     final key = '$language\u0000$line';
     if (_cache.containsKey(key)) return _cache[key];
-    final answer = callCoreJson('lumtub_words', jsonEncode({'language': language, 'lines': [line]}));
+    final answer = callCoreJson(
+        'lumtub_words',
+        jsonEncode({
+          'language': language,
+          'lines': [line]
+        }));
     final lines = answer['lines'];
     List<CoreWord>? words;
     if (lines is List && lines.isNotEmpty && lines.first is List) {
       words = [
         for (final w in lines.first as List)
           if (w is Map && w['s'] is int && w['e'] is int && w['k'] is List)
-            (start: w['s'] as int, end: w['e'] as int, keys: [for (final k in w['k'] as List) '$k'], reading: w['r'] as String?),
+            (
+              start: w['s'] as int,
+              end: w['e'] as int,
+              keys: [for (final k in w['k'] as List) '$k'],
+              reading: w['r'] as String?
+            ),
       ];
     }
     // Subtitles come back to a line: keep the latest few thousand.

@@ -14,7 +14,11 @@ void main() {
     IosVideoLayer.handleEvent(7, 'play', null);
     IosVideoLayer.handleEvent(7, 'failed:not possible now', null);
     IosVideoLayer.handleEvent(7, 'something new', null);
-    expect(seen, [(IosPipEvent.skip, -15.0, null), (IosPipEvent.play, null, null), (IosPipEvent.failed, null, 'not possible now')]);
+    expect(seen, [
+      (IosPipEvent.skip, -15.0, null),
+      (IosPipEvent.play, null, null),
+      (IosPipEvent.failed, null, 'not possible now')
+    ]);
   });
 
   test('the window counts as open from its start until it stops or fails', () {

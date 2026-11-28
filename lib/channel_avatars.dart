@@ -27,6 +27,8 @@ class ChannelAvatars {
     final tag = RegExp(r'<meta\s+property="og:image"\s+content="([^"]+)"').firstMatch(html);
     final url = tag == null ? null : ChannelRef.avatarUrl(tag.group(1)!.replaceAll('&amp;', '&'));
     // Channels without a picture list YouTube's own logo instead.
-    return url != null && (url.contains('googleusercontent.com') || url.contains('ggpht.com')) ? url : null;
+    return url != null && (url.contains('googleusercontent.com') || url.contains('ggpht.com'))
+        ? url
+        : null;
   }
 }

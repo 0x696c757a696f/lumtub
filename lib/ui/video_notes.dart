@@ -10,11 +10,23 @@ import 'common.dart';
 
 /// AI 讲解 of a subtitle line, read with the lines around it, with a way
 /// to keep the explanation as a note at the line's time.
-Future<void> showLineExplanation(BuildContext context, AppController controller, {required String text, required Duration at, List<String> before = const [], List<String> after = const []}) =>
-    showDialog<void>(context: context, builder: (context) => _Explanation(controller: controller, text: text, at: at, before: before, after: after));
+Future<void> showLineExplanation(BuildContext context, AppController controller,
+        {required String text,
+        required Duration at,
+        List<String> before = const [],
+        List<String> after = const []}) =>
+    showDialog<void>(
+        context: context,
+        builder: (context) =>
+            _Explanation(controller: controller, text: text, at: at, before: before, after: after));
 
 class _Explanation extends StatefulWidget {
-  const _Explanation({required this.controller, required this.text, required this.at, required this.before, required this.after});
+  const _Explanation(
+      {required this.controller,
+      required this.text,
+      required this.at,
+      required this.before,
+      required this.after});
   final AppController controller;
   final String text;
   final Duration at;
@@ -41,7 +53,8 @@ class _ExplanationState extends State<_Explanation> {
       _error = null;
     });
     try {
-      final answer = await widget.controller.explainLine(widget.text, before: widget.before, after: widget.after);
+      final answer = await widget.controller
+          .explainLine(widget.text, before: widget.before, after: widget.after);
       if (mounted) setState(() => _answer = answer);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
@@ -62,32 +75,41 @@ class _ExplanationState extends State<_Explanation> {
         width: 480,
         child: SingleChildScrollView(
           child: SelectionArea(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-              _Quote(at: widget.at, text: widget.text),
-              const SizedBox(height: 16),
-              if (answer != null)
-                Text(answer, style: const TextStyle(height: 1.6))
-              else if (_error case final error?)
-                ErrorBanner(error, onRetry: _run)
-              else
-                Row(children: [
-                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-                  const SizedBox(width: 12),
-                  Text(tr('Asking AI…'), style: TextStyle(color: colors.onSurfaceVariant)),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Quote(at: widget.at, text: widget.text),
+                  const SizedBox(height: 16),
+                  if (answer != null)
+                    Text(answer, style: const TextStyle(height: 1.6))
+                  else if (_error case final error?)
+                    ErrorBanner(error, onRetry: _run)
+                  else
+                    Row(children: [
+                      const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5)),
+                      const SizedBox(width: 12),
+                      Text(tr('Asking AI…'), style: TextStyle(color: colors.onSurfaceVariant)),
+                    ]),
                 ]),
-            ]),
           ),
         ),
       ),
       actions: [
-        if (answer != null) TextButton(onPressed: () => copyText(context, answer, tr('Copied')), child: Text(tr('Copy'))),
+        if (answer != null)
+          TextButton(
+              onPressed: () => copyText(context, answer, tr('Copied')), child: Text(tr('Copy'))),
         if (answer != null)
           TextButton.icon(
             icon: Icon(AppIcons.notePencil, size: 18),
             label: Text(tr('Save as note')),
             onPressed: () async {
               final navigator = Navigator.of(context);
-              final saved = await showNoteEditor(context, widget.controller, at: widget.at, quote: widget.text, body: answer);
+              final saved = await showNoteEditor(context, widget.controller,
+                  at: widget.at, quote: widget.text, body: answer);
               if (saved) navigator.pop();
             },
           ),
@@ -103,15 +125,34 @@ class _ExplanationState extends State<_Explanation> {
 /// [before] and [after] it, AI can also make the words a whole sentence.
 /// True once kept.
 Future<bool> showNoteEditor(BuildContext context, AppController controller,
-        {Duration at = Duration.zero, String quote = '', String body = '', VideoNote? note, List<String> before = const [], List<String> after = const []}) async =>
+        {Duration at = Duration.zero,
+        String quote = '',
+        String body = '',
+        VideoNote? note,
+        List<String> before = const [],
+        List<String> after = const []}) async =>
     await showDialog<bool>(
       context: context,
-      builder: (context) => _NoteEditor(controller: controller, at: note?.at ?? at, quote: note?.quote ?? quote, body: note?.body ?? body, note: note, before: before, after: after),
+      builder: (context) => _NoteEditor(
+          controller: controller,
+          at: note?.at ?? at,
+          quote: note?.quote ?? quote,
+          body: note?.body ?? body,
+          note: note,
+          before: before,
+          after: after),
     ) ??
     false;
 
 class _NoteEditor extends StatefulWidget {
-  const _NoteEditor({required this.controller, required this.at, required this.quote, required this.body, this.note, this.before = const [], this.after = const []});
+  const _NoteEditor(
+      {required this.controller,
+      required this.at,
+      required this.quote,
+      required this.body,
+      this.note,
+      this.before = const [],
+      this.after = const []});
   final AppController controller;
   final Duration at;
   final String quote;
@@ -183,7 +224,8 @@ class _NoteEditorState extends State<_NoteEditor> {
         await widget.controller.changeNote(note, quote: _quote.text, body: _body.text);
       }
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Note saved')), duration: const Duration(seconds: 2)));
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text(tr('Note saved')), duration: const Duration(seconds: 2)));
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
@@ -198,38 +240,45 @@ class _NoteEditorState extends State<_NoteEditor> {
       title: Row(children: [
         Icon(AppIcons.notePencil, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Expanded(child: Text(widget.note == null ? tr('Note at {0}', [formatClock(widget.at)]) : tr('Edit note'))),
+        Expanded(
+            child: Text(widget.note == null
+                ? tr('Note at {0}', [formatClock(widget.at)])
+                : tr('Edit note'))),
       ]),
       content: SizedBox(
         width: 480,
         child: SingleChildScrollView(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-            TextField(
-              controller: _quote,
-              minLines: 1,
-              maxLines: 6,
-              decoration: InputDecoration(
-                labelText: tr('Said in the video'),
-                helperText: tr('Cut it down to the part that matters'),
-                suffixIcon: widget.controller.canSummarize && (widget.before.isNotEmpty || widget.after.isNotEmpty)
-                    ? IconButton(
-                        tooltip: tr('Make it a whole sentence with AI'),
-                        icon: Icon(AppIcons.sparkle, size: 18),
-                        onPressed: _busy ? null : _complete,
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _body,
-              autofocus: widget.body.isEmpty,
-              minLines: 3,
-              maxLines: 12,
-              decoration: InputDecoration(labelText: tr('Your note'), alignLabelWithHint: true),
-            ),
-            if (_error case final error?) ...[const SizedBox(height: 12), ErrorBanner(error)],
-          ]),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _quote,
+                  minLines: 1,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    labelText: tr('Said in the video'),
+                    helperText: tr('Cut it down to the part that matters'),
+                    suffixIcon: widget.controller.canSummarize &&
+                            (widget.before.isNotEmpty || widget.after.isNotEmpty)
+                        ? IconButton(
+                            tooltip: tr('Make it a whole sentence with AI'),
+                            icon: Icon(AppIcons.sparkle, size: 18),
+                            onPressed: _busy ? null : _complete,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _body,
+                  autofocus: widget.body.isEmpty,
+                  minLines: 3,
+                  maxLines: 12,
+                  decoration: InputDecoration(labelText: tr('Your note'), alignLabelWithHint: true),
+                ),
+                if (_error case final error?) ...[const SizedBox(height: 12), ErrorBanner(error)],
+              ]),
         ),
       ),
       actions: [
@@ -258,11 +307,17 @@ class _Quote extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final quote = Container(
       padding: const EdgeInsetsDirectional.only(start: 12),
-      decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: colors.outlineVariant, width: 3))),
-      child: Text.rich(TextSpan(children: [
-        TextSpan(text: '${formatClock(at)}  ', style: TextStyle(color: colors.primary, fontFeatures: const [FontFeature.tabularFigures()])),
-        TextSpan(text: text, style: TextStyle(color: colors.onSurfaceVariant)),
-      ]), style: const TextStyle(height: 1.5)),
+      decoration: BoxDecoration(
+          border: BorderDirectional(start: BorderSide(color: colors.outlineVariant, width: 3))),
+      child: Text.rich(
+          TextSpan(children: [
+            TextSpan(
+                text: '${formatClock(at)}  ',
+                style: TextStyle(
+                    color: colors.primary, fontFeatures: const [FontFeature.tabularFigures()])),
+            TextSpan(text: text, style: TextStyle(color: colors.onSurfaceVariant)),
+          ]),
+          style: const TextStyle(height: 1.5)),
     );
     return onTap == null ? quote : InkWell(onTap: onTap, child: quote);
   }
@@ -307,56 +362,76 @@ class _VideoNotesListState extends State<VideoNotesList> {
       future: _notes,
       builder: (context, snapshot) {
         final notes = snapshot.data ?? const <VideoNote>[];
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Expanded(child: Text(tr('My notes'), style: Theme.of(context).textTheme.titleSmall)),
-            if (notes.isNotEmpty)
-              IconButton(
-                tooltip: tr('Copy all notes'),
-                visualDensity: VisualDensity.compact,
-                icon: Icon(AppIcons.copy, size: 18),
-                onPressed: () => copyText(context, notesText(widget.controller.details?.title ?? notes.first.title, notes), tr('Notes copied')),
-              ),
-            IconButton(
-              tooltip: tr('Add a note here'),
-              visualDensity: VisualDensity.compact,
-              icon: Icon(AppIcons.plus, size: 18),
-              onPressed: () => unawaited(showNoteEditor(context, widget.controller, at: widget.controller.player?.state.position ?? Duration.zero)),
-            ),
-          ]),
-          if (notes.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(tr('Right-click or long-press a line in the subtitle list to explain it with AI or keep it as a note.'), style: TextStyle(fontSize: 12, color: colors.outline, height: 1.5)),
-            ),
-          for (final note in notes)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(children: [
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-                    _Quote(at: note.at, text: note.quote.isEmpty ? '' : note.quote, onTap: () => widget.onSeek(note.at)),
-                    if (note.body.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectableText(note.body, style: const TextStyle(height: 1.5))),
-                  ]),
-                ),
-                PopupMenuButton<String>(
-                  tooltip: tr('More'),
-                  icon: Icon(AppIcons.dotsThreeVertical, size: 18, color: colors.outline),
-                  onSelected: (action) async {
-                    if (action == 'edit') {
-                      await showNoteEditor(context, widget.controller, note: note);
-                    } else if (action == 'delete') {
-                      await widget.controller.forgetNote(note);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'edit', child: Text(tr('Edit'))),
-                    PopupMenuItem(value: 'delete', child: Text(tr('Delete'))),
-                  ],
+                    child: Text(tr('My notes'), style: Theme.of(context).textTheme.titleSmall)),
+                if (notes.isNotEmpty)
+                  IconButton(
+                    tooltip: tr('Copy all notes'),
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(AppIcons.copy, size: 18),
+                    onPressed: () => copyText(
+                        context,
+                        notesText(widget.controller.details?.title ?? notes.first.title, notes),
+                        tr('Notes copied')),
+                  ),
+                IconButton(
+                  tooltip: tr('Add a note here'),
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(AppIcons.plus, size: 18),
+                  onPressed: () => unawaited(showNoteEditor(context, widget.controller,
+                      at: widget.controller.player?.state.position ?? Duration.zero)),
                 ),
               ]),
-            ),
-        ]);
+              if (notes.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                      tr('Right-click or long-press a line in the subtitle list to explain it with AI or keep it as a note.'),
+                      style: TextStyle(fontSize: 12, color: colors.outline, height: 1.5)),
+                ),
+              for (final note in notes)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _Quote(
+                                at: note.at,
+                                text: note.quote.isEmpty ? '' : note.quote,
+                                onTap: () => widget.onSeek(note.at)),
+                            if (note.body.isNotEmpty)
+                              Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: SelectableText(note.body,
+                                      style: const TextStyle(height: 1.5))),
+                          ]),
+                    ),
+                    PopupMenuButton<String>(
+                      tooltip: tr('More'),
+                      icon: Icon(AppIcons.dotsThreeVertical, size: 18, color: colors.outline),
+                      onSelected: (action) async {
+                        if (action == 'edit') {
+                          await showNoteEditor(context, widget.controller, note: note);
+                        } else if (action == 'delete') {
+                          await widget.controller.forgetNote(note);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(value: 'edit', child: Text(tr('Edit'))),
+                        PopupMenuItem(value: 'delete', child: Text(tr('Delete'))),
+                      ],
+                    ),
+                  ]),
+                ),
+            ]);
       },
     );
   }
@@ -367,7 +442,10 @@ String notesText(String title, List<VideoNote> notes) => [
       '# $title',
       for (final note in notes)
         [
-          if (note.quote.isNotEmpty) '> [${formatClock(note.at)}] ${note.quote.replaceAll('\n', ' ')}' else '[${formatClock(note.at)}]',
+          if (note.quote.isNotEmpty)
+            '> [${formatClock(note.at)}] ${note.quote.replaceAll('\n', ' ')}'
+          else
+            '[${formatClock(note.at)}]',
           if (note.body.isNotEmpty) note.body,
         ].join('\n\n'),
     ].join('\n\n');

@@ -75,23 +75,38 @@ String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch 
 List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
   final keys = shortcutKeys(prefs.shortcutKeys);
   String of(PlayerAction action) => keys[action]!.map((k) => k.label).join(', ');
-  String pair(PlayerAction a, PlayerAction b) => [of(a), of(b)].where((k) => k.isNotEmpty).join(' / ');
+  String pair(PlayerAction a, PlayerAction b) =>
+      [of(a), of(b)].where((k) => k.isNotEmpty).join(' / ');
   final rows = <(String, String)>[
     (of(PlayerAction.playPause), tr('Play or pause')),
-    (pair(PlayerAction.seekBack, PlayerAction.seekForward), tr('Seek back or forward {0} seconds', [prefs.seekSeconds])),
-    (pair(PlayerAction.longSeekBack, PlayerAction.longSeekForward), tr('Seek back or forward {0} seconds', [prefs.longSeekSeconds])),
-    (pair(PlayerAction.volumeUp, PlayerAction.volumeDown), tr('Volume up/down {0}%', [prefs.volumeStep])),
+    (
+      pair(PlayerAction.seekBack, PlayerAction.seekForward),
+      tr('Seek back or forward {0} seconds', [prefs.seekSeconds])
+    ),
+    (
+      pair(PlayerAction.longSeekBack, PlayerAction.longSeekForward),
+      tr('Seek back or forward {0} seconds', [prefs.longSeekSeconds])
+    ),
+    (
+      pair(PlayerAction.volumeUp, PlayerAction.volumeDown),
+      tr('Volume up/down {0}%', [prefs.volumeStep])
+    ),
     (pair(PlayerAction.slower, PlayerAction.faster), tr('Slow down or speed up playback')),
     (tr('Hold on the video'), tr('Hold for 2x speed')),
     (keyNames(tr('Ctrl + wheel')), tr('Slow down or speed up playback')),
     (of(PlayerAction.mute), tr('Mute')),
     (of(PlayerAction.fullscreen), tr('Fullscreen')),
     (of(PlayerAction.exitFullscreen), tr('Exit fullscreen')),
-    if (prefs.rightClick != RightClick.off) (tr('Right click on the video'), prefs.rightClick.label),
-    if (prefs.middleClick != MiddleClick.off) (tr('Middle click on the video'), prefs.middleClick.label),
+    if (prefs.rightClick != RightClick.off)
+      (tr('Right click on the video'), prefs.rightClick.label),
+    if (prefs.middleClick != MiddleClick.off)
+      (tr('Middle click on the video'), prefs.middleClick.label),
     (of(PlayerAction.next), tr('Next video')),
     (of(PlayerAction.previous), tr('Previous video')),
-    (pair(PlayerAction.frameBack, PlayerAction.frameForward), tr('Step back or forward one frame while paused')),
+    (
+      pair(PlayerAction.frameBack, PlayerAction.frameForward),
+      tr('Step back or forward one frame while paused')
+    ),
     ('0 - 9', tr('Jump to 0% - 90% of the video')),
     (pair(PlayerAction.start, PlayerAction.end), tr('Jump to the start or end')),
     (pair(PlayerAction.lineBack, PlayerAction.lineNext), tr('Previous or next subtitle line')),
@@ -108,43 +123,62 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
     (of(PlayerAction.screenshot), tr('Screenshot')),
     (of(PlayerAction.stats), tr('Show or hide playback stats')),
     (of(PlayerAction.captions), tr('Subtitles on or off')),
-    (pair(PlayerAction.captionsBigger, PlayerAction.captionsSmaller), tr('Larger or smaller subtitles')),
+    (
+      pair(PlayerAction.captionsBigger, PlayerAction.captionsSmaller),
+      tr('Larger or smaller subtitles')
+    ),
     (of(PlayerAction.miniPlayer), tr('Mini player')),
     (of(PlayerAction.danmaku), tr('Bullet chat on or off')),
     (pair(PlayerAction.chapterBack, PlayerAction.chapterNext), tr('Previous or next chapter')),
-    ([of(PlayerAction.back), tr('mouse back button'), tr('two-finger swipe on a touchpad')].where((k) => k.isNotEmpty).join(' / '), tr('Go back')),
+    (
+      [of(PlayerAction.back), tr('mouse back button'), tr('two-finger swipe on a touchpad')]
+          .where((k) => k.isNotEmpty)
+          .join(' / '),
+      tr('Go back')
+    ),
     (of(PlayerAction.search), tr('Search')),
     (of(PlayerAction.incognito), tr('Incognito mode')),
     (pair(PlayerAction.top, PlayerAction.bottom), tr('Scroll a list to the top or bottom')),
     (pair(PlayerAction.pageUp, PlayerAction.pageDown), tr('Scroll a list up or down a page')),
     (of(PlayerAction.help), tr('Show these shortcuts')),
   ];
-  return [for (final row in rows) if (row.$1.isNotEmpty) row];
+  return [
+    for (final row in rows)
+      if (row.$1.isNotEmpty) row
+  ];
 }
 
 /// Player key bindings, used both on the watch page and inside the player
 /// controls, which keep focus while the video is fullscreen. [onFeedback]
 /// is told what a key did, for the indicator over the video.
-Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, VideoState? Function() video, {void Function(IconData icon, String text)? onFeedback, VoidCallback? onScreenshot}) {
+Map<ShortcutActivator, VoidCallback> playerShortcuts(
+    AppController controller, VideoState? Function() video,
+    {void Function(IconData icon, String text)? onFeedback, VoidCallback? onScreenshot}) {
   final player = controller.player;
   final prefs = controller.preferences;
   if (player == null || !prefs.keyboardShortcuts) return const {};
   final volume = prefs.volumeStep.toDouble();
   void seek(int seconds) {
     unawaited(controller.seekBy(Duration(seconds: seconds)));
-    onFeedback?.call(seconds < 0 ? AppIcons.rewindFill : AppIcons.fastForwardFill, seconds < 0 ? tr('Back {0} s', [-seconds]) : tr('Forward {0} s', [seconds]));
+    onFeedback?.call(seconds < 0 ? AppIcons.rewindFill : AppIcons.fastForwardFill,
+        seconds < 0 ? tr('Back {0} s', [-seconds]) : tr('Forward {0} s', [seconds]));
   }
+
   void changeVolume(double delta) {
-    unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(AppIcons.speakerHighFill, '${player.state.volume.round()}%')));
+    unawaited(controller.changeVolume(delta).then(
+        (_) => onFeedback?.call(AppIcons.speakerHighFill, '${player.state.volume.round()}%')));
   }
+
   void playOrPause() => unawaited(player.playOrPause());
   // Steps through 倍速选项 like YouTube's Shift+< and Shift+>.
   void stepSpeed(int direction) {
     final next = nextSpeed(controller.settings.speeds, player.state.rate, direction);
     if (next == null) return;
     unawaited(player.setRate(next));
-    onFeedback?.call(direction > 0 ? AppIcons.fastForwardFill : AppIcons.speedometer, '${_trim(next)}x');
+    onFeedback?.call(
+        direction > 0 ? AppIcons.fastForwardFill : AppIcons.speedometer, '${_trim(next)}x');
   }
+
   // 0-9 jump to that tenth of the video, as on YouTube.
   void jumpToTenth(int tenth) {
     final duration = player.state.duration;
@@ -152,6 +186,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(controller.seek(duration * (tenth / 10)));
     onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
+
   void jumpTo(bool end) {
     if (end && (controller.playing?.isLive ?? false)) {
       unawaited(controller.goLive());
@@ -160,45 +195,65 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     }
     final duration = player.state.duration;
     unawaited(controller.seek(end ? duration : Duration.zero));
-    onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('End') : tr('Start'));
+    onFeedback?.call(
+        end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('End') : tr('Start'));
   }
+
   // One frame at a time, only while paused, as on YouTube.
   void stepFrame(bool forward) {
     final platform = player.platform;
     if (player.state.playing || platform is! NativePlayer) return;
     unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
-    onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill, forward ? tr('Next frame') : tr('Previous frame'));
+    onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill,
+        forward ? tr('Next frame') : tr('Previous frame'));
   }
+
   // Line by line through the subtitles, as Language Reactor's A and D.
   void subtitleStep(int skip) {
     unawaited(controller.stepLine(skip).then((moved) {
       if (!moved) return;
       onFeedback?.call(
-        skip < 0 ? AppIcons.skipBackFill : skip > 0 ? AppIcons.skipForwardFill : AppIcons.arrowCounterClockwiseFill,
-        skip < 0 ? tr('Previous line') : skip > 0 ? tr('Next line') : tr('Replay this line'),
+        skip < 0
+            ? AppIcons.skipBackFill
+            : skip > 0
+                ? AppIcons.skipForwardFill
+                : AppIcons.arrowCounterClockwiseFill,
+        skip < 0
+            ? tr('Previous line')
+            : skip > 0
+                ? tr('Next line')
+                : tr('Replay this line'),
       );
     }));
   }
+
   void lineLoop() {
     unawaited(controller.toggleLineLoop().then((on) {
-      if (on != null) onFeedback?.call(AppIcons.repeatOnce, on ? tr('Loop this line') : tr('Line loop off'));
+      if (on != null) {
+        onFeedback?.call(AppIcons.repeatOnce, on ? tr('Loop this line') : tr('Line loop off'));
+      }
     }));
   }
+
   void linePause() {
     unawaited(controller.togglePauseEachLine().then((on) {
-      onFeedback?.call(on ? AppIcons.pauseFill : AppIcons.playFill, on ? tr('Pause after each line on') : tr('Pause after each line off'));
+      onFeedback?.call(on ? AppIcons.pauseFill : AppIcons.playFill,
+          on ? tr('Pause after each line on') : tr('Pause after each line off'));
     }));
   }
+
   void revealTranslation() {
     if (controller.secondaryTrackId == 'no') return;
     controller.toggleTranslation();
   }
+
   void copySubtitle() {
     final text = controller.currentSubtitleText;
     if (text.isEmpty) return;
     unawaited(Clipboard.setData(ClipboardData(text: text)));
     onFeedback?.call(AppIcons.copy, tr('Subtitle copied'));
   }
+
   // A note on the line being said, paused while it is written.
   void saveNote() {
     final state = video();
@@ -212,31 +267,48 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
       state.context,
       controller,
       at: i >= 0 ? lines[i].start : at,
-      quote: controller.currentSubtitleText.isNotEmpty ? controller.currentSubtitleText : i >= 0 ? lines[i].text : '',
+      quote: controller.currentSubtitleText.isNotEmpty
+          ? controller.currentSubtitleText
+          : i >= 0
+              ? lines[i].text
+              : '',
       before: [for (final c in lines.sublist(i > 3 ? i - 3 : 0, i < 0 ? 0 : i)) c.text],
-      after: [if (i >= 0) for (final c in lines.sublist(i + 1, i + 5 < lines.length ? i + 5 : lines.length)) c.text],
+      after: [
+        if (i >= 0)
+          for (final c in lines.sublist(i + 1, i + 5 < lines.length ? i + 5 : lines.length)) c.text
+      ],
     ).then((_) {
       if (playing) unawaited(player.play());
     }));
   }
+
   void previous() {
     if (controller.hasPrevious) unawaited(controller.playPrevious());
   }
+
   void next() => unawaited(controller.playNext());
   void mute() {
     unawaited(controller.toggleMute().then((_) {
       final muted = player.state.volume == 0;
-      onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${player.state.volume.round()}%');
+      onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill,
+          muted ? tr('Mute') : '${player.state.volume.round()}%');
     }));
   }
+
   void exitFullscreen() {
     final state = video();
     if (state != null && state.isFullscreen()) unawaited(state.exitFullscreen());
-  }  void captions() {
+  }
+
+  void captions() {
     unawaited(controller.toggleSubtitles().then((on) {
-      if (on != null) onFeedback?.call(on ? AppIcons.closedCaptioningFill : AppIcons.subtitlesSlash, on ? tr('Subtitles on') : tr('Subtitles off'));
+      if (on != null) {
+        onFeedback?.call(on ? AppIcons.closedCaptioningFill : AppIcons.subtitlesSlash,
+            on ? tr('Subtitles on') : tr('Subtitles off'));
+      }
     }));
   }
+
   void captionSize(int direction) {
     final now = controller.settings.subtitleScale;
     final next = ((now * 10).round() + direction).clamp(5, 30) / 10;
@@ -244,6 +316,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(controller.saveSettings(controller.settings.copyWith(subtitleScale: next)));
     onFeedback?.call(AppIcons.closedCaptioningFill, '${next.toStringAsFixed(1)}×');
   }
+
   void mini() {
     if (controller.mini) {
       controller.expandMini();
@@ -252,12 +325,15 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
       controller.enterMini();
     }
   }
+
   void danmaku() {
     if (!controller.hasDanmaku) return;
     final settings = controller.preferences.danmaku;
     unawaited(controller.setDanmaku(settings.copyWith(enabled: !settings.enabled)));
-    onFeedback?.call(settings.enabled ? AppIcons.chatCircleSlash : AppIcons.chatsFill, settings.enabled ? tr('Bullet chat off') : tr('Bullet chat on'));
+    onFeedback?.call(settings.enabled ? AppIcons.chatCircleSlash : AppIcons.chatsFill,
+        settings.enabled ? tr('Bullet chat off') : tr('Bullet chat on'));
   }
+
   void chapter(int direction) {
     final chapters = controller.details?.chapters ?? const <Chapter>[];
     if (chapters.isEmpty) return;
@@ -267,10 +343,18 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     // Back from more than 3 s into a chapter goes to its start, as YouTube does.
     final target = direction > 0
         ? (index + 1 < chapters.length ? chapters[index + 1] : null)
-        : (current != null && position - current.start > const Duration(seconds: 3) ? current : index > 0 ? chapters[index - 1] : current);
+        : (current != null && position - current.start > const Duration(seconds: 3)
+            ? current
+            : index > 0
+                ? chapters[index - 1]
+                : current);
     if (target == null) return;
     unawaited(controller.seek(target.start));
-    onFeedback?.call(direction > 0 ? AppIcons.skipForwardFill : AppIcons.skipBackFill, target.title.isEmpty ? (direction > 0 ? tr('Next chapter') : tr('Previous chapter')) : target.title);
+    onFeedback?.call(
+        direction > 0 ? AppIcons.skipForwardFill : AppIcons.skipBackFill,
+        target.title.isEmpty
+            ? (direction > 0 ? tr('Next chapter') : tr('Previous chapter'))
+            : target.title);
   }
 
   VoidCallback? run(PlayerAction action) => switch (action) {
@@ -314,10 +398,40 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
         PlayerAction.chapterBack => () => chapter(-1),
         PlayerAction.chapterNext => () => chapter(1),
         // Pages' own, bound by the app shell.
-        PlayerAction.search || PlayerAction.incognito || PlayerAction.back || PlayerAction.top || PlayerAction.bottom || PlayerAction.pageDown || PlayerAction.pageUp || PlayerAction.help => null,
+        PlayerAction.search ||
+        PlayerAction.incognito ||
+        PlayerAction.back ||
+        PlayerAction.top ||
+        PlayerAction.bottom ||
+        PlayerAction.pageDown ||
+        PlayerAction.pageUp ||
+        PlayerAction.help =>
+          null,
       };
-  const digits = [LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4, LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9];
-  const numpad = [LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4, LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9];
+  const digits = [
+    LogicalKeyboardKey.digit0,
+    LogicalKeyboardKey.digit1,
+    LogicalKeyboardKey.digit2,
+    LogicalKeyboardKey.digit3,
+    LogicalKeyboardKey.digit4,
+    LogicalKeyboardKey.digit5,
+    LogicalKeyboardKey.digit6,
+    LogicalKeyboardKey.digit7,
+    LogicalKeyboardKey.digit8,
+    LogicalKeyboardKey.digit9
+  ];
+  const numpad = [
+    LogicalKeyboardKey.numpad0,
+    LogicalKeyboardKey.numpad1,
+    LogicalKeyboardKey.numpad2,
+    LogicalKeyboardKey.numpad3,
+    LogicalKeyboardKey.numpad4,
+    LogicalKeyboardKey.numpad5,
+    LogicalKeyboardKey.numpad6,
+    LogicalKeyboardKey.numpad7,
+    LogicalKeyboardKey.numpad8,
+    LogicalKeyboardKey.numpad9
+  ];
   final bindings = <ShortcutActivator, VoidCallback>{
     for (final MapEntry(:key, :value) in shortcutKeys(prefs.shortcutKeys).entries)
       if (run(key) case final callback?)
@@ -340,10 +454,13 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
 double? nextSpeed(List<double> speeds, double rate, int direction) {
   final sorted = [...speeds]..sort();
   if (sorted.isEmpty) return null;
-  return direction > 0 ? sorted.where((s) => s > rate + 0.001).firstOrNull ?? sorted.last : sorted.lastWhere((s) => s < rate - 0.001, orElse: () => sorted.first);
+  return direction > 0
+      ? sorted.where((s) => s > rate + 0.001).firstOrNull ?? sorted.last
+      : sorted.lastWhere((s) => s < rate - 0.001, orElse: () => sorted.first);
 }
 
-String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsFixed(1) : speed.toString();
+String _trim(double speed) =>
+    speed == speed.roundToDouble() ? speed.toStringAsFixed(1) : speed.toString();
 
 Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showSheet<void>(
       context,
@@ -360,10 +477,15 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
                 child: Row(children: [
                   Expanded(child: Text(action)),
                   const SizedBox(width: 12),
-                  Flexible(child: Container(
+                  Flexible(
+                      child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
-                    child: Text(keys, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6)),
+                    child: Text(keys,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   )),
                 ]),
               ),
@@ -381,11 +503,14 @@ class NotWhileTyping extends ShortcutActivator {
 
   static bool get typing {
     final context = FocusManager.instance.primaryFocus?.context;
-    return context != null && (context.widget is EditableText || context.findAncestorStateOfType<EditableTextState>() != null);
+    return context != null &&
+        (context.widget is EditableText ||
+            context.findAncestorStateOfType<EditableTextState>() != null);
   }
 
   @override
-  bool accepts(KeyEvent event, HardwareKeyboard state) => !typing && activator.accepts(event, state);
+  bool accepts(KeyEvent event, HardwareKeyboard state) =>
+      !typing && activator.accepts(event, state);
 
   @override
   Iterable<LogicalKeyboardKey>? get triggers => activator.triggers;

@@ -6,7 +6,12 @@ extension PlaybackEvents on AppController {
   /// Opens [item] on the watch page; [at] is where to start, else where
   /// it was left off. [keepMini] plays it in the mini player when that is
   /// where the last video was (the queue moving on by itself).
-  Future<void> play(VideoItem item, {List<VideoItem>? from, PlayingList? list, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
+  Future<void> play(VideoItem item,
+      {List<VideoItem>? from,
+      PlayingList? list,
+      Duration? at,
+      bool keepMini = false,
+      bool retryingStart = false}) async {
     final player = this.player;
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
@@ -99,9 +104,14 @@ extension PlaybackEvents on AppController {
     final hold = preferences.autoPlay && settings.subtitleMode != SubtitleMode.off && !item.isLive;
     // Listened for before opening, so a length reported while it opens
     // still counts, and the last video's never does.
-    final length = item.duration == null && !item.isLive ? player.stream.duration.firstWhere((length) => length > Duration.zero && _fileSerial == serial).timeout(const Duration(minutes: 1)) : null;
+    final length = item.duration == null && !item.isLive
+        ? player.stream.duration
+            .firstWhere((length) => length > Duration.zero && _fileSerial == serial)
+            .timeout(const Duration(minutes: 1))
+        : null;
     unawaited(length?.then((_) {}, onError: (_) {}));
-    if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
+    if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) &&
+        serial == _playSerial) {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
       unawaited(_syncSilenceSkipping(player));
@@ -112,9 +122,13 @@ extension PlaybackEvents on AppController {
         await _history?.record(opened);
         // A link or a list without lengths leaves the card without one; the
         // player's own length is taken once this video reports it.
-        if (length != null && opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial, length));
+        if (length != null && opened.duration == null && !opened.isLive) {
+          unawaited(_fillDuration(opened.id, serial, length));
+        }
       }
-      if (start != null && at == null) _notice(tr('Resume from {0}', [AppController._clock(start)]));
+      if (start != null && at == null) {
+        _notice(tr('Resume from {0}', [AppController._clock(start)]));
+      }
       if (opened.isLive || item.liveStatus == 'was_live') _startChat(opened, serial);
     }
   }
@@ -134,8 +148,13 @@ extension PlaybackEvents on AppController {
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
       final local = await downloads?.localVideo(item.id);
-      final saved = [for (final s in local?.segments ?? const <SkipSegment>[]) if (settings.sponsorCategories.contains(s.category)) s];
-      final segments = saved.isNotEmpty ? saved : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
+      final saved = [
+        for (final s in local?.segments ?? const <SkipSegment>[])
+          if (settings.sponsorCategories.contains(s.category)) s
+      ];
+      final segments = saved.isNotEmpty
+          ? saved
+          : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _update(() => _segments = segments);
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
@@ -157,7 +176,9 @@ extension PlaybackEvents on AppController {
       // Each segment is skipped once, so seeking back into it plays it.
       _skipped.add(segment);
       unawaited(player?.seek(segment.end));
-      if (settings.sponsorNotice) _notice(tr('Skipped {0}', [sponsorCategories[segment.category] ?? tr('Segments')]));
+      if (settings.sponsorNotice) {
+        _notice(tr('Skipped {0}', [sponsorCategories[segment.category] ?? tr('Segments')]));
+      }
       return;
     }
   }
@@ -169,10 +190,12 @@ extension PlaybackEvents on AppController {
 
   void _listenTo(Player player) {
     void videoSize(_) {
-      _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
+      _outputSize?.video =
+          Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
       if ((player.state.width ?? 0) > 0) _refitCrop(player);
       _queueLibassLook();
     }
+
     final platform = player.platform;
     if (platform is NativePlayer) {
       // The subtitles shown are followed as mpv reports them, as it can
@@ -191,8 +214,11 @@ extension PlaybackEvents on AppController {
         // A track not yet in its own style would show for a moment in the
         // main one's (white) before its copy (yellow) replaces it: it stays
         // hidden until _restyleNow has the copy on.
-        if (libassDraws && secondaryTrackId != 'no' && _subtitleCopies[secondaryTrackId]?.second != true) {
-          unawaited(platform.setProperty('secondary-sub-visibility', 'no').catchError((Object _) {}));
+        if (libassDraws &&
+            secondaryTrackId != 'no' &&
+            _subtitleCopies[secondaryTrackId]?.second != true) {
+          unawaited(
+              platform.setProperty('secondary-sub-visibility', 'no').catchError((Object _) {}));
         }
         _followSubtitles(player);
         // Only scheduled, as above.
@@ -200,7 +226,10 @@ extension PlaybackEvents on AppController {
         _restyleSubtitles(player);
       }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
       // Only schedules the speed change, like the listeners above.
-      unawaited(platform.observeProperty(SilenceSkipper.property, (value) async => _onSilenceMetadata(player, value)).catchError((Object e) => logWarn('Could not watch for silence: $e')));
+      unawaited(platform
+          .observeProperty(
+              SilenceSkipper.property, (value) async => _onSilenceMetadata(player, value))
+          .catchError((Object e) => logWarn('Could not watch for silence: $e')));
     }
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
@@ -232,7 +261,8 @@ extension PlaybackEvents on AppController {
               playbackError = null;
             });
           }
-          if (_recovery.observeProgress(position,
+          if (_recovery.observeProgress(
+            position,
             playing: player.state.playing,
             buffering: player.state.buffering,
             decoded: audioOnly || _backgroundAudioOnly || (player.state.width ?? 0) > 0,
@@ -246,7 +276,8 @@ extension PlaybackEvents on AppController {
         }
         // The next video is resolved once this one plays steadily, so its
         // yt-dlp run does not compete with the start of this one.
-        if (_settled.observe(position,
+        if (_settled.observe(
+          position,
           playing: player.state.playing,
           buffering: player.state.buffering,
           decoded: audioOnly || _backgroundAudioOnly || (player.state.width ?? 0) > 0,
@@ -255,7 +286,9 @@ extension PlaybackEvents on AppController {
         )) {
           if (upNext.firstOrNull case final next?) prefetch(next);
         }
-        if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
+        if (_decoderPending &&
+            position > const Duration(milliseconds: 500) &&
+            (player.state.width ?? 0) > 0) {
           _decoderPending = false;
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
@@ -276,8 +309,11 @@ extension PlaybackEvents on AppController {
         if (!done || playing == null || _fileSerial != _playSerial) return;
         // A live stream through the relay ends only when its fragments
         // stopped coming.
-        if (_tracking != null && (_liveSplit == _tracking!.id || PlaybackRecovery.endedEarly(_lastPosition, player.state.duration))) {
-          unawaited(_recover(tr('Video ended unexpectedly at {0}', [AppController._clock(_lastPosition)])));
+        if (_tracking != null &&
+            (_liveSplit == _tracking!.id ||
+                PlaybackRecovery.endedEarly(_lastPosition, player.state.duration))) {
+          unawaited(_recover(
+              tr('Video ended unexpectedly at {0}', [AppController._clock(_lastPosition)])));
           return;
         }
         _saveProgress();
@@ -301,29 +337,46 @@ extension PlaybackEvents on AppController {
       // problems such as dropped frames can be read after the fact.
       player.stream.log.listen((log) {
         final text = log.text.trim();
-        final subtitle = isSubtitleError(text) || log.prefix == 'sub' || log.prefix.startsWith('sub/');
-        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
+        final subtitle =
+            isSubtitleError(text) || log.prefix == 'sub' || log.prefix.startsWith('sub/');
+        if ((log.level == 'error' || log.prefix == 'ytdl_hook') &&
+            _recentErrors.length < 20 &&
+            !subtitle &&
+            !isUnattributedHttpError(text)) {
+          _recentErrors.add(text);
+        }
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
-        final lost = log.prefix == 'curl' && text.startsWith('transfer failed') && _fileSerial == _playSerial;
+        final lost = log.prefix == 'curl' &&
+            text.startsWith('transfer failed') &&
+            _fileSerial == _playSerial;
         if (lost) _streamLostIn = _playSerial;
         // Data cut off mid-frame, after curl lost a stream, leaves the
         // decoder failing on every frame over a still picture.
         // iOS invalidates VideoToolbox's sessions while the app is in the
         // background: the decoder fails on every frame from then on and the
         // picture goes. A new decoder fixes it; reopening the stream does not.
-        if (Platform.isIOS && PlaybackRecovery.decoderSessionLost(text)) unawaited(renewVideoDecoder());
-        if (log.prefix == 'vd' && text.startsWith('Error while decoding frame') && DateTime.now().difference(_lastDecoderRenewal) > const Duration(seconds: 5)) {
+        if (Platform.isIOS && PlaybackRecovery.decoderSessionLost(text)) {
+          unawaited(renewVideoDecoder());
+        }
+        if (log.prefix == 'vd' &&
+            text.startsWith('Error while decoding frame') &&
+            DateTime.now().difference(_lastDecoderRenewal) > const Duration(seconds: 5)) {
           final now = DateTime.now();
           _decodeErrors
             ..add(now)
             ..removeWhere((at) => now.difference(at) > const Duration(seconds: 10));
         }
         // Opened again at once rather than after the picture watch notices.
-        if ((lost || _decodeErrors.length >= 3) && _fileSerial == _playSerial && player.state.playing && DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
+        if ((lost || _decodeErrors.length >= 3) &&
+            _fileSerial == _playSerial &&
+            player.state.playing &&
+            DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
           _lastBrokenReopen = DateTime.now();
           _decodeErrors.clear();
-          unawaited(_recover(lost ? 'libmpv gave up on a stream' : 'The video data broke and frames stopped decoding'));
+          unawaited(_recover(lost
+              ? 'libmpv gave up on a stream'
+              : 'The video data broke and frames stopped decoding'));
         }
         if (PlaybackRecovery.graphicsLost(text)) unawaited(_remakeVideoOutput(player, text));
         // The same line for every frame says nothing new.
@@ -347,7 +400,13 @@ extension PlaybackEvents on AppController {
         if (!buffering || _tracking == null) return;
         final serial = _playSerial;
         _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
-          if (serial == _playSerial && _fileSerial == serial && player.state.buffering && player.state.playing) unawaited(_recover('No buffering progress for over ${PlaybackRecovery.stallTimeout.inSeconds} seconds'));
+          if (serial == _playSerial &&
+              _fileSerial == serial &&
+              player.state.buffering &&
+              player.state.playing) {
+            unawaited(_recover(
+                'No buffering progress for over ${PlaybackRecovery.stallTimeout.inSeconds} seconds'));
+          }
         });
       }),
     ]);
@@ -361,8 +420,11 @@ extension PlaybackEvents on AppController {
       _openedVia = null;
       // The relay's socket was taken away while the app was suspended (iOS):
       // it listens again, and the same addresses open once more through it.
-      if (loopbackRefused(message) && (_relayed == item.id || _liveSplit == item.id) && _mayReviveRelay()) {
-        logWarn('The local relay refused libmpv ($message); listening again and reopening ${item.id}');
+      if (loopbackRefused(message) &&
+          (_relayed == item.id || _liveSplit == item.id) &&
+          _mayReviveRelay()) {
+        logWarn(
+            'The local relay refused libmpv ($message); listening again and reopening ${item.id}');
         final serial = _playSerial;
         final position = _lastPosition > Duration.zero ? _lastPosition : null;
         unawaited(() async {
@@ -380,12 +442,17 @@ extension PlaybackEvents on AppController {
           return;
         }
         final limited = _youtubeRefused;
-        logWarn('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
-        unawaited(limited != null ? _fallBack(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
+        logWarn(
+            'Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
+        unawaited(limited != null
+            ? _fallBack(item, _playSerial, limited, start: position)
+            : _open(item, _playSerial, start: position, piped: false));
         return;
       }
       if (!failure.retryable) {
-        _mayFallBack(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
+        _mayFallBack(failure.kind)
+            ? unawaited(_fallBack(item, _playSerial, failure, start: position))
+            : _fail(item, failure);
         return;
       }
       if (_openedResolved == item.id) {
@@ -404,16 +471,20 @@ extension PlaybackEvents on AppController {
         // the video itself.
         if (_resolvedAgain != _playSerial) {
           _resolvedAgain = _playSerial;
-          logWarn('Prefetched address did not play ($message; $_openedOrigin); resolving ${item.id} again');
+          logWarn(
+              'Prefetched address did not play ($message; $_openedOrigin); resolving ${item.id} again');
           unawaited(_open(item, _playSerial, start: start, quickAgain: true));
         } else {
-          logWarn('Address resolved again did not play ($message; $_openedOrigin); libmpv resolves ${item.id} itself');
+          logWarn(
+              'Address resolved again did not play ($message; $_openedOrigin); libmpv resolves ${item.id} itself');
           unawaited(_open(item, _playSerial, start: start, resolved: false));
         }
         return;
       }
       // Resolved again and still refused: the servers are the last way.
-      _mayFallBack(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
+      _mayFallBack(failure.kind)
+          ? unawaited(_fallBack(item, _playSerial, failure, start: position))
+          : _fail(item, failure);
     } else if (PlaybackRecovery.isNetworkError(message)) {
       final failure = PlaybackFailure.classify([message, ..._recentErrors]);
       if (failure.retryable) {
@@ -444,7 +515,8 @@ extension PlaybackEvents on AppController {
         if (upNext.isNotEmpty) {
           await play(upNext.first, keepMini: true);
         } else if (queue.isNotEmpty) {
-          await play(queue.first, keepMini: true, at: mini && queue.first.id == playing?.id ? Duration.zero : null);
+          await play(queue.first,
+              keepMini: true, at: mini && queue.first.id == playing?.id ? Duration.zero : null);
         } else if (playing != null) {
           await play(playing!, keepMini: true, at: Duration.zero);
         }
@@ -484,10 +556,19 @@ extension PlaybackEvents on AppController {
         await Future<void>.delayed(const Duration(milliseconds: 1200));
         if (!_windowHidden) return;
       }
-      final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip && !IosVideoLayer.active.value);
+      final wanted = preferences.audioOnlyInBackground ||
+          ((Platform.isAndroid || Platform.isIOS) &&
+              !Device.tv &&
+              !pip &&
+              !IosVideoLayer.active.value);
       // On iOS the decoder goes even while paused: VideoToolbox's session
       // would not survive the background.
-      if (!wanted || audioOnly || _backgroundAudioOnly || (!player!.state.playing && !Platform.isIOS)) return;
+      if (!wanted ||
+          audioOnly ||
+          _backgroundAudioOnly ||
+          (!player!.state.playing && !Platform.isIOS)) {
+        return;
+      }
       _backgroundAudioOnly = true;
       logInfo('Picture off while Lumtub is in the background');
       await platform.setProperty('vid', 'no');
@@ -528,7 +609,9 @@ extension PlaybackEvents on AppController {
     final options = PlayerOptionApplicator.cacheOptions(settings, background: hidden);
     logDebug(() => 'Cache ${hidden ? 'for the background' : 'back'}: $options');
     for (final MapEntry(:key, :value) in options.entries) {
-      await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+      await platform
+          .setProperty(key, value)
+          .catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
     }
   }
 
@@ -565,10 +648,19 @@ extension PlaybackEvents on AppController {
     final known = playing?.id == item.id ? details : null;
     final length = player.state.duration;
     var cached = _scrobbleFor;
-    if (cached == null || cached.$1 != item.id || !identical(cached.$2, known) || cached.$3 != length) {
-      cached = _scrobbleFor = (item.id, known, length, scrobbleTrackOf(item, known, length: length > Duration.zero ? length : null));
+    if (cached == null ||
+        cached.$1 != item.id ||
+        !identical(cached.$2, known) ||
+        cached.$3 != length) {
+      cached = _scrobbleFor = (
+        item.id,
+        known,
+        length,
+        scrobbleTrackOf(item, known, length: length > Duration.zero ? length : null)
+      );
     }
-    scrobbler.observe(cached.$4, position: position, playing: player.state.playing && !player.state.buffering);
+    scrobbler.observe(cached.$4,
+        position: position, playing: player.state.playing && !player.state.buffering);
   }
 
   /// Counts the time played up to now into 观看统计, before it is shown.
@@ -581,7 +673,8 @@ extension PlaybackEvents on AppController {
     final item = _tracking;
     final now = DateTime.now();
     final last = _watchTick;
-    final playing = player != null && player.state.playing && !player.state.buffering && item != null;
+    final playing =
+        player != null && player.state.playing && !player.state.buffering && item != null;
     _watchTick = playing ? now : null;
     if (last != null) {
       final gap = now.difference(last).inMilliseconds;

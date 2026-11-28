@@ -7,7 +7,9 @@ void main() {
   test('a lane runs as many jobs at once as it allows, the most urgent first', () async {
     final queue = JobQueue();
     addTearDown(queue.dispose);
-    final gates = {for (final k in ['a', 'b', 'c']) k: Completer<void>()};
+    final gates = {
+      for (final k in ['a', 'b', 'c']) k: Completer<void>()
+    };
     final started = <String>[];
     Future<String> job(String key, JobPriority priority) => queue.run(key, (context) async {
           started.add(key);
@@ -54,7 +56,8 @@ void main() {
     final queue = JobQueue(backgroundPaused: () => paused);
     addTearDown(queue.dispose);
     final ran = <String>[];
-    final later = queue.run('index', (context) async => ran.add('index'), lane: JobLane.light, priority: JobPriority.background);
+    final later = queue.run('index', (context) async => ran.add('index'),
+        lane: JobLane.light, priority: JobPriority.background);
     await queue.run('asked', (context) async => ran.add('asked'), lane: JobLane.light);
     await pumpEventQueue();
     expect(ran, ['asked']);

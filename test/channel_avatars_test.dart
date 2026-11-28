@@ -13,10 +13,12 @@ void main() {
   const b = ChannelRef('UCBR8-60-B28hp2BmDPdntcQ', 'B');
   const c = ChannelRef('UCX6OQ3DkcsbYNE6H8uQQuVA', 'C');
 
-  String page(String image) => '<html><head><meta property="og:image" content="$image"></head></html>';
+  String page(String image) =>
+      '<html><head><meta property="og:image" content="$image"></head></html>';
 
   test('reads the avatar from a channel page and ignores the site logo', () {
-    expect(ChannelAvatars.parse(page('https://yt3.googleusercontent.com/x=s900-c&amp;y')), 'https://yt3.googleusercontent.com/x=s900-c&y');
+    expect(ChannelAvatars.parse(page('https://yt3.googleusercontent.com/x=s900-c&amp;y')),
+        'https://yt3.googleusercontent.com/x=s900-c&y');
     expect(ChannelAvatars.parse(page('https://www.youtube.com/img/desktop/yt_1200.png')), isNull);
     expect(ChannelAvatars.parse('<html></html>'), isNull);
   });
@@ -26,7 +28,8 @@ void main() {
     expect(ChannelRef.avatarUrl('http://yt3.ggpht.com/a'), 'https://yt3.ggpht.com/a');
     expect(ChannelRef.avatarUrl('ftp://x'), isNull);
     expect(ChannelRef.avatarUrl(null), isNull);
-    expect(ChannelRef.fromJson({'id': a.id, 'name': 'A', 'avatar': '//yt3.ggpht.com/a'})!.avatar, 'https://yt3.ggpht.com/a');
+    expect(ChannelRef.fromJson({'id': a.id, 'name': 'A', 'avatar': '//yt3.ggpht.com/a'})!.avatar,
+        'https://yt3.ggpht.com/a');
   });
 
   test('channels saved without a picture get one once, a few at a time', () async {
@@ -42,10 +45,13 @@ void main() {
       peak = active > peak ? active : peak;
       await Future<void>.delayed(const Duration(milliseconds: 10));
       active--;
-      return id == c.id ? http.Response('', 404) : http.Response(page('https://yt3.googleusercontent.com/$id'), 200);
+      return id == c.id
+          ? http.Response('', 404)
+          : http.Response(page('https://yt3.googleusercontent.com/$id'), 200);
     });
     final store = LibraryStore(File('${dir.path}/library.json'))
-      ..channels.addAll([a, b, c, const ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'D', 'https://yt3.ggpht.com/d')]);
+      ..channels.addAll(
+          [a, b, c, const ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'D', 'https://yt3.ggpht.com/d')]);
     final library = LibraryController(store, client: client);
     await library.fillMissingAvatars(concurrency: 2);
     expect(library.channels.map((ch) => ch.avatar), [

@@ -27,14 +27,16 @@ abstract final class VolumeBalance {
   /// [loudnessDb] for the video when known. A livestream follows faster,
   /// as it has no whole to measure. [withLimiters] false leaves out the
   /// `alimiter` stages, for a libmpv without them.
-  static String filter(int strength, {double? loudnessDb, bool live = false, bool withLimiters = true}) {
+  static String filter(int strength,
+      {double? loudnessDb, bool live = false, bool withLimiters = true}) {
     final s = strength.clamp(1, 100) / 100;
     // A wider Gaussian window follows more slowly: gentle at low strength.
     final window = _odd((61 - 50 * s).round());
     final maxGain = (1 + 9 * s).toStringAsFixed(1);
     final frame = live ? 150 : 400;
     final stages = [
-      if (withLimiters && loudnessDb != null && gainFor(loudnessDb).abs() >= 0.5) 'alimiter=level_in=${_linear(gainFor(loudnessDb))}:limit=1:level=0',
+      if (withLimiters && loudnessDb != null && gainFor(loudnessDb).abs() >= 0.5)
+        'alimiter=level_in=${_linear(gainFor(loudnessDb))}:limit=1:level=0',
       'dynaudnorm=f=$frame:g=$window:m=$maxGain:p=0.95:r=0.2',
       if (withLimiters) 'alimiter=limit=0.95:level=0:attack=5:release=60',
     ];

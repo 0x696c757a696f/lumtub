@@ -18,7 +18,8 @@ class FakeSocks {
   int replyCode = 0;
   final asked = <String>[];
 
-  static Future<FakeSocks> start(int target, {String? user, String? pass, int replyCode = 0}) async {
+  static Future<FakeSocks> start(int target,
+      {String? user, String? pass, int replyCode = 0}) async {
     final fake = FakeSocks(await ServerSocket.bind(InternetAddress.loopbackIPv4, 0), target)
       ..user = user
       ..pass = pass
@@ -40,7 +41,9 @@ class FakeSocks {
         step = user == null ? 2 : 1;
         client.add([5, user == null ? 0 : (methods.contains(2) ? 2 : 255)]);
       }
-      if (step == 1 && buffer.length >= 2 && buffer.length >= 3 + buffer[1] + buffer[2 + buffer[1]]) {
+      if (step == 1 &&
+          buffer.length >= 2 &&
+          buffer.length >= 3 + buffer[1] + buffer[2 + buffer[1]]) {
         final ulen = buffer[1];
         final u = utf8.decode(buffer.sublist(2, 2 + ulen));
         final p = utf8.decode(buffer.sublist(3 + ulen, 3 + ulen + buffer[2 + ulen]));
@@ -51,9 +54,15 @@ class FakeSocks {
       }
       if (step == 2 && buffer.length >= 7) {
         final atyp = buffer[3];
-        final addrLength = atyp == 1 ? 4 : atyp == 4 ? 16 : buffer[4] + 1;
+        final addrLength = atyp == 1
+            ? 4
+            : atyp == 4
+                ? 16
+                : buffer[4] + 1;
         if (buffer.length < 4 + addrLength + 2) return;
-        final address = atyp == 3 ? utf8.decode(buffer.sublist(5, 4 + addrLength)) : buffer.sublist(4, 4 + addrLength).join('.');
+        final address = atyp == 3
+            ? utf8.decode(buffer.sublist(5, 4 + addrLength))
+            : buffer.sublist(4, 4 + addrLength).join('.');
         asked.add('$atyp:$address');
         step = 4;
         if (replyCode != 0) {
@@ -86,7 +95,8 @@ Future<(HttpServer, List<String>)> startTarget() async {
 }
 
 /// The bridge's login header, as dart:io and libmpv send it.
-String loginOf(SocksBridge bridge) => 'Proxy-Authorization: Basic ${base64.encode(utf8.encode('${SocksBridge.user}:${bridge.token}'))}\r\n';
+String loginOf(SocksBridge bridge) =>
+    'Proxy-Authorization: Basic ${base64.encode(utf8.encode('${SocksBridge.user}:${bridge.token}'))}\r\n';
 
 /// Sends [request] to the bridge, logged in with [login] after its first
 /// line, and returns everything it answers.
@@ -94,9 +104,11 @@ Future<String> ask(SocksBridge bridge, String request, {String? thenSend, String
   final socket = await Socket.connect('127.0.0.1', bridge.port);
   final answer = StringBuffer();
   final done = Completer<void>();
-  socket.listen((data) => answer.write(latin1.decode(data)), onDone: done.complete, onError: (_) => done.complete());
+  socket.listen((data) => answer.write(latin1.decode(data)),
+      onDone: done.complete, onError: (_) => done.complete());
   final line = request.indexOf('\r\n') + 2;
-  socket.write('${request.substring(0, line)}${login ?? loginOf(bridge)}${request.substring(line)}');
+  socket
+      .write('${request.substring(0, line)}${login ?? loginOf(bridge)}${request.substring(line)}');
   if (thenSend != null) {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     socket.write(thenSend);
@@ -125,7 +137,9 @@ void _tests(bool native) {
     final (target, seen) = await startTarget();
     final socks = await FakeSocks.start(target.port);
     final bridge = await start('socks5h://127.0.0.1:${socks.server.port}');
-    final answer = await ask(bridge, 'CONNECT example.test:443 HTTP/1.1\r\nHost: example.test:443\r\n\r\n', thenSend: get);
+    final answer = await ask(
+        bridge, 'CONNECT example.test:443 HTTP/1.1\r\nHost: example.test:443\r\n\r\n',
+        thenSend: get);
     expect(answer, startsWith('HTTP/1.1 200'));
     expect(answer, contains('hello'));
     expect(socks.asked, ['3:example.test']);
@@ -152,7 +166,8 @@ void _tests(bool native) {
     final socks = await FakeSocks.start(target.port);
     final bridge = await start('socks5h://127.0.0.1:${socks.server.port}');
     final client = HttpClient()..findProxy = (_) => 'PROXY ${bridge.hostPort}';
-    final response = await client.getUrl(Uri.parse('http://example.test:8080/a/b?q=1')).then((r) => r.close());
+    final response =
+        await client.getUrl(Uri.parse('http://example.test:8080/a/b?q=1')).then((r) => r.close());
     expect(await response.transform(utf8.decoder).join(), 'hello');
     expect(seen, ['/a/b?q=1']);
     expect(socks.asked, ['3:example.test']);
@@ -192,21 +207,25 @@ void _tests(bool native) {
     await dead.close();
     bridge = await start('socks5://127.0.0.1:$deadPort');
     expect(await ask(bridge, connect), startsWith('HTTP/1.1 502'));
-    expect(await ask(bridge, 'GET http://192.0.2.1:${target.port}/ HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
+    expect(await ask(bridge, 'GET http://192.0.2.1:${target.port}/ HTTP/1.1\r\n\r\n'),
+        startsWith('HTTP/1.1 502'));
     expect(await ask(bridge, 'nonsense\r\n\r\n'), startsWith('HTTP/1.1 400'));
     expect(seen, isEmpty);
     await bridge.close();
     await target.close(force: true);
   });
 
-  test("this PC is reached directly, as through the proxy it would be the proxy's own machine", () async {
+  test("this PC is reached directly, as through the proxy it would be the proxy's own machine",
+      () async {
     final (target, seen) = await startTarget();
     final dead = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     final deadPort = dead.port;
     await dead.close();
     final bridge = await start('socks5h://127.0.0.1:$deadPort');
-    expect(await ask(bridge, 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n', thenSend: get), contains('hello'));
-    expect(await ask(bridge, 'CONNECT localhost:${target.port} HTTP/1.1\r\n\r\n', thenSend: get), contains('hello'));
+    expect(await ask(bridge, 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n', thenSend: get),
+        contains('hello'));
+    expect(await ask(bridge, 'CONNECT localhost:${target.port} HTTP/1.1\r\n\r\n', thenSend: get),
+        contains('hello'));
     expect(seen, ['/', '/']);
     await bridge.close();
     await target.close(force: true);
@@ -218,7 +237,8 @@ void _tests(bool native) {
     final origin = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     origin.listen((socket) => socket.listen((data) {
           heads.add(latin1.decode(data));
-          socket.add(latin1.encode('HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n'));
+          socket.add(
+              latin1.encode('HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n'));
           unawaited(socket.close());
         }));
     final bridge = await start('socks5h://127.0.0.1:1');
@@ -226,8 +246,12 @@ void _tests(bool native) {
     final refused = await ask(bridge, connect, login: '');
     expect(refused, startsWith('HTTP/1.1 407'));
     expect(refused, contains('Proxy-Authenticate: Basic'));
-    expect(await ask(bridge, connect, login: 'Proxy-Authorization: Basic ${base64.encode(utf8.encode('lumtub:guess'))}\r\n'), startsWith('HTTP/1.1 407'));
-    expect(await ask(bridge, 'GET http://127.0.0.1:${origin.port}/x HTTP/1.1\r\nHost: h\r\n\r\n'), startsWith('HTTP/1.1 200'));
+    expect(
+        await ask(bridge, connect,
+            login: 'Proxy-Authorization: Basic ${base64.encode(utf8.encode('lumtub:guess'))}\r\n'),
+        startsWith('HTTP/1.1 407'));
+    expect(await ask(bridge, 'GET http://127.0.0.1:${origin.port}/x HTTP/1.1\r\nHost: h\r\n\r\n'),
+        startsWith('HTTP/1.1 200'));
     expect(heads.join(), 'GET /x HTTP/1.1\r\nHost: h\r\n\r\n');
     await bridge.close();
     await origin.close();
@@ -249,11 +273,13 @@ void _tests(bool native) {
     overrides.useEnvironment = true;
     expect(overrides.route(Uri.parse('https://youtube.com/'), environment: env), 'PROXY evil:1');
     overrides.endpoint = '127.0.0.1:9';
-    expect(overrides.route(Uri.parse('https://youtube.com/'), environment: env), 'PROXY 127.0.0.1:9');
+    expect(
+        overrides.route(Uri.parse('https://youtube.com/'), environment: env), 'PROXY 127.0.0.1:9');
     expect(overrides.route(Uri.parse('http://localhost:5/'), environment: env), 'DIRECT');
     // Cast devices on the home network.
     for (final host in ['192.168.1.20', '10.0.0.5', '172.20.1.1', 'tv.local', '[fe80::1]']) {
-      expect(overrides.route(Uri.parse('http://$host:8008/'), environment: env), 'DIRECT', reason: host);
+      expect(overrides.route(Uri.parse('http://$host:8008/'), environment: env), 'DIRECT',
+          reason: host);
     }
     expect(overrides.route(Uri.parse('http://172.32.0.1/'), environment: env), 'PROXY 127.0.0.1:9');
   });

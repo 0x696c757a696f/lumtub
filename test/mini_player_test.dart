@@ -13,7 +13,11 @@ import 'package:material_ui/material_ui.dart';
 import 'player_controls_test.dart' show FakePlayer;
 import 'tooltip_finder.dart';
 
-const _video = VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+const _video = VideoItem(
+    id: 'dQw4w9WgXcQ',
+    title: '测试视频标题',
+    channel: 'Channel',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 
 void main() {
   late AppController controller;
@@ -152,7 +156,11 @@ void main() {
           theme: theme ? buildAppTheme(Colors.red, Brightness.light) : null,
           home: Scaffold(
             body: Stack(children: [
-              Positioned.fill(child: MiniPlayer(controller: controller, videoBuilder: (context) => const ColoredBox(key: pictureKey, color: Colors.black))),
+              Positioned.fill(
+                  child: MiniPlayer(
+                      controller: controller,
+                      videoBuilder: (context) =>
+                          const ColoredBox(key: pictureKey, color: Colors.black))),
             ]),
           ),
         );

@@ -3,11 +3,13 @@ import 'package:lumtub/ui/animated_visibility.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  Future<double Function(Finder)> pumpRow(WidgetTester tester, Widget Function(bool) panel, ValueNotifier<bool> open) async {
+  Future<double Function(Finder)> pumpRow(
+      WidgetTester tester, Widget Function(bool) panel, ValueNotifier<bool> open) async {
     await tester.pumpWidget(MaterialApp(
       home: ValueListenableBuilder(
         valueListenable: open,
-        builder: (context, shown, _) => Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        builder: (context, shown, _) =>
+            Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const Expanded(child: SizedBox(key: Key('page'))),
           panel(shown),
         ]),
@@ -16,12 +18,17 @@ void main() {
     return (Finder finder) => tester.getSize(finder).width;
   }
 
-  testWidgets('a side panel slides in from the end and the page gives up the room as it moves', (tester) async {
+  testWidgets('a side panel slides in from the end and the page gives up the room as it moves',
+      (tester) async {
     tester.view.physicalSize = const Size(1000, 600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final open = ValueNotifier(false);
-    final width = await pumpRow(tester, (shown) => AnimatedVisibility.side(visible: shown, child: const SizedBox(key: Key('panel'), width: 300)), open);
+    final width = await pumpRow(
+        tester,
+        (shown) => AnimatedVisibility.side(
+            visible: shown, child: const SizedBox(key: Key('panel'), width: 300)),
+        open);
     expect(find.byKey(const Key('panel')), findsNothing);
     expect(width(find.byKey(const Key('page'))), 1000);
     open.value = true;
@@ -44,7 +51,8 @@ void main() {
       home: ValueListenableBuilder(
         valueListenable: shown,
         builder: (context, visible, _) => Column(children: [
-          AnimatedVisibility.topBar(visible: visible, child: const SizedBox(key: Key('bar'), height: 56)),
+          AnimatedVisibility.topBar(
+              visible: visible, child: const SizedBox(key: Key('bar'), height: 56)),
           const Expanded(child: SizedBox(key: Key('page'))),
         ]),
       ),

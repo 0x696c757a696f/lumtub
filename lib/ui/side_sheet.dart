@@ -13,7 +13,8 @@ double sideSheetWidth(double windowWidth) => (windowWidth * 0.4).clamp(360.0, 56
 
 /// Whether [context] is inside a sheet, a [showSideSheet] or a sheet from
 /// the bottom, so a panel lays itself out as one rather than as a dialog.
-bool inSheet(BuildContext context) => context.dependOnInheritedWidgetOfExactType<SheetScope>() != null;
+bool inSheet(BuildContext context) =>
+    context.dependOnInheritedWidgetOfExactType<SheetScope>() != null;
 
 /// Marks the contents of a sheet for [inSheet].
 class SheetScope extends InheritedWidget {
@@ -29,22 +30,30 @@ class SheetScope extends InheritedWidget {
 /// focus stays inside it while it is open.
 Future<T?> showSideSheet<T>(BuildContext context, WidgetBuilder builder) {
   final navigator = Navigator.of(context, rootNavigator: true);
-  return navigator.push<T>(_SideSheetRoute<T>(builder: builder, barrierLabel: tr('Close'), capturedThemes: InheritedTheme.capture(from: context, to: navigator.context)));
+  return navigator.push<T>(_SideSheetRoute<T>(
+      builder: builder,
+      barrierLabel: tr('Close'),
+      capturedThemes: InheritedTheme.capture(from: context, to: navigator.context)));
 }
 
 /// A dialog route that comes in more slowly than it goes, as a sheet does.
 class _SideSheetRoute<T> extends RawDialogRoute<T> {
-  _SideSheetRoute({required WidgetBuilder builder, required super.barrierLabel, required CapturedThemes capturedThemes})
+  _SideSheetRoute(
+      {required WidgetBuilder builder,
+      required super.barrierLabel,
+      required CapturedThemes capturedThemes})
       : super(
           barrierDismissible: true,
           barrierColor: Colors.black26,
           traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
           transitionDuration: Motion.of(const Duration(milliseconds: 300)),
-          pageBuilder: (context, animation, secondary) => capturedThemes.wrap(_SideSheet(builder: builder)),
+          pageBuilder: (context, animation, secondary) =>
+              capturedThemes.wrap(_SideSheet(builder: builder)),
           transitionBuilder: (context, animation, secondary, child) {
             final rtl = Directionality.of(context) == TextDirection.rtl;
             return SlideTransition(
-              position: Tween(begin: Offset(rtl ? -1 : 1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Ease.curve)),
+              position: Tween(begin: Offset(rtl ? -1 : 1, 0), end: Offset.zero)
+                  .animate(CurvedAnimation(parent: animation, curve: Ease.curve)),
               child: child,
             );
           },

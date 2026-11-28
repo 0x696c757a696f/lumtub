@@ -16,6 +16,7 @@ enum LiveChatKind {
   paidSticker,
   membership,
   system,
+
   /// Slow mode, subscribers-only or members-only mode turned on or off.
   mode,
 }
@@ -40,20 +41,26 @@ class LiveChatMessage {
   final String id;
   final LiveChatKind kind;
   final String text;
+
   /// Position in a recorded live stream, absent for an active live chat.
   final Duration? offset;
   final int? timestampUsec;
   final String author;
   final String? authorChannelId;
   final String? authorAvatar;
+
   /// YouTube's already-formatted Super Chat or Super Sticker amount.
   final String? amount;
+
   /// The Super Sticker image, when this is a paid sticker.
   final String? stickerUrl;
+
   /// The colour of a Super Chat's amount tier, as ARGB.
   final int? color;
+
   /// How long YouTube keeps this Super Chat in the strip over the chat.
   final int? tickerSeconds;
+
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
 
@@ -67,7 +74,8 @@ class LiveChatMessage {
   /// The chat items of [lines], read by the native core; none without it.
   static List<LiveChatMessage> _read(String lines) {
     final core = NativeCore.instance;
-    final list = core == null ? null : jsonDecode(core.take(core.withText(lines, core.liveChat)) ?? 'null');
+    final list =
+        core == null ? null : jsonDecode(core.take(core.withText(lines, core.liveChat)) ?? 'null');
     if (list is! List) return const [];
     return [for (final m in list.cast<Map<String, dynamic>>()) fromCore(m)];
   }
@@ -77,7 +85,8 @@ class LiveChatMessage {
         id: m['id'] as String,
         kind: LiveChatKind.values.byName(m['kind'] as String),
         text: m['text'] as String,
-        offset: m['offsetMs'] == null ? null : Duration(milliseconds: (m['offsetMs'] as num).toInt()),
+        offset:
+            m['offsetMs'] == null ? null : Duration(milliseconds: (m['offsetMs'] as num).toInt()),
         timestampUsec: (m['timestampUsec'] as num?)?.toInt(),
         author: m['author'] as String,
         authorChannelId: m['authorChannelId'] as String?,

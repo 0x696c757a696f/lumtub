@@ -27,40 +27,53 @@ class FormatPolicy {
 
   /// Whether H.264 may be disabled: only when VP9 or AV1 is decoded in
   /// hardware, or every video would be decoded on the CPU.
-  static bool canDisableH264(PlayerSettings settings) => hardware(settings, VideoCodec.vp9) || hardware(settings, VideoCodec.av1);
+  static bool canDisableH264(PlayerSettings settings) =>
+      hardware(settings, VideoCodec.vp9) || hardware(settings, VideoCodec.av1);
 
   /// Whether this PC is known to decode [codec] only in software.
   static bool softwareOnly(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
     if (key == null) return false;
-    return settings.hwdec == 'no' || ((settings.decoderResults[key]?.isVerified ?? false) && !hardware(settings, codec));
+    return settings.hwdec == 'no' ||
+        ((settings.decoderResults[key]?.isVerified ?? false) && !hardware(settings, codec));
   }
 
   /// Whether this PC decodes [codec] in hardware, as measured.
   static bool hardware(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
-    return settings.hwdec != 'no' && key != null && (settings.decoderResults[key]?.isHardware ?? false);
+    return settings.hwdec != 'no' &&
+        key != null &&
+        (settings.decoderResults[key]?.isHardware ?? false);
   }
 
   /// Whether [codec] may play. Null (audio, unknown names) is not filtered.
-  static bool allows(PlayerSettings settings, VideoCodec? codec) => codec == null || !settings.disabledCodecs.contains(codec);
+  static bool allows(PlayerSettings settings, VideoCodec? codec) =>
+      codec == null || !settings.disabledCodecs.contains(codec);
 
   /// Whether a stream whose codec is called [name] may play.
-  static bool allowsName(PlayerSettings settings, Object? name) => allows(settings, VideoCodec.of(name));
+  static bool allowsName(PlayerSettings settings, Object? name) =>
+      allows(settings, VideoCodec.of(name));
 
   /// The policy for [settings], worked out by lumtub_core
   /// (native/lumtub_core/src/format_policy.rs). Without the library
   /// yt-dlp's and mpv's defaults apply, minus the disabled codecs.
-  static _Policy _policy(PlayerSettings settings, {int displayHeight = 0, String audioLanguage = ''}) {
+  static _Policy _policy(PlayerSettings settings,
+      {int displayHeight = 0, String audioLanguage = ''}) {
     final core = NativeCore.instance;
     final json = settingsJson(settings, displayHeight: displayHeight, audioLanguage: audioLanguage);
     final answer = core?.take(core.withText(json, core.formatPolicy));
     if (answer == null) {
-      return _Policy([for (final c in VideoCodec.values) if (allows(settings, c)) c], 'ytdl', null, 0);
+      return _Policy([
+        for (final c in VideoCodec.values)
+          if (allows(settings, c)) c
+      ], 'ytdl', null, 0);
     }
     final data = jsonDecode(answer) as Map<String, dynamic>;
     return _Policy(
-      [for (final name in data['order'] as List) if (VideoCodec.byName(name) case final codec?) codec],
+      [
+        for (final name in data['order'] as List)
+          if (VideoCodec.byName(name) case final codec?) codec
+      ],
       data['expression'] as String,
       data['formatSort'] as String?,
       data['displayHeight'] as int,
@@ -71,13 +84,22 @@ class FormatPolicy {
   ///
   /// [audioLanguage] is the language of the dub to play instead of the
   /// original (see [dubLanguage]); empty for the original.
-  static String settingsJson(PlayerSettings settings, {int displayHeight = 0, String audioLanguage = ''}) => jsonEncode({
+  static String settingsJson(PlayerSettings settings,
+          {int displayHeight = 0, String audioLanguage = ''}) =>
+      jsonEncode({
         'strategy': settings.strategy.name,
-        'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
-        'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
+        'disabled': [
+          for (final c in VideoCodec.values)
+            if (settings.disabledCodecs.contains(c)) c.name
+        ],
+        'hardware': [
+          for (final c in VideoCodec.values)
+            if (hardware(settings, c)) c.name
+        ],
         'hardwareHeights': {
           for (final c in VideoCodec.values)
-            if (hardware(settings, c) && (settings.decoderResults[decoderKey(c)]?.height ?? 0) > 0) c.name: settings.decoderResults[decoderKey(c)]!.height,
+            if (hardware(settings, c) && (settings.decoderResults[decoderKey(c)]?.height ?? 0) > 0)
+              c.name: settings.decoderResults[decoderKey(c)]!.height,
         },
         'maxHeight': settings.maxHeight,
         'audio': settings.audioQuality.name,
@@ -88,7 +110,8 @@ class FormatPolicy {
 
   /// The audio language to ask for: [pick], the language chosen for this
   /// video ('' for its original sound), else what the settings say.
-  static String dubLanguage(PlayerSettings settings, {String? pick}) => pick ?? settings.dubLanguage;
+  static String dubLanguage(PlayerSettings settings, {String? pick}) =>
+      pick ?? settings.dubLanguage;
 
   /// The allowed codecs, most preferred first.
   ///
@@ -126,7 +149,8 @@ class FormatPolicy {
   ///
   /// With an [audioLanguage] a dub in that language is tried first and the
   /// original sound after it.
-  static String expression(PlayerSettings settings, {String audioLanguage = ''}) => _policy(settings, audioLanguage: audioLanguage).expression;
+  static String expression(PlayerSettings settings, {String audioLanguage = ''}) =>
+      _policy(settings, audioLanguage: audioLanguage).expression;
 
   /// For a live stream: above 1080p, where YouTube has no stream with
   /// picture and sound together, the best picture in an allowed codec with
@@ -149,7 +173,9 @@ class FormatPolicy {
     ].map((name) => '[vcodec!*=$name]').join();
     // Only HLS: the live picture and sound without a manifest answer one
     // fragment per request, which libmpv cannot follow (see LiveSplit).
-    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080 ? '' : 'bv*[height>1080][protocol^=m3u8]$cap$excluded+ba[protocol^=m3u8]/';
+    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080
+        ? ''
+        : 'bv*[height>1080][protocol^=m3u8]$cap$excluded+ba[protocol^=m3u8]/';
     return '${tall}b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
   }
 
@@ -160,13 +186,19 @@ class FormatPolicy {
   static String? formatSort(PlayerSettings settings) => _policy(settings).formatSort;
 
   /// Names of the disabled codecs, e.g. `AV1、VP9`, or empty.
-  static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join(tr(', '));
+  static String disabledNames(PlayerSettings settings) => [
+        for (final c in VideoCodec.values)
+          if (settings.disabledCodecs.contains(c)) c.label
+      ].join(tr(', '));
 
   /// A one-line summary of the rule in force, for the settings page.
   static String summary(PlayerSettings settings) {
     final disabled = disabledNames(settings);
-    final order = settings.strategy == PlaybackStrategy.quality ? tr('best resolution and frame rate first') : [for (final c in codecOrder(settings)) c.label].join(' › ');
-    final rule = tr('Current rule: {0}, codec order {1}', [settings.strategy.label, order.isEmpty ? tr('None') : order]);
+    final order = settings.strategy == PlaybackStrategy.quality
+        ? tr('best resolution and frame rate first')
+        : [for (final c in codecOrder(settings)) c.label].join(' › ');
+    final rule = tr('Current rule: {0}, codec order {1}',
+        [settings.strategy.label, order.isEmpty ? tr('None') : order]);
     return disabled.isEmpty ? rule : '$rule${tr(', disabled: {0}', [disabled])}';
   }
 }

@@ -13,6 +13,7 @@ mixin _ExploreState {
   SearchUploadDate explorePeriod = SearchUploadDate.any;
   SearchDuration exploreDuration = SearchDuration.any;
   SearchQuality exploreQuality = SearchQuality.any;
+
   /// The 类型 and 视角 filters: 宗教与信仰's own lists there, general ones
   /// elsewhere ([exploreFormats], [exploreViews]).
   WordFilter exploreFormat = ContentFormat.any;
@@ -49,7 +50,8 @@ extension ExploreActions on AppController {
   List<WordFilter> get exploreViews => AppController.viewsOf(exploreSection);
 
   /// Every zone of [section], built in and the user's, in no set order.
-  List<ExploreTopic> allExploreTopics(ExploreSection section) => exploreTopicsOf(section, preferences.exploreCustomTopics);
+  List<ExploreTopic> allExploreTopics(ExploreSection section) =>
+      exploreTopicsOf(section, preferences.exploreCustomTopics);
 
   /// The zones of [section] the strip shows, in the user's order.
   List<ExploreTopic> exploreTopicsFor(ExploreSection section) => arrangeTopics(
@@ -77,8 +79,10 @@ extension ExploreActions on AppController {
 
   /// The faith tradition the zone shown keeps to: the narrowest
   /// sub-category's that names one. Only 宗教与信仰's zones name one.
-  FaithTradition? get exploreTraditionNow =>
-      exploreSection.isFaith ? FaithTradition.of([exploreLeafNow?.tradition, exploreSubNow?.tradition, exploreTopicNow.tradition]) : null;
+  FaithTradition? get exploreTraditionNow => exploreSection.isFaith
+      ? FaithTradition.of(
+          [exploreLeafNow?.tradition, exploreSubNow?.tradition, exploreTopicNow.tradition])
+      : null;
 
   /// The words searched for: the narrowest sub-category's, or the whole
   /// zone's, with 宗教与信仰's filter words.
@@ -105,16 +109,24 @@ extension ExploreActions on AppController {
       if (exploreSubNow == null && preferences.exploreLanguage != ExploreLanguage.any)
         for (final sub in exploreTopicNow.subs) withWords(sub.query),
     }..remove(exploreQuery);
-    return [for (final query in queries) if (query.trim().isNotEmpty) query];
+    return [
+      for (final query in queries)
+        if (query.trim().isNotEmpty) query
+    ];
   }
 
   /// Adds a category of the user's own and shows it.
   Future<void> addExploreTopic(CustomTopic topic) async {
-    final kept = preferences.exploreCustomTopics.where((t) => !(t.section == topic.section && t.label == topic.label)).toList();
+    final kept = preferences.exploreCustomTopics
+        .where((t) => !(t.section == topic.section && t.label == topic.label))
+        .toList();
     final key = topic.topic.key;
     await savePreferences(preferences.copyWith(
       exploreCustomTopics: [...kept, topic],
-      exploreHidden: {...preferences.exploreHidden, topic.section.name: [...?preferences.exploreHidden[topic.section.name]]..remove(key)},
+      exploreHidden: {
+        ...preferences.exploreHidden,
+        topic.section.name: [...?preferences.exploreHidden[topic.section.name]]..remove(key)
+      },
     ));
     final index = exploreTopicsFor(topic.section).indexWhere((t) => t.key == key);
     _reloadExplore(section: topic.section, topic: index);
@@ -123,15 +135,27 @@ extension ExploreActions on AppController {
   /// Removes one of the user's categories, keeping the one shown if it stays.
   Future<void> removeExploreTopic(ExploreSection section, String label) async {
     final key = 'custom:$label';
-    await _arrangeExplore(section, () => savePreferences(preferences.copyWith(
-          exploreCustomTopics: preferences.exploreCustomTopics.where((t) => !(t.section == section && t.label == label)).toList(),
-          exploreOrder: {...preferences.exploreOrder, section.name: [...?preferences.exploreOrder[section.name]]..remove(key)},
-          exploreHidden: {...preferences.exploreHidden, section.name: [...?preferences.exploreHidden[section.name]]..remove(key)},
-        )));
+    await _arrangeExplore(
+        section,
+        () => savePreferences(preferences.copyWith(
+              exploreCustomTopics: preferences.exploreCustomTopics
+                  .where((t) => !(t.section == section && t.label == label))
+                  .toList(),
+              exploreOrder: {
+                ...preferences.exploreOrder,
+                section.name: [...?preferences.exploreOrder[section.name]]..remove(key)
+              },
+              exploreHidden: {
+                ...preferences.exploreHidden,
+                section.name: [...?preferences.exploreHidden[section.name]]..remove(key)
+              },
+            )));
   }
 
   /// Saves the order and hidden zones of [section] from the manage dialog.
-  Future<void> arrangeExploreTopics(ExploreSection section, List<String> order, Set<String> hidden) => _arrangeExplore(
+  Future<void> arrangeExploreTopics(
+          ExploreSection section, List<String> order, Set<String> hidden) =>
+      _arrangeExplore(
         section,
         () => savePreferences(preferences.copyWith(
           exploreOrder: {...preferences.exploreOrder, section.name: order},
@@ -174,7 +198,8 @@ extension ExploreActions on AppController {
   }
 
   /// 视频 or 直播, whichever 宗教信仰 or 学术 was opened from while its tabs show.
-  ExploreSection get exploreHalf => exploreSection.tabs != null ? _topicBeforeTabs.$1 : exploreSection;
+  ExploreSection get exploreHalf =>
+      exploreSection.tabs != null ? _topicBeforeTabs.$1 : exploreSection;
 
   /// Shows another part, zone, sub-category, mode, period or filter of the
   /// explore page. A new part starts on its first zone, and on its usual
@@ -193,8 +218,10 @@ extension ExploreActions on AppController {
     ExploreRegion? region,
     ExploreLanguage? language,
   }) {
-    if ((region != null && region != preferences.exploreRegion) || (language != null && language != preferences.exploreLanguage)) {
-      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
+    if ((region != null && region != preferences.exploreRegion) ||
+        (language != null && language != preferences.exploreLanguage)) {
+      unawaited(
+          savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
       explore?.dispose();
       explore = null;
     }
@@ -211,9 +238,11 @@ extension ExploreActions on AppController {
       return;
     }
     final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
-    final nextLeaf = leaf ?? (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
+    final nextLeaf = leaf ??
+        (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
     final modes = ExploreMode.of(nextSection);
-    final sameKind = nextSection.tabs == exploreSection.tabs && nextSection.isLive == exploreSection.isLive;
+    final sameKind =
+        nextSection.tabs == exploreSection.tabs && nextSection.isLive == exploreSection.isLive;
     final nextMode = mode != null && modes.contains(mode)
         ? mode
         : !newSection || (sameKind && modes.contains(exploreMode))
@@ -223,7 +252,8 @@ extension ExploreActions on AppController {
     final nextDuration = duration ?? exploreDuration;
     final nextQuality = quality ?? exploreQuality;
     // A filter of the other kind's list starts over at 不限.
-    final formats = AppController.formatsOf(nextSection), views = AppController.viewsOf(nextSection);
+    final formats = AppController.formatsOf(nextSection),
+        views = AppController.viewsOf(nextSection);
     final nextFormat = format ?? (formats.contains(exploreFormat) ? exploreFormat : formats.first);
     final nextView = view ?? (views.contains(exploreView) ? exploreView : views.first);
     if (!newSection &&
@@ -255,7 +285,20 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage);
+  Object get _exploreKey => (
+        exploreSection,
+        exploreTopic,
+        exploreSub,
+        exploreLeaf,
+        exploreMode,
+        explorePeriod,
+        exploreDuration,
+        exploreQuality,
+        exploreFormat,
+        exploreView,
+        preferences.exploreRegion,
+        preferences.exploreLanguage
+      );
 
   void _putAwayExplore() {
     final loader = explore;
@@ -285,8 +328,10 @@ extension ExploreActions on AppController {
       return;
     }
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
-      if (DateTime.now().difference(at) < (exploreSection.isLive ? _keepLiveExplore : _keepExplore)) {
-        logDebug(() => 'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
+      if (DateTime.now().difference(at) <
+          (exploreSection.isLive ? _keepLiveExplore : _keepExplore)) {
+        logDebug(() =>
+            'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
         _update(() => explore = loader
           ..paused = false
           ..addListener(_passOn('explore')));
@@ -308,9 +353,14 @@ extension ExploreActions on AppController {
     _exploreDepth = 0;
     // Listed titles are machine-translated, so the language is asked of
     // each video instead (VideoLanguages).
-    final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
+    final spoken =
+        language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
     final perChannel = <String, int>{};
-    final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality, recent: exploreSection == ExploreSection.frontier);
+    final sp = exploreParams(mode,
+        period: explorePeriod,
+        duration: exploreDuration,
+        quality: exploreQuality,
+        recent: exploreSection == ExploreSection.frontier);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
     // The Home and Explore "For You" lists share these choices.  Explore has
     // its own loader, so it must apply the mix here instead of relying on
@@ -325,14 +375,22 @@ extension ExploreActions on AppController {
     // seldom titled by their church, so there only those naming another
     // are left out.
     final tradition = mix ? null : exploreTraditionNow;
-    final strictTradition = tradition != null && tradition.strict && !exploreSection.isLive && faithMarkerLanguages.contains(language);
+    final strictTradition = tradition != null &&
+        tradition.strict &&
+        !exploreSection.isLive &&
+        faithMarkerLanguages.contains(language);
     // A live stream goes on after it was watched: only videos are left out
     // of 全部 once seen.
-    final seen = mix && !exploreSection.isLive ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    final seen = mix && !exploreSection.isLive
+        ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)}
+        : const <String>{};
     final prefs = preferences;
     final ai = _aiFilter;
     final known = mode == ExploreMode.fresh
-        ? {for (final item in history) TasteProfile.channelKey(item), for (final channel in library?.channels ?? const <ChannelRef>[]) channel.id}
+        ? {
+            for (final item in history) TasteProfile.channelKey(item),
+            for (final channel in library?.channels ?? const <ChannelRef>[]) channel.id
+          }
         : const <String>{};
     final dropped = <String, int>{};
     bool drop(String why) {
@@ -341,26 +399,40 @@ extension ExploreActions on AppController {
     }
 
     bool where(VideoItem item) {
-      if (notInterested != null && notInterested.videos.contains(item.id)) return drop('not interested');
+      if (notInterested != null && notInterested.videos.contains(item.id)) {
+        return drop('not interested');
+      }
       // What the page would hide is left out here too, so that hiding it
       // still fills the page (see [AppController.visible]).
       if (prefs.blocksGroup(item) || prefs.isUnrecommended(item.channelId)) return drop('blocked');
-      if (!prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)) return drop('settings');
-      if (ai != null && ai.hides(item) && !(item.channelId != null && (library?.isFollowing(item.channelId!) ?? false))) return drop('AI filter');
+      if (!prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)) {
+        return drop('settings');
+      }
+      if (ai != null &&
+          ai.hides(item) &&
+          !(item.channelId != null && (library?.isFollowing(item.channelId!) ?? false))) {
+        return drop('AI filter');
+      }
       // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
       // list, but its score is reduced below in the ranking callback.
       if (feedMix != null && feedMix.penaltyOf(item) == null) return drop('Shorts or vertical');
       if (taste != null && taste.channelAffinity(item) < -0.3) return drop('often skipped channel');
       if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return drop('not upcoming');
-      if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return drop('not a replay');
+      if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') {
+        return drop('not a replay');
+      }
       final seconds = item.duration;
       if (mode == ExploreMode.gems) {
         final views = item.viewCount;
-        if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return drop('not a hidden gem');
+        if (views == null || views > gemMaxViews || seconds == null || seconds < 240) {
+          return drop('not a hidden gem');
+        }
       }
       if (mode == ExploreMode.fresh) {
         final views = item.viewCount;
-        if (views == null || views > freshMaxViews || seconds == null || seconds < 60) return drop('not new');
+        if (views == null || views > freshMaxViews || seconds == null || seconds < 60) {
+          return drop('not new');
+        }
         if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
@@ -369,8 +441,15 @@ extension ExploreActions on AppController {
       // 全部 is for finding more: not what was watched or what 为你推荐
       // already shows. It keeps any one channel from filling it.
       if (mix && seen.contains(item.id)) return drop('already seen');
-      if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return drop('more than 2 per channel');
-      if (tradition != null && !tradition.admits(item, strict: strictTradition)) return drop('other tradition');
+      if (mix &&
+          (perChannel[TasteProfile.channelKey(item)] =
+                  (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) >
+              2) {
+        return drop('more than 2 per channel');
+      }
+      if (tradition != null && !tradition.admits(item, strict: strictTradition)) {
+        return drop('other tradition');
+      }
       // Last, as it counts the videos that show.
       return faith == null || faith(item) || drop('faith filter');
     }
@@ -387,12 +466,19 @@ extension ExploreActions on AppController {
             // The zones' search words are Chinese, which finds Chinese
             // videos: they are put in the language picked, else the
             // region's, else a non-Chinese interface's.
-            final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
+            final ui = youtubeHl.startsWith('zh')
+                ? ExploreLanguage.any
+                : ExploreLanguage.parse(youtubeHl.split('-').first);
             final regional = preferences.exploreRegion.searchLanguage;
-            final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
+            final wordsIn = language != ExploreLanguage.any
+                ? language
+                : regional != ExploreLanguage.any
+                    ? regional
+                    : ui;
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
-            final translates = !(wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional));
+            final translates = !(wordsIn == ExploreLanguage.any ||
+                (wordsIn == ExploreLanguage.zh && !traditional));
             // Each search is checked on its own: one that brings only
             // videos in other languages gives up early (VideoLanguages.only)
             // and the next, wider one starts, instead of the whole page
@@ -404,7 +490,8 @@ extension ExploreActions on AppController {
               // Search listings give no frame size: a vertical video is told
               // by the bars at the sides of its thumbnail.
               if (dropVertical && thumbnails != null) {
-                listing = listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
+                listing = listing.refined((lines) => PortraitThumbnails.drop(
+                    lines, (id) => PortraitThumbnails.check(id, thumbnails)));
               }
               if (!spoken || languages == null) return listing;
               return listing.refined((lines) => languages.only(
@@ -413,7 +500,11 @@ extension ExploreActions on AppController {
                     listedInLanguage: hl != null,
                     giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
                     done: (check) {
-                      total = (asked: total.asked + check.asked, kept: total.kept + check.kept, heard: total.heard + check.heard);
+                      total = (
+                        asked: total.asked + check.asked,
+                        kept: total.kept + check.kept,
+                        heard: total.heard + check.heard
+                      );
                       // Only the list shown says how its check went.
                       if (identical(explore, made)) _update(() => exploreLanguageCheck = total);
                     },
@@ -422,12 +513,19 @@ extension ExploreActions on AppController {
 
             Listing searchIn(List<String> queries) => checked(translates
                 ? Listing.deferred(() async {
-                    final translated = await _searchWordsIn(queries, wordsIn, traditional: traditional);
+                    final translated =
+                        await _searchWordsIn(queries, wordsIn, traditional: traditional);
                     // A language YouTube has no interface in finds its
                     // neighbour's videos unless the search names it.
                     final anchor = spoken ? language.searchAnchor : null;
-                    final words = [for (final w in translated) anchor == null || w.contains(anchor) ? w : '$w $anchor'];
-                    if (spoken) logInfo('Explore in ${language.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl ${hl ?? '-'}, gl $region)');
+                    final words = [
+                      for (final w in translated)
+                        anchor == null || w.contains(anchor) ? w : '$w $anchor'
+                    ];
+                    if (spoken) {
+                      logInfo(
+                          'Explore in ${language.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl ${hl ?? '-'}, gl $region)');
+                    }
                     return search(words);
                   })
                 : search(queries));
@@ -436,13 +534,17 @@ extension ExploreActions on AppController {
             var listing = searchIn(queries);
             if (!mix && !exploreTopicNow.custom) {
               for (final wider in broader) {
-                listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
+                listing = listing.followedBy(() => searchIn([wider]),
+                    switched: () => logInfo(
+                        'Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
               }
             }
             // A zone of the user's own is translated like the others; when
             // that runs out, its words as written are searched as well.
             if (!mix && exploreTopicNow.custom && translates) {
-              listing = listing.followedBy(() => checked(search(queries)), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
+              listing = listing.followedBy(() => checked(search(queries)),
+                  switched: () => logInfo(
+                      'Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$query" as written'));
             }
             return listing;
           },
@@ -479,28 +581,40 @@ extension ExploreActions on AppController {
   /// [queries] in [language], translated where they are in another, or
   /// into [traditional] characters; a query that cannot be translated is
   /// searched as it is. Which words are translated: [translatesInto].
-  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) async {
+  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language,
+      {bool traditional = false}) async {
     final target = traditional ? 'zh-TW' : language.code;
     final phrases = _searchPhrases ??= SearchPhrases(
       _microsoftFirst,
-      file: directories == null ? null : File('${directories!.cache.path}${Platform.pathSeparator}search_phrases.json'),
+      file: directories == null
+          ? null
+          : File('${directories!.cache.path}${Platform.pathSeparator}search_phrases.json'),
       bundled: () => rootBundle.loadString('assets/search_phrases.json'),
     );
     Object? refused;
     void failed(Object e) => refused ??= e;
-    final asIs = [for (final q in queries) q.trim().isEmpty || (!traditional && titleLanguage(q) == language)];
+    final asIs = [
+      for (final q in queries) q.trim().isEmpty || (!traditional && titleLanguage(q) == language)
+    ];
     // The zones' Chinese keywords go by their English (searchPivots),
     // which is translated instead and which an English search takes as it
     // is; keywords no pivot covers (a zone of the user's own) are put into
     // English first.
-    final sources = [for (final (i, q) in queries.indexed) asIs[i] || traditional ? q : englishSearchOf(q)];
+    final sources = [
+      for (final (i, q) in queries.indexed) asIs[i] || traditional ? q : englishSearchOf(q)
+    ];
     if (!traditional && pivotsThroughEnglish(language)) {
-      final unpivoted = [for (final (i, s) in sources.indexed) if (!asIs[i]) ...unpivotedPhrasesOf(s)];
+      final unpivoted = [
+        for (final (i, s) in sources.indexed)
+          if (!asIs[i]) ...unpivotedPhrasesOf(s)
+      ];
       if (unpivoted.isNotEmpty) {
         final english = await phrases.translate(unpivoted, 'en', failure: failed);
         for (final (i, s) in sources.indexed) {
           final own = asIs[i] ? const <String>[] : unpivotedPhrasesOf(s);
-          if (own.isNotEmpty && own.every(english.containsKey)) sources[i] = withEnglishOf(s, [for (final p in own) english[p]!]);
+          if (own.isNotEmpty && own.every(english.containsKey)) {
+            sources[i] = withEnglishOf(s, [for (final p in own) english[p]!]);
+          }
         }
       }
     }
@@ -509,21 +623,28 @@ extension ExploreActions on AppController {
     // to nothing. Every query's phrases go in one request.
     bool asks(String w) => translatesInto(w, language) && searchGlossary[w] == null;
     final words = [for (final s in sources) searchPhrasesOf(s)];
-    final asked = {for (final (i, w) in words.indexed) if (!asIs[i]) ...w.where(asks)};
-    final translated = asked.isEmpty ? const <String, String>{} : await phrases.translate(asked, target, failure: failed);
+    final asked = {
+      for (final (i, w) in words.indexed)
+        if (!asIs[i]) ...w.where(asks)
+    };
+    final translated = asked.isEmpty
+        ? const <String, String>{}
+        : await phrases.translate(asked, target, failure: failed);
     final out = <String>[];
     for (final (i, query) in queries.indexed) {
       if (asIs[i] || (!words[i].any(asks) && sources[i] == query)) {
         out.add(query);
         continue;
       }
-      final result = searchWordsOf([for (final w in words[i]) searchGlossary[w] ?? (asks(w) ? translated[w] ?? w : w)]);
+      final result = searchWordsOf(
+          [for (final w in words[i]) searchGlossary[w] ?? (asks(w) ? translated[w] ?? w : w)]);
       logDebug(() => 'Explore searches "$query" in $target as "$result"');
       out.add(result.isEmpty ? query : result);
     }
     if (refused != null) {
       final left = asked.where((w) => !translated.containsKey(w)).length;
-      logWarn('Could not translate $left of ${asked.length} explore search phrases into $target: $refused');
+      logWarn(
+          'Could not translate $left of ${asked.length} explore search phrases into $target: $refused');
     }
     return out;
   }
@@ -537,7 +658,10 @@ extension ExploreActions on AppController {
       for (final topic in exploreTopicsFor(section))
         // Live streams are few in any one sub-category: a live mix searches
         // each zone as a whole.
-        if (!topic.mix && topic.opens == null) topic.subs.isEmpty || section.isLive ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
+        if (!topic.mix && topic.opens == null)
+          topic.subs.isEmpty || section.isLive
+              ? topic.query
+              : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];

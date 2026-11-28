@@ -19,6 +19,7 @@ class ChannelPlayback {
   final _entries = <String, ({double? rate, int? volume})>{};
   Timer? _save;
   bool _dirty = false;
+
   /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
   int _revision = 0;
   final _writes = WriteQueue();
@@ -87,7 +88,10 @@ class ChannelPlayback {
             file,
             jsonEncode({
               for (final MapEntry(:key, :value) in _entries.entries)
-                key: {if (value.rate != null) 'rate': value.rate, if (value.volume != null) 'volume': value.volume},
+                key: {
+                  if (value.rate != null) 'rate': value.rate,
+                  if (value.volume != null) 'volume': value.volume
+                },
             }));
         if (written == _revision) _dirty = false;
       } catch (e) {

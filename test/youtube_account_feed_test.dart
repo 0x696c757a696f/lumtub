@@ -17,13 +17,23 @@ class _FakeWeb implements WebInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
     asked.add((body, hl));
-    return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(pages[asked.length - 1]))));
+    return (
+      status: 200,
+      body: Uint8List.fromList(utf8.encode(jsonEncode(pages[asked.length - 1])))
+    );
   }
 }
 
-Map<String, Object?> _video(String id) => {'videoRenderer': {'videoId': id, 'title': {'simpleText': 'Title $id'}, 'lengthText': {'simpleText': '3:00'}}};
+Map<String, Object?> _video(String id) => {
+      'videoRenderer': {
+        'videoId': id,
+        'title': {'simpleText': 'Title $id'},
+        'lengthText': {'simpleText': '3:00'}
+      }
+    };
 
 void main() {
   test('reads the day labels of the watch history in English', () {
@@ -33,36 +43,124 @@ void main() {
     expect(YoutubeAccountFeed.daysAgo('Monday', now: wednesday), 2);
     expect(YoutubeAccountFeed.daysAgo('Thursday', now: wednesday), 6);
     expect(YoutubeAccountFeed.daysAgo('Nov 1', now: wednesday), 17);
-    expect(YoutubeAccountFeed.daysAgo('Dec 24', now: wednesday), 329, reason: 'a date ahead is last year\'s');
+    expect(YoutubeAccountFeed.daysAgo('Dec 24', now: wednesday), 329,
+        reason: 'a date ahead is last year\'s');
     expect(YoutubeAccountFeed.daysAgo('Nov 12, 2025', now: wednesday), 371);
     expect(YoutubeAccountFeed.daysAgo('Watched', now: wednesday), isNull);
   });
 
   test('reads the history page after page, in English, with each video\'s day', () async {
     final web = _FakeWeb([
-      {'contents': {'twoColumnBrowseResultsRenderer': {'tabs': [{'tabRenderer': {'selected': true, 'content': {'sectionListRenderer': {'contents': [
-        {'itemSectionRenderer': {'header': {'itemSectionHeaderRenderer': {'title': {'runs': [{'text': 'Today'}]}}}, 'contents': [_video('aaaaaaaaaaa')]}},
-        {'continuationItemRenderer': {'continuationEndpoint': {'continuationCommand': {'token': 'NEXT'}}}},
-      ]}}}}]}}},
-      {'onResponseReceivedActions': [{'appendContinuationItemsAction': {'continuationItems': [
-        {'itemSectionRenderer': {'header': {'itemSectionHeaderRenderer': {'title': {'simpleText': 'Yesterday'}}}, 'contents': [_video('bbbbbbbbbbb'), _video('aaaaaaaaaaa')]}},
-      ]}}]},
+      {
+        'contents': {
+          'twoColumnBrowseResultsRenderer': {
+            'tabs': [
+              {
+                'tabRenderer': {
+                  'selected': true,
+                  'content': {
+                    'sectionListRenderer': {
+                      'contents': [
+                        {
+                          'itemSectionRenderer': {
+                            'header': {
+                              'itemSectionHeaderRenderer': {
+                                'title': {
+                                  'runs': [
+                                    {'text': 'Today'}
+                                  ]
+                                }
+                              }
+                            },
+                            'contents': [_video('aaaaaaaaaaa')]
+                          }
+                        },
+                        {
+                          'continuationItemRenderer': {
+                            'continuationEndpoint': {
+                              'continuationCommand': {'token': 'NEXT'}
+                            }
+                          }
+                        },
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        'onResponseReceivedActions': [
+          {
+            'appendContinuationItemsAction': {
+              'continuationItems': [
+                {
+                  'itemSectionRenderer': {
+                    'header': {
+                      'itemSectionHeaderRenderer': {
+                        'title': {'simpleText': 'Yesterday'}
+                      }
+                    },
+                    'contents': [_video('bbbbbbbbbbb'), _video('aaaaaaaaaaa')]
+                  }
+                },
+              ]
+            }
+          }
+        ]
+      },
     ]);
     final feed = YoutubeAccountFeed(web);
     final items = await feed.videos(YoutubeAccountFeed.history);
     expect(items.map((v) => v.id), ['aaaaaaaaaaa', 'bbbbbbbbbbb']);
-    expect(web.asked.map((a) => (a.$1['browseId'] ?? a.$1['continuation'], a.$2)), [('FEhistory', 'en'), ('NEXT', 'en')]);
+    expect(web.asked.map((a) => (a.$1['browseId'] ?? a.$1['continuation'], a.$2)),
+        [('FEhistory', 'en'), ('NEXT', 'en')]);
     expect(feed.historyDays, {'aaaaaaaaaaa': 0, 'bbbbbbbbbbb': 1});
     expect(items.first, isA<VideoItem>());
   }, skip: NativeCore.instance == null);
 
   test('puts a YouTube playlist in order with the fewest moves, and uploads in batches', () async {
     final ids = [for (var i = 0; i < 6; i++) 'video${i}xxxx'];
-    Map<String, Object?> entry(int i) => {'playlistVideoRenderer': {'videoId': ids[i], 'setVideoId': 'SET$i', 'title': {'simpleText': 'Title $i'}}};
+    Map<String, Object?> entry(int i) => {
+          'playlistVideoRenderer': {
+            'videoId': ids[i],
+            'setVideoId': 'SET$i',
+            'title': {'simpleText': 'Title $i'}
+          }
+        };
     final web = _FakeWeb([
-      {'contents': {'twoColumnBrowseResultsRenderer': {'tabs': [{'tabRenderer': {'selected': true, 'content': {'sectionListRenderer': {'contents': [
-        {'itemSectionRenderer': {'contents': [{'playlistVideoListRenderer': {'contents': [for (var i = 0; i < 6; i++) entry(i)]}}]}},
-      ]}}}}]}}},
+      {
+        'contents': {
+          'twoColumnBrowseResultsRenderer': {
+            'tabs': [
+              {
+                'tabRenderer': {
+                  'selected': true,
+                  'content': {
+                    'sectionListRenderer': {
+                      'contents': [
+                        {
+                          'itemSectionRenderer': {
+                            'contents': [
+                              {
+                                'playlistVideoListRenderer': {
+                                  'contents': [for (var i = 0; i < 6; i++) entry(i)]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
       {},
       {},
       {},

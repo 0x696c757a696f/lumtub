@@ -8,12 +8,17 @@ void main() {
       final theme = buildAppTheme(Colors.blue, brightness);
       await tester.pumpWidget(MaterialApp(
         theme: theme,
-        home: Scaffold(body: Column(children: [
+        home: Scaffold(
+            body: Column(children: [
           FilterChip(label: const Text('on'), selected: true, onSelected: (_) {}),
           FilterChip(label: const Text('off'), onSelected: (_) {}),
         ])),
       ));
-      Color? colorOf(String text) => tester.widget<DefaultTextStyle>(find.ancestor(of: find.text(text), matching: find.byType(DefaultTextStyle)).first).style.color;
+      Color? colorOf(String text) => tester
+          .widget<DefaultTextStyle>(
+              find.ancestor(of: find.text(text), matching: find.byType(DefaultTextStyle)).first)
+          .style
+          .color;
       expect(colorOf('on'), theme.colorScheme.surface);
       expect(colorOf('off'), theme.colorScheme.onSurface);
     });

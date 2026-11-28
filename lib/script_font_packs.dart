@@ -30,7 +30,8 @@ class ScriptFontPack {
     if (_missing[script] case final known?) return known;
     var has = true;
     try {
-      final result = await Process.run('fc-list', [':charset=${sample.toRadixString(16)}', 'family']);
+      final result =
+          await Process.run('fc-list', [':charset=${sample.toRadixString(16)}', 'family']);
       has = result.exitCode != 0 || '${result.stdout}'.trim().isNotEmpty;
     } catch (e) {
       logDebug(() => 'Could not ask fontconfig for $script fonts: $e');

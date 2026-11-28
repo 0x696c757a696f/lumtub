@@ -5,7 +5,12 @@ import 'package:lumtub/cast/airplay.dart';
 import 'package:lumtub/cast/cast_device.dart';
 import 'package:lumtub/cast/mdns.dart';
 
-MdnsService _service(Map<String, String> txt) => MdnsService(id: 'Living Room._airplay._tcp.local', name: 'Living Room', host: InternetAddress('192.168.1.30'), port: 7000, txt: txt);
+MdnsService _service(Map<String, String> txt) => MdnsService(
+    id: 'Living Room._airplay._tcp.local',
+    name: 'Living Room',
+    host: InternetAddress('192.168.1.30'),
+    port: 7000,
+    txt: txt);
 
 void main() {
   test('reads the feature bits', () {
@@ -16,7 +21,14 @@ void main() {
   });
 
   test('tells AirPlay 2 receivers, PINs and speakers apart', () {
-    final tv = AirPlayDevice.fromService(_service({'features': '0x4A7FDFD5,0xBC177FDE', 'flags': '0x244', 'deviceid': 'AA:BB:CC:DD:EE:FF', 'model': 'AppleTV11,1'}), null)!;
+    final tv = AirPlayDevice.fromService(
+        _service({
+          'features': '0x4A7FDFD5,0xBC177FDE',
+          'flags': '0x244',
+          'deviceid': 'AA:BB:CC:DD:EE:FF',
+          'model': 'AppleTV11,1'
+        }),
+        null)!;
     expect(tv.id, 'airplay:AA:BB:CC:DD:EE:FF');
     expect(tv.name, 'Living Room');
     expect(tv.protocol, CastProtocol.airplay);
@@ -25,8 +37,14 @@ void main() {
     final old = AirPlayDevice.fromService(_service({'features': '0x5A7FFFF7', 'sf': '0x4'}), null)!;
     expect(old.v2, isFalse);
     expect(old.needsPin, isFalse);
-    expect(AirPlayDevice.fromService(_service({'features': '0x4A7FCA00,0xBC354BD0', 'model': 'AudioAccessory5,1'}), null), isNull);
-    expect(AirPlayDevice.fromService(_service({'features': '0x4A7FDFD5,0xBC177FDE', 'model': 'Mac14,2'}), null), isNull);
+    expect(
+        AirPlayDevice.fromService(
+            _service({'features': '0x4A7FCA00,0xBC354BD0', 'model': 'AudioAccessory5,1'}), null),
+        isNull);
+    expect(
+        AirPlayDevice.fromService(
+            _service({'features': '0x4A7FDFD5,0xBC177FDE', 'model': 'Mac14,2'}), null),
+        isNull);
   });
 
   test('asks the LAN for AirPlay', () {
@@ -41,8 +59,16 @@ void main() {
   test('pairs, plays and steers a receiver', () async {
     final parts = fake!.split(':');
     final pairings = AirPlayPairings();
-    final device = AirPlayDevice(id: 'fake', name: 'Fake', address: InternetAddress(parts[0]), port: int.parse(parts[1]), features: 1 | 1 << 48, flags: 0x8, pairings: pairings);
-    const media = CastMedia(url: 'http://127.0.0.1:1/x.m3u8', title: 'x', start: Duration(seconds: 5));
+    final device = AirPlayDevice(
+        id: 'fake',
+        name: 'Fake',
+        address: InternetAddress(parts[0]),
+        port: int.parse(parts[1]),
+        features: 1 | 1 << 48,
+        flags: 0x8,
+        pairings: pairings);
+    const media =
+        CastMedia(url: 'http://127.0.0.1:1/x.m3u8', title: 'x', start: Duration(seconds: 5));
     await expectLater(device.load(media), throwsA(isA<AirPlayPinNeeded>()));
     var pairing = await device.startPairing();
     await expectLater(device.finishPairing(pairing, '0000'), throwsA(isA<CastException>()));

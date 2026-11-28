@@ -26,7 +26,13 @@ class StoryboardTile {
 }
 
 class Storyboard {
-  Storyboard({required this.width, required this.height, required this.rows, required this.columns, required this.sheets, required this.interval});
+  Storyboard(
+      {required this.width,
+      required this.height,
+      required this.rows,
+      required this.columns,
+      required this.sheets,
+      required this.interval});
 
   /// Size of one frame in pixels.
   final int width;
@@ -34,6 +40,7 @@ class Storyboard {
   final int rows;
   final int columns;
   final List<StoryboardSheet> sheets;
+
   /// Time between two frames.
   final Duration interval;
 
@@ -65,7 +72,10 @@ class Storyboard {
         rows: board['rows'] as int,
         columns: board['columns'] as int,
         interval: Duration(microseconds: board['interval'] as int),
-        sheets: [for (final s in (board['sheets'] as List<Object?>).cast<List<Object?>>()) StoryboardSheet(s[0]! as String, Duration(microseconds: s[1]! as int))],
+        sheets: [
+          for (final s in (board['sheets'] as List<Object?>).cast<List<Object?>>())
+            StoryboardSheet(s[0]! as String, Duration(microseconds: s[1]! as int))
+        ],
       );
     } on TypeError {
       return null;
@@ -80,14 +90,17 @@ class Storyboard {
     if (fragments is! List) return null;
     final sheets = <StoryboardSheet>[
       for (final fragment in fragments.whereType<Map<String, Object?>>())
-        if (fragment case {'url': final String url, 'duration': final num duration} when duration > 0) StoryboardSheet(url, Duration(microseconds: (duration * 1e6).round())),
+        if (fragment case {'url': final String url, 'duration': final num duration}
+            when duration > 0)
+          StoryboardSheet(url, Duration(microseconds: (duration * 1e6).round())),
     ];
     if (sheets.isEmpty) return null;
     // yt-dlp's fps is frames per second; without it every sheet but the
     // last holds rows * columns frames.
     final fps = f['fps'];
     final perSheet = (rows * columns).toInt();
-    final seconds = fps is num && fps > 0 ? 1 / fps : sheets.first.duration.inMicroseconds / 1e6 / perSheet;
+    final seconds =
+        fps is num && fps > 0 ? 1 / fps : sheets.first.duration.inMicroseconds / 1e6 / perSheet;
     return Storyboard(
       width: width.toInt(),
       height: height.toInt(),
@@ -115,7 +128,8 @@ class Storyboard {
     final start = i == 0 ? Duration.zero : _ends[i - 1];
     final index = ((time - start).inMicroseconds / interval.inMicroseconds).floor();
     // The last sheet is shorter than a full one.
-    final count = min(tilesPerSheet, max(1, (sheets[i].duration.inMicroseconds / interval.inMicroseconds).ceil()));
+    final count = min(tilesPerSheet,
+        max(1, (sheets[i].duration.inMicroseconds / interval.inMicroseconds).ceil()));
     final tile = index.clamp(0, count - 1);
     return StoryboardTile(i, tile ~/ columns, tile % columns);
   }
@@ -157,7 +171,8 @@ class StoryboardSheets {
     try {
       // In turn with thumbnails and under their size cap, read as it
       // arrives rather than buffered whole.
-      final (status, body) = await CachedThumbnail.download(_http, Uri.parse(url)).timeout(const Duration(seconds: 15));
+      final (status, body) = await CachedThumbnail.download(_http, Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
       if (status != 200 || body == null || body.isEmpty) return null;
       final codec = await ui.instantiateImageCodec(body);
       final frame = await codec.getNextFrame();

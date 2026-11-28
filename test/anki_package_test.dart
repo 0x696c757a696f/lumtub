@@ -14,9 +14,23 @@ void main() {
     final folder = await Directory.systemTemp.createTemp('lumtub-apkg');
     addTearDown(() => folder.delete(recursive: true));
     final book = VocabularyBook(File('${folder.path}/vocabulary.json'));
-    final word = VocabularyWord(word: '学习', language: 'zh', reading: 'xué xí', meaning: 'to study', sentence: '我们一起学习吧', videoId: 'abcdefghijk', videoTitle: 'T', at: const Duration(seconds: 75), added: DateTime(2026));
+    final word = VocabularyWord(
+        word: '学习',
+        language: 'zh',
+        reading: 'xué xí',
+        meaning: 'to study',
+        sentence: '我们一起学习吧',
+        videoId: 'abcdefghijk',
+        videoTitle: 'T',
+        at: const Duration(seconds: 75),
+        added: DateTime(2026));
     await book.add(word);
-    await book.add(VocabularyWord(word: 'main', language: 'fr', meaning: 'n. 手', videoId: 'abcdefghijk', added: DateTime(2026)));
+    await book.add(VocabularyWord(
+        word: 'main',
+        language: 'fr',
+        meaning: 'n. 手',
+        videoId: 'abcdefghijk',
+        added: DateTime(2026)));
     final sound = book.soundOf(word.key);
     await sound.parent.create(recursive: true);
     await sound.writeAsBytes(Uint8List.fromList(ascii.encode('RIFF....WAVEfmt ')));
@@ -39,7 +53,14 @@ void main() {
 
   test('the note fields keep their HTML safe', () {
     final fields = AnkiCard.noteFields(
-      VocabularyWord(word: '<i>', language: 'en', meaning: 'a\nb', videoId: 'abcdefghijk', videoTitle: '"x" & <y>', at: const Duration(seconds: 3), added: DateTime(2026)),
+      VocabularyWord(
+          word: '<i>',
+          language: 'en',
+          meaning: 'a\nb',
+          videoId: 'abcdefghijk',
+          videoTitle: '"x" & <y>',
+          at: const Duration(seconds: 3),
+          added: DateTime(2026)),
       audio: 'a.wav',
       picture: 'p.jpg',
     );

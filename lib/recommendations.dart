@@ -14,10 +14,13 @@ import 'native_core.dart';
 enum RecommendSource {
   /// Suggested by YouTube next to a video watched or kept.
   related(1.0),
+
   /// New from a followed channel.
   subscription(0.9),
+
   /// New from a channel watched often but not followed.
   channel(0.7),
+
   /// Popular in a topic the history is about.
   topic(0.5);
 
@@ -29,9 +32,11 @@ class Candidate {
   const Candidate(this.item, this.source, {this.seedWeight = 1, this.reason = ''});
   final VideoItem item;
   final RecommendSource source;
+
   /// How much the video it came from counts: recent and finished videos
   /// count more.
   final double seedWeight;
+
   /// Why it is suggested, shown on its card.
   final String reason;
 }
@@ -67,14 +72,17 @@ class TasteProfile implements Finalizable {
           {
             'k': channelKey(item),
             't': item.title,
-            if (progressOf?.call(item.id) case final progress? when progress.duration > Duration.zero) ...{
+            if (progressOf?.call(item.id) case final progress?
+                when progress.duration > Duration.zero) ...{
               'f': progress.fraction,
               // Left within the first seconds.
               'skip': progress.fraction < 0.15 && progress.position < const Duration(seconds: 45),
             },
           },
       ],
-      'favorites': [for (final item in favorites) {'k': channelKey(item), 't': item.title}],
+      'favorites': [
+        for (final item in favorites) {'k': channelKey(item), 't': item.title}
+      ],
       'followed': followed.toList(),
       'searches': searches,
     });
@@ -113,20 +121,26 @@ class TasteProfile implements Finalizable {
   /// skipped.
   double channelAffinity(VideoItem item) {
     final core = _core;
-    return core == null ? 0 : core.withText(channelKey(item), (bytes, length) => core.tasteAffinity(_handle, bytes, length));
+    return core == null
+        ? 0
+        : core.withText(
+            channelKey(item), (bytes, length) => core.tasteAffinity(_handle, bytes, length));
   }
 
   /// 0 to 1: how close [item]'s title is to the history's words.
   double titleMatch(VideoItem item) {
     final core = _core;
-    return core == null ? 0 : core.withText(item.title, (bytes, length) => core.tasteMatch(_handle, bytes, length));
+    return core == null
+        ? 0
+        : core.withText(item.title, (bytes, length) => core.tasteMatch(_handle, bytes, length));
   }
 
   /// The history's interest [item] belongs to most: its title word that
   /// weighs most in the history, if any weighs enough.
   String? interestOf(VideoItem item) {
     final core = _core;
-    return core?.take(core.withText(item.title, (bytes, length) => core.tasteInterest(_handle, bytes, length)));
+    return core?.take(
+        core.withText(item.title, (bytes, length) => core.tasteInterest(_handle, bytes, length)));
   }
 
   /// The channels watched most, most first.
@@ -144,9 +158,12 @@ class TasteProfile implements Finalizable {
   /// [index, reason index] pairs from lumtub_recommend, or null.
   List<(int, int)>? _rank(String json) {
     final core = _core;
-    final answer = core?.take(core.withText(json, (bytes, length) => core.recommend(_handle, bytes, length)));
+    final answer =
+        core?.take(core.withText(json, (bytes, length) => core.recommend(_handle, bytes, length)));
     if (answer == null) return null;
-    return [for (final pair in jsonDecode(answer) as List) ((pair as List)[0] as int, pair[1] as int)];
+    return [
+      for (final pair in jsonDecode(answer) as List) ((pair as List)[0] as int, pair[1] as int)
+    ];
   }
 
   static String channelKey(VideoItem item) => item.channelId ?? 'name:${item.channel}';
@@ -165,10 +182,13 @@ class TasteProfile implements Finalizable {
 enum FeedLane {
   /// What the whole history keeps coming back to.
   longTerm(0.35, RankWeights(fresh: 0.3)),
+
   /// What the last few videos were about; follows the latest watch.
   recent(0.30, RankWeights(channel: 0.5, title: 0.9, fresh: 0.3, views: 0.2)),
+
   /// Near the interests but from channels not watched yet.
   explore(0.20, RankWeights(channel: 0, title: 0.3, fresh: 0.2, views: 0.5, novelty: 0.5)),
+
   /// New and popular now.
   fresh(0.15, RankWeights(channel: 0.3, title: 0.2, fresh: 1.2, views: 0.6));
 
@@ -179,11 +199,13 @@ enum FeedLane {
 
 /// How much each signal counts when ranking.
 class RankWeights {
-  const RankWeights({this.channel = 0.8, this.title = 0.6, this.fresh = 0.5, this.views = 0.3, this.novelty = 0});
+  const RankWeights(
+      {this.channel = 0.8, this.title = 0.6, this.fresh = 0.5, this.views = 0.3, this.novelty = 0});
   final double channel;
   final double title;
   final double fresh;
   final double views;
+
   /// For channels the history has never seen.
   final double novelty;
 }
@@ -191,7 +213,8 @@ class RankWeights {
 /// Takes from [lanes] in proportion to their [FeedLane.share]: each slot
 /// goes to the lane furthest behind its share, skipping empty ones and
 /// videos already taken. Returns at most [count]; the lanes are consumed.
-List<Recommendation> mixLanes(Map<FeedLane, List<Recommendation>> lanes, int count, {Set<String>? taken, Map<FeedLane, int>? placed}) {
+List<Recommendation> mixLanes(Map<FeedLane, List<Recommendation>> lanes, int count,
+    {Set<String>? taken, Map<FeedLane, int>? placed}) {
   final seen = taken ?? <String>{};
   final counts = placed ?? {for (final lane in FeedLane.values) lane: 0};
   final result = <Recommendation>[];
@@ -239,6 +262,7 @@ class NotInterested {
   final videos = <String>{};
   final channels = <String, int>{};
   bool _dirty = false;
+
   /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
   int _revision = 0;
   final _writes = WriteQueue();
@@ -255,7 +279,9 @@ class NotInterested {
       final map = data['channels'];
       if (map is Map) {
         for (final entry in map.entries) {
-          if (entry.key is String && entry.value is int) channels[entry.key as String] = entry.value as int;
+          if (entry.key is String && entry.value is int) {
+            channels[entry.key as String] = entry.value as int;
+          }
         }
       }
     } catch (e) {
@@ -323,7 +349,11 @@ List<Recommendation> recommend(
   final rows = <Map<String, Object>>[];
   for (final candidate in candidates) {
     final item = candidate.item;
-    if (exclude.contains(item.id) || (notInterested?.videos.contains(item.id) ?? false) || item.isUpcoming) continue;
+    if (exclude.contains(item.id) ||
+        (notInterested?.videos.contains(item.id) ?? false) ||
+        item.isUpcoming) {
+      continue;
+    }
     final penalty = mix.penaltyOf(item);
     if (penalty == null) continue;
     final key = TasteProfile.channelKey(item);
@@ -341,11 +371,21 @@ List<Recommendation> recommend(
   }
   final picks = taste._rank(jsonEncode({
     'candidates': rows,
-    'weights': {'channel': weights.channel, 'title': weights.title, 'fresh': weights.fresh, 'views': weights.views, 'novelty': weights.novelty},
+    'weights': {
+      'channel': weights.channel,
+      'title': weights.title,
+      'fresh': weights.fresh,
+      'views': weights.views,
+      'novelty': weights.novelty
+    },
     'count': count,
     'seed': seed,
   }));
-  if (picks != null) return [for (final (video, reason) in picks) Recommendation(kept[video].item, kept[reason].reason)];
+  if (picks != null) {
+    return [
+      for (final (video, reason) in picks) Recommendation(kept[video].item, kept[reason].reason)
+    ];
+  }
   final seen = <String>{};
   return [
     for (final candidate in kept)

@@ -10,7 +10,12 @@ import 'package:lumtub/native_core.dart';
 import 'package:lumtub/search_options.dart';
 import 'package:lumtub/video_repository.dart';
 
-String _video(int i, int? seconds) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': '', if (seconds != null) 'duration': seconds});
+String _video(int i, int? seconds) => jsonEncode({
+      'id': 'v${i.toString().padLeft(10, '0')}',
+      'title': '$i',
+      'channel': '',
+      if (seconds != null) 'duration': seconds
+    });
 
 /// A channel tab, newest first, that counts what was read from it.
 class _Tab {
@@ -47,7 +52,12 @@ void main() {
       (ChannelSort.shortest, ['6', '1', '4', '0', '5', '7', '3', '2']),
     ]) {
       final tab = _Tab([...lengths]);
-      final lengthsOf = ChannelLengths(newest: () => Listing(tab.open), channel: _channel, tab: ChannelTab.videos, sort: sort, core: (_) async => null);
+      final lengthsOf = ChannelLengths(
+          newest: () => Listing(tab.open),
+          channel: _channel,
+          tab: ChannelTab.videos,
+          sort: sort,
+          core: (_) async => null);
       final loader = VideoListLoader(lengthsOf.listing, pageSize: 3);
       addTearDown(loader.dispose);
       expect(await _all(loader), want);
@@ -59,9 +69,32 @@ void main() {
   });
 
   test('a length filter keeps only videos of that length', () {
-    expect([for (final s in [null, 0, 239, 240, 1200, 1201]) SearchDuration.short.admits(s)], [false, true, true, false, false, false]);
-    expect([for (final s in [null, 239, 240, 1200, 1201]) SearchDuration.medium.admits(s)], [false, false, true, true, false]);
-    expect([for (final s in [null, 1200, 1201]) SearchDuration.long.admits(s)], [false, false, true]);
+    expect([
+      for (final s in [null, 0, 239, 240, 1200, 1201]) SearchDuration.short.admits(s)
+    ], [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]);
+    expect([
+      for (final s in [null, 239, 240, 1200, 1201]) SearchDuration.medium.admits(s)
+    ], [
+      false,
+      false,
+      true,
+      true,
+      false
+    ]);
+    expect([
+      for (final s in [null, 1200, 1201]) SearchDuration.long.admits(s)
+    ], [
+      false,
+      false,
+      true
+    ]);
     expect(SearchDuration.any.admits(null), isTrue);
   });
 
@@ -80,7 +113,14 @@ void main() {
       var now = DateTime(2026, 11, 27);
       final tab = _Tab([...lengths]);
       Future<List<String>> once(ChannelSort sort) async {
-        final lengthsOf = ChannelLengths(newest: () => Listing(tab.open), channel: _channel, tab: ChannelTab.videos, sort: sort, folder: dir.path, core: core, clock: () => now);
+        final lengthsOf = ChannelLengths(
+            newest: () => Listing(tab.open),
+            channel: _channel,
+            tab: ChannelTab.videos,
+            sort: sort,
+            folder: dir.path,
+            core: core,
+            clock: () => now);
         final loader = VideoListLoader(lengthsOf.listing, pageSize: 3);
         addTearDown(loader.dispose);
         return _all(loader);
@@ -106,7 +146,12 @@ void main() {
 
     test('the app runs the core on an isolate of its own', () async {
       final tab = _Tab([...lengths]);
-      final lengthsOf = ChannelLengths(newest: () => Listing(tab.open), channel: _channel, tab: ChannelTab.live, sort: ChannelSort.longest, folder: dir.path);
+      final lengthsOf = ChannelLengths(
+          newest: () => Listing(tab.open),
+          channel: _channel,
+          tab: ChannelTab.live,
+          sort: ChannelSort.longest,
+          folder: dir.path);
       final loader = VideoListLoader(lengthsOf.listing);
       addTearDown(loader.dispose);
       loader.loadMore();

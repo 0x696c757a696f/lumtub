@@ -9,12 +9,24 @@ import 'theme.dart';
 /// The emoji offered, by group: the ones people use most in comments and
 /// chats, drawn by the system's emoji font.
 const emojiGroups = <(String, String)>[
-  ('Smileys', '😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬😮‍💨🤥😌😔😪🤤😴😷🤒🤕🤢🤮🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀💩🤡👻👽🤖'),
+  (
+    'Smileys',
+    '😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬😮‍💨🤥😌😔😪🤤😴😷🤒🤕🤢🤮🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀💩🤡👻👽🤖'
+  ),
   ('Gestures', '👋🤚🖐✋🖖👌🤌🤏✌🤞🤟🤘🤙👈👉👆👇☝👍👎✊👊🤛🤜👏🙌👐🤲🤝🙏✍💪🦾👀👁👂🧠'),
   ('Hearts', '❤🧡💛💚💙💜🖤🤍🤎💔❣💕💞💓💗💖💘💝💟💯💢💥💫💦💨🕳💬💭💤✨⭐🌟🔥⚡🎉🎊'),
-  ('Nature', '🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🐤🦆🦅🦉🐺🐴🦄🐝🦋🐌🐞🐢🐍🐙🐬🐳🐟🌸🌹🌻🌷🌱🌲🍀🍁🌈☀🌙☁❄🌊'),
-  ('Food', '🍎🍊🍋🍌🍉🍇🍓🍒🍑🥭🍍🥥🥝🍅🥑🌶🌽🥕🍞🧀🍳🍔🍟🍕🌭🌮🍜🍣🍱🥟🍚🍙🍰🎂🍩🍪🍫🍬🍭🍿☕🍵🧋🍺🍻🍷🥂'),
-  ('Activities', '⚽🏀🏈⚾🎾🏐🎱🏓🎮🕹🎲🎯🎳🎸🎹🎺🎻🥁🎤🎧🎬🎨📷📺📱💻⌨🎁🏆🥇🥈🥉🚗✈🚀⏰💡📌📎✅❌❓❗⚠➕➖🆗🆒🆕'),
+  (
+    'Nature',
+    '🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🐤🦆🦅🦉🐺🐴🦄🐝🦋🐌🐞🐢🐍🐙🐬🐳🐟🌸🌹🌻🌷🌱🌲🍀🍁🌈☀🌙☁❄🌊'
+  ),
+  (
+    'Food',
+    '🍎🍊🍋🍌🍉🍇🍓🍒🍑🥭🍍🥥🥝🍅🥑🌶🌽🥕🍞🧀🍳🍔🍟🍕🌭🌮🍜🍣🍱🥟🍚🍙🍰🎂🍩🍪🍫🍬🍭🍿☕🍵🧋🍺🍻🍷🥂'
+  ),
+  (
+    'Activities',
+    '⚽🏀🏈⚾🎾🏐🎱🏓🎮🕹🎲🎯🎳🎸🎹🎺🎻🥁🎤🎧🎬🎨📷📺📱💻⌨🎁🏆🥇🥈🥉🚗✈🚀⏰💡📌📎✅❌❓❗⚠➕➖🆗🆒🆕'
+  ),
 ];
 
 /// Splits [group] into its emoji, keeping joined ones (`😮‍💨`) whole.
@@ -31,7 +43,9 @@ List<String> emojiOf(String group) {
       emoji += String.fromCharCode(runes[++i]);
     }
     // Older symbols (❤ ☀ ✈) draw as plain text without the emoji form.
-    if (runes[i] < 0x1F000 && !emoji.contains('\u{FE0F}') && !emoji.contains('\u{200D}')) emoji += '\u{FE0F}';
+    if (runes[i] < 0x1F000 && !emoji.contains('\u{FE0F}') && !emoji.contains('\u{200D}')) {
+      emoji += '\u{FE0F}';
+    }
     out.add(emoji);
   }
   return out;
@@ -40,7 +54,9 @@ List<String> emojiOf(String group) {
 /// Puts [text] in [field] where its cursor is, over what is selected.
 void insertAtCursor(TextEditingController field, String text) {
   final value = field.value;
-  final selection = value.selection.isValid ? value.selection : TextSelection.collapsed(offset: value.text.length);
+  final selection = value.selection.isValid
+      ? value.selection
+      : TextSelection.collapsed(offset: value.text.length);
   field.value = TextEditingValue(
     text: value.text.replaceRange(selection.start, selection.end, text),
     selection: TextSelection.collapsed(offset: selection.start + text.length),
@@ -50,7 +66,8 @@ void insertAtCursor(TextEditingController field, String text) {
 /// A button opening the emoji, with the channel's own first when a live
 /// chat offers them; a picked one goes into [field] where its cursor is.
 class EmojiButton extends StatelessWidget {
-  const EmojiButton({super.key, required this.field, this.focus, this.channel = const [], this.size = 18});
+  const EmojiButton(
+      {super.key, required this.field, this.focus, this.channel = const [], this.size = 18});
   final TextEditingController field;
   final FocusNode? focus;
   final List<ChannelEmoji> channel;
@@ -78,7 +95,8 @@ class _EmojiGrid extends StatelessWidget {
     final colors = context.colors;
     Widget heading(String name) => Padding(
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-          child: Text(name, style: context.text.labelSmall?.copyWith(color: colors.onSurfaceVariant)),
+          child:
+              Text(name, style: context.text.labelSmall?.copyWith(color: colors.onSurfaceVariant)),
         );
     Widget cell({required String tooltip, required Widget child, VoidCallback? onTap}) => Tooltip(
           message: tooltip,
@@ -107,7 +125,15 @@ class _EmojiGrid extends StatelessWidget {
                 onTap: emoji.locked ? null : () => pick(emoji.shortcut),
                 child: Opacity(
                   opacity: emoji.locked ? 0.35 : 1,
-                  child: Image(image: ResizeImage.resizeIfNeeded((24 * MediaQuery.devicePixelRatioOf(context)).round(), (24 * MediaQuery.devicePixelRatioOf(context)).round(), CachedThumbnail(emoji.url, null)), width: 24, height: 24, errorBuilder: (context, _, __) => Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
+                  child: Image(
+                      image: ResizeImage.resizeIfNeeded(
+                          (24 * MediaQuery.devicePixelRatioOf(context)).round(),
+                          (24 * MediaQuery.devicePixelRatioOf(context)).round(),
+                          CachedThumbnail(emoji.url, null)),
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, _, __) =>
+                          Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
                 ),
               ),
           ]),
@@ -115,7 +141,11 @@ class _EmojiGrid extends StatelessWidget {
         for (final (name, group) in emojiGroups) ...[
           heading(tr(name)),
           Wrap(children: [
-            for (final emoji in emojiOf(group)) cell(tooltip: emoji, onTap: () => pick(emoji), child: Text(emoji, style: const TextStyle(fontSize: 20))),
+            for (final emoji in emojiOf(group))
+              cell(
+                  tooltip: emoji,
+                  onTap: () => pick(emoji),
+                  child: Text(emoji, style: const TextStyle(fontSize: 20))),
           ]),
         ],
       ]),

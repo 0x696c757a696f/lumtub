@@ -23,7 +23,8 @@ String watchDuration(int seconds) {
 /// 观看统计: how long videos played, from [WatchTime].
 Future<void> openWatchStats(BuildContext context, AppController controller) {
   controller.flushWatchTime();
-  return Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _WatchStatsPage(controller: controller)));
+  return Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (context) => _WatchStatsPage(controller: controller)));
 }
 
 class _WatchStatsPage extends StatefulWidget {
@@ -40,7 +41,12 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
   Future<WatchStats?> _load() async => await widget.controller.watchTime?.stats();
 
   Future<void> _clear() async {
-    if (!await confirmDialog(context, title: tr('Clear watch statistics?'), content: tr('The daily watch time kept on this computer will be deleted.'), confirm: tr('Clear'))) return;
+    if (!await confirmDialog(context,
+        title: tr('Clear watch statistics?'),
+        content: tr('The daily watch time kept on this computer will be deleted.'),
+        confirm: tr('Clear'))) {
+      return;
+    }
     widget.controller.watchTime?.clear();
     setState(() => _stats = _load());
   }
@@ -50,19 +56,23 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
     final recording = widget.controller.preferences.recordHistory;
     return Scaffold(
       appBar: SkinAppBar(AppBar(title: Text(tr('Watch statistics')), actions: [
-        IconButton(tooltip: tr('Clear watch statistics'), icon: Icon(AppIcons.trash), onPressed: _clear),
+        IconButton(
+            tooltip: tr('Clear watch statistics'), icon: Icon(AppIcons.trash), onPressed: _clear),
       ])),
       body: FutureBuilder<WatchStats?>(
         future: _stats,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final stats = snapshot.data;
           if (stats == null) return Center(child: Text(tr('The native core is missing')));
           return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: [
             if (!recording)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Text(tr('Record watch history is off, so new watch time is not counted.'), style: TextStyle(color: context.colors.outline)),
+                child: Text(tr('Record watch history is off, so new watch time is not counted.'),
+                    style: TextStyle(color: context.colors.outline)),
               ),
             Wrap(spacing: 12, runSpacing: 12, children: [
               _Tile(label: tr('Today'), value: watchDuration(stats.today)),
@@ -75,10 +85,14 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
             const SizedBox(height: 8),
             SizedBox(height: 140, child: _DailyBars(days: stats.days)),
             const SizedBox(height: 24),
-            Text(tr('Most watched channels, last 30 days'), style: Theme.of(context).textTheme.titleSmall),
+            Text(tr('Most watched channels, last 30 days'),
+                style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             if (stats.top.isEmpty)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('Nothing recorded yet'), style: TextStyle(color: context.colors.outline)))
+              Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(tr('Nothing recorded yet'),
+                      style: TextStyle(color: context.colors.outline)))
             else
               for (final (key, name, seconds) in stats.top)
                 _ChannelRow(
@@ -108,7 +122,8 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 160,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: context.colors.surfaceContainerHighest, borderRadius: AppStyle.cardRadius),
+        decoration: BoxDecoration(
+            color: context.colors.surfaceContainerHighest, borderRadius: AppStyle.cardRadius),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: TextStyle(color: context.colors.outline, fontSize: 12)),
           const SizedBox(height: 4),
@@ -165,18 +180,24 @@ class _ChannelRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppStyle.cardRadius,
         child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Expanded(child: Text(name.isEmpty ? tr('Unknown channel') : name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-            Text(watchDuration(seconds), style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(
+                  child: Text(name.isEmpty ? tr('Unknown channel') : name,
+                      maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Text(watchDuration(seconds),
+                  style: TextStyle(color: context.colors.outline, fontSize: 12)),
+            ]),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                  value: most == 0 ? 0 : seconds / most,
+                  minHeight: 4,
+                  backgroundColor: context.colors.surfaceContainerHighest),
+            ),
           ]),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(value: most == 0 ? 0 : seconds / most, minHeight: 4, backgroundColor: context.colors.surfaceContainerHighest),
-          ),
-        ]),
-      ),
+        ),
       );
 }

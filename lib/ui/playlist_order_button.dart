@@ -8,9 +8,11 @@ import 'app_icons.dart';
 
 /// 正序 / 倒序 for playlist [id]: the list shows and plays last to first.
 class PlaylistOrderButton extends StatelessWidget {
-  const PlaylistOrderButton({super.key, required this.controller, required this.id, this.onReversed});
+  const PlaylistOrderButton(
+      {super.key, required this.controller, required this.id, this.onReversed});
   final AppController controller;
   final String id;
+
   /// Called when the order turns to last to first.
   final VoidCallback? onReversed;
 

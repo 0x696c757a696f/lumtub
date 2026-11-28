@@ -54,7 +54,8 @@ class ChineseDictionary {
   }
 
   /// Every entry for [word], in either script.
-  List<ChineseEntry> lookup(String word) => [for (final i in _lines.linesOf(word)) ChineseEntry.parse(_lines.line(i))];
+  List<ChineseEntry> lookup(String word) =>
+      [for (final i in _lines.linesOf(word)) ChineseEntry.parse(_lines.line(i))];
 
   bool contains(String word) => _lines.contains(word);
 
@@ -133,7 +134,9 @@ class ChineseDictionary {
       backward.insert(0, run.sublist(end - n, end).join());
       end -= n;
     }
-    if (forward.length != backward.length) return forward.length < backward.length ? forward : backward;
+    if (forward.length != backward.length) {
+      return forward.length < backward.length ? forward : backward;
+    }
     int singles(List<String> words) => words.where((w) => w.runes.length == 1).length;
     return singles(forward) < singles(backward) ? forward : backward;
   }
@@ -152,29 +155,125 @@ class ChineseDictionary {
   static bool isHan(String char) => char.isNotEmpty && _isHanRune(char.runes.first);
 
   static bool _isHanRune(int r) =>
-      (r >= 0x4e00 && r <= 0x9fff) || (r >= 0x3400 && r <= 0x4dbf) || (r >= 0x20000 && r <= 0x323af) || (r >= 0xf900 && r <= 0xfaff) || r == 0x3007;
+      (r >= 0x4e00 && r <= 0x9fff) ||
+      (r >= 0x3400 && r <= 0x4dbf) ||
+      (r >= 0x20000 && r <= 0x323af) ||
+      (r >= 0xf900 && r <= 0xfaff) ||
+      r == 0x3007;
 
   /// How the most common characters with more than one reading are
   /// usually read, which the dictionary cannot tell without context.
   static const _usualReadings = {
-    '了': 'le5', '的': 'de5', '得': 'de5', '地': 'de5', '着': 'zhe5', '著': 'zhe5', '都': 'dou1', '还': 'hai2', '還': 'hai2',
-    '和': 'he2', '为': 'wei4', '為': 'wei4', '行': 'xing2', '长': 'chang2', '長': 'chang2', '只': 'zhi3', '要': 'yao4',
-    '会': 'hui4', '會': 'hui4', '种': 'zhong3', '種': 'zhong3', '重': 'zhong4', '便': 'bian4', '觉': 'jue2', '覺': 'jue2',
-    '看': 'kan4', '好': 'hao3', '少': 'shao3', '没': 'mei2', '沒': 'mei2', '说': 'shuo1', '說': 'shuo1', '一': 'yi1', '不': 'bu4',
-    '个': 'ge4', '個': 'ge4', '们': 'men5', '們': 'men5', '吗': 'ma5', '嗎': 'ma5', '呢': 'ne5', '吧': 'ba5', '么': 'me5',
-    '麼': 'me5', '这': 'zhe4', '這': 'zhe4', '那': 'na4', '哪': 'na3', '啊': 'a5', '大': 'da4', '中': 'zhong1', '发': 'fa1',
-    '發': 'fa1', '干': 'gan4', '乐': 'le4', '樂': 'le4', '差': 'cha4', '数': 'shu4', '數': 'shu4', '处': 'chu4', '處': 'chu4',
-    '当': 'dang1', '當': 'dang1', '相': 'xiang1', '空': 'kong1', '教': 'jiao1', '将': 'jiang1', '將': 'jiang1', '给': 'gei3',
-    '給': 'gei3', '把': 'ba3', '被': 'bei4', '也': 'ye3', '是': 'shi4', '我': 'wo3', '你': 'ni3', '他': 'ta1', '她': 'ta1',
-    '它': 'ta1', '有': 'you3', '在': 'zai4', '就': 'jiu4', '都是': 'dou1 shi4', '什么': 'shen2 me5', '什麼': 'shen2 me5',
-    '怎么': 'zen3 me5', '怎麼': 'zen3 me5', '这么': 'zhe4 me5', '這麼': 'zhe4 me5', '那么': 'na4 me5', '那麼': 'na4 me5',
-    '多么': 'duo1 me5', '为什么': 'wei4 shen2 me5', '為什麼': 'wei4 shen2 me5', '觉得': 'jue2 de5', '覺得': 'jue2 de5',
-    '东西': 'dong1 xi5', '東西': 'dong1 xi5', '朋友': 'peng2 you5', '时候': 'shi2 hou5', '時候': 'shi2 hou5',
+    '了': 'le5',
+    '的': 'de5',
+    '得': 'de5',
+    '地': 'de5',
+    '着': 'zhe5',
+    '著': 'zhe5',
+    '都': 'dou1',
+    '还': 'hai2',
+    '還': 'hai2',
+    '和': 'he2',
+    '为': 'wei4',
+    '為': 'wei4',
+    '行': 'xing2',
+    '长': 'chang2',
+    '長': 'chang2',
+    '只': 'zhi3',
+    '要': 'yao4',
+    '会': 'hui4',
+    '會': 'hui4',
+    '种': 'zhong3',
+    '種': 'zhong3',
+    '重': 'zhong4',
+    '便': 'bian4',
+    '觉': 'jue2',
+    '覺': 'jue2',
+    '看': 'kan4',
+    '好': 'hao3',
+    '少': 'shao3',
+    '没': 'mei2',
+    '沒': 'mei2',
+    '说': 'shuo1',
+    '說': 'shuo1',
+    '一': 'yi1',
+    '不': 'bu4',
+    '个': 'ge4',
+    '個': 'ge4',
+    '们': 'men5',
+    '們': 'men5',
+    '吗': 'ma5',
+    '嗎': 'ma5',
+    '呢': 'ne5',
+    '吧': 'ba5',
+    '么': 'me5',
+    '麼': 'me5',
+    '这': 'zhe4',
+    '這': 'zhe4',
+    '那': 'na4',
+    '哪': 'na3',
+    '啊': 'a5',
+    '大': 'da4',
+    '中': 'zhong1',
+    '发': 'fa1',
+    '發': 'fa1',
+    '干': 'gan4',
+    '乐': 'le4',
+    '樂': 'le4',
+    '差': 'cha4',
+    '数': 'shu4',
+    '數': 'shu4',
+    '处': 'chu4',
+    '處': 'chu4',
+    '当': 'dang1',
+    '當': 'dang1',
+    '相': 'xiang1',
+    '空': 'kong1',
+    '教': 'jiao1',
+    '将': 'jiang1',
+    '將': 'jiang1',
+    '给': 'gei3',
+    '給': 'gei3',
+    '把': 'ba3',
+    '被': 'bei4',
+    '也': 'ye3',
+    '是': 'shi4',
+    '我': 'wo3',
+    '你': 'ni3',
+    '他': 'ta1',
+    '她': 'ta1',
+    '它': 'ta1',
+    '有': 'you3',
+    '在': 'zai4',
+    '就': 'jiu4',
+    '都是': 'dou1 shi4',
+    '什么': 'shen2 me5',
+    '什麼': 'shen2 me5',
+    '怎么': 'zen3 me5',
+    '怎麼': 'zen3 me5',
+    '这么': 'zhe4 me5',
+    '這麼': 'zhe4 me5',
+    '那么': 'na4 me5',
+    '那麼': 'na4 me5',
+    '多么': 'duo1 me5',
+    '为什么': 'wei4 shen2 me5',
+    '為什麼': 'wei4 shen2 me5',
+    '觉得': 'jue2 de5',
+    '覺得': 'jue2 de5',
+    '东西': 'dong1 xi5',
+    '東西': 'dong1 xi5',
+    '朋友': 'peng2 you5',
+    '时候': 'shi2 hou5',
+    '時候': 'shi2 hou5',
   };
 }
 
 class ChineseEntry {
-  const ChineseEntry({required this.traditional, required this.simplified, required this.pinyin, required this.senses});
+  const ChineseEntry(
+      {required this.traditional,
+      required this.simplified,
+      required this.pinyin,
+      required this.senses});
 
   final String traditional;
   final String simplified;
@@ -190,7 +289,13 @@ class ChineseEntry {
     final secondSpace = line.indexOf(' ', firstSpace + 1);
     final open = line.indexOf('[', secondSpace);
     final close = line.indexOf(']', open);
-    final senses = line.substring(close + 1).trim().split('/').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    final senses = line
+        .substring(close + 1)
+        .trim()
+        .split('/')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
     return ChineseEntry(
       traditional: line.substring(0, firstSpace),
       simplified: line.substring(firstSpace + 1, secondSpace),

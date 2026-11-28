@@ -17,7 +17,8 @@ abstract class SecretProtector {
 
   /// DPAPI on Windows, else the native core's vault: a key kept by the
   /// system keyring.
-  static SecretProtector forThisSystem() => Platform.isWindows ? DpapiProtector() : VaultProtector();
+  static SecretProtector forThisSystem() =>
+      Platform.isWindows ? DpapiProtector() : VaultProtector();
 }
 
 /// The native core's vault (lumtub_vault_seal): AES-256-GCM under a key
@@ -36,7 +37,9 @@ class VaultProtector implements SecretProtector {
 
   @override
   Uint8List unprotect(Uint8List data) {
-    if (data.length < _magic.length || !_listEquals(data.sublist(0, _magic.length), _magic)) throw const FormatException('Not a sealed file');
+    if (data.length < _magic.length || !_listEquals(data.sublist(0, _magic.length), _magic)) {
+      throw const FormatException('Not a sealed file');
+    }
     final plain = NativeCore.instance?.vaultOpen(ascii.decode(data.sublist(_magic.length)));
     if (plain == null) throw FileSystemException(tr("Couldn't decrypt the account credentials"));
     return Uint8List.fromList(utf8.encode(plain));
@@ -70,7 +73,8 @@ class DpapiProtector implements SecretProtector {
     final crypt = DynamicLibrary.open('crypt32.dll');
     final kernel = DynamicLibrary.open('kernel32.dll');
     final call = crypt.lookupFunction<_CryptNative, _CryptDart>(function);
-    final localFree = kernel.lookupFunction<Pointer<Void> Function(Pointer<Void>), Pointer<Void> Function(Pointer<Void>)>('LocalFree');
+    final localFree = kernel.lookupFunction<Pointer<Void> Function(Pointer<Void>),
+        Pointer<Void> Function(Pointer<Void>)>('LocalFree');
     return using((arena) {
       final input = arena<_DataBlob>();
       final entropy = arena<_DataBlob>();
@@ -84,7 +88,8 @@ class DpapiProtector implements SecretProtector {
         ..pbData = arena<Uint8>(_entropy.length);
       entropy.ref.pbData.asTypedList(_entropy.length).setAll(0, _entropy);
       if (call(input, nullptr, entropy, nullptr, nullptr, _uiForbidden, output) == 0) {
-        throw FileSystemException(tr("Windows couldn't encrypt or decrypt the account credentials"));
+        throw FileSystemException(
+            tr("Windows couldn't encrypt or decrypt the account credentials"));
       }
       try {
         return Uint8List.fromList(output.ref.pbData.asTypedList(output.ref.cbData));
@@ -101,8 +106,10 @@ final class _DataBlob extends Struct {
   external Pointer<Uint8> pbData;
 }
 
-typedef _CryptNative = Int32 Function(Pointer<_DataBlob>, Pointer<Utf16>, Pointer<_DataBlob>, Pointer<Void>, Pointer<Void>, Uint32, Pointer<_DataBlob>);
-typedef _CryptDart = int Function(Pointer<_DataBlob>, Pointer<Utf16>, Pointer<_DataBlob>, Pointer<Void>, Pointer<Void>, int, Pointer<_DataBlob>);
+typedef _CryptNative = Int32 Function(Pointer<_DataBlob>, Pointer<Utf16>, Pointer<_DataBlob>,
+    Pointer<Void>, Pointer<Void>, Uint32, Pointer<_DataBlob>);
+typedef _CryptDart = int Function(Pointer<_DataBlob>, Pointer<Utf16>, Pointer<_DataBlob>,
+    Pointer<Void>, Pointer<Void>, int, Pointer<_DataBlob>);
 
 /// A small JSON object kept encrypted on disk.
 class SecureJsonFile {
@@ -118,7 +125,9 @@ class SecureJsonFile {
       final bytes = await file.readAsBytes();
       final protector = this.protector;
       // The keyring may take a while to answer: never on the window's isolate.
-      final plain = protector is VaultProtector ? await Isolate.run(() => protector.unprotect(bytes)) : protector.unprotect(bytes);
+      final plain = protector is VaultProtector
+          ? await Isolate.run(() => protector.unprotect(bytes))
+          : protector.unprotect(bytes);
       final data = jsonDecode(utf8.decode(plain));
       return data is Map<String, dynamic> ? data : null;
     } catch (_) {
@@ -147,7 +156,9 @@ class SecureJsonFile {
     final protector = this.protector;
     final Uint8List sealed;
     try {
-      sealed = protector is VaultProtector ? await Isolate.run(() => protector.protect(plain)) : protector.protect(plain);
+      sealed = protector is VaultProtector
+          ? await Isolate.run(() => protector.protect(plain))
+          : protector.protect(plain);
     } catch (_) {
       if (generation == _generation && _retries < 4) {
         _retry = Timer(Duration(minutes: 1 << _retries++), () => _write(value).catchError((_) {}));

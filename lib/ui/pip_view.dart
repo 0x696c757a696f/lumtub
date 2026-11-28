@@ -33,6 +33,7 @@ class _PipViewState extends State<PipView> {
   final _subscriptions = <StreamSubscription<int?>>[];
   Timer? _hide;
   bool _controlsShown = false;
+
   /// The controls stay built only while they show or fade, so hidden ones
   /// cost nothing.
   bool _controlsBuilt = false;
@@ -81,7 +82,9 @@ class _PipViewState extends State<PipView> {
     final player = _controller.player!;
     final settings = _controller.settings;
     final window = MediaQuery.sizeOf(context);
-    if (!_controlsShown && Accessibility.screenReader(context)) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _show() : null);
+    if (!_controlsShown && Accessibility.screenReader(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _show() : null);
+    }
     final video = VideoBox(
       controller: _controller,
       smallSubtitles: true,
@@ -89,10 +92,17 @@ class _PipViewState extends State<PipView> {
       child: WarmLayer(
         child: Video(
           controller: _controller.videoController!,
-          controls: null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
+          controls:
+              null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
           pauseUponEnteringBackgroundMode: false,
           subtitleViewConfiguration: settings.pipSubtitles
-              ? subtitleViewFor(settings, smallWindow: window, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws, mainLanguage: _controller.mainSubtitleLanguage, secondLanguage: _controller.secondSubtitleLanguage)
+              ? subtitleViewFor(settings,
+                  smallWindow: window,
+                  secondary: _controller.secondarySubtitle?.label,
+                  byHeight: Platform.isAndroid || Platform.isIOS,
+                  libass: _controller.libassDraws,
+                  mainLanguage: _controller.mainSubtitleLanguage,
+                  secondLanguage: _controller.secondSubtitleLanguage)
               : const SubtitleViewConfiguration(visible: false),
         ),
       ),
@@ -127,7 +137,10 @@ class _PipViewState extends State<PipView> {
                 child: _controlsBuilt
                     ? IgnorePointer(
                         ignoring: !_controlsShown,
-                        child: PipControls(controller: _controller, player: player, scale: (window.shortestSide / 280).clamp(0.6, 2.0)),
+                        child: PipControls(
+                            controller: _controller,
+                            player: player,
+                            scale: (window.shortestSide / 280).clamp(0.6, 2.0)),
                       )
                     : const SizedBox.shrink(),
               ),
@@ -138,7 +151,8 @@ class _PipViewState extends State<PipView> {
                 height: 18,
                 child: MouseRegion(
                   cursor: SystemMouseCursors.resizeDownRight,
-                  child: GestureDetector(behavior: HitTestBehavior.opaque, onPanStart: (_) => AppWindow.startResize()),
+                  child: GestureDetector(
+                      behavior: HitTestBehavior.opaque, onPanStart: (_) => AppWindow.startResize()),
                 ),
               ),
             ]),
@@ -189,18 +203,36 @@ class _PipControlsState extends State<PipControls> {
         onPanStart: (_) => AppWindow.startDrag(),
         onDoubleTap: () => controller.setPip(false),
         child: DecoratedBox(
-          decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent])),
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent])),
           child: Row(children: [
             const SizedBox(width: 8),
-            Expanded(child: Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12))),
-            IconButton(style: style, tooltip: tr('Leave picture in picture'), iconSize: 18, icon: Icon(AppIcons.arrowsOutSimple), onPressed: () => controller.setPip(false)),
+            Expanded(
+                child: Text(_title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 12))),
+            IconButton(
+                style: style,
+                tooltip: tr('Leave picture in picture'),
+                iconSize: 18,
+                icon: Icon(AppIcons.arrowsOutSimple),
+                onPressed: () => controller.setPip(false)),
           ]),
         ),
       ),
       Expanded(
         child: Center(
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            IconButton(style: style, tooltip: tr('Back {0} s', [seek]), iconSize: 26 * scale, icon: Icon(AppIcons.clockCounterClockwise), onPressed: () => unawaited(controller.seekBy(Duration(seconds: -seek)))),
+            IconButton(
+                style: style,
+                tooltip: tr('Back {0} s', [seek]),
+                iconSize: 26 * scale,
+                icon: Icon(AppIcons.clockCounterClockwise),
+                onPressed: () => unawaited(controller.seekBy(Duration(seconds: -seek)))),
             StreamBuilder<bool>(
               stream: player.stream.playing,
               initialData: player.state.playing,
@@ -212,7 +244,12 @@ class _PipControlsState extends State<PipControls> {
                 onPressed: () => unawaited(player.playOrPause()),
               ),
             ),
-            IconButton(style: style, tooltip: tr('Forward {0} s', [seek]), iconSize: 26 * scale, icon: Icon(AppIcons.clockClockwise), onPressed: () => unawaited(controller.seekBy(Duration(seconds: seek)))),
+            IconButton(
+                style: style,
+                tooltip: tr('Forward {0} s', [seek]),
+                iconSize: 26 * scale,
+                icon: Icon(AppIcons.clockClockwise),
+                onPressed: () => unawaited(controller.seekBy(Duration(seconds: seek)))),
           ]),
         ),
       ),

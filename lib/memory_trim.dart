@@ -29,7 +29,8 @@ void _releaseUnix() {
   try {
     final process = DynamicLibrary.process();
     if (Platform.isMacOS) {
-      process.lookupFunction<Size Function(Pointer<Void>, Size), int Function(Pointer<Void>, int)>('malloc_zone_pressure_relief')(nullptr, 0);
+      process.lookupFunction<Size Function(Pointer<Void>, Size), int Function(Pointer<Void>, int)>(
+          'malloc_zone_pressure_relief')(nullptr, 0);
     } else {
       // Absent outside glibc, as on musl.
       process.lookupFunction<Int32 Function(Size), int Function(int)>('malloc_trim')(0);
@@ -40,5 +41,7 @@ void _releaseUnix() {
 }
 
 final _kernel32 = DynamicLibrary.open('kernel32.dll');
-final _heapCompact = _kernel32.lookupFunction<IntPtr Function(Pointer<Void>, Uint32), int Function(Pointer<Void>, int)>('HeapCompact');
-final _getProcessHeap = _kernel32.lookupFunction<Pointer<Void> Function(), Pointer<Void> Function()>('GetProcessHeap');
+final _heapCompact = _kernel32.lookupFunction<IntPtr Function(Pointer<Void>, Uint32),
+    int Function(Pointer<Void>, int)>('HeapCompact');
+final _getProcessHeap =
+    _kernel32.lookupFunction<Pointer<Void> Function(), Pointer<Void> Function()>('GetProcessHeap');

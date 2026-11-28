@@ -56,7 +56,8 @@ int? lineToStep(List<SubtitleCue> lines, Duration position, int skip) {
 const replayEarly = Duration(milliseconds: 80);
 
 /// Where playback goes to play [line] from its start.
-Duration lineStart(SubtitleCue line) => line.start > replayEarly ? line.start - replayEarly : Duration.zero;
+Duration lineStart(SubtitleCue line) =>
+    line.start > replayEarly ? line.start - replayEarly : Duration.zero;
 
 /// 模糊翻译: whether the blurred second subtitle shows plainly now. It
 /// shows while the pointer is over it, and from a tap or key until the
@@ -115,6 +116,7 @@ class TranslationReveal {
 /// The second subtitle's own lines in [text] as libmpv reports them.
 String secondLines(String text) {
   final lines = text.split('\n');
-  final blank = lines.indexWhere((l) => l.trim().isEmpty, lines.indexWhere((l) => l.trim().isNotEmpty).clamp(0, lines.length));
+  final blank = lines.indexWhere(
+      (l) => l.trim().isEmpty, lines.indexWhere((l) => l.trim().isNotEmpty).clamp(0, lines.length));
   return (blank < 0 ? lines : lines.sublist(0, blank)).join('\n').trim();
 }

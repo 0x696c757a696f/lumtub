@@ -32,7 +32,8 @@ extension SmokeCheck on AppController {
     try {
       await _seedShowcase();
       for (final dark in [false, true]) {
-        await saveAppearance(appearance.copyWith(themeMode: dark ? ThemeMode.dark : ThemeMode.light));
+        await saveAppearance(
+            appearance.copyWith(themeMode: dark ? ThemeMode.dark : ThemeMode.light));
         final theme = dark ? 'dark' : 'light';
         navigate(PageMode.home);
         await shot('home-$theme', settle: Duration(seconds: dark ? 8 : 40));
@@ -66,9 +67,14 @@ extension SmokeCheck on AppController {
       _update(() {});
       final player = this.player;
       if (player != null) {
-        unawaited(play(const VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
+        unawaited(play(const VideoItem(
+            id: 'aqz-KE-bpKQ',
+            title: 'Big Buck Bunny',
+            channel: 'Blender',
+            url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
         final clock = Stopwatch()..start();
-        while (clock.elapsed < const Duration(seconds: 120) && player.state.position < const Duration(seconds: 5)) {
+        while (clock.elapsed < const Duration(seconds: 120) &&
+            player.state.position < const Duration(seconds: 5)) {
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
         await player.seek(const Duration(minutes: 1, seconds: 40));
@@ -115,11 +121,13 @@ extension SmokeCheck on AppController {
       // Without the system's blur: what the app and the window manager do.
       // CI machines have no graphics card, and macOS and Windows then draw
       // their blur solid, so the blur is pictured on its own.
-      final light = appearance.copyWith(skin: 'aero', themeMode: ThemeMode.light, windowGlassClarity: 1, windowGlassBlur: false);
+      final light = appearance.copyWith(
+          skin: 'aero', themeMode: ThemeMode.light, windowGlassClarity: 1, windowGlassBlur: false);
       await shot('glass-off', light.copyWith(windowGlass: false));
       await shot('glass-frame', light.copyWith(windowGlass: true, windowGlassWhole: false));
       await shot('glass-whole', light.copyWith(windowGlass: true, windowGlassWhole: true));
-      await shot('glass-blur', light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: true));
+      await shot('glass-blur',
+          light.copyWith(windowGlass: true, windowGlassWhole: false, windowGlassBlur: true));
       final dark = light.copyWith(skin: 'obsidian', themeMode: ThemeMode.dark);
       await shot('glass-dark-off', dark.copyWith(windowGlass: false));
       await shot('glass-dark-frame', dark.copyWith(windowGlass: true, windowGlassWhole: false));
@@ -150,7 +158,8 @@ extension SmokeCheck on AppController {
     if (repository == null) return const [];
     final listing = repository.search(query, sp: searchParams(type: SearchFilter.videos));
     try {
-      final found = (await listing.next(count).toList().timeout(const Duration(seconds: 60))).whereType<VideoItem>();
+      final found = (await listing.next(count).toList().timeout(const Duration(seconds: 60)))
+          .whereType<VideoItem>();
       return found.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 120).toList();
     } catch (e) {
       logWarn('Showcase could not search for $query: $e');
@@ -164,7 +173,12 @@ extension SmokeCheck on AppController {
     library?.followAll(_showcaseChannels);
     for (final channel in _showcaseChannels) {
       final found = await _showcaseSearch(channel.name);
-      for (final item in found.where((v) => v.channel.toLowerCase().contains(channel.name.split(' ').first.toLowerCase())).take(2).toList().reversed) {
+      for (final item in found
+          .where(
+              (v) => v.channel.toLowerCase().contains(channel.name.split(' ').first.toLowerCase()))
+          .take(2)
+          .toList()
+          .reversed) {
         await _history?.record(item);
       }
     }
@@ -194,7 +208,8 @@ extension SmokeCheck on AppController {
   /// Pictures of what sets Lumtub apart, named with [suffix] for the
   /// interface language: 为你推荐 with its reasons, a video with two
   /// subtitles, a live stream with 弹幕, and 探索 by spoken language.
-  Future<void> _featureShots(Future<void> Function(String name, {Duration settle}) shot, String suffix) async {
+  Future<void> _featureShots(
+      Future<void> Function(String name, {Duration settle}) shot, String suffix) async {
     final settingsBefore = settings;
     final danmakuBefore = preferences.danmaku;
     Future<void> part(String name, Future<void> Function() run) async {
@@ -216,7 +231,9 @@ extension SmokeCheck on AppController {
     await part('explore-language', () async {
       clearSearch();
       navigate(PageMode.explore);
-      setExplore(section: ExploreSection.popular, language: suffix.isEmpty ? ExploreLanguage.it : ExploreLanguage.ja);
+      setExplore(
+          section: ExploreSection.popular,
+          language: suffix.isEmpty ? ExploreLanguage.it : ExploreLanguage.ja);
       // Science rather than everything, which is mostly the news.
       final science = exploreTopicsFor(exploreSection).indexWhere((t) => t.key == 'Science');
       if (science >= 0) setExplore(topic: science);
@@ -231,7 +248,9 @@ extension SmokeCheck on AppController {
     // for the Chinese one.
     await part('watch-subtitles', () async {
       final found = await _showcaseSearch('Kurzgesagt In a Nutshell');
-      final video = found.where((v) => v.channel.contains('Kurzgesagt') && (v.duration ?? 0) > 240).firstOrNull;
+      final video = found
+          .where((v) => v.channel.contains('Kurzgesagt') && (v.duration ?? 0) > 240)
+          .firstOrNull;
       if (video == null) throw StateError('No Kurzgesagt video found');
       await setDanmaku(danmakuBefore.copyWith(enabled: false));
       await saveSettings(settingsBefore.copyWith(
@@ -239,13 +258,15 @@ extension SmokeCheck on AppController {
         secondarySubtitleLanguage: suffix.isEmpty ? 'zh-CN' : PlayerSettings.originalSubtitle,
       ));
       unawaited(play(video));
-      await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
+      await _waitFor(
+          () => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
       await player.seek(Duration(seconds: (video.duration! * 0.3).round()));
       var both = false;
       final clock = Stopwatch()..start();
       while (!both && clock.elapsed < const Duration(seconds: 60)) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
-        both = (await _mpvText('sub-text')).trim().isNotEmpty && (await _mpvText('secondary-sub-text')).trim().isNotEmpty;
+        both = (await _mpvText('sub-text')).trim().isNotEmpty &&
+            (await _mpvText('secondary-sub-text')).trim().isNotEmpty;
       }
       logInfo('Showcase subtitles of ${video.id}: ${both ? 'both shown' : 'not both'}');
       await shot('watch-subtitles$suffix', settle: const Duration(milliseconds: 300));
@@ -256,8 +277,14 @@ extension SmokeCheck on AppController {
     await part('danmaku', () async {
       await saveSettings(settingsBefore.copyWith(subtitleMode: SubtitleMode.off));
       await setDanmaku(danmakuBefore.copyWith(enabled: true));
-      unawaited(play(const VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
-      await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
+      unawaited(play(const VideoItem(
+          id: 'jfKfPfyJRdk',
+          title: 'lofi hip hop radio',
+          channel: 'Lofi Girl',
+          url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk',
+          liveStatus: 'is_live')));
+      await _waitFor(
+          () => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
       await shot('danmaku$suffix', settle: const Duration(seconds: 40));
       await player.stop();
     });
@@ -289,8 +316,10 @@ extension SmokeCheck on AppController {
     final scenes = File('${folder.path}/scenes.txt');
     final clock = Stopwatch();
     var step = 0;
-    Future<void> wait(num seconds) => Future<void>.delayed(Duration(milliseconds: (seconds * 1000).round()));
-    Future<void> scene(String name) => scenes.writeAsString('$name ${clock.elapsedMilliseconds}\n', mode: FileMode.append);
+    Future<void> wait(num seconds) =>
+        Future<void>.delayed(Duration(milliseconds: (seconds * 1000).round()));
+    Future<void> scene(String name) =>
+        scenes.writeAsString('$name ${clock.elapsedMilliseconds}\n', mode: FileMode.append);
     Future<void> signal(String name, [String text = '']) async {
       final file = File('${folder.path}/$name');
       await file.writeAsString(text);
@@ -339,14 +368,40 @@ extension SmokeCheck on AppController {
         ('', ThemeMode.dark),
       ];
       for (final (palette, mode) in looks) {
-        await saveAppearance(appearance.copyWith(skin: palette.isEmpty ? '' : paletteSkinId(palette), palette: '', themeMode: mode));
+        await saveAppearance(appearance.copyWith(
+            skin: palette.isEmpty ? '' : paletteSkinId(palette), palette: '', themeMode: mode));
         await wait(1.2);
       }
 
       navigate(PageMode.settings);
       await wait(1);
       await scene('languages');
-      for (final tag in ['en', 'zh-Hans', 'ja', 'ko', 'es', 'fr', 'de', 'ru', 'ar', 'hi', 'pt', 'he', 'th', 'vi', 'uk', 'el', 'bn', 'fa', 'my', 'ka', 'am', 'eo', 'la', 'en']) {
+      for (final tag in [
+        'en',
+        'zh-Hans',
+        'ja',
+        'ko',
+        'es',
+        'fr',
+        'de',
+        'ru',
+        'ar',
+        'hi',
+        'pt',
+        'he',
+        'th',
+        'vi',
+        'uk',
+        'el',
+        'bn',
+        'fa',
+        'my',
+        'ka',
+        'am',
+        'eo',
+        'la',
+        'en'
+      ]) {
         setLanguage(AppLanguage(tag));
         _update(() {});
         await wait(0.8);
@@ -364,7 +419,10 @@ extension SmokeCheck on AppController {
 
   Future<void> runSmokeCheck() async {
     final out = File(_outFile!);
-    final results = <String, Object?>{'version': appVersion, 'system': Platform.operatingSystemVersion};
+    final results = <String, Object?>{
+      'version': appVersion,
+      'system': Platform.operatingSystemVersion
+    };
     var passed = false;
     try {
       final player = this.player;
@@ -379,17 +437,29 @@ extension SmokeCheck on AppController {
       final youtube = Platform.environment['LUMTUB_SMOKE_YOUTUBE'];
       if (youtube != null && youtube.isNotEmpty) {
         try {
-          unawaited(play(VideoItem(id: youtube, title: youtube, channel: '', url: 'https://www.youtube.com/watch?v=$youtube')));
-          results['youtube'] = await _smokeWatch(player, '${out.path}.youtube.png', wait: const Duration(seconds: 120));
+          unawaited(play(VideoItem(
+              id: youtube,
+              title: youtube,
+              channel: '',
+              url: 'https://www.youtube.com/watch?v=$youtube')));
+          results['youtube'] = await _smokeWatch(player, '${out.path}.youtube.png',
+              wait: const Duration(seconds: 120));
         } catch (e) {
           results['youtube'] = {'played': false, 'error': '$e'};
         }
         // Reported only; YouTube often refuses build machines.
         try {
           final checks = await runNetworkCheck((_) {}).timeout(const Duration(minutes: 3));
-          results['network'] = [for (final c in checks) '${c.name}: ${c.skipped ? 'skipped' : c.ok ? 'ok' : 'failed'} ${c.ms ?? ''} ms · ${c.route} · ${c.detail}'];
-          final samples = await runPlaybackTest((_) {}, seconds: 5).timeout(const Duration(minutes: 4));
-          results['playbackTest'] = [for (final s in samples) '${s.codec.label}: ${s.error ?? '${s.picture} ${s.decoder} cpu ${s.cpuPercent?.round()}% ${s.memoryMb} MB dropped ${s.dropped}'}'];
+          results['network'] = [
+            for (final c in checks)
+              '${c.name}: ${c.skipped ? 'skipped' : c.ok ? 'ok' : 'failed'} ${c.ms ?? ''} ms · ${c.route} · ${c.detail}'
+          ];
+          final samples =
+              await runPlaybackTest((_) {}, seconds: 5).timeout(const Duration(minutes: 4));
+          results['playbackTest'] = [
+            for (final s in samples)
+              '${s.codec.label}: ${s.error ?? '${s.picture} ${s.decoder} cpu ${s.cpuPercent?.round()}% ${s.memoryMb} MB dropped ${s.dropped}'}'
+          ];
         } catch (e) {
           results['diagnostics'] = '$e';
         }
@@ -410,12 +480,15 @@ extension SmokeCheck on AppController {
   }
 
   /// Waits until [player] is three seconds into a video with a picture.
-  Future<Map<String, Object?>> _smokeWatch(Player player, String picture, {Duration wait = const Duration(seconds: 60)}) async {
+  Future<Map<String, Object?>> _smokeWatch(Player player, String picture,
+      {Duration wait = const Duration(seconds: 60)}) async {
     final clock = Stopwatch()..start();
-    while (clock.elapsed < wait && !(player.state.position >= const Duration(seconds: 3) && (player.state.width ?? 0) > 0)) {
+    while (clock.elapsed < wait &&
+        !(player.state.position >= const Duration(seconds: 3) && (player.state.width ?? 0) > 0)) {
       await Future<void>.delayed(const Duration(milliseconds: 250));
     }
-    final played = player.state.position >= const Duration(seconds: 3) && (player.state.width ?? 0) > 0;
+    final played =
+        player.state.position >= const Duration(seconds: 3) && (player.state.width ?? 0) > 0;
     final result = <String, Object?>{
       'played': played,
       'seconds': clock.elapsedMilliseconds / 1000,

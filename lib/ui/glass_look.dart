@@ -30,8 +30,11 @@ class GlassLook extends ThemeExtension<GlassLook> {
   final Color? chrome;
 
   @override
-  GlassLook copyWith({double? alpha, bool? whole, Color? tint, Color? chrome}) =>
-      GlassLook(alpha: alpha ?? this.alpha, whole: whole ?? this.whole, tint: tint ?? this.tint, chrome: chrome ?? this.chrome);
+  GlassLook copyWith({double? alpha, bool? whole, Color? tint, Color? chrome}) => GlassLook(
+      alpha: alpha ?? this.alpha,
+      whole: whole ?? this.whole,
+      tint: tint ?? this.tint,
+      chrome: chrome ?? this.chrome);
 
   @override
   GlassLook lerp(GlassLook? other, double t) => t < 0.5 || other == null ? this : other;
@@ -74,15 +77,34 @@ List<GlassWriting> glassWritings(ThemeData theme, {required bool whole}) {
   final tint = glassTint(theme);
   List<Color> ground(SkinSurface? s) => s == null ? const [] : s.groundColors;
   Color plate(SkinSurface? s) => plateColor(tint, surface: s);
-  GlassWriting frame(String what, Color text, SkinSurface? s, {double min = 4.5}) => (what: what, text: text, ground: ground(s), min: min, plate: plate(s));
+  GlassWriting frame(String what, Color text, SkinSurface? s, {double min = 4.5}) =>
+      (what: what, text: text, ground: ground(s), min: min, plate: plate(s));
   final chromePlate = plateColor(tint, color: chrome);
   final onChrome = chrome == null ? const <Color>[] : [chrome];
   return [
     // The top bar and rail of the standard look and of skins without
     // bars of their own.
-    (what: 'text on the frame', text: scheme.onSurface, ground: onChrome, min: 4.5, plate: chromePlate),
-    (what: 'muted text on the frame', text: scheme.onSurfaceVariant, ground: onChrome, min: 4.5, plate: chromePlate),
-    (what: 'status bar', text: skin?.statusBarText ?? scheme.outline, ground: skin?.statusBar != null ? ground(skin!.statusBar) : onChrome, min: 4.5, plate: skin?.statusBar != null ? plate(skin!.statusBar) : chromePlate),
+    (
+      what: 'text on the frame',
+      text: scheme.onSurface,
+      ground: onChrome,
+      min: 4.5,
+      plate: chromePlate
+    ),
+    (
+      what: 'muted text on the frame',
+      text: scheme.onSurfaceVariant,
+      ground: onChrome,
+      min: 4.5,
+      plate: chromePlate
+    ),
+    (
+      what: 'status bar',
+      text: skin?.statusBarText ?? scheme.outline,
+      ground: skin?.statusBar != null ? ground(skin!.statusBar) : onChrome,
+      min: 4.5,
+      plate: skin?.statusBar != null ? plate(skin!.statusBar) : chromePlate
+    ),
     if (skin != null) ...[
       if (skin.titleBar case final t?) ...[
         frame('title', t.text, t.surface),
@@ -91,14 +113,28 @@ List<GlassWriting> glassWritings(ThemeData theme, {required bool whole}) {
         if (t.button?.baseColor == null) frame('window buttons', t.buttonIcon, t.surface, min: 3),
       ],
       if (skin.menuBar case final m?) frame('menu bar', m.text, m.surface),
-      if (skin.topBar != null) frame('top bar', skin.topBarText ?? scheme.onSurface, skin.topBar, min: 3),
-      if (skin.sideBar != null) frame('rail', skin.navText ?? scheme.onSurfaceVariant, skin.sideBar),
+      if (skin.topBar != null)
+        frame('top bar', skin.topBarText ?? scheme.onSurface, skin.topBar, min: 3),
+      if (skin.sideBar != null)
+        frame('rail', skin.navText ?? scheme.onSurfaceVariant, skin.sideBar),
       if (skin.tabs case final t?) frame('tabs', t.text, t.bar),
     ],
     if (whole) ...[
       (what: 'text on the pages', text: scheme.onSurface, ground: const [], min: 4.5, plate: null),
-      (what: 'muted text on the pages', text: scheme.onSurfaceVariant, ground: const [], min: 4.5, plate: null),
-      (what: 'quiet text on the pages', text: scheme.outline, ground: const [], min: 4.5, plate: null),
+      (
+        what: 'muted text on the pages',
+        text: scheme.onSurfaceVariant,
+        ground: const [],
+        min: 4.5,
+        plate: null
+      ),
+      (
+        what: 'quiet text on the pages',
+        text: scheme.outline,
+        ground: const [],
+        min: 4.5,
+        plate: null
+      ),
       (what: 'links on the pages', text: linkColor(theme), ground: const [], min: 4.5, plate: null),
     ],
   ];
@@ -116,9 +152,13 @@ Color plateColor(Color tint, {SkinSurface? surface, Color? color}) {
 List<Color> glassBehind(GlassWriting w, Color tint, Color desktop, double alpha) {
   Color fade(Color c, double by) => c.withValues(alpha: c.a * by);
   final under = Color.alphaBlend(fade(tint, alpha), desktop);
-  final bars = w.ground.isEmpty ? [under] : [for (final c in w.ground) Color.alphaBlend(fade(c, alpha), under)];
+  final bars = w.ground.isEmpty
+      ? [under]
+      : [for (final c in w.ground) Color.alphaBlend(fade(c, alpha), under)];
   final plate = w.plate;
-  return plate == null ? bars : [for (final bar in bars) Color.alphaBlend(fade(plate, GlassPlate.coverage), bar)];
+  return plate == null
+      ? bars
+      : [for (final bar in bars) Color.alphaBlend(fade(plate, GlassPlate.coverage), bar)];
 }
 
 /// The lowest [GlassLook.alpha] at which every [glassWritings] of [theme]
@@ -126,10 +166,11 @@ List<Color> glassBehind(GlassWriting w, Color tint, Color desktop, double alpha)
 double glassFloor(ThemeData theme, {required bool whole}) {
   final tint = glassTint(theme);
   final writings = glassWritings(theme, whole: whole);
-  bool reads(double alpha) => writings.every((w) => desktopColors.every((desk) => glassBehind(w, tint, desk, alpha).every((bg) {
-        // Words at their own alpha land on what is behind them.
-        return contrastRatio(Color.alphaBlend(w.text, bg), bg) >= w.min;
-      })));
+  bool reads(double alpha) => writings
+      .every((w) => desktopColors.every((desk) => glassBehind(w, tint, desk, alpha).every((bg) {
+            // Words at their own alpha land on what is behind them.
+            return contrastRatio(Color.alphaBlend(w.text, bg), bg) >= w.min;
+          })));
   for (var alpha = glassClearest; alpha < 1; alpha += 0.01) {
     if (reads(alpha)) return double.parse(alpha.toStringAsFixed(2));
   }
@@ -159,7 +200,10 @@ ThemeData withGlass(ThemeData theme, {required double transparency, required boo
       ...theme.extensions.values.where((e) => e is! AppTones),
       // The chrome colour of the standard look's bars, at the glass's alpha
       // over the tint; without one the bars are the bare glass.
-      AppTones(chrome: tones.chrome?.withValues(alpha: tones.chrome!.a * look.alpha) ?? Colors.transparent, warmth: tones.warmth),
+      AppTones(
+          chrome:
+              tones.chrome?.withValues(alpha: tones.chrome!.a * look.alpha) ?? Colors.transparent,
+          warmth: tones.warmth),
       look,
     ],
   );
@@ -193,7 +237,10 @@ class GlassPlate extends StatelessWidget {
   Widget build(BuildContext context) {
     final look = context.glass;
     if (look == null) return child;
-    return _Halo(color: plateColor(look.tint, surface: surface, color: surface == null ? look.chrome : null).withValues(alpha: 1), child: child);
+    return _Halo(
+        color: plateColor(look.tint, surface: surface, color: surface == null ? look.chrome : null)
+            .withValues(alpha: 1),
+        child: child);
   }
 }
 
@@ -205,7 +252,8 @@ class _Halo extends SingleChildRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) => _RenderHalo(color);
 
   @override
-  void updateRenderObject(BuildContext context, _RenderHalo renderObject) => renderObject.color = color;
+  void updateRenderObject(BuildContext context, _RenderHalo renderObject) =>
+      renderObject.color = color;
 }
 
 /// Paints its child twice: once in the halo colour, widened and blurred,
@@ -239,7 +287,9 @@ class _RenderHalo extends RenderProxyBox {
     final blur = _blur.layer ??= ImageFilterLayer();
     blur.imageFilter = _filter;
     context.pushLayer(blur, (context, offset) {
-      _tint.layer = context.pushColorFilter(offset, ColorFilter.mode(_color, BlendMode.srcIn), (context, offset) => context.paintChild(child, offset), oldLayer: _tint.layer);
+      _tint.layer = context.pushColorFilter(offset, ColorFilter.mode(_color, BlendMode.srcIn),
+          (context, offset) => context.paintChild(child, offset),
+          oldLayer: _tint.layer);
     }, offset);
     context.paintChild(child, offset);
   }
@@ -262,7 +312,10 @@ class GlassBackdrop extends StatelessWidget {
   final bool plain;
 
   @override
-  Widget build(BuildContext context) => RepaintBoundary(child: CustomPaint(painter: _GlassPainter(look.tint.withValues(alpha: look.alpha), sheen: !plain), size: Size.infinite));
+  Widget build(BuildContext context) => RepaintBoundary(
+      child: CustomPaint(
+          painter: _GlassPainter(look.tint.withValues(alpha: look.alpha), sheen: !plain),
+          size: Size.infinite));
 }
 
 class _GlassPainter extends CustomPainter {
@@ -281,17 +334,21 @@ class _GlassPainter extends CustomPainter {
     final clear = streak.withValues(alpha: 0);
     // Broad bands across the diagonal, as light through a pane.
     final span = (size.width + size.height) / 2;
-    canvas.drawRect(rect, Paint()
-      ..shader = ui.Gradient.linear(
-        Offset.zero,
-        Offset(span, span),
-        [clear, streak, clear, clear, streak, clear, clear],
-        const [0.08, 0.13, 0.2, 0.42, 0.47, 0.56, 1],
-      ));
+    canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset.zero,
+            Offset(span, span),
+            [clear, streak, clear, clear, streak, clear, clear],
+            const [0.08, 0.13, 0.2, 0.42, 0.47, 0.56, 1],
+          ));
     // The thin light edge inside the frame.
-    canvas.drawRect(rect.deflate(0.5), Paint()
-      ..style = PaintingStyle.stroke
-      ..color = Colors.white.withValues(alpha: light ? 0.5 : 0.18));
+    canvas.drawRect(
+        rect.deflate(0.5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..color = Colors.white.withValues(alpha: light ? 0.5 : 0.18));
   }
 
   @override

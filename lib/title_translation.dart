@@ -9,10 +9,13 @@ import 'translation.dart';
 /// how.
 enum TitleTranslation {
   off,
+
   /// The translation stands in place of the title; the original shows on hover.
   replace,
+
   /// The translation on the first line, the original under it.
   translationFirst,
+
   /// The original on the first line, the translation under it.
   originalFirst;
 
@@ -45,10 +48,13 @@ class TitleTranslations {
 
   final Duration dwell;
   final int maxInFlight;
+
   /// Answers kept in memory; the oldest goes first.
   final int maxKept;
+
   /// How long a title whose translation failed is left alone.
   final Duration retryAfter;
+
   /// Longer text is never sent: no YouTube title is this long.
   final int maxLength;
   final int maxTries;
@@ -61,6 +67,7 @@ class TitleTranslations {
   String _target = '';
   bool Function(String text) _needs = (_) => true;
   Object? _setup;
+
   /// Raised by [configure]: answers to questions asked before are dropped.
   int _generation = 0;
 
@@ -68,6 +75,7 @@ class TitleTranslations {
   /// Insertion order is recency.
   final _kept = <String, String>{};
   final _listeners = HashMap<String, List<VoidCallback>>();
+
   /// Titles waiting to be sent, with when they came on screen; oldest first.
   final _queue = <String, DateTime>{};
   final _inFlight = HashSet<String>();
@@ -90,7 +98,12 @@ class TitleTranslations {
   /// depend on (service, target, languages left alone); when it changes,
   /// what is known is forgotten and the titles on screen are asked again
   /// (the translator's own cache answers those it already made).
-  void configure({required TitleTranslation mode, required Translator translator, required String target, required bool Function(String text) needs, required Object setup}) {
+  void configure(
+      {required TitleTranslation mode,
+      required Translator translator,
+      required String target,
+      required bool Function(String text) needs,
+      required Object setup}) {
     final changed = setup != _setup || !identical(translator, _translator);
     if (!changed && mode == _mode) return;
     _mode = mode;
@@ -115,7 +128,9 @@ class TitleTranslations {
       _timer?.cancel();
       _timer = null;
     }
-    final shown = [for (final MapEntry(:key, :value) in _listeners.entries) (key, [...value])];
+    final shown = [
+      for (final MapEntry(:key, :value) in _listeners.entries) (key, [...value])
+    ];
     for (final (text, callbacks) in shown) {
       if (on) _admit(text);
       for (final callback in callbacks) {
@@ -205,7 +220,8 @@ class TitleTranslations {
       _tries.remove(text);
       _backoff = Duration.zero;
       final clean = result.replaceAll(RegExp(r'\s+'), ' ').trim();
-      _keep(text, clean.isEmpty || clean == text.replaceAll(RegExp(r'\s+'), ' ').trim() ? text : clean);
+      _keep(text,
+          clean.isEmpty || clean == text.replaceAll(RegExp(r'\s+'), ' ').trim() ? text : clean);
       _wake(text);
     }, onError: (Object error) {
       if (generation != _generation) return;

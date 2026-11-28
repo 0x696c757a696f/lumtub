@@ -5,7 +5,12 @@ import 'package:flutter/widgets.dart';
 /// values a part of the window shows makes a good selection: whatever the
 /// builder reads from outside its own context belongs in it.
 class SelectBuilder<T> extends StatefulWidget {
-  const SelectBuilder({super.key, required this.listenable, required this.select, required this.builder, this.child});
+  const SelectBuilder(
+      {super.key,
+      required this.listenable,
+      required this.select,
+      required this.builder,
+      this.child});
   final Listenable listenable;
   final T Function() select;
   final Widget Function(BuildContext context, T value, Widget? child) builder;

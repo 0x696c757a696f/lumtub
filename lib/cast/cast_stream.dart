@@ -26,7 +26,11 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info, {PlayerSettings? sett
   for (final f in formats.whereType<Map<dynamic, dynamic>>()) {
     final url = f['url']?.toString() ?? '';
     final protocol = f['protocol']?.toString() ?? '';
-    if (!url.startsWith('http') || !(protocol == 'https' || protocol == 'http') || f['fragments'] != null) continue;
+    if (!url.startsWith('http') ||
+        !(protocol == 'https' || protocol == 'http') ||
+        f['fragments'] != null) {
+      continue;
+    }
     final video = f['vcodec']?.toString() ?? 'none';
     final audio = f['acodec']?.toString() ?? 'none';
     if (video == 'none' || audio == 'none' || f['ext'] != 'mp4') continue;
@@ -34,7 +38,8 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info, {PlayerSettings? sett
     final height = f['height'] is num ? (f['height'] as num).toInt() : 0;
     final bitrate = f['tbr'] is num ? (f['tbr'] as num).round() : 0;
     // Higher tuples are better: allowed height, then H.264, then size.
-    candidates.add((height <= _castMaxHeight ? 1 : 0, _isH264(video) ? 1 : 0, height * 100000 + bitrate, url));
+    candidates.add(
+        (height <= _castMaxHeight ? 1 : 0, _isH264(video) ? 1 : 0, height * 100000 + bitrate, url));
   }
   if (candidates.isEmpty) return null;
   candidates.sort((a, b) {
@@ -49,10 +54,17 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info, {PlayerSettings? sett
 
 /// The best muxed mp4 stream of a Piped or Invidious answer, by the same rules.
 CastSource? castSourceFromRelay(PipedVideo video, {PlayerSettings? settings}) {
-  final muxed = [for (final s in video.muxed) if (settings == null || FormatPolicy.allowsName(settings, s.codec)) s];
+  final muxed = [
+    for (final s in video.muxed)
+      if (settings == null || FormatPolicy.allowsName(settings, s.codec)) s
+  ];
   if (video.live || muxed.isEmpty) return null;
   final sorted = [...muxed]..sort((a, b) {
-      int rank(PipedStream s) => (s.height <= _castMaxHeight ? 4000000 : 0) + (_isH264(s.codec) ? 2000000 : 0) + s.height * 1000 + s.bitrate ~/ 1000;
+      int rank(PipedStream s) =>
+          (s.height <= _castMaxHeight ? 4000000 : 0) +
+          (_isH264(s.codec) ? 2000000 : 0) +
+          s.height * 1000 +
+          s.bitrate ~/ 1000;
       return rank(b).compareTo(rank(a));
     });
   return CastSource(sorted.first.url, height: sorted.first.height);
@@ -61,7 +73,16 @@ CastSource? castSourceFromRelay(PipedVideo video, {PlayerSettings? settings}) {
 /// A picture stream and a sound stream the app joins for a TV
 /// (native/lumtub_core/src/cast.rs): MP4 or WebM files with an index.
 class CastSplit {
-  const CastSplit({required this.video, required this.videoSize, required this.audio, required this.audioSize, required this.height, this.fps = 30, this.codec = 'h264', this.videoFormat = '', this.audioFormat = ''});
+  const CastSplit(
+      {required this.video,
+      required this.videoSize,
+      required this.audio,
+      required this.audioSize,
+      required this.height,
+      this.fps = 30,
+      this.codec = 'h264',
+      this.videoFormat = '',
+      this.audioFormat = ''});
   final String video;
   final int videoSize;
   final String audio;
@@ -88,10 +109,23 @@ class CastSplit {
   CastSplit? renewedFrom(Map<String, dynamic> info) {
     final formats = info['formats'];
     if (formats is! List) return null;
-    String? url(String id) => formats.whereType<Map<dynamic, dynamic>>().where((f) => f['format_id']?.toString() == id && f['url'] is String).map((f) => f['url'] as String).firstOrNull;
+    String? url(String id) => formats
+        .whereType<Map<dynamic, dynamic>>()
+        .where((f) => f['format_id']?.toString() == id && f['url'] is String)
+        .map((f) => f['url'] as String)
+        .firstOrNull;
     final (v, a) = (url(videoFormat), url(audioFormat));
     if (v == null || a == null) return null;
-    return CastSplit(video: v, videoSize: videoSize, audio: a, audioSize: audioSize, height: height, fps: fps, codec: codec, videoFormat: videoFormat, audioFormat: audioFormat);
+    return CastSplit(
+        video: v,
+        videoSize: videoSize,
+        audio: a,
+        audioSize: audioSize,
+        height: height,
+        fps: fps,
+        codec: codec,
+        videoFormat: videoFormat,
+        audioFormat: audioFormat);
   }
 
   /// Whether the picture fits an MPEG transport stream, which DLNA
@@ -123,7 +157,11 @@ String? _castCodec(Map<dynamic, dynamic> f) {
 CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castMaxHeight}) {
   final formats = info['formats'];
   if (formats is! List) return null;
-  bool plain(Map<dynamic, dynamic> f) => (f['url']?.toString() ?? '').startsWith('https://') && f['protocol'] == 'https' && f['fragments'] == null && f['has_drm'] != true;
+  bool plain(Map<dynamic, dynamic> f) =>
+      (f['url']?.toString() ?? '').startsWith('https://') &&
+      f['protocol'] == 'https' &&
+      f['fragments'] == null &&
+      f['has_drm'] != true;
   const codecRank = {'h264': 2, 'vp9': 1, 'av1': 0};
   Map<dynamic, dynamic>? video;
   (int, int, int, int)? best;
@@ -139,12 +177,14 @@ CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castM
       final height = f['height'] is num ? (f['height'] as num).toInt() : 0;
       final fps = f['fps'] is num ? (f['fps'] as num).round() : 30;
       if (height <= 0 || height > maxHeight) continue;
-      final rank = (height, fps, codecRank[codec]!, f['tbr'] is num ? (f['tbr'] as num).round() : 0);
+      final rank =
+          (height, fps, codecRank[codec]!, f['tbr'] is num ? (f['tbr'] as num).round() : 0);
       if (best == null || _beats(rank, best)) (video, best) = (f, rank);
     } else if (v == 'none' && a.startsWith('mp4a') && (f['ext'] == 'm4a' || f['ext'] == 'mp4')) {
       final note = '${f['format_note'] ?? ''} ${f['format_id'] ?? ''}'.toLowerCase();
       if (note.contains('drc')) continue;
-      final language = f['language_preference'] is num ? (f['language_preference'] as num).toInt() : 0;
+      final language =
+          f['language_preference'] is num ? (f['language_preference'] as num).toInt() : 0;
       final abr = f['abr'] is num ? (f['abr'] as num).round() : 0;
       // The original or default track first, then about 128 kbit/s AAC LC.
       final rank = (language, abr <= 160 ? 1 : 0, abr, 0);
@@ -165,5 +205,10 @@ CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castM
   );
 }
 
-bool _beats((int, int, int, int) a, (int, int, int, int) b) =>
-    a.$1 != b.$1 ? a.$1 > b.$1 : a.$2 != b.$2 ? a.$2 > b.$2 : a.$3 != b.$3 ? a.$3 > b.$3 : a.$4 > b.$4;
+bool _beats((int, int, int, int) a, (int, int, int, int) b) => a.$1 != b.$1
+    ? a.$1 > b.$1
+    : a.$2 != b.$2
+        ? a.$2 > b.$2
+        : a.$3 != b.$3
+            ? a.$3 > b.$3
+            : a.$4 > b.$4;

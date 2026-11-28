@@ -30,7 +30,12 @@ Uint8List mdnsQuery(String service) {
 
 /// A device found by mDNS.
 class MdnsService {
-  const MdnsService({required this.id, required this.name, required this.host, required this.port, this.txt = const {}});
+  const MdnsService(
+      {required this.id,
+      required this.name,
+      required this.host,
+      required this.port,
+      this.txt = const {}});
   final String id;
   final String name;
   final InternetAddress host;
@@ -50,6 +55,7 @@ class MdnsCollector {
   final _srv = <String, (String, int)>{};
   final _txt = <String, Map<String, String>>{};
   final _addresses = <String, InternetAddress>{};
+
   /// The instances whose SRV record names each host.
   final _byTarget = <String, Set<String>>{};
 
@@ -72,10 +78,16 @@ class MdnsCollector {
     if (read is! Map) return const [];
     final records = read;
     final touched = <String>{};
-    List<List<Object?>> rows(String key) => [for (final row in records[key] as List? ?? const []) if (row is List) row];
-    bool room(Map<String, Object?> map, String name) => map.length < _maxNames || map.containsKey(name);
+    List<List<Object?>> rows(String key) => [
+          for (final row in records[key] as List? ?? const [])
+            if (row is List) row
+        ];
+    bool room(Map<String, Object?> map, String name) =>
+        map.length < _maxNames || map.containsKey(name);
     for (final row in rows('ptr')) {
-      if (row case [final String owner, final String target] when owner.toLowerCase() == service && (_ptr.length < _maxNames || _ptr.contains(target))) {
+      if (row case [final String owner, final String target]
+          when owner.toLowerCase() == service &&
+              (_ptr.length < _maxNames || _ptr.contains(target))) {
         _ptr.add(target);
         touched.add(target);
       }
@@ -100,7 +112,12 @@ class MdnsCollector {
         // The sender's own address, or (through an mDNS reflector between
         // two networks) another address on the local network; never this
         // PC or one on the internet.
-        if (address == null || (from != null && address != from && (address.isLoopback || !isLocalHost(address.address)))) continue;
+        if (address == null ||
+            (from != null &&
+                address != from &&
+                (address.isLoopback || !isLocalHost(address.address)))) {
+          continue;
+        }
         // An IPv4 address wins over an IPv6 one for the same name.
         if (address.type == InternetAddressType.IPv4) {
           _addresses[name] = address;
@@ -110,7 +127,10 @@ class MdnsCollector {
         touched.addAll(_byTarget[name] ?? const {});
       }
     }
-    return [for (final instance in touched) if (_service(instance) case final found?) found];
+    return [
+      for (final instance in touched)
+        if (_service(instance) case final found?) found
+    ];
   }
 
   MdnsService? _service(String instance) {
@@ -128,13 +148,17 @@ class MdnsCollector {
   }
 
   /// The services whose records are all known, an IPv4 address preferred.
-  List<MdnsService> get services => [for (final instance in _ptr) if (_service(instance) case final found?) found];
+  List<MdnsService> get services => [
+        for (final instance in _ptr)
+          if (_service(instance) case final found?) found
+      ];
 }
 
 /// Asks the LAN for [service] for [timeout], emitting each device once.
 /// The question goes out from a high port, so replies come back unicast and
 /// nothing has to share port 5353 with the system's own mDNS.
-Stream<MdnsService> discoverMdns({String service = googleCastService, Duration timeout = const Duration(seconds: 6)}) {
+Stream<MdnsService> discoverMdns(
+    {String service = googleCastService, Duration timeout = const Duration(seconds: 6)}) {
   final controller = StreamController<MdnsService>();
   final sockets = <RawDatagramSocket>[];
   final collector = MdnsCollector(service: service);

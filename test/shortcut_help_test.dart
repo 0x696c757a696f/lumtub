@@ -8,7 +8,11 @@ void main() {
     tester.view.physicalSize = const Size(800, 500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => showShortcutHelp(context, const AppPreferences()), child: const Text('open')))));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                onPressed: () => showShortcutHelp(context, const AppPreferences()),
+                child: const Text('open')))));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

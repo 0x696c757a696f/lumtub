@@ -11,6 +11,7 @@ enum VideoCodec {
 
   const VideoCodec(this.label, this.prefixes);
   final String label;
+
   /// Lower-case name prefixes that mean this codec.
   final List<String> prefixes;
 

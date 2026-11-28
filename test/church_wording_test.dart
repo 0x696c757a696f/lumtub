@@ -5,7 +5,8 @@ import 'package:lumtub/native_core.dart';
 
 void main() {
   test('Eastern Catholic videos are of the Byzantine rite, others of the Latin', () {
-    expect(ChurchWording.riteOf('Divine Liturgy | Ukrainian Greek Catholic Church'), ChurchRite.byzantine);
+    expect(ChurchWording.riteOf('Divine Liturgy | Ukrainian Greek Catholic Church'),
+        ChurchRite.byzantine);
     expect(ChurchWording.riteOf('Byzantine Catholic Vespers'), ChurchRite.byzantine);
     expect(ChurchWording.riteOf('Santa Messa presieduta da Papa Leone XIV'), ChurchRite.latin);
     expect(ChurchWording.riteOf('Greek Orthodox Vespers'), isNull);
@@ -39,19 +40,40 @@ void main() {
   });
 
   test('the Pope in any language is Catholic', () {
-    for (final text in ['Le pape Léon XIV en Turquie', 'Papież Leon XIV w Turcji', 'O Papa Leão XIV na Turquia', 'Il Papa in Turchia', 'Leo XIV: first year', 'La Santa Sede risponde']) {
+    for (final text in [
+      'Le pape Léon XIV en Turquie',
+      'Papież Leon XIV w Turcji',
+      'O Papa Leão XIV na Turquia',
+      'Il Papa in Turchia',
+      'Leo XIV: first year',
+      'La Santa Sede risponde'
+    ]) {
       expect(ChurchWording.isCatholicText(text), isTrue, reason: text);
     }
     expect(ChurchWording.isCatholicText('La papa es una verdura'), isFalse);
   });
 
   test("a Catholic channel's videos are Catholic though their titles say nothing", () {
-    VideoItem item(String id, String title, String channel) => VideoItem(id: id, title: title, channel: channel, channelId: channel, url: 'https://www.youtube.com/watch?v=$id');
+    VideoItem item(String id, String title, String channel) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel,
+        channelId: channel,
+        url: 'https://www.youtube.com/watch?v=$id');
     expect(ChurchWording.riteOfVideo(item('a', 'My morning routine', 'UCnoted')), isNull);
     ChurchWording.noteChannel('UCnoted', ChurchRite.latin);
     expect(ChurchWording.riteOfVideo(item('a', 'My morning routine', 'UCnoted')), ChurchRite.latin);
     // Three Catholic videos of eight seen make a channel Catholic.
-    for (final (i, title) in ['Praying the rosary', 'Why I go to Holy Mass', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6'].indexed) {
+    for (final (i, title) in [
+      'Praying the rosary',
+      'Why I go to Holy Mass',
+      'Day 1',
+      'Day 2',
+      'Day 3',
+      'Day 4',
+      'Day 5',
+      'Day 6'
+    ].indexed) {
       ChurchWording.riteOfVideo(item('t$i', title, 'UCseen'));
     }
     expect(ChurchWording.riteOfChannel('UCseen'), isNull);
@@ -64,10 +86,17 @@ void main() {
   });
 
   test('a video counts its channel and description', () {
-    VideoItem item(String channel) => VideoItem(id: 'x', title: 'Sunday homily', channel: channel, url: 'https://www.youtube.com/watch?v=x');
+    VideoItem item(String channel) => VideoItem(
+        id: 'x',
+        title: 'Sunday homily',
+        channel: channel,
+        url: 'https://www.youtube.com/watch?v=x');
     expect(ChurchWording.isCatholicVideo(item('Vatican News')), isTrue);
     expect(ChurchWording.isCatholicVideo(item('Daily Talks')), isFalse);
-    expect(ChurchWording.isCatholicVideo(item('Daily Talks'), description: 'From the Archdiocese of Milan'), isTrue);
+    expect(
+        ChurchWording.isCatholicVideo(item('Daily Talks'),
+            description: 'From the Archdiocese of Milan'),
+        isTrue);
   });
 
   test('only Chinese translations of Catholic text change', () {
@@ -82,9 +111,14 @@ void main() {
     expect(ChurchWording.apply('西门彼得对约翰说：上帝的弥赛亚来了', 'zh-CN', rite: latin), '西满伯多禄对若望说：天主的默西亚来了');
     expect(ChurchWording.apply('他行了神迹，神父来了', 'zh-CN', rite: latin), '他行了神迹，神父来了');
     expect(ChurchWording.apply('上帝的弥赛亚', 'ja', rite: latin), '上帝的弥赛亚');
-    expect(ChurchWording.apply('圣父抵达罗马', 'zh-CN', rite: latin, original: 'Il Santo Padre arriva a Roma'), '教宗抵达罗马');
-    expect(ChurchWording.apply('我们向圣父祈祷', 'zh-CN', rite: latin, original: 'Preghiamo il Padre'), '我们向圣父祈祷');
-    expect(ChurchWording.apply('四旬期', 'zh-CN', rite: ChurchRite.byzantine, original: 'Great Lent'), '大斋期');
+    expect(
+        ChurchWording.apply('圣父抵达罗马', 'zh-CN',
+            rite: latin, original: 'Il Santo Padre arriva a Roma'),
+        '教宗抵达罗马');
+    expect(ChurchWording.apply('我们向圣父祈祷', 'zh-CN', rite: latin, original: 'Preghiamo il Padre'),
+        '我们向圣父祈祷');
+    expect(ChurchWording.apply('四旬期', 'zh-CN', rite: ChurchRite.byzantine, original: 'Great Lent'),
+        '大斋期');
     ChurchWording.hongKong = () => false;
     expect(ChurchWording.apply('那位牧師在主持彌撒。阿門', 'zh-TW', rite: latin), '那位神父在主持彌撒。阿們');
     ChurchWording.hongKong = () => true;

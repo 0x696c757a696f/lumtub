@@ -32,7 +32,9 @@ abstract final class YtDlpTls {
     return {
       for (final entry in environment.entries)
         if (entry.key != 'OPENSSL_CONF') entry.key: entry.value,
-      if (folder != null) 'LUMTUB_TLS_PLUGIN': [folder, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep),
+      if (folder != null)
+        'LUMTUB_TLS_PLUGIN':
+            [folder, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep),
     };
   }
 
@@ -40,7 +42,8 @@ abstract final class YtDlpTls {
 
   /// Writes the plugin, the certificate list of [roots] and the OpenSSL
   /// configuration of [quantum] under [folder].
-  static Future<void> configure(Directory folder, {required String roots, required String quantum}) async {
+  static Future<void> configure(Directory folder,
+      {required String roots, required String quantum}) async {
     final sep = Platform.pathSeparator;
     try {
       _source ??= await rootBundle.loadString(asset);
@@ -83,7 +86,8 @@ abstract final class YtDlpTls {
   static String writePlugin(Directory folder, String source) {
     final sep = Platform.pathSeparator;
     final root = '${folder.path}${sep}yt-dlp-tls';
-    final file = File([root, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep));
+    final file =
+        File([root, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep));
     file.parent.createSync(recursive: true);
     _writeIfChanged(file, source);
     return root;

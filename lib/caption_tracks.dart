@@ -26,8 +26,16 @@ List<CaptionTrack> captionTracksOf(List<int> bytes) {
   if (tracks is! List) return const [];
   return [
     for (final t in tracks.take(200))
-      if (t is Map && t['baseUrl'] is String && t['languageCode'] is String && (t['baseUrl'] as String).length <= 4000 && (t['languageCode'] as String).length <= 35)
-        (url: t['baseUrl'] as String, language: t['languageCode'] as String, automatic: t['kind'] == 'asr'),
+      if (t is Map &&
+          t['baseUrl'] is String &&
+          t['languageCode'] is String &&
+          (t['baseUrl'] as String).length <= 4000 &&
+          (t['languageCode'] as String).length <= 35)
+        (
+          url: t['baseUrl'] as String,
+          language: t['languageCode'] as String,
+          automatic: t['kind'] == 'asr'
+        ),
   ];
 }
 
@@ -35,7 +43,8 @@ List<CaptionTrack> captionTracksOf(List<int> bytes) {
 /// `zh-TW`): the uploader's first, else YouTube's automatic one.
 CaptionTrack? captionTrackIn(List<CaptionTrack> tracks, String language) {
   bool ours(CaptionTrack t) => t.language == language || t.language.startsWith('$language-');
-  return tracks.where((t) => ours(t) && !t.automatic).firstOrNull ?? tracks.where((t) => ours(t) && t.automatic).firstOrNull;
+  return tracks.where((t) => ours(t) && !t.automatic).firstOrNull ??
+      tracks.where((t) => ours(t) && t.automatic).firstOrNull;
 }
 
 /// [track]'s address asking for WebVTT; null unless it is YouTube's own
@@ -43,7 +52,12 @@ CaptionTrack? captionTrackIn(List<CaptionTrack> tracks, String language) {
 Uri? timedTextUrl(CaptionTrack track) {
   final raw = track.url;
   final url = Uri.tryParse(raw.startsWith('/') ? 'https://www.youtube.com$raw' : raw);
-  if (url == null || url.scheme != 'https' || !(url.host == 'www.youtube.com' || url.host == 'youtube.com') || url.path != '/api/timedtext') return null;
+  if (url == null ||
+      url.scheme != 'https' ||
+      !(url.host == 'www.youtube.com' || url.host == 'youtube.com') ||
+      url.path != '/api/timedtext') {
+    return null;
+  }
   // Every value kept as given, repeated ones too; only the format is ours.
   return url.replace(queryParameters: {...url.queryParametersAll, 'fmt': 'vtt'});
 }

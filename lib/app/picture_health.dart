@@ -9,7 +9,8 @@ extension PictureHealth on AppController {
     try {
       final Map<String, dynamic> probe;
       if (Platform.isAndroid) {
-        final answer = await const MethodChannel('lumtub/windows_shell').invokeMapMethod<String, dynamic>('hwDecoders');
+        final answer = await const MethodChannel('lumtub/windows_shell')
+            .invokeMapMethod<String, dynamic>('hwDecoders');
         if (answer == null || _disposed) return;
         probe = answer;
       } else {
@@ -21,15 +22,31 @@ extension PictureHealth on AppController {
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS || Platform.isIOS ? 'videotoolbox' : Platform.isAndroid ? 'mediacodec' : adapter.contains('NVDEC') ? 'nvdec' : 'vaapi', height: height(key)) : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1'])
+          key: height(key) >= 1080
+              ? DecoderStatus.hardware(
+                  Platform.isWindows
+                      ? 'd3d11va'
+                      : Platform.isMacOS || Platform.isIOS
+                          ? 'videotoolbox'
+                          : Platform.isAndroid
+                              ? 'mediacodec'
+                              : adapter.contains('NVDEC')
+                                  ? 'nvdec'
+                                  : 'vaapi',
+                  height: height(key))
+              : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics
       // device was lost, and the automatic codecs would stay off for good.
       final same = adapter == settings.decoderAdapter &&
-          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware && (settings.decoderResults[e.key]?.height ?? 0) == e.value.height);
+          results.entries.every((e) =>
+              (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware &&
+              (settings.decoderResults[e.key]?.height ?? 0) == e.value.height);
       if (same) return;
-      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
+      logInfo(
+          'Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       _update(() => decodeStates = results);
       settings = settings.copyWith(decoderResults: results, decoderAdapter: adapter);
       await _settingsStore?.save(settings);
@@ -68,14 +85,21 @@ extension PictureHealth on AppController {
       // A tall picture decoded on the CPU gets the cheap scaling at once,
       // not after it has dropped frames; one decoded in hardware again
       // gets the normal scaling back.
-      if (decoder.kind != DecoderKind.unverified) await _lightenIfBusy(platform, null, software: decoder.kind == DecoderKind.software);
+      if (decoder.kind != DecoderKind.unverified) {
+        await _lightenIfBusy(platform, null, software: decoder.kind == DecoderKind.software);
+      }
       // Kept as what this PC can do only when it decoded in hardware, or
       // nothing measured it: one video in software, as after a lost
       // graphics device or with hardware decoding off, says nothing about
       // the GPU.
-      final measured = normalized != null && settings.decoderAdapter.isNotEmpty && (settings.decoderResults[normalized]?.isHardware ?? false);
+      final measured = normalized != null &&
+          settings.decoderAdapter.isNotEmpty &&
+          (settings.decoderResults[normalized]?.isHardware ?? false);
       if (normalized != null && !(measured && decoder.kind != DecoderKind.hardware)) {
-        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder.keeping(settings.decoderResults[normalized])});
+        settings = settings.copyWith(decoderResults: {
+          ...settings.decoderResults,
+          normalized: decoder.keeping(settings.decoderResults[normalized])
+        });
         unawaited(_settingsStore?.save(settings));
       }
       // A download older than its codec in the sidecar: only libmpv can
@@ -83,8 +107,11 @@ extension PictureHealth on AppController {
       final item = playing;
       final fileCodec = VideoCodec.of(normalized);
       if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
-        logWarn('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
-        _notice(tr('The downloaded file is {0}, which the playback rules disable; streaming instead', [fileCodec.label]));
+        logWarn(
+            'The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
+        _notice(tr(
+            'The downloaded file is {0}, which the playback rules disable; streaming instead',
+            [fileCodec.label]));
         unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
     } catch (_) {
@@ -99,7 +126,10 @@ extension PictureHealth on AppController {
     final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
     final crop = DecoderStatus.paddingCrop(width, height, hardware: hardware, fast: _fastScaling);
     await platform.setProperty('video-crop', crop);
-    if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+    if (crop.isNotEmpty) {
+      logDebug(
+          () => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+    }
   }
 
   /// The picture changed size within a video (another quality): its crop
@@ -111,7 +141,8 @@ extension PictureHealth on AppController {
     unawaited(Future<void>.delayed(const Duration(milliseconds: 300), () async {
       _cropFitting = false;
       if (!identical(player, this.player)) return;
-      final hardware = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current')).kind == DecoderKind.hardware;
+      final hardware = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current')).kind ==
+          DecoderKind.hardware;
       await _fitCrop(platform, hardware: hardware);
     }).catchError((Object _) {}));
   }
@@ -120,7 +151,12 @@ extension PictureHealth on AppController {
   /// minute, so the log shows why a video stutters.
   Future<void> _checkDrops() async {
     final platform = player?.platform;
-    if (platform is! NativePlayer || _tracking == null || _fileSerial != _playSerial || !(player?.state.playing ?? false)) return;
+    if (platform is! NativePlayer ||
+        _tracking == null ||
+        _fileSerial != _playSerial ||
+        !(player?.state.playing ?? false)) {
+      return;
+    }
     await _logMemory(platform);
     await _logUpscaling(platform);
     try {
@@ -142,7 +178,8 @@ extension PictureHealth on AppController {
         // wait = a finished frame until Flutter took it, read = Flutter's
         // compositions, frames = drawn/taken (each taken frame is a new
         // shared handle Flutter opens again).
-        if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 1)) {
+        if (frames != null &&
+            DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 1)) {
           _lastFrameLog = DateTime.now();
           logInfo('Video frames in 10 s, $added dropped: $frames');
         }
@@ -150,10 +187,33 @@ extension PictureHealth on AppController {
       }
       _lastDropLog = DateTime.now();
       final values = <String>[];
-      for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
+      for (final name in [
+        'avsync',
+        'estimated-vf-fps',
+        'container-fps',
+        'display-fps',
+        'vo-delayed-frame-count',
+        'mistimed-frame-count',
+        'decoder-frame-drop-count',
+        'hwdec-current',
+        'video-sync',
+        'speed',
+        'video-params/w',
+        'video-params/h',
+        'time-pos',
+        'audio-pts',
+        'audio-params/samplerate',
+        'audio-out-params/samplerate',
+        'current-ao',
+        'd3d11va-zero-copy',
+        'vd-lavc-dr',
+        'video-codec',
+        'video-out-params/pixelformat'
+      ]) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logDebug(() => 'Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
+      logDebug(() =>
+          'Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (e) {
       // Statistics are best effort; what they set off is logged.
       logWarn('Could not check the playback statistics: $e');
@@ -168,17 +228,30 @@ extension PictureHealth on AppController {
   Future<void> _watchPicture(NativePlayer platform, String? frames) async {
     final match = frames == null ? null : RegExp(r'frames=(\d+)/(\d+)').firstMatch(frames);
     final outputSize = _outputSize;
-    if (match == null || outputSize == null || !outputSize.onScreen || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if (match == null ||
+        outputSize == null ||
+        !outputSize.onScreen ||
+        audioOnly ||
+        _backgroundAudioOnly ||
+        _windowHidden) {
+      return;
+    }
     if (DateTime.now().difference(_lastPictureFix) < const Duration(minutes: 1)) return;
     if ((player?.state.width ?? 0) == 0) {
       // A picture stream YouTube refused as the video opened leaves the
       // sound and subtitles playing over black, with no size: opened again
       // with new addresses once it has had time to start.
       final vid = await platform.getProperty('vid');
-      if (vid.isEmpty || vid == 'no' || vid == 'false' || DateTime.now().difference(_openedAt) < const Duration(seconds: 15)) return;
+      if (vid.isEmpty ||
+          vid == 'no' ||
+          vid == 'false' ||
+          DateTime.now().difference(_openedAt) < const Duration(seconds: 15)) {
+        return;
+      }
       if ((await platform.getProperty('video-out-params/w')).isNotEmpty) return;
       _lastPictureFix = DateTime.now();
-      logWarn('No picture while playing ($frames); the video stream did not open, reopening with new addresses');
+      logWarn(
+          'No picture while playing ($frames); the video stream did not open, reopening with new addresses');
       unawaited(_recover('The video stream did not open while the sound played'));
       return;
     }
@@ -194,7 +267,8 @@ extension PictureHealth on AppController {
       unawaited(_recover('The video stream stopped while the sound played on'));
       return;
     }
-    logWarn('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
+    logWarn(
+        'Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
     try {
       if (drawn == 0) {
         _pictureRestartedIn = _playSerial;
@@ -208,7 +282,10 @@ extension PictureHealth on AppController {
   }
 
   /// Whether mpv scales the cheap way: 低资源占用优先, or [_lightRendering].
-  bool get _fastScaling => _lightRendering != null || (settings.strategy == PlaybackStrategy.lowResource && !settings.customOptions.containsKey('scale'));
+  bool get _fastScaling =>
+      _lightRendering != null ||
+      (settings.strategy == PlaybackStrategy.lowResource &&
+          !settings.customOptions.containsKey('scale'));
 
   /// In 智能自动, switches mpv to the cheapest scaling (as 低资源占用优先
   /// does) on battery or with battery saver, while a picture taller than
@@ -226,24 +303,36 @@ extension PictureHealth on AppController {
       _lightRendering = null;
       // Only the scaling goes back: the decoder and the audio filters
       // (silence skipping, volume balance) stay as they are.
-      await PlayerOptionApplicator.apply(player, settings, previous: _applied ?? settings, lightened: true);
+      await PlayerOptionApplicator.apply(player, settings,
+          previous: _applied ?? settings, lightened: true);
       _optionsApplied(player);
       _applied = settings;
       _refitCrop(player);
-      logInfo(unplugged ? 'Plugged in again; scaling back to normal' : 'Decoding in hardware again; scaling back to normal');
+      logInfo(unplugged
+          ? 'Plugged in again; scaling back to normal'
+          : 'Decoding in hardware again; scaling back to normal');
       return;
     }
     // Filters the person turned on are kept.
-    if (_lightRendering != null || settings.strategy != PlaybackStrategy.auto || settings.scale != const PlayerSettings().scale || settings.deband || settings.interpolation) return;
+    if (_lightRendering != null ||
+        settings.strategy != PlaybackStrategy.auto ||
+        settings.scale != const PlayerSettings().scale ||
+        settings.deband ||
+        settings.interpolation) {
+      return;
+    }
     String reason;
     final mobile = Platform.isIOS || Platform.isAndroid;
-    final height = software ?? false ? int.tryParse(await platform.getProperty('video-params/h')) ?? 0 : 0;
+    final height =
+        software ?? false ? int.tryParse(await platform.getProperty('video-params/h')) ?? 0 : 0;
     if (Power.saving) {
       reason = 'battery';
     } else if ((software ?? false) && (height > 1080 || (mobile && height >= 1080))) {
       reason = 'software';
     } else {
-      final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
+      final busy = frames == null
+          ? null
+          : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
       if (busy == null) return;
       reason = 'busy';
       logDebug(() => 'Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
@@ -280,14 +369,18 @@ extension PictureHealth on AppController {
     final lower = stepDownHeight(height, availableHeights);
     if (lower == null) return;
     _droppedCap = lower;
-    logWarn('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
-    _notice(tr('Frames kept dropping, so automatic quality is lowered to {0}p for this run (choose Auto again to undo)', ['$lower']));
+    logWarn(
+        'Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
+    _notice(tr(
+        'Frames kept dropping, so automatic quality is lowered to {0}p for this run (choose Auto again to undo)',
+        ['$lower']));
     await reloadVideo();
   }
 
   Future<String?> _frameStats(NativePlayer platform) async {
     try {
-      final stats = await AppController._videoChannel.invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});
+      final stats = await AppController._videoChannel
+          .invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});
       return stats == null || stats.isEmpty ? null : stats;
     } catch (_) {
       // An older plugin without timings.
@@ -303,8 +396,12 @@ extension PictureHealth on AppController {
     _upscaleLoggedIn = _playSerial;
     try {
       final shaders = await platform.getProperty('glsl-shaders');
-      final passes = RegExp(r'user shader: ([^"]+)').allMatches(await platform.getProperty('vo-passes')).map((m) => m[1]!.trim()).toSet();
-      final size = '${await platform.getProperty('video-params/h')}p in a player ${await platform.getProperty('osd-height')} px tall';
+      final passes = RegExp(r'user shader: ([^"]+)')
+          .allMatches(await platform.getProperty('vo-passes'))
+          .map((m) => m[1]!.trim())
+          .toSet();
+      final size =
+          '${await platform.getProperty('video-params/h')}p in a player ${await platform.getProperty('osd-height')} px tall';
       logInfo(passes.isNotEmpty
           ? 'Picture enhancement ${settings.upscaling.name}: ${passes.length} shader passes run ($size): ${passes.take(4).join(', ')}'
           : 'Picture enhancement ${settings.upscaling.name} not running ($size; ${_lightRendering != null ? 'fast scaling for $_lightRendering' : shaders.isEmpty ? 'no shaders loaded' : 'the picture is not scaled up enough'})');
@@ -324,10 +421,17 @@ extension PictureHealth on AppController {
       final ahead = cache is Map ? cache['fw-bytes'] : null;
       final total = cache is Map ? cache['total-bytes'] : null;
       final values = <String>[];
-      for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
+      for (final name in [
+        'video-params/w',
+        'video-params/h',
+        'video-codec',
+        'hwdec-current',
+        'video-out-params/pixelformat'
+      ]) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logDebug(() => 'Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
+      logDebug(() =>
+          'Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }

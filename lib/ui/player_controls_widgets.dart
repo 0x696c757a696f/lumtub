@@ -3,7 +3,13 @@ part of 'player_controls.dart';
 /// A button of the bars: focusable from the keyboard, lit under the mouse,
 /// ringed when it has keyboard focus.
 class _Pressable extends StatefulWidget {
-  const _Pressable({required this.tooltip, required this.onTap, required this.child, this.width, this.height, this.padding});
+  const _Pressable(
+      {required this.tooltip,
+      required this.onTap,
+      required this.child,
+      this.width,
+      this.height,
+      this.padding});
   final String tooltip;
   final VoidCallback onTap;
   final Widget child;
@@ -22,7 +28,9 @@ class _PressableState extends State<_Pressable> {
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.select) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.select) {
       widget.onTap();
       return KeyEventResult.handled;
     }
@@ -73,7 +81,13 @@ class _PressableState extends State<_Pressable> {
 }
 
 class _IconBtn extends StatelessWidget {
-  const _IconBtn({required this.icon, required this.tooltip, required this.onTap, this.size = 22, this.width = 34, this.active = false});
+  const _IconBtn(
+      {required this.icon,
+      required this.tooltip,
+      required this.onTap,
+      this.size = 22,
+      this.width = 34,
+      this.active = false});
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
@@ -89,14 +103,20 @@ class _IconBtn extends StatelessWidget {
       onTap: onTap,
       width: touch ? math.max(width, 44.0) : width,
       height: touch ? 44 : 34,
-      child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white),
+      child: Icon(icon,
+          size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white),
     );
   }
 }
 
 /// A round button over the picture, such as the lock.
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.tooltip, required this.onTap, this.active = false, this.accent});
+  const _CircleButton(
+      {required this.icon,
+      required this.tooltip,
+      required this.onTap,
+      this.active = false,
+      this.accent});
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
@@ -111,14 +131,22 @@ class _CircleButton extends StatelessWidget {
           onTap: onTap,
           width: 40,
           height: 40,
-          child: Icon(icon, size: 22, color: active ? accent ?? Theme.of(context).colorScheme.inversePrimary : Colors.white),
+          child: Icon(icon,
+              size: 22,
+              color:
+                  active ? accent ?? Theme.of(context).colorScheme.inversePrimary : Colors.white),
         ),
       );
 }
 
 /// Like, comments, favourites and share in a phone's landscape top bar.
 class _CountButton extends StatelessWidget {
-  const _CountButton({required this.icon, required this.tooltip, required this.onTap, this.count, this.active = false});
+  const _CountButton(
+      {required this.icon,
+      required this.tooltip,
+      required this.onTap,
+      this.count,
+      this.active = false});
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
@@ -132,14 +160,20 @@ class _CountButton extends StatelessWidget {
         width: 52,
         height: 44,
         child: Stack(alignment: Alignment.center, children: [
-          Icon(icon, size: 24, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white),
+          Icon(icon,
+              size: 24,
+              color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white),
           if (count != null)
             PositionedDirectional(
               start: 30,
               top: 0,
               child: Text(
                 formatCount(count!),
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600, shadows: [Shadow(blurRadius: 3, color: Colors.black87)]),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    shadows: [Shadow(blurRadius: 3, color: Colors.black87)]),
               ),
             ),
         ]),
@@ -162,13 +196,24 @@ class _Buffering extends StatelessWidget {
           listenable: c,
           builder: (context, _) {
             final waiting = c.waitingForSubtitles;
-            if (!((snapshot.data ?? false) || waiting) || c.playbackError != null) return const SizedBox.shrink();
+            if (!((snapshot.data ?? false) || waiting) || c.playbackError != null) {
+              return const SizedBox.shrink();
+            }
             return Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                SizedBox(width: 36, height: 36, child: Semantics(liveRegion: true, label: waiting ? null : tr('Loading…'), child: const CircularProgressIndicator(strokeWidth: 3, color: Colors.white))),
+                SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Semantics(
+                        liveRegion: true,
+                        label: waiting ? null : tr('Loading…'),
+                        child:
+                            const CircularProgressIndicator(strokeWidth: 3, color: Colors.white))),
                 if (waiting) ...[
                   const SizedBox(height: 12),
-                  Text(tr('Translating subtitles…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
+                  Text(tr('Translating subtitles…'),
+                      style:
+                          const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
                 ],
               ]),
             );
@@ -196,15 +241,20 @@ class _FeedbackBubble extends StatelessWidget {
                   key: const ValueKey(true),
                   // Seeks, speed and volume changes reach the screen reader
                   // as they show.
-                  child: Semantics(container: true, liveRegion: true, child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(value.icon, size: 22, color: Colors.white),
-                      const SizedBox(width: 4),
-                      Text(value.text, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                    ]),
-                  )),
+                  child: Semantics(
+                      container: true,
+                      liveRegion: true,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                            color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(value.icon, size: 22, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(value.text,
+                              style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        ]),
+                      )),
                 ),
         ),
       );

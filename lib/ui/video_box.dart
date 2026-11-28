@@ -11,7 +11,13 @@ import 'pages/watch_page.dart' show androidSubtitleScale, smallSubtitleScale;
 /// Tells [controller] how large [child], which shows the video, is on
 /// screen, so libmpv draws the picture at that size.
 class VideoBox extends StatefulWidget {
-  const VideoBox({super.key, required this.controller, required this.child, this.smallSubtitles = false, this.subtitlesOff, this.danmakuOver = true});
+  const VideoBox(
+      {super.key,
+      required this.controller,
+      required this.child,
+      this.smallSubtitles = false,
+      this.subtitlesOff,
+      this.danmakuOver = true});
   final AppController controller;
   final Widget child;
 
@@ -50,14 +56,20 @@ class _VideoBoxState extends State<VideoBox> {
         final small = widget.smallSubtitles;
         // Phones (Android and iOS) by the player's height, as YouTube's app: by area
         // against 1080p an upright phone player gets 9 px text.
-        final textScale = Platform.isAndroid || Platform.isIOS ? androidSubtitleScale(box, Device.captionScale, small) : small ? smallSubtitleScale(box) : sqrt(box.width * box.height / (1920 * 1080));
-        widget.controller.subtitleViewChanged(box, textScale, small ? (box.shortestSide / 720).clamp(0.3, 1.0) : 1);
+        final textScale = Platform.isAndroid || Platform.isIOS
+            ? androidSubtitleScale(box, Device.captionScale, small)
+            : small
+                ? smallSubtitleScale(box)
+                : sqrt(box.width * box.height / (1920 * 1080));
+        widget.controller.subtitleViewChanged(
+            box, textScale, small ? (box.shortestSide / 720).clamp(0.3, 1.0) : 1);
         widget.controller.subtitlesOffIn(this, widget.subtitlesOff?.call(box) ?? false);
       }
       final over = widget.danmakuOver;
       if (over == null) return widget.child;
       final danmaku = DanmakuLayer(overlay: widget.controller.danmakuShown);
-      return Stack(fit: StackFit.expand, children: over ? [widget.child, danmaku] : [danmaku, widget.child]);
+      return Stack(
+          fit: StackFit.expand, children: over ? [widget.child, danmaku] : [danmaku, widget.child]);
     });
   }
 }

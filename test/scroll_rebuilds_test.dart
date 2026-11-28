@@ -7,7 +7,12 @@ import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:material_ui/material_ui.dart';
 
-VideoItem _video(int i) => VideoItem(id: 'v$i'.padRight(11, '0'), title: 'Video $i', channel: 'Channel $i', channelId: 'UC$i', url: 'u');
+VideoItem _video(int i) => VideoItem(
+    id: 'v$i'.padRight(11, '0'),
+    title: 'Video $i',
+    channel: 'Channel $i',
+    channelId: 'UC$i',
+    url: 'u');
 
 void main() {
   testWidgets('cards are not built again while the grid scrolls', (tester) async {
@@ -16,7 +21,9 @@ void main() {
     addTearDown(tester.view.reset);
     final items = [for (var i = 0; i < 300; i++) _video(i)];
     final controller = AppController()..ready = true;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: VideoActions(
       controller: controller,
       child: CustomScrollView(slivers: [SliverVideoGrid(items: items, onOpen: (_) {})]),
     ))));
@@ -26,6 +33,7 @@ void main() {
       built.add(element);
       element.visitChildren(mark);
     }
+
     tester.binding.rootElement!.visitChildren(mark);
     var again = 0;
     widgets.debugOnRebuildDirtyWidget = (element, _) {

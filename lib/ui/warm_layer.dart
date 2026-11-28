@@ -30,7 +30,11 @@ class WarmLayer extends StatelessWidget {
     if (w == 0) return const Color(0xFFFFFFFF);
     final light = _blackBody(AppearanceSettings.kelvinOf(w).toDouble());
     final white = _blackBody(6500);
-    return Color.from(alpha: 1, red: (light.$1 / white.$1).clamp(0, 1), green: (light.$2 / white.$2).clamp(0, 1), blue: (light.$3 / white.$3).clamp(0, 1));
+    return Color.from(
+        alpha: 1,
+        red: (light.$1 / white.$1).clamp(0, 1),
+        green: (light.$2 / white.$2).clamp(0, 1),
+        blue: (light.$3 / white.$3).clamp(0, 1));
   }
 
   /// A black body's colour at [kelvin], 1000 to 40000 K, by Tanner
@@ -38,9 +42,19 @@ class WarmLayer extends StatelessWidget {
   static (double, double, double) _blackBody(double kelvin) {
     final t = kelvin / 100;
     final red = t <= 66 ? 255.0 : 329.698727446 * pow(t - 60, -0.1332047592);
-    final green = t <= 66 ? 99.4708025861 * log(t) - 161.1195681661 : 288.1221695283 * pow(t - 60, -0.0755148492);
-    final blue = t >= 66 ? 255.0 : t <= 19 ? 0.0 : 138.5177312231 * log(t - 10) - 305.0447927307;
-    return (red.clamp(0, 255).toDouble(), green.clamp(0, 255).toDouble(), blue.clamp(0, 255).toDouble());
+    final green = t <= 66
+        ? 99.4708025861 * log(t) - 161.1195681661
+        : 288.1221695283 * pow(t - 60, -0.0755148492);
+    final blue = t >= 66
+        ? 255.0
+        : t <= 19
+            ? 0.0
+            : 138.5177312231 * log(t - 10) - 305.0447927307;
+    return (
+      red.clamp(0, 255).toDouble(),
+      green.clamp(0, 255).toDouble(),
+      blue.clamp(0, 255).toDouble()
+    );
   }
 
   /// The tint each layer last gave the native video layer; a new one
@@ -77,7 +91,8 @@ class WarmLayer extends StatelessWidget {
           tween: Tween(end: warmth),
           duration: Motion.of(const Duration(milliseconds: 1200)),
           curve: Curves.easeInOut,
-          builder: (context, value, _) => value <= 0.001 ? const SizedBox.shrink() : CustomPaint(painter: _Warm(tint(value))),
+          builder: (context, value, _) =>
+              value <= 0.001 ? const SizedBox.shrink() : CustomPaint(painter: _Warm(tint(value))),
         ),
       ),
     );
@@ -90,9 +105,11 @@ class _Warm extends CustomPainter {
   final Color color;
 
   @override
-  void paint(Canvas canvas, Size size) => canvas.drawRect(Offset.zero & size, Paint()
-    ..color = color
-    ..blendMode = BlendMode.multiply);
+  void paint(Canvas canvas, Size size) => canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..color = color
+        ..blendMode = BlendMode.multiply);
 
   @override
   bool shouldRepaint(_Warm old) => old.color != color;

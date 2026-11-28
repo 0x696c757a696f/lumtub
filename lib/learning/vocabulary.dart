@@ -16,7 +16,8 @@ class VocabularyWord {
   const VocabularyWord({
     required this.word,
     required this.language,
-    required this.added, this.reading = '',
+    required this.added,
+    this.reading = '',
     this.meaning = '',
     this.sentence = '',
     this.translation = '',
@@ -105,8 +106,8 @@ class VocabularyBook extends ChangeNotifier {
 
   /// Where the line [key] was heard in is kept, for Anki: a WAV file in
   /// `vocabulary-sounds` beside the book.
-  File soundOf(String key) =>
-      File('${file.parent.path}${Platform.pathSeparator}vocabulary-sounds${Platform.pathSeparator}${sha1.convert(utf8.encode(key)).toString().substring(0, 16)}.wav');
+  File soundOf(String key) => File(
+      '${file.parent.path}${Platform.pathSeparator}vocabulary-sounds${Platform.pathSeparator}${sha1.convert(utf8.encode(key)).toString().substring(0, 16)}.wav');
 
   bool contains(String language, String word) => _keys.contains('$language:$word');
 
@@ -147,7 +148,12 @@ class VocabularyBook extends ChangeNotifier {
 
   Future<void> _save() async {
     try {
-      await writeFileAtomic(file, jsonEncode({'version': 1, 'words': [for (final w in _words) w.toJson()]}));
+      await writeFileAtomic(
+          file,
+          jsonEncode({
+            'version': 1,
+            'words': [for (final w in _words) w.toJson()]
+          }));
     } catch (e) {
       logError('Could not save the vocabulary book', e);
     }
@@ -159,12 +165,23 @@ class VocabularyBook extends ChangeNotifier {
 String vocabularyCsv(List<VocabularyWord> words) {
   String field(String text) {
     final clean = text.replaceAll('\r\n', '\n');
-    return RegExp(r'[",\n\r]').hasMatch(clean) || clean != clean.trim() ? '"${clean.replaceAll('"', '""')}"' : clean;
+    return RegExp(r'[",\n\r]').hasMatch(clean) || clean != clean.trim()
+        ? '"${clean.replaceAll('"', '""')}"'
+        : clean;
   }
 
   final out = StringBuffer('﻿word,reading,meaning,sentence,translation,video,time,link\r\n');
   for (final w in words) {
-    out.write([w.word, w.reading, w.meaning, w.sentence, w.translation, w.videoTitle, clockOf(w.at), w.link].map(field).join(','));
+    out.write([
+      w.word,
+      w.reading,
+      w.meaning,
+      w.sentence,
+      w.translation,
+      w.videoTitle,
+      clockOf(w.at),
+      w.link
+    ].map(field).join(','));
     out.write('\r\n');
   }
   return out.toString();
@@ -174,8 +191,12 @@ String vocabularyCsv(List<VocabularyWord> words) {
 /// the reading, meaning, the line with the word in bold, its translation
 /// and a link back to that moment of the video on the back.
 String vocabularyAnki(List<VocabularyWord> words) {
-  String html(String text) => const HtmlEscape(HtmlEscapeMode.element).convert(text).replaceAll('\t', ' ').replaceAll(RegExp(r'\r?\n'), '<br>');
-  final out = StringBuffer('#separator:tab\n#html:true\n#columns:Front\tBack\tTags\n#tags column:3\n');
+  String html(String text) => const HtmlEscape(HtmlEscapeMode.element)
+      .convert(text)
+      .replaceAll('\t', ' ')
+      .replaceAll(RegExp(r'\r?\n'), '<br>');
+  final out =
+      StringBuffer('#separator:tab\n#html:true\n#columns:Front\tBack\tTags\n#tags column:3\n');
   for (final w in words) {
     final sentence = html(w.sentence).replaceAll(html(w.word), '<b>${html(w.word)}</b>');
     final back = [
@@ -183,7 +204,8 @@ String vocabularyAnki(List<VocabularyWord> words) {
       if (w.meaning.isNotEmpty) html(w.meaning),
       if (w.sentence.isNotEmpty) '<br>$sentence',
       if (w.translation.isNotEmpty) '<i>${html(w.translation)}</i>',
-      if (w.link.isNotEmpty) '<a href="${html(w.link)}">${html(w.videoTitle.isEmpty ? w.link : '${w.videoTitle} ${clockOf(w.at)}')}</a>',
+      if (w.link.isNotEmpty)
+        '<a href="${html(w.link)}">${html(w.videoTitle.isEmpty ? w.link : '${w.videoTitle} ${clockOf(w.at)}')}</a>',
     ].join('<br>');
     out.write('${html(w.word)}\t$back\tlumtub lumtub::${w.language}\n');
   }
@@ -200,7 +222,11 @@ String clockOf(Duration d) {
 /// [bytes] unchanged when it is not one it can read.
 List<int> wavTail(List<int> bytes, double seconds) {
   final data = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
-  if (data.length < 44 || String.fromCharCodes(data.sublist(0, 4)) != 'RIFF' || String.fromCharCodes(data.sublist(8, 12)) != 'WAVE') return bytes;
+  if (data.length < 44 ||
+      String.fromCharCodes(data.sublist(0, 4)) != 'RIFF' ||
+      String.fromCharCodes(data.sublist(8, 12)) != 'WAVE') {
+    return bytes;
+  }
   final view = ByteData.sublistView(data);
   int? rate, align, dataAt, dataLength, fmtAt, fmtSize;
   var at = 12;
@@ -220,7 +246,15 @@ List<int> wavTail(List<int> bytes, double seconds) {
     }
     at += 8 + size + (size.isOdd ? 1 : 0);
   }
-  if (rate == null || align == null || align == 0 || dataAt == null || dataLength == null || fmtAt == null || fmtSize == null) return bytes;
+  if (rate == null ||
+      align == null ||
+      align == 0 ||
+      dataAt == null ||
+      dataLength == null ||
+      fmtAt == null ||
+      fmtSize == null) {
+    return bytes;
+  }
   final keep = ((seconds * rate).round() * align).clamp(0, dataLength - dataLength % align);
   final pcm = data.sublist(dataAt + dataLength - keep, dataAt + dataLength);
   final out = BytesBuilder(copy: false)

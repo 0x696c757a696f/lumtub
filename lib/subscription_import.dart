@@ -25,7 +25,8 @@ final _inUrl = RegExp(r'(?:/channel/|[?&]channel_id=)(UC[\w-]{22})');
 const maxSubscriptionFileBytes = 20 << 20;
 
 /// [parseSubscriptions] off the UI thread, for files that can be large.
-Future<SubscriptionImport> parseSubscriptionsInBackground(List<int> bytes) => Isolate.run(() => parseSubscriptions(bytes));
+Future<SubscriptionImport> parseSubscriptionsInBackground(List<int> bytes) =>
+    Isolate.run(() => parseSubscriptions(bytes));
 
 /// Reads a NewPipe, FreeTube or YouTube JSON export, a Lumtub settings
 /// backup, a Google Takeout or FreeTube CSV, or an OPML file, deciding by the content. Never throws:
@@ -43,11 +44,13 @@ SubscriptionImport parseSubscriptions(List<int> bytes) {
 
 /// [channels] (id and name) as a NewPipe subscriptions export, which
 /// NewPipe, FreeTube, LibreTube and Lumtub itself can import.
-String newPipeSubscriptions(Iterable<(String id, String name)> channels) => const JsonEncoder.withIndent('  ').convert({
+String newPipeSubscriptions(Iterable<(String id, String name)> channels) =>
+    const JsonEncoder.withIndent('  ').convert({
       'app_version': '0.27.6',
       'app_version_int': 1004,
       'subscriptions': [
-        for (final (id, name) in channels) {'service_id': 0, 'url': 'https://www.youtube.com/channel/$id', 'name': name},
+        for (final (id, name) in channels)
+          {'service_id': 0, 'url': 'https://www.youtube.com/channel/$id', 'name': name},
       ],
     });
 
@@ -106,7 +109,11 @@ SubscriptionImport _json(String text) {
     }
     final snippet = raw['snippet'];
     final resource = snippet is Map ? snippet['resourceId'] : null;
-    final id = _idFrom(raw['id']) ?? _idFrom(raw['channelId']) ?? _idFrom(raw['url']) ?? _idFrom(raw['channelUrl']) ?? (resource is Map ? _idFrom(resource['channelId']) : null);
+    final id = _idFrom(raw['id']) ??
+        _idFrom(raw['channelId']) ??
+        _idFrom(raw['url']) ??
+        _idFrom(raw['channelUrl']) ??
+        (resource is Map ? _idFrom(resource['channelId']) : null);
     if (id == null) {
       out.skipped++;
       return;
@@ -127,7 +134,10 @@ SubscriptionImport _json(String text) {
     if (doc is Map) {
       final subscriptions = doc['subscriptions'];
       if (subscriptions is List) {
-        final newPipe = doc.containsKey('app_version') || (subscriptions.isNotEmpty && subscriptions.first is Map && (subscriptions.first as Map).containsKey('service_id'));
+        final newPipe = doc.containsKey('app_version') ||
+            (subscriptions.isNotEmpty &&
+                subscriptions.first is Map &&
+                (subscriptions.first as Map).containsKey('service_id'));
         list(subscriptions, newPipe ? SubscriptionFormat.newPipe : SubscriptionFormat.freeTube);
       } else if (doc['library'] is Map && (doc['library'] as Map)['channels'] is List) {
         // A Lumtub settings backup.
@@ -144,14 +154,17 @@ SubscriptionImport _json(String text) {
     }
   }
   final usable = out.channels.isNotEmpty || out.skipped > 0;
-  return SubscriptionImport(out.channels, skipped: out.skipped + (out.channels.isEmpty ? 0 : bad), format: usable ? (format ?? SubscriptionFormat.freeTube) : null);
+  return SubscriptionImport(out.channels,
+      skipped: out.skipped + (out.channels.isEmpty ? 0 : bad),
+      format: usable ? (format ?? SubscriptionFormat.freeTube) : null);
 }
 
 SubscriptionImport _opml(String text) {
   final out = _Collector();
   var found = false;
   final attribute = RegExp('([\\w:.-]+)\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\')');
-  for (final tag in RegExp(r'<outline\b([^>]*?)/?>', caseSensitive: false, dotAll: true).allMatches(text)) {
+  for (final tag
+      in RegExp(r'<outline\b([^>]*?)/?>', caseSensitive: false, dotAll: true).allMatches(text)) {
     final attributes = <String, String>{};
     for (final a in attribute.allMatches(tag.group(1)!)) {
       attributes[a.group(1)!.toLowerCase()] = _unescape(a.group(2) ?? a.group(3) ?? '');
@@ -166,10 +179,12 @@ SubscriptionImport _opml(String text) {
     }
     out.add(id, (attributes['title'] ?? attributes['text'] ?? '').trim());
   }
-  return SubscriptionImport(out.channels, skipped: out.skipped, format: found ? SubscriptionFormat.opml : null);
+  return SubscriptionImport(out.channels,
+      skipped: out.skipped, format: found ? SubscriptionFormat.opml : null);
 }
 
-String _unescape(String s) => s.replaceAllMapped(RegExp(r'&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);'), (m) {
+String _unescape(String s) =>
+    s.replaceAllMapped(RegExp(r'&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);'), (m) {
       final e = m.group(1)!;
       switch (e) {
         case 'amp':
@@ -183,7 +198,8 @@ String _unescape(String s) => s.replaceAllMapped(RegExp(r'&(#x[0-9a-fA-F]+|#\d+|
         case 'apos':
           return "'";
       }
-      final code = e[1] == 'x' ? int.tryParse(e.substring(2), radix: 16) : int.tryParse(e.substring(1));
+      final code =
+          e[1] == 'x' ? int.tryParse(e.substring(2), radix: 16) : int.tryParse(e.substring(1));
       return code == null || code > 0x10FFFF ? m.group(0)! : String.fromCharCode(code);
     });
 
@@ -206,10 +222,13 @@ SubscriptionImport _csv(String text) {
     found = true;
     // Takeout and FreeTube both put the title in the third column.
     var name = row.length > 2 ? row[2].trim() : '';
-    if (name.isEmpty || _idFrom(name) != null) name = row.length > 1 && _idFrom(row[1]) == null ? row[1].trim() : '';
+    if (name.isEmpty || _idFrom(name) != null) {
+      name = row.length > 1 && _idFrom(row[1]) == null ? row[1].trim() : '';
+    }
     out.add(id, name);
   }
-  return SubscriptionImport(out.channels, skipped: found ? out.skipped : 0, format: found ? SubscriptionFormat.csv : null);
+  return SubscriptionImport(out.channels,
+      skipped: found ? out.skipped : 0, format: found ? SubscriptionFormat.csv : null);
 }
 
 List<List<String>> _csvRows(String text) {

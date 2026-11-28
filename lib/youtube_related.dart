@@ -17,16 +17,19 @@ class YoutubeRelated {
   final http.Client _client;
 
   static Map<String, String> get _headers => {
-    ...YoutubeWeb.apiHeaders(acceptLanguage: youtubeAcceptLanguage),
-  };
+        ...YoutubeWeb.apiHeaders(acceptLanguage: youtubeAcceptLanguage),
+      };
 
   /// What was read from each response, not the response itself: a `/next`
   /// response decodes to megabytes of maps, of which a few fields are used.
-  final _cache = <String, Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})>>{};
+  final _cache = <String,
+      Future<
+          ({List<VideoItem> related, ({String title, String description, int? likes})? text})>>{};
 
   /// YouTube's `/next` response for [videoId], in the interface language;
   /// the related videos and the translated title both come from it.
-  Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _next(String videoId) {
+  Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _next(
+      String videoId) {
     if (_cache.length > 40) unawaited(_cache.remove(_cache.keys.first));
     return _cache[videoId] ??= () async {
       final response = await _client
@@ -35,13 +38,19 @@ class YoutubeRelated {
             headers: _headers,
             body: jsonEncode({
               'context': {
-                'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': youtubeHl},
+                'client': {
+                  'clientName': 'WEB',
+                  'clientVersion': YoutubeWeb.clientVersion,
+                  'hl': youtubeHl
+                },
               },
               'videoId': videoId,
             }),
           )
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+      if (response.statusCode != 200) {
+        throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+      }
       return _readInBackground(response.bodyBytes);
     }()
       ..ignore();
@@ -68,21 +77,33 @@ class YoutubeRelated {
   }
 
   // A `/next` response runs to a megabyte or two.
-  static Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _readInBackground(List<int> bytes) =>
-      Isolate.run(() => readNextBytes(bytes));
+  static Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})>
+      _readInBackground(List<int> bytes) => Isolate.run(() => readNextBytes(bytes));
 
   /// The related videos and the localized text of a `/next` response
   /// [body], read by the native core; nothing without it.
-  static ({List<VideoItem> related, ({String title, String description, int? likes})? text}) readNext(String body) => readNextBytes(utf8.encode(body));
+  static ({List<VideoItem> related, ({String title, String description, int? likes})? text})
+      readNext(String body) => readNextBytes(utf8.encode(body));
 
-  static ({List<VideoItem> related, ({String title, String description, int? likes})? text}) readNextBytes(List<int> body) {
+  static ({List<VideoItem> related, ({String title, String description, int? likes})? text})
+      readNextBytes(List<int> body) {
     final core = NativeCore.instance;
-    final answer = core == null ? null : jsonDecode(core.take(core.withBytes(body, core.youtubeNext)) ?? 'null');
+    final answer = core == null
+        ? null
+        : jsonDecode(core.take(core.withBytes(body, core.youtubeNext)) ?? 'null');
     if (answer is! Map<String, dynamic>) return (related: const <VideoItem>[], text: null);
     final text = answer['text'] as Map<String, dynamic>?;
     return (
-      related: [for (final v in (answer['related'] as List).cast<Map<String, dynamic>>()) videoFromCore(v)],
-      text: text == null ? null : (title: text['title'] as String, description: text['description'] as String, likes: (text['likes'] as num?)?.toInt()),
+      related: [
+        for (final v in (answer['related'] as List).cast<Map<String, dynamic>>()) videoFromCore(v)
+      ],
+      text: text == null
+          ? null
+          : (
+              title: text['title'] as String,
+              description: text['description'] as String,
+              likes: (text['likes'] as num?)?.toInt()
+            ),
     );
   }
 
@@ -90,7 +111,8 @@ class YoutubeRelated {
   static List<VideoItem> parse(Object? data) => readNext(jsonEncode(data)).related;
 
   @visibleForTesting
-  static ({String title, String description, int? likes})? localized(Object? data) => readNext(jsonEncode(data)).text;
+  static ({String title, String description, int? likes})? localized(Object? data) =>
+      readNext(jsonEncode(data)).text;
 }
 
 /// A video the native core read from a YouTube response.

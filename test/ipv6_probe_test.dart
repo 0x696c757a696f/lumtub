@@ -28,7 +28,10 @@ void main() {
     expect(PlayerSettings.fromJson(const {}).ipVersion, 'auto');
     expect(PlayerSettings.fromJson({'ipVersion': 'nonsense'}).ipVersion, 'auto');
     for (final mode in ['auto', 'ipv4', 'any']) {
-      expect(PlayerSettings.fromJson(const PlayerSettings().copyWith(ipVersion: mode).toJson()).ipVersion, mode);
+      expect(
+          PlayerSettings.fromJson(const PlayerSettings().copyWith(ipVersion: mode).toJson())
+              .ipVersion,
+          mode);
     }
   });
 }

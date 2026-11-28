@@ -4,12 +4,20 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:material_ui/material_ui.dart';
 
-const _item = VideoItem(id: 'dQw4w9WgXcQ', title: 'Video', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', duration: 212);
+const _item = VideoItem(
+    id: 'dQw4w9WgXcQ',
+    title: 'Video',
+    channel: 'Channel',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    duration: 212);
 
 /// The hover preview's frames; the prefetch starts with them.
-Finder get _preview => find.descendant(of: find.byType(VideoCard), matching: find.byType(AnimatedSwitcher));
+Finder get _preview =>
+    find.descendant(of: find.byType(VideoCard), matching: find.byType(AnimatedSwitcher));
 
-Widget _card() => Scaffold(body: Center(child: SizedBox(width: 320, height: 300, child: VideoCard(item: _item, onOpen: () {}))));
+Widget _card() => Scaffold(
+    body: Center(
+        child: SizedBox(width: 320, height: 300, child: VideoCard(item: _item, onOpen: () {}))));
 
 Future<TestGesture> _hover(WidgetTester tester) async {
   final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -20,7 +28,8 @@ Future<TestGesture> _hover(WidgetTester tester) async {
   return mouse;
 }
 
-PageRouteBuilder<void> _route(Duration duration, Widget page, {bool opaque = true}) => PageRouteBuilder<void>(
+PageRouteBuilder<void> _route(Duration duration, Widget page, {bool opaque = true}) =>
+    PageRouteBuilder<void>(
       opaque: opaque,
       transitionDuration: duration,
       pageBuilder: (context, _, __) => page,

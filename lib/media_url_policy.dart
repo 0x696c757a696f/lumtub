@@ -18,7 +18,12 @@ bool isAllowedMediaUrl(String url, {Iterable<String> trustedHosts = const []}) {
 
 /// A DNS name, not an IP literal in any spelling, localhost or `.local`.
 bool _isPublicName(String host) {
-  if (host.isEmpty || host == 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return false;
+  if (host.isEmpty ||
+      host == 'localhost' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.local')) {
+    return false;
+  }
   if (InternetAddress.tryParse(host) != null) return false;
   // 2130706433 and 0x7f.1 are addresses to some resolvers: the last label must be a name.
   final last = host.split('.').last;
@@ -27,8 +32,8 @@ bool _isPublicName(String host) {
 
 bool isYoutubeMediaHost(String host) => _isYoutubeHost(host);
 
-bool _isYoutubeHost(String host) =>
-    const ['googlevideo.com', 'youtube.com', 'ytimg.com'].any((domain) => host == domain || host.endsWith('.$domain'));
+bool _isYoutubeHost(String host) => const ['googlevideo.com', 'youtube.com', 'ytimg.com']
+    .any((domain) => host == domain || host.endsWith('.$domain'));
 
 final _resolved = <String, ({DateTime at, bool public})>{};
 
@@ -43,14 +48,18 @@ final _resolved = <String, ({DateTime at, bool public})>{};
 /// is accepted: only a Piped or Invidious server in use (picked by the
 /// user or from the public list) can try it, and what it reaches is a GET
 /// the player makes, whose reply is played, not read back.
-Future<bool> resolvesToPublicAddress(String host, {Future<List<InternetAddress>> Function(String host)? lookup}) async {
+Future<bool> resolvesToPublicAddress(String host,
+    {Future<List<InternetAddress>> Function(String host)? lookup}) async {
   final key = host.toLowerCase();
   final known = _resolved[key];
-  if (known != null && DateTime.now().difference(known.at) < const Duration(minutes: 5)) return known.public;
+  if (known != null && DateTime.now().difference(known.at) < const Duration(minutes: 5)) {
+    return known.public;
+  }
   var public = true;
   try {
     final found = await (lookup ?? InternetAddress.lookup)(key).timeout(const Duration(seconds: 4));
-    public = !found.any((a) => isLocalHost(a.address) || a.isMulticast || a.address == '0.0.0.0' || a.address == '::');
+    public = !found.any((a) =>
+        isLocalHost(a.address) || a.isMulticast || a.address == '0.0.0.0' || a.address == '::');
   } catch (_) {}
   _resolved[key] = (at: DateTime.now(), public: public);
   return public;

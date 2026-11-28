@@ -26,8 +26,11 @@ enum PackKind {
 }
 
 class PackFile {
-  factory PackFile.fromJson(Map<String, dynamic> json) =>
-      PackFile(path: '${json['path']}', url: '${json['url']}', sha256: '${json['sha256']}', size: (json['size'] as num?)?.toInt() ?? 0);
+  factory PackFile.fromJson(Map<String, dynamic> json) => PackFile(
+      path: '${json['path']}',
+      url: '${json['url']}',
+      sha256: '${json['sha256']}',
+      size: (json['size'] as num?)?.toInt() ?? 0);
 
   const PackFile({required this.path, required this.url, required this.sha256, required this.size});
   final String path;
@@ -47,7 +50,9 @@ class Pack {
     required this.version,
     required this.kind,
     required this.titles,
-    required this.license, required this.files, this.descriptions = const {},
+    required this.license,
+    required this.files,
+    this.descriptions = const {},
     this.notice = '',
     this.source = '',
     this.minApp = '',
@@ -73,7 +78,10 @@ class Pack {
 
   static String? _inLanguage(Map<String, String> texts) {
     final tag = currentLanguage.tag;
-    return texts[tag] ?? texts[tag.split('-').first] ?? (tag.startsWith('zh') ? texts['zh-Hans'] : null) ?? texts['en'];
+    return texts[tag] ??
+        texts[tag.split('-').first] ??
+        (tag.startsWith('zh') ? texts['zh-Hans'] : null) ??
+        texts['en'];
   }
 
   /// Whether this build can use it: made for its package and not newer
@@ -104,8 +112,13 @@ class Pack {
       notice: '${json['notice'] ?? ''}',
       source: '${json['source'] ?? ''}',
       minApp: '${json['minApp'] ?? ''}',
-      platforms: [for (final p in json['platforms'] is List ? json['platforms'] as List : const []) '$p'],
-      files: [for (final f in files) if (f is Map<String, dynamic>) PackFile.fromJson(f)],
+      platforms: [
+        for (final p in json['platforms'] is List ? json['platforms'] as List : const []) '$p'
+      ],
+      files: [
+        for (final f in files)
+          if (f is Map<String, dynamic>) PackFile.fromJson(f)
+      ],
     );
   }
 
@@ -130,7 +143,8 @@ class InstalledPack {
   final Pack pack;
   final Directory folder;
 
-  File file(String path) => File('${folder.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}');
+  File file(String path) => File(
+      '${folder.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}');
 }
 
 /// Data packs (models, language data, shaders, runtimes) downloaded only
@@ -148,7 +162,8 @@ class PackManager extends ChangeNotifier {
   final Directory root;
   final ToolManager tools;
 
-  static final catalogUri = Uri.parse('https://github.com/0x696c757a696f/lumtub/releases/download/packs/packs.json');
+  static final catalogUri =
+      Uri.parse('https://github.com/0x696c757a696f/lumtub/releases/download/packs/packs.json');
   static final signatureUri = Uri.parse('$catalogUri.sig');
 
   static String get _sep => Platform.pathSeparator;
@@ -192,7 +207,9 @@ class PackManager extends ChangeNotifier {
   /// Reads the catalog kept and the packs on this device.
   Future<void> load() async {
     final folder = root.path;
-    final answer = NativeCore.instance == null ? const <String, dynamic>{} : await _inIsolate('lumtub_packs_in', jsonEncode({'folder': folder}));
+    final answer = NativeCore.instance == null
+        ? const <String, dynamic>{}
+        : await _inIsolate('lumtub_packs_in', jsonEncode({'folder': folder}));
     _catalogVersion = (answer['version'] as num?)?.toInt() ?? 0;
     _catalog = [
       for (final p in answer['packs'] is List ? answer['packs'] as List : const [])
@@ -209,7 +226,11 @@ class PackManager extends ChangeNotifier {
       if (idFolder is! Directory) continue;
       final versions = <Directory>[];
       await for (final v in idFolder.list()) {
-        if (v is Directory && !v.path.endsWith('.new') && await File('${v.path}$_sep$_entry').exists()) versions.add(v);
+        if (v is Directory &&
+            !v.path.endsWith('.new') &&
+            await File('${v.path}$_sep$_entry').exists()) {
+          versions.add(v);
+        }
       }
       versions.sort((a, b) => compareVersionFolders(a.path, b.path));
       for (final version in versions) {
@@ -253,10 +274,12 @@ class PackManager extends ChangeNotifier {
           final signature = File('${temp.path}${_sep}packs.json.sig');
           await _get(catalogUri, json, most: 4 << 20);
           await _get(signatureUri, signature, most: 64 << 10);
-          final ask = jsonEncode({'file': json.path, 'signature': signature.path, 'folder': root.path});
+          final ask =
+              jsonEncode({'file': json.path, 'signature': signature.path, 'folder': root.path});
           final answer = await _inIsolate('lumtub_packs_take', ask);
           if (answer['error'] case final String problem) throw FormatException(problem);
-          logInfo('Pack catalog ${answer['version']} with ${answer['packs']} pack(s)${answer['newer'] == true ? '' : ' (already kept)'}');
+          logInfo(
+              'Pack catalog ${answer['version']} with ${answer['packs']} pack(s)${answer['newer'] == true ? '' : ' (already kept)'}');
           await load();
         } catch (e) {
           error = '$e';
@@ -321,7 +344,9 @@ class PackManager extends ChangeNotifier {
           if (await target.exists()) await target.delete(recursive: true);
           await staging.rename(target.path);
           await for (final other in folder.list()) {
-            if (other is Directory && other.path != target.path && !other.path.endsWith('.new')) await _removeQuietly(other);
+            if (other is Directory && other.path != target.path && !other.path.endsWith('.new')) {
+              await _removeQuietly(other);
+            }
           }
           logInfo('Installed pack $id ${pack.version}');
           await load();
@@ -339,7 +364,9 @@ class PackManager extends ChangeNotifier {
   /// Downloads [file] into [into], going on from a part left by an earlier
   /// try, and checks its size and SHA-256.
   Future<void> _download(PackFile file, File into, void Function(int received) onProgress) async {
-    if (await into.exists() && await into.length() == file.size && await tools.sha256Of(into) == file.sha256) {
+    if (await into.exists() &&
+        await into.length() == file.size &&
+        await tools.sha256Of(into) == file.sha256) {
       onProgress(file.size);
       return;
     }
@@ -349,7 +376,8 @@ class PackManager extends ChangeNotifier {
       await part.delete();
       have = 0;
     }
-    final reply = await tools.sendRetrying(Uri.parse(file.url), headers: {if (have > 0) 'Range': 'bytes=$have-'});
+    final reply = await tools
+        .sendRetrying(Uri.parse(file.url), headers: {if (have > 0) 'Range': 'bytes=$have-'});
     if (reply.statusCode == 200) {
       have = 0;
     } else if (reply.statusCode != 206) {
@@ -361,7 +389,9 @@ class PackManager extends ChangeNotifier {
     try {
       await for (final chunk in reply.stream.timeout(const Duration(seconds: 90))) {
         received += chunk.length;
-        if (received > file.size) throw const FormatException('The file is larger than the catalog says');
+        if (received > file.size) {
+          throw const FormatException('The file is larger than the catalog says');
+        }
         sink.add(chunk);
         onProgress(received);
       }
@@ -418,4 +448,5 @@ class PackManager extends ChangeNotifier {
 /// function, so the closure sent there holds only these two strings: one
 /// made inside a method can carry the method's whole context, futures too,
 /// which an isolate refuses.
-Future<Map<String, dynamic>> _inIsolate(String name, String ask) => Isolate.run(() => callCoreJson(name, ask));
+Future<Map<String, dynamic>> _inIsolate(String name, String ask) =>
+    Isolate.run(() => callCoreJson(name, ask));

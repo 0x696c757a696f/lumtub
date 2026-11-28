@@ -11,9 +11,13 @@ void main() {
   }
 
   test('tells a refused relay from other refusals', () {
-    expect(loopbackRefused('tcp: Connection to tcp://127.0.0.1:49620 failed: Connection refused'), isTrue);
+    expect(loopbackRefused('tcp: Connection to tcp://127.0.0.1:49620 failed: Connection refused'),
+        isTrue);
     expect(loopbackRefused('Failed to open http://localhost:4000/abc: Connection refused'), isTrue);
-    expect(loopbackRefused('tcp: Connection to tcp://rr3---sn.googlevideo.com:443 failed: Connection refused'), isFalse);
+    expect(
+        loopbackRefused(
+            'tcp: Connection to tcp://rr3---sn.googlevideo.com:443 failed: Connection refused'),
+        isFalse);
     expect(loopbackRefused('Failed to open http://127.0.0.1:49620/abc: HTTP 404'), isFalse);
   });
 
@@ -66,7 +70,8 @@ void _tests(bool native) {
       request.response.add(data.sublist(from, to + 1));
       await request.response.close();
     });
-    relay = native ? NativeRelay(NativeCore.instance!, chunkSize: 300) : ChunkedRelay(chunkSize: 300);
+    relay =
+        native ? NativeRelay(NativeCore.instance!, chunkSize: 300) : ChunkedRelay(chunkSize: 300);
     await relay.start();
   });
 
@@ -85,7 +90,8 @@ void _tests(bool native) {
     return (response.statusCode, bytes, response.headers);
   }
 
-  String source() => 'http://127.0.0.1:${upstream.port}/videoplayback?itag=137&clen=${data.length}&mime=video%2Fmp4&sig=a%2Bb';
+  String source() =>
+      'http://127.0.0.1:${upstream.port}/videoplayback?itag=137&clen=${data.length}&mime=video%2Fmp4&sig=a%2Bb';
 
   test('serves a whole stream in small upstream pieces', () async {
     final address = relay.register(source())!;

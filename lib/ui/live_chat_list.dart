@@ -21,6 +21,7 @@ class LiveChatList extends StatefulWidget {
 
 class LiveChatListState extends State<LiveChatList> {
   final _scroll = ScrollController();
+
   /// The newest message shown while scrolled up; null while following.
   /// Held by the message itself, not by a count: once the chat is at its
   /// cap the count stays the same as the oldest are dropped.
@@ -59,7 +60,10 @@ class LiveChatListState extends State<LiveChatList> {
       _holding = false;
       _held = null;
     });
-    if (_scroll.hasClients) unawaited(Motion.scrollTo(_scroll, 0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
+    if (_scroll.hasClients) {
+      unawaited(Motion.scrollTo(_scroll, 0,
+          duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
+    }
   }
 
   /// How many messages, from the oldest, show while held.
@@ -97,7 +101,8 @@ class LiveChatListState extends State<LiveChatList> {
             child: FilledButton.tonalIcon(
               onPressed: _toLatest,
               icon: Icon(AppIcons.caretDown, size: 16),
-              label: Text(waiting > 0 ? tr('{0} new messages', [waiting]) : tr('Back to the latest')),
+              label:
+                  Text(waiting > 0 ? tr('{0} new messages', [waiting]) : tr('Back to the latest')),
             ),
           ),
         ),

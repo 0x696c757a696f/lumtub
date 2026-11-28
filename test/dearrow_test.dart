@@ -6,7 +6,8 @@ import 'package:lumtub/player_settings.dart';
 void main() {
   test('reads the best title and frame that are not YouTube\'s own', () {
     const id = 'dQw4w9WgXcQ';
-    expect(DeArrow.requestUri(id).toString(), 'https://sponsor.ajay.app/api/branding/${DeArrow.hashPrefix(id)}');
+    expect(DeArrow.requestUri(id).toString(),
+        'https://sponsor.ajay.app/api/branding/${DeArrow.hashPrefix(id)}');
     expect(DeArrow.hashPrefix(id), hasLength(4));
     final branding = DeArrow.parse('''{
       "other": {"titles": [{"title": "Not this one", "votes": 5, "locked": false, "original": false}]},
@@ -21,8 +22,11 @@ void main() {
     }''', id);
     expect(branding.title, 'Rick Astley sings Never Gonna Give You Up');
     expect(branding.thumbnailTime, 42.5);
-    expect(DeArrow.thumbnailUri(id, 42.5).toString(), 'https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=$id&time=42.5');
-    final original = DeArrow.parse('{"$id": {"titles": [{"title": "Same", "votes": 3, "original": true}], "thumbnails": [{"original": true, "votes": 2}]}}', id);
+    expect(DeArrow.thumbnailUri(id, 42.5).toString(),
+        'https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=$id&time=42.5');
+    final original = DeArrow.parse(
+        '{"$id": {"titles": [{"title": "Same", "votes": 3, "original": true}], "thumbnails": [{"original": true, "votes": 2}]}}',
+        id);
     expect(original.title, isNull);
     expect(original.thumbnailTime, isNull);
     expect(DeArrow.parse('[]', id).title, isNull);
@@ -41,7 +45,9 @@ void main() {
     thumbnails = true;
     expect(deArrow.thumbnailOf('aaaaaaaaaaa')?.queryParameters['time'], '10.0');
     expect(const PlayerSettings().deArrowTitles, isFalse);
-    expect(PlayerSettings.fromJson(const PlayerSettings(deArrowTitles: true).toJson()).deArrowTitles, isTrue);
+    expect(
+        PlayerSettings.fromJson(const PlayerSettings(deArrowTitles: true).toJson()).deArrowTitles,
+        isTrue);
     deArrow.configure(http.Client(), titles: () => false, thumbnails: () => false);
   });
 }

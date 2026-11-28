@@ -13,41 +13,63 @@ import '../video_repository.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.gather = 1.5, this.pages = 25, this.name, this.dropped, this.trickle = false});
+  VideoListLoader(this._open,
+      {this.pageSize = 20,
+      this.limit,
+      this.where,
+      this.matches,
+      this.rank,
+      this.fill = 1,
+      this.readAhead = true,
+      this.gather = 1.5,
+      this.pages = 25,
+      this.name,
+      this.dropped,
+      this.trickle = false});
 
   final Listing Function() _open;
   final int pageSize;
+
   /// Stop after this many videos, if set.
   final int? limit;
+
   /// Leaves out videos that fail this test, such as the one playing.
   final bool Function(VideoItem item)? where;
+
   /// Keeps only entries whose title passes, such as a search inside one
   /// channel tab. Pages that add nothing are skipped over, up to a limit.
   final bool Function(String title)? matches;
+
   /// Orders the videos, highest first. Candidates are gathered a little
   /// ahead of what shows, and each page shows the best of all gathered so
   /// far: one not shown yet still competes with those found later, instead
   /// of each page being ordered on its own.
   final double Function(VideoItem item)? rank;
+
   /// With [where] or [matches], pages are read until this many entries
   /// show, so a strict filter still leaves something to scroll.
   final int fill;
+
   /// Whether ranked candidates are gathered a few pages ahead. Off where
   /// each entry costs a lookup, such as the explore language filter: what
   /// was found then shows as it is found.
   final bool readAhead;
+
   /// With [readAhead], candidates are gathered until this many pages'
   /// worth wait (reading at most twice that many pages more), so the best
   /// shows first from a wider choice.
   final double gather;
+
   /// At most this many pages are read for one [loadMore] while the filters
   /// leave nothing to show; the next [loadMore] reads on from there.
   final int pages;
+
   /// What the list is, for the log; a list that comes back empty is logged
   /// with how many entries were read and, from [dropped], why they were
   /// left out.
   final String? name;
   final Map<String, int>? dropped;
+
   /// Shows the videos read so far while a page is still being read, at
   /// most a few times a second, for a source slow enough that waiting for
   /// a whole page looks like nothing came (yt-dlp on a phone, which reads
@@ -55,10 +77,13 @@ class VideoListLoader extends ChangeNotifier {
   final bool trickle;
 
   List<VideoItem> items = const [];
+
   /// Set while the list is put away: it reads no further pages by itself.
   bool paused = false;
+
   /// Channels the listing found; only searches list them.
   List<ChannelResult> channels = const [];
+
   /// Playlists the listing found.
   List<PlaylistResult> playlists = const [];
   bool loading = false;
@@ -68,14 +93,18 @@ class VideoListLoader extends ChangeNotifier {
   Listing? _listing;
   StreamSubscription<Object>? _subscription;
   final _seen = <String>{};
+
   /// Ranked candidates not shown yet.
   final _pool = <(VideoItem, double)>[];
+
   /// The rank of each video shown, so the ones a [loadMore] is still adding
   /// can be ordered again as better ones arrive.
   final _scores = <String, double>{};
+
   /// Where the videos the current [loadMore] adds begin.
   int _roundStart = 0;
   bool _disposed = false;
+
   /// Entries read from the listing so far, shown or not.
   int _read = 0;
   int get read => _read;
@@ -86,7 +115,12 @@ class VideoListLoader extends ChangeNotifier {
 
   /// Waits before each automatic retry after a failure, longer each time;
   /// once they are used up only the 重试 button tries again.
-  static List<Duration> retryDelays = const [Duration(seconds: 5), Duration(seconds: 15), Duration(seconds: 45), Duration(minutes: 2)];
+  static List<Duration> retryDelays = const [
+    Duration(seconds: 5),
+    Duration(seconds: 15),
+    Duration(seconds: 45),
+    Duration(minutes: 2)
+  ];
 
   /// Loaders waiting to retry. When any loader gets an answer the network
   /// is back, so these retry at once instead of waiting their turn.
@@ -95,14 +129,21 @@ class VideoListLoader extends ChangeNotifier {
   Timer? _retryTimer;
 
   /// Errors a retry would only make worse, or cannot fix.
-  static final _noRetry = RegExp(r'429|Too Many Requests|Sign in to confirm|not a bot|Private video|unavailable', caseSensitive: false);
+  static final _noRetry = RegExp(
+      r'429|Too Many Requests|Sign in to confirm|not a bot|Private video|unavailable',
+      caseSensitive: false);
 
   /// The error as it came, which [error] shows in plainer words.
   String? _cause;
 
   void _scheduleRetry() {
     final message = error == null ? null : _cause ?? error;
-    if (_disposed || message == null || _noRetry.hasMatch(message) || _retries >= retryDelays.length) return;
+    if (_disposed ||
+        message == null ||
+        _noRetry.hasMatch(message) ||
+        _retries >= retryDelays.length) {
+      return;
+    }
     _failing.add(this);
     _retryTimer?.cancel();
     _retryTimer = Timer(retryDelays[_retries++], _retryNow);
@@ -179,7 +220,11 @@ class VideoListLoader extends ChangeNotifier {
           if ((match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
           pendingPlaylists.add(entry);
         } else if (entry is VideoItem) {
-          if (where?.call(entry) == false || (match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
+          if (where?.call(entry) == false ||
+              (match != null && !match(entry.title)) ||
+              !_seen.add(entry.id)) {
+            return;
+          }
           if (limit != null && items.length + pendingVideos.length >= limit!) return;
           pendingVideos.add(entry);
           shown++;
@@ -214,7 +259,10 @@ class VideoListLoader extends ChangeNotifier {
         // candidates shows first.
         final wanting = order == null
             ? (matches != null || where != null) && shown < fill
-            : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < (pageSize * gather).ceil() && skipped < (gather * 2).ceil());
+            : (_pool.length < fill && (matches != null || where != null)) ||
+                (readAhead &&
+                    _pool.length < (pageSize * gather).ceil() &&
+                    skipped < (gather * 2).ceil());
         if (error == null && more && wanting && skipped < pages - 1 && !_disposed && !paused) {
           // What was found so far shows while the next page is read.
           if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
@@ -233,7 +281,11 @@ class VideoListLoader extends ChangeNotifier {
           error = friendlyError(late);
         }
         if (items.isEmpty && error == null && !more && !_disposed) {
-          final why = dropped == null || dropped!.isEmpty ? '' : ', dropped ${[for (final e in dropped!.entries) '${e.value} (${e.key})'].join(', ')}';
+          final why = dropped == null || dropped!.isEmpty
+              ? ''
+              : ', dropped ${[
+                  for (final e in dropped!.entries) '${e.value} (${e.key})'
+                ].join(', ')}';
           if (name != null) logInfo('$name has no videos to show: read $_read entries$why');
           // Nothing came back at all, as happens for a while after the
           // first launch: tried again a little later before the list is
@@ -269,7 +321,10 @@ class VideoListLoader extends ChangeNotifier {
     if (_pool.isEmpty) return;
     final reorder = !readAhead && _roundStart < items.length;
     if (reorder) {
-      _pool.addAll([for (final item in items.sublist(_roundStart)) (item, _scores[item.id] ?? double.negativeInfinity)]);
+      _pool.addAll([
+        for (final item in items.sublist(_roundStart))
+          (item, _scores[item.id] ?? double.negativeInfinity)
+      ]);
       items = items.sublist(0, _roundStart);
     }
     _pool.sort((a, b) => b.$2.compareTo(a.$2));

@@ -31,7 +31,8 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
   AppController get _controller => widget.controller;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(listenable: _controller, builder: (context, _) => _build(context));
+  Widget build(BuildContext context) =>
+      ListenableBuilder(listenable: _controller, builder: (context, _) => _build(context));
 
   Widget _build(BuildContext context) {
     final saved = _controller.preferences.danmaku;
@@ -49,7 +50,9 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
             Text(value, style: TextStyle(color: colors.outline)),
           ]),
         );
-    Widget slider(double value, double min, double max, int divisions, DanmakuSettings Function(double) apply) => Slider(
+    Widget slider(double value, double min, double max, int divisions,
+            DanmakuSettings Function(double) apply) =>
+        Slider(
           value: value.clamp(min, max),
           min: min,
           max: max,
@@ -61,7 +64,8 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
     return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
       SwitchListTile(
         title: Text(tr('Show bullet chat')),
-        subtitle: Text(tr('Live chat, chat replays and comments that name a moment fly across the picture')),
+        subtitle: Text(
+            tr('Live chat, chat replays and comments that name a moment fly across the picture')),
         value: s.enabled,
         onChanged: (on) => save(s.copyWith(enabled: on)),
       ),
@@ -76,10 +80,16 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         // Chips wrap onto a second line where the names run long.
         child: Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final (area, name) in [(0.25, tr('Top quarter')), (0.5, tr('Top half')), (1.0, tr('Fullscreen'))])
+          for (final (area, name) in [
+            (0.25, tr('Top quarter')),
+            (0.5, tr('Top half')),
+            (1.0, tr('Fullscreen'))
+          ])
             ChoiceChip(
               label: Text(name),
-              selected: area == DanmakuSettings.areas.reduce((a, b) => (a - s.area).abs() <= (b - s.area).abs() ? a : b),
+              selected: area ==
+                  DanmakuSettings.areas
+                      .reduce((a, b) => (a - s.area).abs() <= (b - s.area).abs() ? a : b),
               onSelected: s.enabled ? (_) => save(s.copyWith(area: area)) : null,
             ),
         ]),
@@ -91,7 +101,8 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
       ),
       SwitchListTile(
         title: Text(tr('Comments that name a moment')),
-        subtitle: Text(tr('On videos without a chat, a comment such as "1:23 the best part" flies at 1:23')),
+        subtitle: Text(
+            tr('On videos without a chat, a comment such as "1:23 the best part" flies at 1:23')),
         value: s.comments,
         onChanged: s.enabled ? (on) => save(s.copyWith(comments: on)) : null,
       ),

@@ -8,7 +8,12 @@ import 'haptics.dart';
 /// wide as the widest label, so six long labels outgrow a window long
 /// before tabs would, and a cut-off or crushed label is never shown.
 class FittingSegments<T> extends StatelessWidget {
-  const FittingSegments({super.key, required this.values, required this.label, required this.selected, required this.onSelected});
+  const FittingSegments(
+      {super.key,
+      required this.values,
+      required this.label,
+      required this.selected,
+      required this.onSelected});
   final List<T> values;
   final String Function(T value) label;
   final T selected;
@@ -23,7 +28,12 @@ class FittingSegments<T> extends StatelessWidget {
         final scaler = MediaQuery.textScalerOf(context);
         var widest = 0.0;
         for (final v in values) {
-          final painter = TextPainter(text: TextSpan(text: label(v), style: style), textDirection: Directionality.of(context), textScaler: scaler, maxLines: 1)..layout();
+          final painter = TextPainter(
+              text: TextSpan(text: label(v), style: style),
+              textDirection: Directionality.of(context),
+              textScaler: scaler,
+              maxLines: 1)
+            ..layout();
           if (painter.width > widest) widest = painter.width;
           painter.dispose();
         }
@@ -32,7 +42,10 @@ class FittingSegments<T> extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: SegmentedButton<T>(
               showSelectedIcon: false,
-              segments: [for (final v in values) ButtonSegment(value: v, label: Text(label(v), maxLines: 1, softWrap: false))],
+              segments: [
+                for (final v in values)
+                  ButtonSegment(value: v, label: Text(label(v), maxLines: 1, softWrap: false))
+              ],
               selected: {selected},
               onSelectionChanged: (value) {
                 Haptics.select();

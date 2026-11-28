@@ -23,12 +23,14 @@ class ReturnDislike {
   final http.Client _client;
   final _cache = <String, DislikeCount>{};
 
-  static Uri requestUri(String videoId) => Uri.https('returnyoutubedislikeapi.com', '/votes', {'videoId': videoId});
+  static Uri requestUri(String videoId) =>
+      Uri.https('returnyoutubedislikeapi.com', '/votes', {'videoId': videoId});
 
   Future<DislikeCount?> votes(String videoId) async {
     final cached = _cache[videoId];
     if (cached != null) return cached;
-    final response = await _client.get(requestUri(videoId), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
+    final response = await _client.get(requestUri(videoId),
+        headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) return null;
     final count = parse(response.body);
     if (count != null) {
@@ -41,6 +43,7 @@ class ReturnDislike {
   static DislikeCount? parse(String body) {
     final data = jsonDecode(body);
     if (data is! Map || data['dislikes'] is! num) return null;
-    return DislikeCount(likes: (data['likes'] as num? ?? 0).toInt(), dislikes: (data['dislikes'] as num).toInt());
+    return DislikeCount(
+        likes: (data['likes'] as num? ?? 0).toInt(), dislikes: (data['dislikes'] as num).toInt());
   }
 }

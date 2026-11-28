@@ -12,7 +12,13 @@ extension LibassLookActions on AppController {
   /// view scales text by [textScale] and its padding by [paddingScale].
   void subtitleViewChanged(Size view, double textScale, double paddingScale) {
     final last = _subtitleView;
-    if (last != null && (last.view.width - view.width).abs() < 2 && (last.view.height - view.height).abs() < 2 && last.textScale == textScale && last.paddingScale == paddingScale) return;
+    if (last != null &&
+        (last.view.width - view.width).abs() < 2 &&
+        (last.view.height - view.height).abs() < 2 &&
+        last.textScale == textScale &&
+        last.paddingScale == paddingScale) {
+      return;
+    }
     _subtitleView = (view: view, textScale: textScale, paddingScale: paddingScale);
     _queueLibassLook();
   }
@@ -30,7 +36,9 @@ extension LibassLookActions on AppController {
     if (platform is! NativePlayer || !libassDraws) return;
     final value = subtitlesOff ? 'no' : 'yes';
     for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
-      unawaited(platform.setProperty(name, value).catchError((Object e) => logDebug(() => 'Could not set $name: $e')));
+      unawaited(platform
+          .setProperty(name, value)
+          .catchError((Object e) => logDebug(() => 'Could not set $name: $e')));
     }
   }
 
@@ -44,7 +52,9 @@ extension LibassLookActions on AppController {
     // Android found no font for this video's script: the Flutter view draws.
     if (libassCantDraw && platform is NativePlayer) {
       for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
-        unawaited(platform.setProperty(name, 'no').catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
+        unawaited(platform
+            .setProperty(name, 'no')
+            .catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
       }
     }
     if (subtitlesOff) _showLibassSubtitles();
@@ -54,8 +64,20 @@ extension LibassLookActions on AppController {
   /// The look for the player now: its laid-out size when known.
   LibassLook get _libassLook {
     final view = _subtitleView;
-    if (view == null) return LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale);
-    return LibassLook.of(view: view.view, aspect: _canvasAspect, textScale: view.textScale, paddingScale: view.paddingScale, position: settings.subtitlePosition, border: settings.subtitleBorder);
+    if (view == null) {
+      return LibassLook.standard(
+          position: settings.subtitlePosition,
+          border: settings.subtitleBorder,
+          byHeight: Platform.isAndroid || Platform.isIOS,
+          caption: Device.captionScale);
+    }
+    return LibassLook.of(
+        view: view.view,
+        aspect: _canvasAspect,
+        textScale: view.textScale,
+        paddingScale: view.paddingScale,
+        position: settings.subtitlePosition,
+        border: settings.subtitleBorder);
   }
 
   double get _videoAspect {
@@ -71,7 +93,9 @@ extension LibassLookActions on AppController {
   /// takes the player's shape while libmpv draws subtitles.
   double get _canvasAspect {
     final view = _subtitleView?.view;
-    final whole = Platform.isIOS ? !_coverVideo && !IosVideoLayer.active.value : _outputSize?.canvasShaped ?? false;
+    final whole = Platform.isIOS
+        ? !_coverVideo && !IosVideoLayer.active.value
+        : _outputSize?.canvasShaped ?? false;
     if (!whole || view == null || view.isEmpty) return _videoAspect;
     return view.width / view.height;
   }
@@ -93,7 +117,8 @@ extension LibassLookActions on AppController {
     if (again) _libassSent = {};
     _libassLookTimer?.cancel();
     if (!settings.libassSubtitles || player?.platform is! NativePlayer) return;
-    _libassLookTimer = Timer(const Duration(milliseconds: 120), () => unawaited(_applyLibassLook()));
+    _libassLookTimer =
+        Timer(const Duration(milliseconds: 120), () => unawaited(_applyLibassLook()));
   }
 
   /// Sends libmpv the subtitle options that changed for the player's size,
@@ -134,10 +159,12 @@ extension LibassLookActions on AppController {
   }
 
   /// The room a line has, in letters: copies are wrapped to it.
-  int _roomEms(double scale) => LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _canvasAspect).floor();
+  int _roomEms(double scale) =>
+      LibassLayout.roomEms(em: _libassLook.em, scale: scale, aspect: _canvasAspect).floor();
 
   /// What the copy of the main subtitle depends on: where it wraps.
-  String get _mainCopyKey => 'main|${_roomEms(settings.subtitleScale)}|${linuxScriptFamilies.keys.join('+')}';
+  String get _mainCopyKey =>
+      'main|${_roomEms(settings.subtitleScale)}|${linuxScriptFamilies.keys.join('+')}';
 
   /// What the styled copy of a second subtitle depends on.
   String get _secondCopyKey => _secondCopyKeyFor(secondBlurred);
@@ -173,14 +200,19 @@ extension LibassLookActions on AppController {
   /// How much bigger than [secondEm] the copy's letters are drawn without
   /// secondary-sub-scale: mpv older than 0.42 scales an ASS second
   /// subtitle by the main one's sub-scale instead.
-  double get _secondCopyScale => _secondScaleMissing ? _libassLook.em / secondEm / max(settings.subtitleScale, 0.01) : 1;
+  double get _secondCopyScale =>
+      _secondScaleMissing ? _libassLook.em / secondEm / max(settings.subtitleScale, 0.01) : 1;
 
   /// Asks [player]'s libmpv once whether it has secondary-sub-scale.
   Future<void> _askSecondScale(Player player, NativePlayer platform) async {
     if (identical(_secondScaleAsked, player)) return;
     final missing = (await platform.getProperty('secondary-sub-scale')).isEmpty;
     _secondScaleAsked = player;
-    if (missing != _secondScaleMissing) logInfo(missing ? 'libmpv has no secondary-sub-scale: the second subtitle carries its own size' : 'libmpv has secondary-sub-scale');
+    if (missing != _secondScaleMissing) {
+      logInfo(missing
+          ? 'libmpv has no secondary-sub-scale: the second subtitle carries its own size'
+          : 'libmpv has secondary-sub-scale');
+    }
     _secondScaleMissing = missing;
   }
 
@@ -188,7 +220,11 @@ extension LibassLookActions on AppController {
   String get _mainSource => _subtitleCopies[_mainTrackId]?.source ?? _mainTrackId;
 
   /// The font libmpv draws the main subtitle in.
-  String get _mainFont => _drawnFamily ?? (settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont));
+  String get _mainFont =>
+      _drawnFamily ??
+      (settings.subtitleFont.isEmpty
+          ? 'sans-serif'
+          : PlayerSettings.fontForThisSystem(settings.subtitleFont));
 
   /// The family libmpv draws the main subtitle in, where the settings alone
   /// do not say it: on Android and iOS the one that draws this video's
@@ -197,7 +233,8 @@ extension LibassLookActions on AppController {
   String? get _drawnFamily {
     if (Platform.isAndroid || Platform.isIOS) return _subtitleFamily;
     if (settings.subtitleFont.isEmpty) return null;
-    return PlayerSettings.fontForThisSystem(settings.subtitleFont, language: player?.state.track.subtitle.language ?? '');
+    return PlayerSettings.fontForThisSystem(settings.subtitleFont,
+        language: player?.state.track.subtitle.language ?? '');
   }
 
   /// Whether the subtitle track [id] is Lumtub's copy of another, which
@@ -228,7 +265,9 @@ extension LibassLookActions on AppController {
     if (moved == null && !_restyleNeeded) return;
     // One at a time: each starts from what the one before put on screen.
     final serial = _copySerial;
-    _restyling = _restyling.then((_) => _restyleNow(player, serial, moved)).catchError((Object e) => logWarn('Could not copy the subtitles: $e'));
+    _restyling = _restyling
+        .then((_) => _restyleNow(player, serial, moved))
+        .catchError((Object e) => logWarn('Could not copy the subtitles: $e'));
   }
 
   /// Whether either subtitle may need a copy made, swapped or taken away.
@@ -243,7 +282,9 @@ extension LibassLookActions on AppController {
     }
 
     // 模糊翻译 keeps the second subtitle's plain and blurred copies both.
-    return wrong(main, false) || wrong(secondaryTrackId, true) || _subtitleCopies.length > (settings.blurSecondary ? 3 : 2);
+    return wrong(main, false) ||
+        wrong(secondaryTrackId, true) ||
+        _subtitleCopies.length > (settings.blurSecondary ? 3 : 2);
   }
 
   Future<void> _restyleNow(Player player, int serial, ({String old, String now})? moved) async {
@@ -262,31 +303,39 @@ extension LibassLookActions on AppController {
       final copy = _subtitleCopies[shown];
       var source = copy?.source ?? shown;
       if (moved != null && source == moved.old) source = moved.now;
-      final wanted = libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
+      final wanted =
+          libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
       if (second && (_subtitleCopies[wanted]?.key.endsWith(_quickMark) ?? false)) quick = true;
       if (!current()) return;
       if (wanted != shown) {
         await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
         // mpv may have shown the track in the other place too.
-        if (second && await platform.getProperty('sid') == wanted) await platform.setProperty('sid', source);
+        if (second && await platform.getProperty('sid') == wanted) {
+          await platform.setProperty('sid', source);
+        }
         if (!second) await syncMainSubtitle();
       }
       // Hidden while its copy was made (the secondary-sid listener); shown
       // now in its own style, or as it is where no copy could be made.
-      if (second) await platform.setProperty('secondary-sub-visibility', libassDraws && !subtitlesOff ? 'yes' : 'no');
+      if (second) {
+        await platform.setProperty(
+            'secondary-sub-visibility', libassDraws && !subtitlesOff ? 'yes' : 'no');
+      }
     }
     // The second subtitle went on with the lines around now only: the
     // whole track follows (the restyle sees the quick copy's key).
     if (quick && current()) _restyleSubtitles(player);
     // Copies neither subtitle shows any more: a growing translation would
     // pile them up in mpv's track list.
-    final main = await platform.getProperty('sid'), secondShown = await platform.getProperty('secondary-sid');
+    final main = await platform.getProperty('sid'),
+        secondShown = await platform.getProperty('secondary-sid');
     // 模糊翻译: the second subtitle's other copy, blurred or plain, is kept
     // ready, so showing or blurring it swaps tracks at once.
     String? other;
     final secondSource = _subtitleCopies[secondShown]?.source;
     if (!quick && libassDraws && settings.blurSecondary && secondSource != null && current()) {
-      other = await _copyFor(platform, secondSource, second: true, current: current, blurred: !secondBlurred);
+      other = await _copyFor(platform, secondSource,
+          second: true, current: current, blurred: !secondBlurred);
     }
     for (final id in [..._subtitleCopies.keys]) {
       if (id == main || id == secondShown || id == other || !current()) continue;
@@ -304,11 +353,14 @@ extension LibassLookActions on AppController {
   /// track itself where it needs none or none can be made.
   /// [blurred] asks for the second subtitle's copy blurred or not, made
   /// whole at once, rather than as it shows now.
-  Future<String> _copyFor(NativePlayer platform, String source, {required bool second, required bool Function() current, bool? blurred}) async {
+  Future<String> _copyFor(NativePlayer platform, String source,
+      {required bool second, required bool Function() current, bool? blurred}) async {
     final blur = second && (blurred ?? secondBlurred);
     var key = second ? _secondCopyKeyFor(blur) : _mainCopyKey;
     final tracks = await mpvSubtitleTracks(platform);
-    final made = _subtitleCopies.entries.where((e) => e.value.source == source && e.value.key == key && tracks.containsKey(e.key)).firstOrNull;
+    final made = _subtitleCopies.entries
+        .where((e) => e.value.source == source && e.value.key == key && tracks.containsKey(e.key))
+        .firstOrNull;
     if (made != null) return made.key;
     final track = tracks[source];
     if (track == null || !second && _plainFits.contains('$source|$key')) return source;
@@ -318,8 +370,10 @@ extension LibassLookActions on AppController {
     // first copied for the lines around now, which takes a moment where
     // laying out all of them took a second or more on a phone; the whole
     // copy replaces it right after.
-    bool near(SubtitleCue c) => c.end >= _quickFrom && c.start <= _quickFrom + const Duration(seconds: 90);
-    final hasQuick = _subtitleCopies.values.any((c) => c.source == source && c.key == '$key$_quickMark');
+    bool near(SubtitleCue c) =>
+        c.end >= _quickFrom && c.start <= _quickFrom + const Duration(seconds: 90);
+    final hasQuick =
+        _subtitleCopies.values.any((c) => c.source == source && c.key == '$key$_quickMark');
     if (second && blurred == null && cues.length > 60 && !hasQuick) {
       _quickFrom = (player?.state.position ?? Duration.zero) - const Duration(seconds: 5);
       cues = cues.where(near).toList();
@@ -335,12 +389,19 @@ extension LibassLookActions on AppController {
           // In the character forms of the second subtitle's own language.
           : settings.secondaryFont.isEmpty
               ? null
-              : PlayerSettings.fontForThisSystem(settings.secondaryFont, language: track.language ?? '');
+              : PlayerSettings.fontForThisSystem(settings.secondaryFont,
+                  language: track.language ?? '');
       final mainTrack = tracks[_mainSource];
-      var mainCues = mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
+      var mainCues =
+          mainTrack == null ? const <SubtitleCue>[] : await _trackCues(platform, mainTrack);
       if (key.endsWith(_quickMark)) mainCues = mainCues.where(near).toList();
       if (!current()) return source;
-      final main = (cues: mainCues, font: _mainFont, room: _roomEms(settings.subtitleScale).toDouble(), wrapFont: settings.subtitleFont);
+      final main = (
+        cues: mainCues,
+        font: _mainFont,
+        room: _roomEms(settings.subtitleScale).toDouble(),
+        wrapFont: settings.subtitleFont
+      );
       final secondLanguage = track.language ?? '', mainLanguage = mainTrack?.language ?? '';
       text = secondAss(cues, settings,
           outline: look.em > 0 ? look.border / look.em : 0,
@@ -351,9 +412,11 @@ extension LibassLookActions on AppController {
           scale: _secondCopyScale,
           blurred: blur,
           runs: Platform.isAndroid || Platform.isIOS
-              ? (text, {required bool second}) => _runsAgainst(text, second ? font : _mainFont, second ? secondLanguage : mainLanguage)
+              ? (text, {required bool second}) => _runsAgainst(
+                  text, second ? font : _mainFont, second ? secondLanguage : mainLanguage)
               : Platform.isLinux
-                  ? (text, {required bool second}) => _mixedRuns(text, second ? secondLanguage : mainLanguage)
+                  ? (text, {required bool second}) =>
+                      _mixedRuns(text, second ? secondLanguage : mainLanguage)
                   : null);
     } else {
       final room = _roomEms(settings.subtitleScale).toDouble();
@@ -368,13 +431,15 @@ extension LibassLookActions on AppController {
           await Future<void>(() {});
           if (!current()) return source;
         }
-        final w = LibassLayout.wrap(c.text, room, font: settings.subtitleFont, bold: settings.subtitleBold);
+        final w = LibassLayout.wrap(c.text, room,
+            font: settings.subtitleFont, bold: settings.subtitleBold);
         wrapped.add(w);
         mixed.add(_mixedRuns(w, language));
       }
       // Nothing runs past the edges and no line mixes scripts: the track
       // shows as it is.
-      if (Iterable<int>.generate(cues.length).every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {
+      if (Iterable<int>.generate(cues.length)
+          .every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {
         _plainFits.add('$source|$key');
         return source;
       }
@@ -384,13 +449,20 @@ extension LibassLookActions on AppController {
           (
             start: c.start,
             end: c.end,
-            text: (mixed[i]?.map((r) => r.family == null ? r.text : '<font face="${r.family}">${r.text}</font>').join() ?? wrapped[i]).replaceAll(RegExp(r'\n\s*\n'), '\n'),
+            text: (mixed[i]
+                        ?.map((r) =>
+                            r.family == null ? r.text : '<font face="${r.family}">${r.text}</font>')
+                        .join() ??
+                    wrapped[i])
+                .replaceAll(RegExp(r'\n\s*\n'), '\n'),
           ),
       ]);
     }
-    final folder = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles');
+    final folder =
+        Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles');
     await folder.create(recursive: true);
-    final file = File('${folder.path}${Platform.pathSeparator}copy-${playing?.id ?? 'video'}-${_copyFiles++}.${second ? 'ass' : 'srt'}');
+    final file = File(
+        '${folder.path}${Platform.pathSeparator}copy-${playing?.id ?? 'video'}-${_copyFiles++}.${second ? 'ass' : 'srt'}');
     await file.writeAsString(text);
     if (!current()) {
       await file.delete();
@@ -398,12 +470,19 @@ extension LibassLookActions on AppController {
     }
     await platform.command(['sub-add', file.path, 'auto', track.title ?? '', track.language ?? '']);
     final list = jsonDecode(await platform.getProperty('track-list'));
-    final added = list is List ? list.whereType<Map<Object?, Object?>>().where((t) => t['type'] == 'sub' && t['external-filename'] == file.path).lastOrNull : null;
+    final added = list is List
+        ? list
+            .whereType<Map<Object?, Object?>>()
+            .where((t) => t['type'] == 'sub' && t['external-filename'] == file.path)
+            .lastOrNull
+        : null;
     if (added == null) return source;
     final id = '${added['id']}';
     _subtitleCopies[id] = (source: source, key: key, second: second, file: file.path);
     if (!current()) return source;
-    logInfo(second ? 'Second subtitle drawn in its own style (track $source as $id)' : 'Subtitle lines broken for libmpv (track $source as $id)');
+    logInfo(second
+        ? 'Second subtitle drawn in its own style (track $source as $id)'
+        : 'Subtitle lines broken for libmpv (track $source as $id)');
     // Its size (secondary-sub-scale) is sent with the player's look, which
     // may have gone out before this copy was there.
     if (second) _queueLibassLook();
@@ -420,7 +499,10 @@ extension LibassLookActions on AppController {
       final stretches = AndroidSubtitleFonts.stretches(text, linuxScriptFamilies);
       return stretches.any((r) => r.family != null) ? stretches : null;
     }
-    if (!(Platform.isAndroid || Platform.isIOS) || AndroidSubtitleFonts.familyFor(text, language: language) != null) return null;
+    if (!(Platform.isAndroid || Platform.isIOS) ||
+        AndroidSubtitleFonts.familyFor(text, language: language) != null) {
+      return null;
+    }
     final runs = AndroidSubtitleFonts.runs(text, language: language);
     return runs != null && runs.length > 1 ? runs : null;
   }
@@ -440,10 +522,14 @@ extension LibassLookActions on AppController {
     if (whole != null) return whole;
     final counts = <String, int>{};
     for (final line in sample.split('\n')) {
-      for (final run in AndroidSubtitleFonts.runs(line, language: language) ?? const <({String text, String family})>[]) {
+      for (final run in AndroidSubtitleFonts.runs(line, language: language) ??
+          const <({String text, String family})>[]) {
         counts[run.family] = (counts[run.family] ?? 0) + run.text.length;
       }
     }
-    return counts.entries.fold<MapEntry<String, int>?>(null, (best, e) => best == null || e.value > best.value ? e : best)?.key;
+    return counts.entries
+        .fold<MapEntry<String, int>?>(
+            null, (best, e) => best == null || e.value > best.value ? e : best)
+        ?.key;
   }
 }

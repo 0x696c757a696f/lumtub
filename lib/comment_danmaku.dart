@@ -35,9 +35,13 @@ List<LiveChatMessage> timedComments(Iterable<YoutubeComment> comments, {Duration
       final at = _time(match);
       if (at == null || (length != null && length > Duration.zero && at > length)) continue;
       var text = line.trim();
-      if (line.substring(0, match.start).trim().isEmpty) text = line.substring(match.end).replaceFirst(_lead, '').trim();
+      if (line.substring(0, match.start).trim().isEmpty) {
+        text = line.substring(match.end).replaceFirst(_lead, '').trim();
+      }
       if (text.isEmpty) continue;
-      if (text.runes.length > _longest) text = '${String.fromCharCodes(text.runes.take(_longest - 1))}…';
+      if (text.runes.length > _longest) {
+        text = '${String.fromCharCodes(text.runes.take(_longest - 1))}…';
+      }
       lines.add((at, text));
     }
     if (lines.isEmpty || lines.length > 3) continue;

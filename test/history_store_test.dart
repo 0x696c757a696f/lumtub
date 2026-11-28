@@ -23,7 +23,11 @@ void main() {
     await root.delete(recursive: true);
   });
 
-  VideoItem video(int i) => VideoItem(id: 'v${i.toString().padLeft(10, '0')}', title: 'Video $i', channel: 'Channel', url: 'https://www.youtube.com/watch?v=$i');
+  VideoItem video(int i) => VideoItem(
+      id: 'v${i.toString().padLeft(10, '0')}',
+      title: 'Video $i',
+      channel: 'Channel',
+      url: 'https://www.youtube.com/watch?v=$i');
 
   Future<HistoryStore> open() async {
     final store = HistoryStore(directories);
@@ -92,7 +96,8 @@ void main() {
 
   test('a file longer than the limit is trimmed on start', () async {
     final file = File('${directories.data.path}/watch_history.json');
-    await file.writeAsString(jsonEncode([for (var i = 0; i < historyLimit + 20; i++) video(i).toJson()]));
+    await file
+        .writeAsString(jsonEncode([for (var i = 0; i < historyLimit + 20; i++) video(i).toJson()]));
     final store = await open();
     expect(store.items.length, historyLimit);
     expect(store.items.first.id, video(0).id);
@@ -122,14 +127,16 @@ void main() {
     expect(jsonDecode(await store.file.readAsString()), isEmpty);
   });
 
-  test('a corrupt file is kept as .broken, the history starts empty and the failure is logged', () async {
+  test('a corrupt file is kept as .broken, the history starts empty and the failure is logged',
+      () async {
     final file = File('${directories.data.path}/watch_history.json');
     await file.writeAsString('[{"id": "abc", "ti');
     final store = await open();
     expect(store.items, isEmpty);
     expect(File('${file.path}.broken').readAsStringSync(), '[{"id": "abc", "ti');
     await AppLog.current!.flush();
-    expect(await AppLog.current!.file.readAsString(), contains('watch_history.json could not be read'));
+    expect(await AppLog.current!.file.readAsString(),
+        contains('watch_history.json could not be read'));
     await store.record(video(1));
     await store.flush();
     expect((await open()).items.length, 1);

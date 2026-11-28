@@ -12,8 +12,10 @@ void main() {
         yield List.filled(64 << 10, 1);
       }
     }
+
     final client = MockClient.streaming((request, _) async => http.StreamedResponse(pieces(), 200));
-    expect(await StoryboardSheets(client).sheet('https://i.ytimg.com/sb/x/storyboard3_L2/M0.jpg'), isNull);
+    expect(await StoryboardSheets(client).sheet('https://i.ytimg.com/sb/x/storyboard3_L2/M0.jpg'),
+        isNull);
     expect(sent, lessThan(160));
   });
 

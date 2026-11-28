@@ -198,11 +198,45 @@ enum ExploreRegion {
         'BD' => ExploreLanguage.bn,
         'TR' => ExploreLanguage.turkish,
         'IL' => ExploreLanguage.he,
-        'SA' || 'AE' || 'QA' || 'KW' || 'BH' || 'OM' || 'JO' || 'LB' || 'IQ' || 'YE' || 'EG' || 'MA' || 'DZ' || 'TN' || 'LY' => ExploreLanguage.ar,
+        'SA' ||
+        'AE' ||
+        'QA' ||
+        'KW' ||
+        'BH' ||
+        'OM' ||
+        'JO' ||
+        'LB' ||
+        'IQ' ||
+        'YE' ||
+        'EG' ||
+        'MA' ||
+        'DZ' ||
+        'TN' ||
+        'LY' =>
+          ExploreLanguage.ar,
         'FR' || 'BE' || 'LU' || 'SN' => ExploreLanguage.fr,
         'DE' || 'AT' || 'CH' => ExploreLanguage.de,
         'NL' => ExploreLanguage.nl,
-        'ES' || 'MX' || 'AR' || 'CL' || 'CO' || 'PE' || 'VE' || 'EC' || 'BO' || 'PY' || 'UY' || 'CR' || 'PA' || 'GT' || 'HN' || 'SV' || 'NI' || 'DO' || 'PR' => ExploreLanguage.es,
+        'ES' ||
+        'MX' ||
+        'AR' ||
+        'CL' ||
+        'CO' ||
+        'PE' ||
+        'VE' ||
+        'EC' ||
+        'BO' ||
+        'PY' ||
+        'UY' ||
+        'CR' ||
+        'PA' ||
+        'GT' ||
+        'HN' ||
+        'SV' ||
+        'NI' ||
+        'DO' ||
+        'PR' =>
+          ExploreLanguage.es,
         'PT' || 'BR' => ExploreLanguage.pt,
         'IT' => ExploreLanguage.it,
         'GR' || 'CY' => ExploreLanguage.el,
@@ -315,11 +349,13 @@ enum ExploreLanguage {
   final String _label;
   String get label => tr(_label);
 
-  static ExploreLanguage parse(Object? raw) => values.where((l) => l.name == raw).firstOrNull ?? any;
+  static ExploreLanguage parse(Object? raw) =>
+      values.where((l) => l.name == raw).firstOrNull ?? any;
 
   /// Whether [title] reads as this language.
   /// Without the library every title passes.
-  bool matches(String title) => this == any || NativeCore.instance == null || titleLanguage(title) == this;
+  bool matches(String title) =>
+      this == any || NativeCore.instance == null || titleLanguage(title) == this;
 
   /// The language's ISO 639-1 code, which translation takes.
   String get code => switch (this) {
@@ -362,7 +398,23 @@ enum ExploreLanguage {
   /// from when no region is picked; null where no one country leads.
   String? get homeCountry => switch (this) {
         // Searches from Iran bring no videos at all.
-        any || zh || en || es || ar || eo || la || sq || ti || am || hy || mn || my || tk || uz || fa => null,
+        any ||
+        zh ||
+        en ||
+        es ||
+        ar ||
+        eo ||
+        la ||
+        sq ||
+        ti ||
+        am ||
+        hy ||
+        mn ||
+        my ||
+        tk ||
+        uz ||
+        fa =>
+          null,
         ja => 'JP',
         ko => 'KR',
         fr => 'FR',
@@ -422,7 +474,8 @@ ExploreLanguage titleLanguage(String title) {
   if (core == null) return ExploreLanguage.any;
   if (_languages[title] case final known?) return known;
   final index = core.withText(title, core.titleLanguage);
-  final language = index < ExploreLanguage.values.length ? ExploreLanguage.values[index] : ExploreLanguage.any;
+  final language =
+      index < ExploreLanguage.values.length ? ExploreLanguage.values[index] : ExploreLanguage.any;
   if (_languages.length >= 4000) _languages.remove(_languages.keys.first);
   return _languages[title] = language;
 }
@@ -435,9 +488,12 @@ bool isTranslatedPhrase(String phrase) => nonLatinLetter.hasMatch(phrase);
 /// Lower-case words a search keeps in every language: titles write them
 /// the same everywhere.
 const keptSearchWords = {
-  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hololive', 'hop', 'imam', 'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
-  'macos', 'mandala', 'manga', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja', 'qawwali', 'rabbi', 'rap', //
-  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'startup', 'tutorial', 'unboxing', 'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
+  'asmr', 'bhajan', 'blender', 'cosplay', 'esports', 'haul', 'hip', 'hololive', 'hop', 'imam',
+  'indie', 'jazz', 'khutbah', 'kirtan', 'lofi', //
+  'macos', 'mandala', 'manga', 'metal', 'mukbang', 'nasheed', 'nijisanji', 'podcast', 'pop', 'puja',
+  'qawwali', 'rabbi', 'rap', //
+  'rock', 'seerah', 'speedrun', 'swami', 'tafsir', 'thangka', 'startup', 'tutorial', 'unboxing',
+  'vlog', 'vtuber', 'walkthrough', 'writeup', 'yoga',
 };
 
 final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
@@ -450,7 +506,9 @@ final _commonWord = RegExp(r"^[a-z][a-z'-]{2,}$");
 bool translatesInto(String phrase, ExploreLanguage language) {
   if (isTranslatedPhrase(phrase)) return true;
   if (language == ExploreLanguage.en || language == ExploreLanguage.any) return false;
-  return phrase.split(RegExp(r'\s+')).any((word) => _commonWord.hasMatch(word) && !keptSearchWords.contains(word));
+  return phrase
+      .split(RegExp(r'\s+'))
+      .any((word) => _commonWord.hasMatch(word) && !keptSearchWords.contains(word));
 }
 
 /// Search words put the same way in every language, as YouTube titles
@@ -459,8 +517,14 @@ bool translatesInto(String phrase, ExploreLanguage language) {
 /// "live" itself stays out of the words around it: "art live" put into
 /// Indonesian or Vietnamese was "the art of living", "Diwali live" into
 /// Dutch "Divali leeft" (seen on 2026-11-17 in 66 languages).
-const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live', 'live': 'live', 'Live': 'live', 'LIVE': 'live'};
-
+const searchGlossary = {
+  '直播': 'live',
+  '实况': 'live',
+  '直播间': 'live',
+  'live': 'live',
+  'Live': 'live',
+  'LIVE': 'live'
+};
 
 /// [query] with the zones' Chinese keywords in English ([searchPivots]);
 /// words searched the same in every language ([searchGlossary]) stay. A
@@ -468,7 +532,10 @@ const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live',
 /// paper explained" is "AI paper explained"), and so is a word repeated.
 String englishSearchOf(String query) {
   final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-  final seen = {for (final w in words) if (!isTranslatedPhrase(w)) w.toLowerCase()};
+  final seen = {
+    for (final w in words)
+      if (!isTranslatedPhrase(w)) w.toLowerCase()
+  };
   // An English word the query gives beside its Chinese keyword is that
   // keyword's English, not a name: "基督宗教 Christianity" kept
   // "Christianity" as written, which a search in Italian took for a name
@@ -503,7 +570,12 @@ String englishSearchOf(String query) {
 /// "educazione fisica" (school PE), through English it is "sport". Chinese,
 /// Japanese and Korean are put into each other directly.
 bool pivotsThroughEnglish(ExploreLanguage language) => switch (language) {
-      ExploreLanguage.any || ExploreLanguage.en || ExploreLanguage.zh || ExploreLanguage.ja || ExploreLanguage.ko => false,
+      ExploreLanguage.any ||
+      ExploreLanguage.en ||
+      ExploreLanguage.zh ||
+      ExploreLanguage.ja ||
+      ExploreLanguage.ko =>
+        false,
       _ => true,
     };
 
@@ -519,7 +591,10 @@ String withEnglishOf(String source, List<String> english) {
   var next = 0;
   return [
     for (final phrase in searchPhrasesOf(source))
-      if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null) english[next++].trim() else phrase,
+      if (isTranslatedPhrase(phrase) && searchGlossary[phrase] == null)
+        english[next++].trim()
+      else
+        phrase,
   ].where((p) => p.isNotEmpty).join(' ');
 }
 

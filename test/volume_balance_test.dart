@@ -28,15 +28,20 @@ void main() {
     expect(int.parse(part(gentle, ':g')), greaterThan(int.parse(part(strong, ':g'))));
     expect(int.parse(part(strong, ':g')).isOdd, isTrue);
     expect(double.parse(part(gentle, ':m')), lessThan(double.parse(part(strong, ':m'))));
-    expect(int.parse(part(VolumeBalance.filter(50, live: true), 'f')), lessThan(int.parse(part(VolumeBalance.filter(50), 'f'))));
+    expect(int.parse(part(VolumeBalance.filter(50, live: true), 'f')),
+        lessThan(int.parse(part(VolumeBalance.filter(50), 'f'))));
   });
 
   test('without limiters only the normaliser is left', () {
-    expect(VolumeBalance.filter(50, loudnessDb: 6, withLimiters: false), '@${VolumeBalance.label}:lavfi=[dynaudnorm=f=400:g=37:m=5.5:p=0.95:r=0.2]');
+    expect(VolumeBalance.filter(50, loudnessDb: 6, withLimiters: false),
+        '@${VolumeBalance.label}:lavfi=[dynaudnorm=f=400:g=37:m=5.5:p=0.95:r=0.2]');
   });
 
   test("YouTube's loudness is read from a /player answer", () {
-    expect(VolumeBalance.loudnessIn('{"playerConfig":{"audioConfig":{"loudnessDb":-3.0100002,"perceptualLoudnessDb":-17.01}}}'), closeTo(-3.01, 1e-6));
+    expect(
+        VolumeBalance.loudnessIn(
+            '{"playerConfig":{"audioConfig":{"loudnessDb":-3.0100002,"perceptualLoudnessDb":-17.01}}}'),
+        closeTo(-3.01, 1e-6));
     expect(VolumeBalance.loudnessIn('{"playerConfig":{"audioConfig":{"loudnessDb": 7}}}'), 7);
     expect(VolumeBalance.loudnessIn('{"playabilityStatus":{"status":"LOGIN_REQUIRED"}}'), isNull);
   });

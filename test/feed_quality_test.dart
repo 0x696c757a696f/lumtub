@@ -4,7 +4,16 @@ import 'package:lumtub/feed_quality.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
 
-VideoItem v(String id, {String title = 'title', String channel = 'c', int? duration, int? width, int? height, String? description, bool shortListing = false, String? url}) => VideoItem(
+VideoItem v(String id,
+        {String title = 'title',
+        String channel = 'c',
+        int? duration,
+        int? width,
+        int? height,
+        String? description,
+        bool shortListing = false,
+        String? url}) =>
+    VideoItem(
       id: id.padRight(11, '_'),
       title: title,
       channel: channel,
@@ -36,10 +45,18 @@ void main() {
   });
 
   test('VideoItem keeps the new fields through json', () {
-    final item = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 't', 'width': 720, 'height': 1280, 'description': 'Provided to YouTube by X', 'webpage_url': 'https://www.youtube.com/shorts/abcdefghijk'});
+    final item = VideoItem.fromJson({
+      'id': 'abcdefghijk',
+      'title': 't',
+      'width': 720,
+      'height': 1280,
+      'description': 'Provided to YouTube by X',
+      'webpage_url': 'https://www.youtube.com/shorts/abcdefghijk'
+    });
     expect(isVertical(item) && isShort(item), isTrue);
     final again = VideoItem.fromJson(item.toJson());
-    expect((again.width, again.height, again.description, again.isShortListing), (720, 1280, 'Provided to YouTube by X', true));
+    expect((again.width, again.height, again.description, again.isShortListing),
+        (720, 1280, 'Provided to YouTube by X', true));
   });
 
   group('recommend with a mix', () {
@@ -48,9 +65,13 @@ void main() {
       Candidate(v('norm1', duration: 600), RecommendSource.related),
       Candidate(v('short', duration: 30), RecommendSource.related, seedWeight: 1.5),
       Candidate(v('mv', title: 'X (Official MV)', channel: 'X'), RecommendSource.related),
-      Candidate(v('vert', width: 720, height: 1280, duration: 600), RecommendSource.related, seedWeight: 1.5),
+      Candidate(v('vert', width: 720, height: 1280, duration: 600), RecommendSource.related,
+          seedWeight: 1.5),
     ];
-    List<String> ids(FeedMix mix) => [for (final r in recommend(candidates, taste: taste, mix: mix)) r.item.id.replaceAll('_', '')];
+    List<String> ids(FeedMix mix) => [
+          for (final r in recommend(candidates, taste: taste, mix: mix))
+            r.item.id.replaceAll('_', '')
+        ];
 
     test('off keeps everything', () {
       expect(ids(const FeedMix()).toSet(), {'norm1', 'short', 'mv', 'vert'});
@@ -70,7 +91,8 @@ void main() {
 
   test('preferences persist the levels, defaulting to reduce', () {
     expect(const AppPreferences().feedShorts, FeedLevel.reduce);
-    final prefs = const AppPreferences().copyWith(feedShorts: FeedLevel.off, feedVertical: FeedLevel.reduce);
+    final prefs =
+        const AppPreferences().copyWith(feedShorts: FeedLevel.off, feedVertical: FeedLevel.reduce);
     final back = AppPreferences.fromJson(prefs.toJson());
     expect((back.feedShorts, back.feedVertical), (FeedLevel.off, FeedLevel.reduce));
     expect(AppPreferences.fromJson({'feedShorts': 'bogus'}).feedShorts, FeedLevel.reduce);
@@ -78,6 +100,9 @@ void main() {
 
   test('For You refreshes on its own unless turned off', () {
     expect(const AppPreferences().homeAutoRefresh, isTrue);
-    expect(AppPreferences.fromJson(const AppPreferences().copyWith(homeAutoRefresh: false).toJson()).homeAutoRefresh, isFalse);
+    expect(
+        AppPreferences.fromJson(const AppPreferences().copyWith(homeAutoRefresh: false).toJson())
+            .homeAutoRefresh,
+        isFalse);
   });
 }

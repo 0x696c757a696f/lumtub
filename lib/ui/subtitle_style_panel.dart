@@ -14,7 +14,8 @@ import 'subtitle_style.dart';
 /// on the video while it is made: sliders preview as they move and save
 /// when let go, colours and switches apply on tap. Languages and the rest
 /// stay on the 字幕设置 page.
-Future<void> showSubtitleStylePanel(BuildContext context, AppController controller) => showPlayerPanel(
+Future<void> showSubtitleStylePanel(BuildContext context, AppController controller) =>
+    showPlayerPanel(
       context,
       title: tr('Subtitle style'),
       width: 420,
@@ -49,7 +50,8 @@ class _StylePanelState extends State<_StylePanel> {
   void _save(PlayerSettings next) => _controller.saveSettings(next);
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(listenable: _controller, builder: (context, _) => _build(context));
+  Widget build(BuildContext context) =>
+      ListenableBuilder(listenable: _controller, builder: (context, _) => _build(context));
 
   Widget _build(BuildContext context) {
     final s = _controller.settings;
@@ -61,9 +63,19 @@ class _StylePanelState extends State<_StylePanel> {
     final scale = second ? s.secondaryScale : s.subtitleScale;
     final color = second ? s.secondaryColor : s.subtitleColor;
     final opacity = second ? s.secondaryOpacity : s.subtitleOpacity;
-    PlayerSettings look(PlayerSettings from, {String? font, double? scale, int? color, double? opacity}) => second
-        ? from.copyWith(secondaryFont: font, secondaryScale: scale, secondaryColor: color, secondaryOpacity: opacity)
-        : from.copyWith(subtitleFont: font, subtitleScale: scale, subtitleColor: color, subtitleOpacity: opacity);
+    PlayerSettings look(PlayerSettings from,
+            {String? font, double? scale, int? color, double? opacity}) =>
+        second
+            ? from.copyWith(
+                secondaryFont: font,
+                secondaryScale: scale,
+                secondaryColor: color,
+                secondaryOpacity: opacity)
+            : from.copyWith(
+                subtitleFont: font,
+                subtitleScale: scale,
+                subtitleColor: color,
+                subtitleOpacity: opacity);
 
     Widget label(String text, [String? value]) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -73,7 +85,13 @@ class _StylePanelState extends State<_StylePanel> {
           ]),
         );
 
-    Widget slider({required double value, required double min, required double max, required int divisions, required PlayerSettings Function(double) apply}) => Slider(
+    Widget slider(
+            {required double value,
+            required double min,
+            required double max,
+            required int divisions,
+            required PlayerSettings Function(double) apply}) =>
+        Slider(
           value: value.clamp(min, max),
           min: min,
           max: max,
@@ -97,10 +115,16 @@ class _StylePanelState extends State<_StylePanel> {
       ListTile(
         title: Text(tr('Font')),
         trailing: Text(subtitleFontLabel(font), style: TextStyle(color: colors.primary)),
-        onTap: () => pickSubtitleFont(context, font, (v) => _save(look(_controller.settings, font: v))),
+        onTap: () =>
+            pickSubtitleFont(context, font, (v) => _save(look(_controller.settings, font: v))),
       ),
       label(tr('Size'), '${scale.toStringAsFixed(1)}×'),
-      slider(value: scale, min: 0.5, max: 3, divisions: 25, apply: (v) => look(_controller.settings, scale: (v * 10).round() / 10)),
+      slider(
+          value: scale,
+          min: 0.5,
+          max: 3,
+          divisions: 25,
+          apply: (v) => look(_controller.settings, scale: (v * 10).round() / 10)),
       label(tr('Color'), subtitleColorLabel(color)),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -117,24 +141,42 @@ class _StylePanelState extends State<_StylePanel> {
                   decoration: BoxDecoration(
                     color: Color(0xFF000000 | c),
                     shape: BoxShape.circle,
-                    border: Border.all(color: c == color ? colors.primary : colors.outlineVariant, width: c == color ? 3 : 1),
+                    border: Border.all(
+                        color: c == color ? colors.primary : colors.outlineVariant,
+                        width: c == color ? 3 : 1),
                   ),
                 ),
               ),
             ),
           ActionChip(
             label: Text(tr('Custom')),
-            onPressed: () => pickSubtitleColor(context, color, (v) => _save(look(_controller.settings, color: v))),
+            onPressed: () => pickSubtitleColor(
+                context, color, (v) => _save(look(_controller.settings, color: v))),
           ),
         ]),
       ),
       label(tr('Opacity'), '${(opacity * 100).round()}%'),
-      slider(value: opacity, min: 0.1, max: 1, divisions: 18, apply: (v) => look(_controller.settings, opacity: (v * 20).round() / 20)),
+      slider(
+          value: opacity,
+          min: 0.1,
+          max: 1,
+          divisions: 18,
+          apply: (v) => look(_controller.settings, opacity: (v * 20).round() / 20)),
       const Divider(height: 24),
       label(tr('Subtitle position'), '${s.subtitlePosition}%'),
-      slider(value: s.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, apply: (v) => _controller.settings.copyWith(subtitlePosition: v.round())),
+      slider(
+          value: s.subtitlePosition.toDouble(),
+          min: 0,
+          max: 100,
+          divisions: 100,
+          apply: (v) => _controller.settings.copyWith(subtitlePosition: v.round())),
       label(tr('Outline thickness'), s.subtitleBorder.toStringAsFixed(1)),
-      slider(value: s.subtitleBorder, min: 0, max: 8, divisions: 16, apply: (v) => _controller.settings.copyWith(subtitleBorder: v)),
+      slider(
+          value: s.subtitleBorder,
+          min: 0,
+          max: 8,
+          divisions: 16,
+          apply: (v) => _controller.settings.copyWith(subtitleBorder: v)),
       SwitchListTile(
         title: Text(tr('Background box')),
         value: s.subtitleBackground,

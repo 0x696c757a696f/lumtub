@@ -11,7 +11,9 @@ import 'package:flutter/widgets.dart';
 /// every system.
 abstract final class Accessibility {
   static final _systemParametersInfo = Platform.isWindows
-      ? DynamicLibrary.open('user32.dll').lookupFunction<Int32 Function(Uint32, Uint32, Pointer<Int32>, Uint32), int Function(int, int, Pointer<Int32>, int)>('SystemParametersInfoW')
+      ? DynamicLibrary.open('user32.dll').lookupFunction<
+          Int32 Function(Uint32, Uint32, Pointer<Int32>, Uint32),
+          int Function(int, int, Pointer<Int32>, int)>('SystemParametersInfoW')
       : null;
   static const _spiGetScreenReader = 0x0046;
 
@@ -76,7 +78,8 @@ abstract final class Accessibility {
     if (message.isEmpty || !SemanticsBinding.instance.semanticsEnabled) return;
     final view = View.maybeOf(context);
     if (view == null) return;
-    unawaited(SemanticsService.sendAnnouncement(view, message, Directionality.maybeOf(context) ?? TextDirection.ltr));
+    unawaited(SemanticsService.sendAnnouncement(
+        view, message, Directionality.maybeOf(context) ?? TextDirection.ltr));
   }
 
   static String _spoken = '';
@@ -96,7 +99,8 @@ abstract final class Accessibility {
     }
     final view = dispatcher.implicitView ?? dispatcher.views.firstOrNull;
     if (view == null) return;
-    unawaited(SemanticsService.sendAnnouncement(view, text, rightToLeft(text) ? TextDirection.rtl : TextDirection.ltr));
+    unawaited(SemanticsService.sendAnnouncement(
+        view, text, rightToLeft(text) ? TextDirection.rtl : TextDirection.ltr));
   }
 
   /// The subtitle line for [SpokenLine] to say where announcements are not
@@ -107,7 +111,11 @@ abstract final class Accessibility {
   /// Thaana or N'Ko.
   static bool rightToLeft(String text) {
     for (final c in text.runes) {
-      if ((c >= 0x0590 && c <= 0x08FF) || (c >= 0xFB1D && c <= 0xFDFF) || (c >= 0xFE70 && c <= 0xFEFF)) return true;
+      if ((c >= 0x0590 && c <= 0x08FF) ||
+          (c >= 0xFB1D && c <= 0xFDFF) ||
+          (c >= 0xFE70 && c <= 0xFEFF)) {
+        return true;
+      }
       if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) || c >= 0x00C0) return false;
     }
     return false;
@@ -119,7 +127,8 @@ abstract final class Accessibility {
 /// [actions] carry what the pieces' own small buttons do. Leaving the
 /// pieces out also keeps the semantics tree of a long feed small.
 class SpokenAs extends StatelessWidget {
-  const SpokenAs({super.key, required this.label, required this.child, this.button = true, this.actions});
+  const SpokenAs(
+      {super.key, required this.label, required this.child, this.button = true, this.actions});
   final String label;
   final bool button;
   final Map<CustomSemanticsAction, VoidCallback>? actions;
@@ -145,9 +154,15 @@ class SpokenLine extends StatelessWidget {
         valueListenable: Accessibility.spokenLine,
         builder: (context, line, _) => line.isEmpty
             ? const SizedBox.shrink()
-            : Semantics(liveRegion: true, label: line, textDirection: Accessibility.rightToLeft(line) ? TextDirection.rtl : TextDirection.ltr, child: const SizedBox(width: 1, height: 1)),
+            : Semantics(
+                liveRegion: true,
+                label: line,
+                textDirection:
+                    Accessibility.rightToLeft(line) ? TextDirection.rtl : TextDirection.ltr,
+                child: const SizedBox(width: 1, height: 1)),
       );
 }
 
 /// Parts of a sentence for the screen reader, empty ones left out.
-String spokenParts(Iterable<String?> parts) => parts.whereType<String>().where((p) => p.trim().isNotEmpty).join(', ');
+String spokenParts(Iterable<String?> parts) =>
+    parts.whereType<String>().where((p) => p.trim().isNotEmpty).join(', ');

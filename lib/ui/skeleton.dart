@@ -24,7 +24,10 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    if (!Motion.reduced) _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
+    if (!Motion.reduced) {
+      _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
+        ..repeat();
+    }
   }
 
   @override
@@ -40,7 +43,8 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
     final clear = surface.withAlpha(0);
     final controller = _controller;
     // One word for the screen reader in place of grey boxes.
-    final child = Semantics(label: tr('Loading…'), excludeSemantics: true, child: RepaintBoundary(child: widget.child));
+    final child = Semantics(
+        label: tr('Loading…'), excludeSemantics: true, child: RepaintBoundary(child: widget.child));
     Widget shine(double t) => ShaderMask(
           blendMode: BlendMode.srcATop,
           shaderCallback: (bounds) => ui.Gradient.linear(
@@ -54,7 +58,8 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
           child: child,
         );
     if (controller == null) return shine(0.5);
-    return AnimatedBuilder(animation: controller, builder: (context, _) => shine(-0.5 + 2 * controller.value));
+    return AnimatedBuilder(
+        animation: controller, builder: (context, _) => shine(-0.5 + 2 * controller.value));
   }
 }
 
@@ -69,7 +74,10 @@ class SkeletonBox extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
         width: width ?? double.infinity,
         height: height,
-        child: DecoratedBox(decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(radius))),
+        child: DecoratedBox(
+            decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(radius))),
       );
 }
 
@@ -108,5 +116,8 @@ class _DelayedRevealState extends State<DelayedReveal> {
   }
 
   @override
-  Widget build(BuildContext context) => _shown ? Entrance(duration: DelayedReveal.enter, curve: Easing.emphasizedDecelerate, child: widget.child) : const SizedBox.shrink();
+  Widget build(BuildContext context) => _shown
+      ? Entrance(
+          duration: DelayedReveal.enter, curve: Easing.emphasizedDecelerate, child: widget.child)
+      : const SizedBox.shrink();
 }

@@ -32,6 +32,7 @@ export 'word_voice.dart' show VoiceService, VoiceException;
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.
 const learningPackRelease = 'https://github.com/0x696c757a696f/lumtub/releases/download/learning';
+
 /// [downloaded]: on disk, read the first time subtitles in its language
 /// show up, so dictionaries for languages not being watched take no memory.
 enum PackState { missing, downloading, downloaded, loading, ready, failed }
@@ -172,7 +173,17 @@ class Learning extends ChangeNotifier {
   @override
   void notifyListeners() {
     _words.clear();
-    final key = Object.hashAll([_license, licensed, unlocked, _showPinyin, _showRomanization, _englishLevel, Object.hashAllUnordered([for (final e in _myLevels.entries) '${e.key}${e.value}']), for (final l in _wordLevels.values) l, for (final p in _packs.values) p.dictionary]);
+    final key = Object.hashAll([
+      _license,
+      licensed,
+      unlocked,
+      _showPinyin,
+      _showRomanization,
+      _englishLevel,
+      Object.hashAllUnordered([for (final e in _myLevels.entries) '${e.key}${e.value}']),
+      for (final l in _wordLevels.values) l,
+      for (final p in _packs.values) p.dictionary
+    ]);
     if (key != _lastView) {
       _lastView = key;
       viewChanges.value++;
@@ -244,7 +255,9 @@ class Learning extends ChangeNotifier {
   }
 
   /// Word cards left today without the pack; unlimited with it.
-  int get trialLeft => licensed ? trialPerDay : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
+  int get trialLeft => licensed
+      ? trialPerDay
+      : (_trialDay == _trialToday ? (trialPerDay - _trialUsed).clamp(0, trialPerDay) : trialPerDay);
 
   /// Counts one word card; false when the free ones are used up. A [word]
   /// already looked up today is free.
@@ -279,7 +292,10 @@ class Learning extends ChangeNotifier {
     return true;
   }
 
-  bool get licensed => _license != null && !_blocked && (_receiptDay != null || (_entered != null && DateTime.now().difference(_entered!) < grace));
+  bool get licensed =>
+      _license != null &&
+      !_blocked &&
+      (_receiptDay != null || (_entered != null && DateTime.now().difference(_entered!) < grace));
 
   /// A code is kept but does not unlock here: revoked, taken off this
   /// device, or never confirmed by the server within [grace].
@@ -299,7 +315,9 @@ class Learning extends ChangeNotifier {
   /// Which meanings a word card shows where a dictionary has both.
   /// Until one is chosen: Chinese first with a Chinese interface,
   /// English otherwise.
-  MeaningLanguage get meanings => _meanings ?? (currentLanguage.isChinese ? MeaningLanguage.chineseFirst : MeaningLanguage.english);
+  MeaningLanguage get meanings =>
+      _meanings ??
+      (currentLanguage.isChinese ? MeaningLanguage.chineseFirst : MeaningLanguage.english);
   MeaningLanguage? _meanings;
 
   /// Who reads words aloud on a word card.
@@ -354,7 +372,8 @@ class Learning extends ChangeNotifier {
   String get levelKey => '$_englishLevel|$_myLevels|${_wordLevels.keys.join(',')}';
 
   /// Whether the word levels of [language] are there to mark words by.
-  bool hasLevels(String language) => language == 'en' ? english != null : _wordLevels.containsKey(language);
+  bool hasLevels(String language) =>
+      language == 'en' ? english != null : _wordLevels.containsKey(language);
 
   /// [token]'s level on its language's scale (see [levelIn]); null when
   /// no list has it.
@@ -385,20 +404,28 @@ class Learning extends ChangeNotifier {
     final word = levelOfWord(token);
     return word != null && word <= mine;
   }
+
   PackState stateOf(DictionaryPack pack) => _packs[pack]!.state;
   double? progressOf(DictionaryPack pack) => _packs[pack]!.progress;
   String? errorOf(DictionaryPack pack) => _packs[pack]!.error;
-  ChineseDictionary? get chinese => _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary?;
-  EnglishDictionary? get english => _packs[DictionaryPack.english]!.dictionary as EnglishDictionary?;
-  JapaneseDictionary? get japanese => _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary?;
+  ChineseDictionary? get chinese =>
+      _packs[DictionaryPack.chinese]!.dictionary as ChineseDictionary?;
+  EnglishDictionary? get english =>
+      _packs[DictionaryPack.english]!.dictionary as EnglishDictionary?;
+  JapaneseDictionary? get japanese =>
+      _packs[DictionaryPack.japanese]!.dictionary as JapaneseDictionary?;
+
   /// Whether a dictionary is on disk, read or not: lines in its language
   /// are looked at, which reads it the first time.
-  bool get anyDictionary => _packs.values.any((p) => const {PackState.downloaded, PackState.loading, PackState.ready}.contains(p.state));
+  bool get anyDictionary => _packs.values.any(
+      (p) => const {PackState.downloaded, PackState.loading, PackState.ready}.contains(p.state));
 
   /// The Wiktionary dictionary for [language], when it is ready.
   WiktionaryDictionary? wiktionary(String language) {
     for (final pack in DictionaryPack.values) {
-      if (pack.wiktionary && pack.language == language) return _packs[pack]!.dictionary as WiktionaryDictionary?;
+      if (pack.wiktionary && pack.language == language) {
+        return _packs[pack]!.dictionary as WiktionaryDictionary?;
+      }
     }
     return null;
   }
@@ -421,7 +448,13 @@ class Learning extends ChangeNotifier {
       return cut.words;
     }
     // Without readings, made once per line too.
-    final plain = cut.plain ?? [for (final w in cut.words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+    final plain = cut.plain ??
+        [
+          for (final w in cut.words)
+            w.reading == null
+                ? w
+                : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)
+        ];
     _words[text] = (words: cut.words, plain: plain);
     return plain;
   }
@@ -446,11 +479,23 @@ class Learning extends ChangeNotifier {
     if (WiktionaryDictionary.looksKorean(text)) {
       final words = _onDisk('ko') ? _wiktionaryWords('ko', text) : null;
       if (words == null || _showRomanization) return words;
-      return [for (final w in words) w.reading == null ? w : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)];
+      return [
+        for (final w in words)
+          w.reading == null
+              ? w
+              : WordToken(w.text, null, isWord: w.isWord, lookup: w.lookup, language: w.language)
+      ];
     }
-    if (WiktionaryDictionary.looksCyrillic(text)) return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
+    if (WiktionaryDictionary.looksCyrillic(text)) {
+      return _onDisk('ru') ? _wiktionaryWords('ru', text) : null;
+    }
     if (!EnglishDictionary.looksLatin(text)) return null;
-    final latin = [for (final code in const ['en', 'es', 'fr', 'de', 'it', 'pt']) if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state case PackState.downloaded || PackState.loading || PackState.ready) code];
+    final latin = [
+      for (final code in const ['en', 'es', 'fr', 'de', 'it', 'pt'])
+        if (_packs[DictionaryPack.values.firstWhere((p) => p.language == code)]!.state
+            case PackState.downloaded || PackState.loading || PackState.ready)
+          code
+    ];
     final language = _latin.guess(text, latin);
     // Read on first use; until then the line stays plain.
     if (language == null || !_onDisk(language)) return null;
@@ -474,7 +519,10 @@ class Learning extends ChangeNotifier {
         continue;
       }
       final capital = w.key == w.text && w.text != w.text.toLowerCase();
-      out.add(start && capital ? WordToken(w.text, w.reading, isWord: true, lookup: w.text.toLowerCase(), language: w.language) : w);
+      out.add(start && capital
+          ? WordToken(w.text, w.reading,
+              isWord: true, lookup: w.text.toLowerCase(), language: w.language)
+          : w);
       start = false;
     }
     return out;
@@ -491,7 +539,9 @@ class Learning extends ChangeNotifier {
     var at = 0;
     for (final w in words) {
       if (w.start < at || w.end > text.length || w.keys.isEmpty) continue;
-      if (w.start > at) tokens.add(WordToken(text.substring(at, w.start), null, isWord: false, language: language));
+      if (w.start > at) {
+        tokens.add(WordToken(text.substring(at, w.start), null, isWord: false, language: language));
+      }
       final surface = text.substring(w.start, w.end);
       final reading = switch (language) {
         'ja' => w.reading,
@@ -499,10 +549,13 @@ class Learning extends ChangeNotifier {
         'zh' => chinese?.readingWithChars(surface),
         _ => null,
       };
-      tokens.add(WordToken(surface, reading, isWord: true, lookup: _bestKey(language, w.keys), language: language));
+      tokens.add(WordToken(surface, reading,
+          isWord: true, lookup: _bestKey(language, w.keys), language: language));
       at = w.end;
     }
-    if (at < text.length) tokens.add(WordToken(text.substring(at), null, isWord: false, language: language));
+    if (at < text.length) {
+      tokens.add(WordToken(text.substring(at), null, isWord: false, language: language));
+    }
     return tokens;
   }
 
@@ -539,11 +592,17 @@ class Learning extends ChangeNotifier {
     return DictionaryPack.values.where((p) => p.language == language).firstOrNull;
   }
 
-  static String languageOf(WordToken token) => token.language ?? (ChineseDictionary.isHan(token.text) ? 'zh' : 'en');
+  static String languageOf(WordToken token) =>
+      token.language ?? (ChineseDictionary.isHan(token.text) ? 'zh' : 'en');
   VocabularyBook? get book => _book;
 
-  File? get _settingsFile => _directories == null ? null : File('${_directories!.config.path}${Platform.pathSeparator}learning.json');
-  Directory? _folderOf(DictionaryPack pack) => _directories == null ? null : Directory('${_directories!.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}${pack.language}');
+  File? get _settingsFile => _directories == null
+      ? null
+      : File('${_directories!.config.path}${Platform.pathSeparator}learning.json');
+  Directory? _folderOf(DictionaryPack pack) => _directories == null
+      ? null
+      : Directory(
+          '${_directories!.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}${pack.language}');
   File? _fileOf(DictionaryPack pack) {
     final folder = _folderOf(pack);
     return folder == null ? null : File('${folder.path}${Platform.pathSeparator}${pack.stored}');
@@ -566,8 +625,10 @@ class Learning extends ChangeNotifier {
     EnglishEntry.preferCefr = !currentLanguage.isChinese;
     _voice = WordVoice(Directory('${directories.cache.path}${Platform.pathSeparator}word-sounds'));
     unawaited(_voice!.tidy());
-    _book = VocabularyBook(File('${directories.data.path}${Platform.pathSeparator}vocabulary.json'));
-    unawaited(videoDifficulty.open(File('${directories.data.path}${Platform.pathSeparator}video-difficulty.json')));
+    _book =
+        VocabularyBook(File('${directories.data.path}${Platform.pathSeparator}vocabulary.json'));
+    unawaited(videoDifficulty
+        .open(File('${directories.data.path}${Platform.pathSeparator}video-difficulty.json')));
     try {
       final file = _settingsFile!;
       if (await file.exists()) {
@@ -579,18 +640,28 @@ class Learning extends ChangeNotifier {
           _meanings = MeaningLanguage.values.where((m) => m.name == json['meanings']).firstOrNull;
           _voicePicked = json['voicePicked'] == true;
           // Lumtub's server is now only what Edge's voices fall back on.
-          if (_voicePicked) _voiceService = VoiceService.values.firstWhere((v) => v.name == json['voice'] && v != VoiceService.lumtub, orElse: () => VoiceService.edge);
+          if (_voicePicked) {
+            _voiceService = VoiceService.values.firstWhere(
+                (v) => v.name == json['voice'] && v != VoiceService.lumtub,
+                orElse: () => VoiceService.edge);
+          }
           final level = json['englishLevel'];
-          if (level is int) _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
+          if (level is int) {
+            _englishLevel = level >= 0 && level < EnglishLevel.beyond.index ? level : null;
+          }
           final levels = json['levels'];
           if (levels is Map) {
             for (final MapEntry(:key, :value) in levels.entries) {
               final top = LevelScale.of('$key')?.top;
-              if (top != null && value is int && value >= 1 && value <= top) _myLevels['$key'] = value;
+              if (top != null && value is int && value >= 1 && value <= top) {
+                _myLevels['$key'] = value;
+              }
             }
           }
           final code = json['license'];
-          if (code is String && code.isNotEmpty) _license = await Isolate.run(() => LearningLicense.parse(code));
+          if (code is String && code.isNotEmpty) {
+            _license = await Isolate.run(() => LearningLicense.parse(code));
+          }
           _receipt = '${json['activation'] ?? ''}';
           _entered = DateTime.tryParse('${json['entered'] ?? ''}');
           _blocked = json['blocked'] == true;
@@ -619,7 +690,8 @@ class Learning extends ChangeNotifier {
       final license = _license!;
       final device = await _device();
       final receipt = _receipt;
-      _receiptDay = await Isolate.run(() => ActivationReceipt.verify(receipt, codeId: license.id, device: device)?.day);
+      _receiptDay = await Isolate.run(
+          () => ActivationReceipt.verify(receipt, codeId: license.id, device: device)?.day);
       // A code kept before devices were counted gets the same grace as
       // one entered offline.
       if (_receiptDay == null && _entered == null) {
@@ -627,7 +699,9 @@ class Learning extends ChangeNotifier {
         await _save();
       }
       // Asked again now and then, and at once when never confirmed here.
-      if (_receiptDay == null || DateTime.now().difference(_receiptDay!) > recheck) unawaited(_checkIn());
+      if (_receiptDay == null || DateTime.now().difference(_receiptDay!) > recheck) {
+        unawaited(_checkIn());
+      }
     }
     notifyListeners();
     // Everyone can try the pack, so dictionaries on disk stay current.
@@ -695,7 +769,9 @@ class Learning extends ChangeNotifier {
   /// minutes, as one dictionary's download asks for it several times.
   static Future<SignedSums> _signedSums(http.Client client) {
     final last = _lastSums;
-    if (last != null && DateTime.now().difference(last.at) < const Duration(minutes: 5)) return last.sums;
+    if (last != null && DateTime.now().difference(last.at) < const Duration(minutes: 5)) {
+      return last.sums;
+    }
     final sums = _fetchSignedSums(client);
     final kept = (at: DateTime.now(), sums: sums);
     _lastSums = kept;
@@ -706,11 +782,17 @@ class Learning extends ChangeNotifier {
   }
 
   static Future<SignedSums> _fetchSignedSums(http.Client client) async {
-    final sums = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS')).timeout(const Duration(seconds: 30));
+    final sums = await client
+        .get(Uri.parse('$learningPackRelease/SHA256SUMS'))
+        .timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('SHA256SUMS HTTP ${sums.statusCode}');
     _serverDay = _dayOf(sums.headers['date']);
-    final signature = await client.get(Uri.parse('$learningPackRelease/SHA256SUMS.sig')).timeout(const Duration(seconds: 30));
-    if (signature.statusCode != 200) throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
+    final signature = await client
+        .get(Uri.parse('$learningPackRelease/SHA256SUMS.sig'))
+        .timeout(const Duration(seconds: 30));
+    if (signature.statusCode != 200) {
+      throw HttpException('SHA256SUMS.sig HTTP ${signature.statusCode}');
+    }
     final bytes = sums.bodyBytes;
     final text = signature.body;
     // Ed25519 in Dart's BigInt takes long enough to drop frames.
@@ -758,7 +840,9 @@ class Learning extends ChangeNotifier {
   /// The license server's address, published on the `learning` release so
   /// it can move without an app update.
   static Future<Uri?> _server(http.Client client) async {
-    final where = await client.get(Uri.parse('$learningPackRelease/license-server.txt')).timeout(const Duration(seconds: 20));
+    final where = await client
+        .get(Uri.parse('$learningPackRelease/license-server.txt'))
+        .timeout(const Duration(seconds: 20));
     final server = where.statusCode == 200 ? Uri.tryParse(where.body.trim()) : null;
     return server == null || server.scheme != 'https' ? null : server;
   }
@@ -769,7 +853,9 @@ class Learning extends ChangeNotifier {
     if (list is List) {
       devices = [
         for (final d in list)
-          if (d is Map) LicenseDevice(id: '${d['id']}', label: '${d['label'] ?? ''}', seen: '${d['seen'] ?? ''}'),
+          if (d is Map)
+            LicenseDevice(
+                id: '${d['id']}', label: '${d['label'] ?? ''}', seen: '${d['seen'] ?? ''}'),
       ];
     }
     if (answer['max'] is int) maxDevices = answer['max'] as int;
@@ -783,7 +869,13 @@ class Learning extends ChangeNotifier {
       final server = await _server(client);
       if (server == null) return (_Activation.offline, null);
       final response = await client
-          .post(server.resolve('/activate'), headers: {'content-type': 'application/json'}, body: jsonEncode({'code': license.code, 'device': await _device(), 'label': learningDeviceLabel()}))
+          .post(server.resolve('/activate'),
+              headers: {'content-type': 'application/json'},
+              body: jsonEncode({
+                'code': license.code,
+                'device': await _device(),
+                'label': learningDeviceLabel()
+              }))
           .timeout(const Duration(seconds: 20));
       final answer = jsonDecode(response.body);
       _takeDevices(answer);
@@ -796,7 +888,8 @@ class Learning extends ChangeNotifier {
       if (response.statusCode != 200 || receipt is! String) return (_Activation.offline, null);
       final device = await _device();
       final id = license.id;
-      final valid = await Isolate.run(() => ActivationReceipt.verify(receipt, codeId: id, device: device) != null);
+      final valid = await Isolate.run(
+          () => ActivationReceipt.verify(receipt, codeId: id, device: device) != null);
       return valid ? (_Activation.ok, receipt) : (_Activation.offline, null);
     } catch (e) {
       logWarn('Could not ask the license server about this device: $e');
@@ -865,7 +958,9 @@ class Learning extends ChangeNotifier {
       final server = await _server(client);
       if (server == null) return false;
       final response = await client
-          .post(server.resolve('/deactivate'), headers: {'content-type': 'application/json'}, body: jsonEncode({'code': code.code, 'device': device}))
+          .post(server.resolve('/deactivate'),
+              headers: {'content-type': 'application/json'},
+              body: jsonEncode({'code': code.code, 'device': device}))
           .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) return false;
       _takeDevices(jsonDecode(response.body));
@@ -891,7 +986,8 @@ class Learning extends ChangeNotifier {
   /// to [learningConsentVersion].
   /// The server's address is published on the `learning` release, so it
   /// can move without an app update.
-  Future<ClaimResult> claimLicense({required PurchaseSource source, required String order, String email = ''}) async {
+  Future<ClaimResult> claimLicense(
+      {required PurchaseSource source, required String order, String email = ''}) async {
     final client = http.Client();
     try {
       final server = await _server(client);
@@ -900,7 +996,12 @@ class Learning extends ChangeNotifier {
           .post(
             server.resolve('/claim'),
             headers: {'content-type': 'application/json'},
-            body: jsonEncode({'source': source.name, 'order': order.trim(), if (source.needsEmail) 'email': email.trim(), 'consent': learningConsentVersion}),
+            body: jsonEncode({
+              'source': source.name,
+              'order': order.trim(),
+              if (source.needsEmail) 'email': email.trim(),
+              'consent': learningConsentVersion
+            }),
           )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 429) return ClaimResult.busy;
@@ -911,7 +1012,9 @@ class Learning extends ChangeNotifier {
       final answer = response.statusCode == 200 ? jsonDecode(response.body) : null;
       final code = answer is Map ? answer['code'] : null;
       lastConsent = answer is Map ? DateTime.tryParse('${answer['consented']}')?.toLocal() : null;
-      if (code is! String) return response.statusCode >= 500 ? ClaimResult.offline : ClaimResult.notFound;
+      if (code is! String) {
+        return response.statusCode >= 500 ? ClaimResult.offline : ClaimResult.notFound;
+      }
       return switch (await enterLicense(code)) {
         LicenseResult.ok || LicenseResult.offline => ClaimResult.ok,
         LicenseResult.revoked => ClaimResult.revoked,
@@ -930,7 +1033,9 @@ class Learning extends ChangeNotifier {
   /// can be reached.
   Future<void> removeLicense() async {
     final license = _license;
-    if (license != null && _directories != null) await removeDevice(await _device(), license: license);
+    if (license != null && _directories != null) {
+      await removeDevice(await _device(), license: license);
+    }
     _license = null;
     pendingLicense = null;
     _receipt = '';
@@ -983,7 +1088,31 @@ class Learning extends ChangeNotifier {
     final file = _settingsFile;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({'license': _license?.code ?? '', 'activation': _receipt, 'entered': _entered?.toIso8601String() ?? '', 'blocked': _blocked, 'stopped': _stopReason, 'pinyin': _showPinyin, 'romanization': _showRomanization, 'hoverPause': _hoverPause, 'meanings': _meanings?.name ?? '', 'voice': _voiceService.name, 'voicePicked': _voicePicked, 'englishLevel': _englishLevel ?? -1, 'levels': _myLevels, 'trial': {'taken': _trialTaken, 'seen': _trialSeen, 'day': _trialDay, 'used': _trialUsed, 'words': _trialWords.toList()}, 'lookedUp': lookedUp}));
+      await writeFileAtomic(
+          file,
+          jsonEncode({
+            'license': _license?.code ?? '',
+            'activation': _receipt,
+            'entered': _entered?.toIso8601String() ?? '',
+            'blocked': _blocked,
+            'stopped': _stopReason,
+            'pinyin': _showPinyin,
+            'romanization': _showRomanization,
+            'hoverPause': _hoverPause,
+            'meanings': _meanings?.name ?? '',
+            'voice': _voiceService.name,
+            'voicePicked': _voicePicked,
+            'englishLevel': _englishLevel ?? -1,
+            'levels': _myLevels,
+            'trial': {
+              'taken': _trialTaken,
+              'seen': _trialSeen,
+              'day': _trialDay,
+              'used': _trialUsed,
+              'words': _trialWords.toList()
+            },
+            'lookedUp': lookedUp
+          }));
     } catch (e) {
       logError('Could not save the learning settings', e);
     }
@@ -996,7 +1125,9 @@ class Learning extends ChangeNotifier {
       if (pack.language != language) continue;
       final state = _packs[pack]!.state;
       if (state == PackState.downloaded) unawaited(load(pack));
-      return state == PackState.downloaded || state == PackState.loading || state == PackState.ready;
+      return state == PackState.downloaded ||
+          state == PackState.loading ||
+          state == PackState.ready;
     }
     return false;
   }
@@ -1019,8 +1150,10 @@ class Learning extends ChangeNotifier {
       // Both on another thread: opening a SQLite file counts its words.
       state.dictionary = pack.sqlite
           ? switch (pack) {
-              DictionaryPack.english => EnglishDictionary(await CoreLexicon.openInBackground(pack.language, path)),
-              _ => WiktionaryDictionary(pack.language, await CoreLexicon.openInBackground(pack.language, path)),
+              DictionaryPack.english =>
+                EnglishDictionary(await CoreLexicon.openInBackground(pack.language, path)),
+              _ => WiktionaryDictionary(
+                  pack.language, await CoreLexicon.openInBackground(pack.language, path)),
             }
           : await Isolate.run<Object>(() {
               final unpacked = gzip.decode(File(path).readAsBytesSync());
@@ -1090,8 +1223,12 @@ class Learning extends ChangeNotifier {
     final unpacked = File('${file.path}.new');
     try {
       final expected = (await _signedSums(client)).of(pack.file);
-      if (expected == null) throw const FormatException('The dictionary is not listed in SHA256SUMS');
-      final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/${pack.file}'))).timeout(const Duration(seconds: 30));
+      if (expected == null) {
+        throw const FormatException('The dictionary is not listed in SHA256SUMS');
+      }
+      final response = await client
+          .send(http.Request('GET', Uri.parse('$learningPackRelease/${pack.file}')))
+          .timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) throw HttpException('Dictionary HTTP ${response.statusCode}');
       await file.parent.create(recursive: true);
       final sink = part.openWrite();
@@ -1116,7 +1253,9 @@ class Learning extends ChangeNotifier {
         await sink.close();
       }
       hasher.close();
-      if (hashSink.value.toString() != expected) throw const FormatException('The dictionary download is damaged; try again');
+      if (hashSink.value.toString() != expected) {
+        throw const FormatException('The dictionary download is damaged; try again');
+      }
       if (pack.sqlite) {
         // Unpacked once, then looked up in place; the open copy is let go
         // first so it can be replaced.
@@ -1215,11 +1354,19 @@ class Learning extends ChangeNotifier {
       final expected = (await _signedSums(client)).of(name);
       // Not published yet.
       if (expected == null) return false;
-      final response = await client.get(Uri.parse('$learningPackRelease/$name')).timeout(const Duration(seconds: 60));
-      if (response.statusCode != 200) throw HttpException('Word levels HTTP ${response.statusCode}');
+      final response = await client
+          .get(Uri.parse('$learningPackRelease/$name'))
+          .timeout(const Duration(seconds: 60));
+      if (response.statusCode != 200) {
+        throw HttpException('Word levels HTTP ${response.statusCode}');
+      }
       // A few hundred kilobytes; anything far bigger is not this file.
-      if (response.bodyBytes.length > 8 << 20) throw const FormatException('The word levels are too big');
-      if (sha256.convert(response.bodyBytes).toString() != expected) throw const FormatException('The word levels download is damaged');
+      if (response.bodyBytes.length > 8 << 20) {
+        throw const FormatException('The word levels are too big');
+      }
+      if (sha256.convert(response.bodyBytes).toString() != expected) {
+        throw const FormatException('The word levels download is damaged');
+      }
       await file.parent.create(recursive: true);
       await part.writeAsBytes(response.bodyBytes, flush: true);
       await part.rename(file.path);
@@ -1242,7 +1389,9 @@ class Learning extends ChangeNotifier {
   Future<LevelTestBank?> levelTestBank(String language) async {
     final name = levelTestFile(language);
     final data = _directories?.data.path;
-    final file = data == null ? null : File([data, 'learn', 'level-test', name].join(Platform.pathSeparator));
+    final file = data == null
+        ? null
+        : File([data, 'learn', 'level-test', name].join(Platform.pathSeparator));
     Uint8List? bytes;
     final client = http.Client();
     try {
@@ -1253,10 +1402,18 @@ class Learning extends ChangeNotifier {
         if (sha256.convert(kept).toString() == expected) bytes = kept;
       }
       if (bytes == null) {
-        final response = await client.get(Uri.parse('$learningPackRelease/$name')).timeout(const Duration(seconds: 60));
-        if (response.statusCode != 200) throw HttpException('Level test HTTP ${response.statusCode}');
-        if (response.bodyBytes.length > 4 << 20) throw const FormatException('The level test is too big');
-        if (sha256.convert(response.bodyBytes).toString() != expected) throw const FormatException('The level test download is damaged');
+        final response = await client
+            .get(Uri.parse('$learningPackRelease/$name'))
+            .timeout(const Duration(seconds: 60));
+        if (response.statusCode != 200) {
+          throw HttpException('Level test HTTP ${response.statusCode}');
+        }
+        if (response.bodyBytes.length > 4 << 20) {
+          throw const FormatException('The level test is too big');
+        }
+        if (sha256.convert(response.bodyBytes).toString() != expected) {
+          throw const FormatException('The level test download is damaged');
+        }
         bytes = response.bodyBytes;
         if (file != null) {
           await file.parent.create(recursive: true);
@@ -1290,7 +1447,12 @@ class Learning extends ChangeNotifier {
   /// are cut the old way until it is open.
   Future<void> _openSegmenter(DictionaryPack pack) async {
     final folder = _segmenterOf(pack);
-    if (pack.segmenter == null || folder == null || !CoreWords.available || CoreWords.isOpen(pack.language)) return;
+    if (pack.segmenter == null ||
+        folder == null ||
+        !CoreWords.available ||
+        CoreWords.isOpen(pack.language)) {
+      return;
+    }
     if (await File('${folder.path}${Platform.pathSeparator}metadata.json').exists()) {
       try {
         // Reading Lindera's dictionary takes a while; not on the window's thread.
@@ -1321,7 +1483,9 @@ class Learning extends ChangeNotifier {
       final expected = (await _signedSums(client)).of(name);
       // Not published yet: the dictionary cuts lines itself meanwhile.
       if (expected == null) return;
-      final response = await client.send(http.Request('GET', Uri.parse('$learningPackRelease/$name'))).timeout(const Duration(seconds: 30));
+      final response = await client
+          .send(http.Request('GET', Uri.parse('$learningPackRelease/$name')))
+          .timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) throw HttpException('Segmenter HTTP ${response.statusCode}');
       await folder.parent.create(recursive: true);
       final sink = archive.openWrite();
@@ -1336,7 +1500,9 @@ class Learning extends ChangeNotifier {
         await sink.close();
       }
       hasher.close();
-      if (hashSink.value.toString() != expected) throw const FormatException('The segmenter download is damaged');
+      if (hashSink.value.toString() != expected) {
+        throw const FormatException('The segmenter download is damaged');
+      }
       if (await unpacked.exists()) await unpacked.delete(recursive: true);
       await extractZip(archive, unpacked);
       if (_packs[pack]!.dictionary == null) return;
@@ -1403,10 +1569,20 @@ enum PurchaseSource {
 Future<Uri?> cardCheckoutLink() async {
   final client = http.Client();
   try {
-    for (final (file, host) in const [('kofi-checkout.txt', 'ko-fi.com'), ('creem-checkout.txt', 'creem.io'), ('polar-checkout.txt', 'polar.sh')]) {
-      final answer = await client.get(Uri.parse('$learningPackRelease/$file')).timeout(const Duration(seconds: 15));
+    for (final (file, host) in const [
+      ('kofi-checkout.txt', 'ko-fi.com'),
+      ('creem-checkout.txt', 'creem.io'),
+      ('polar-checkout.txt', 'polar.sh')
+    ]) {
+      final answer = await client
+          .get(Uri.parse('$learningPackRelease/$file'))
+          .timeout(const Duration(seconds: 15));
       final uri = answer.statusCode == 200 ? Uri.tryParse(answer.body.trim()) : null;
-      if (uri != null && uri.scheme == 'https' && (uri.host == host || uri.host.endsWith('.$host'))) return uri;
+      if (uri != null &&
+          uri.scheme == 'https' &&
+          (uri.host == host || uri.host.endsWith('.$host'))) {
+        return uri;
+      }
     }
     return null;
   } catch (e) {

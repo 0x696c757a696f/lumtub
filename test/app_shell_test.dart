@@ -8,10 +8,13 @@ import 'package:lumtub/ui/page_switcher.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  Future<AppController> pumpApp(WidgetTester tester, Size size, {Brightness? platformBrightness}) async {
+  Future<AppController> pumpApp(WidgetTester tester, Size size,
+      {Brightness? platformBrightness}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
-    if (platformBrightness != null) tester.platformDispatcher.platformBrightnessTestValue = platformBrightness;
+    if (platformBrightness != null) {
+      tester.platformDispatcher.platformBrightnessTestValue = platformBrightness;
+    }
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     // Full motion whatever the machine says: on Windows with animations
@@ -19,7 +22,8 @@ void main() {
     // at once and Flutter would run every animation 20 times faster.
     tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures();
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    final controller = AppController(appearance: const AppearanceSettings(motion: MotionPreference.full));
+    final controller =
+        AppController(appearance: const AppearanceSettings(motion: MotionPreference.full));
     await tester.pumpWidget(LumtubApp(controller: controller));
     await tester.pump();
     return controller;
@@ -44,7 +48,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('on a phone, searching gives the field the whole bar and the arrow gives it back', (tester) async {
+  testWidgets('on a phone, searching gives the field the whole bar and the arrow gives it back',
+      (tester) async {
     final controller = await pumpApp(tester, const Size(390, 800));
     controller
       ..ready = true
@@ -77,7 +82,8 @@ void main() {
 
     testWidgets('the rail slides away as the bottom bar comes in, and back', (tester) async {
       await pumpApp(tester, const Size(1280, 800));
-      final rail = find.ancestor(of: find.byType(NavigationRail), matching: find.byType(AnimatedVisibility));
+      final rail =
+          find.ancestor(of: find.byType(NavigationRail), matching: find.byType(AnimatedVisibility));
       final full = width(tester, rail);
       expect(full, greaterThan(0));
 
@@ -89,7 +95,8 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(width(tester, rail), inExclusiveRange(0, full));
       expect(tester.getSize(find.byType(NavigationBar)).height, 64);
-      final bar = find.ancestor(of: find.byType(NavigationBar), matching: find.byType(AnimatedVisibility));
+      final bar =
+          find.ancestor(of: find.byType(NavigationBar), matching: find.byType(AnimatedVisibility));
       expect(tester.getSize(bar).height, inExclusiveRange(0, 64));
       expect(tester.takeException(), isNull);
 
@@ -116,7 +123,8 @@ void main() {
       tester.view.physicalSize = const Size(600, 800);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      Iterable<T> around<T extends Widget>(Type bar) => tester.widgetList<T>(find.ancestor(of: find.byType(bar), matching: find.byType(T)));
+      Iterable<T> around<T extends Widget>(Type bar) =>
+          tester.widgetList<T>(find.ancestor(of: find.byType(bar), matching: find.byType(T)));
       expect(around<ExcludeFocus>(NavigationRail).any((e) => e.excluding), isTrue);
       expect(around<ExcludeSemantics>(NavigationRail).any((e) => e.excluding), isTrue);
       expect(around<IgnorePointer>(NavigationRail).any((e) => e.ignoring), isTrue);
@@ -142,7 +150,8 @@ void main() {
     });
   });
 
-  testWidgets('a change that is not navigation leaves the rail alone, while the rest follows it', (tester) async {
+  testWidgets('a change that is not navigation leaves the rail alone, while the rest follows it',
+      (tester) async {
     final controller = await pumpApp(tester, const Size(1280, 800));
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
     final incognito = find.byWidgetPredicate((w) => w is IconButton && (w.isSelected ?? false));

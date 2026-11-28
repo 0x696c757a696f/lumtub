@@ -29,7 +29,9 @@ Uint8List wav(int rate, int samples, {int dataSize = -1}) {
         .buffer
         .asUint8List())
     ..add(ascii.encode('data'))
-    ..add((ByteData(4)..setUint32(0, dataSize < 0 ? pcm.length : dataSize, Endian.little)).buffer.asUint8List())
+    ..add((ByteData(4)..setUint32(0, dataSize < 0 ? pcm.length : dataSize, Endian.little))
+        .buffer
+        .asUint8List())
     ..add(pcm);
   return b.toBytes();
 }
@@ -53,8 +55,17 @@ void main() {
     final folder = await Directory.systemTemp.createTemp('lumtub-anki');
     addTearDown(() => folder.delete(recursive: true));
     final book = VocabularyBook(File('${folder.path}/vocabulary.json'));
-    final word = VocabularyWord(word: 'docteur', language: 'fr', meaning: 'n. 医生', sentence: 'docteur en neurosciences', videoId: 'abc', videoTitle: 'T', at: const Duration(seconds: 9), added: DateTime(2026));
-    final other = VocabularyWord(word: 'main', language: 'fr', meaning: 'n. 手', added: DateTime(2026));
+    final word = VocabularyWord(
+        word: 'docteur',
+        language: 'fr',
+        meaning: 'n. 医生',
+        sentence: 'docteur en neurosciences',
+        videoId: 'abc',
+        videoTitle: 'T',
+        at: const Duration(seconds: 9),
+        added: DateTime(2026));
+    final other =
+        VocabularyWord(word: 'main', language: 'fr', meaning: 'n. 手', added: DateTime(2026));
     await book.add(word);
     await book.add(other);
     final sound = book.soundOf(word.key);
@@ -81,11 +92,14 @@ void main() {
     });
     final anki = AnkiConnect(client: _Redirect(server.port));
     final pictures = <String>[];
-    expect(await anki.send(book.words, book, picture: (id) async {
-      pictures.add(id);
-      return (bytes: [1, 2], webp: false);
-    }), 1);
-    final model = asked.firstWhere((a) => a['action'] == 'createModel')['params']! as Map<String, Object?>;
+    expect(
+        await anki.send(book.words, book, picture: (id) async {
+          pictures.add(id);
+          return (bytes: [1, 2], webp: false);
+        }),
+        1);
+    final model =
+        asked.firstWhere((a) => a['action'] == 'createModel')['params']! as Map<String, Object?>;
     expect(model['modelName'], 'Lumtub');
     expect(model['inOrderFields'], AnkiCard.fields);
     expect((model['css']! as String).startsWith(AnkiCard.styleMarker), isTrue);
@@ -98,10 +112,12 @@ void main() {
     // which has no video, so no picture was asked for.
     expect((note['fields']! as Map<String, Object?>)['Word'], 'main');
     expect(pictures, isEmpty);
-    final docteur = _notesOf(asked.firstWhere((a) => a['action'] == 'canAddNotes'))[1]! as Map<String, Object?>;
+    final docteur =
+        _notesOf(asked.firstWhere((a) => a['action'] == 'canAddNotes'))[1]! as Map<String, Object?>;
     // Sounds are read only for the words Anki takes.
     expect(docteur.containsKey('audio'), isFalse);
-    expect((docteur['fields']! as Map<String, Object?>)['Sentence'], '<b>docteur</b> en neurosciences');
+    expect((docteur['fields']! as Map<String, Object?>)['Sentence'],
+        '<b>docteur</b> en neurosciences');
     expect((docteur['fields']! as Map<String, Object?>)['Time'], '0:09');
   });
 
@@ -109,7 +125,8 @@ void main() {
     final folder = await Directory.systemTemp.createTemp('lumtub-anki');
     addTearDown(() => folder.delete(recursive: true));
     final book = VocabularyBook(File('${folder.path}/vocabulary.json'));
-    final word = VocabularyWord(word: 'docteur', language: 'fr', meaning: 'n. 医生', added: DateTime(2026));
+    final word =
+        VocabularyWord(word: 'docteur', language: 'fr', meaning: 'n. 医生', added: DateTime(2026));
     await book.add(word);
     final sound = book.soundOf(word.key);
     await sound.parent.create(recursive: true);
@@ -131,12 +148,18 @@ void main() {
       await request.response.close();
     });
     expect(await AnkiConnect(client: _Redirect(server.port)).send(book.words, book), 1);
-    final note = _notesOf(asked.firstWhere((a) => a['action'] == 'addNotes')).single! as Map<String, Object?>;
-    expect(((note['audio']! as List<Object?>).single! as Map<String, Object?>)['fields'], ['Audio']);
+    final note = _notesOf(asked.firstWhere((a) => a['action'] == 'addNotes')).single!
+        as Map<String, Object?>;
+    expect(
+        ((note['audio']! as List<Object?>).single! as Map<String, Object?>)['fields'], ['Audio']);
   });
 
   test('an older Lumtub style is updated, a changed one is kept', () async {
-    for (final (css, updated) in [('/* Lumtub card style 0. old */', true), ('.card { color: red }', false), (AnkiCard.css, false)]) {
+    for (final (css, updated) in [
+      ('/* Lumtub card style 0. old */', true),
+      ('.card { color: red }', false),
+      (AnkiCard.css, false)
+    ]) {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final asked = <String>[];
       server.listen((request) async {
@@ -146,7 +169,9 @@ void main() {
           'modelNames' => ['Lumtub'],
           'modelFieldNames' => AnkiCard.fields.where((f) => f != 'Notes').toList(),
           'modelStyling' => {'css': css},
-          'modelTemplates' => {'Recognition': {'Front': '', 'Back': ''}},
+          'modelTemplates' => {
+              'Recognition': {'Front': '', 'Back': ''}
+            },
           'canAddNotes' => [false],
           _ => null,
         };
@@ -156,7 +181,9 @@ void main() {
       final folder = await Directory.systemTemp.createTemp('lumtub-anki');
       final book = VocabularyBook(File('${folder.path}/v.json'));
       final anki = AnkiConnect(client: _Redirect(server.port));
-      expect(await anki.send([VocabularyWord(word: 'x', language: 'fr', added: DateTime(2026))], book), 0);
+      expect(
+          await anki.send([VocabularyWord(word: 'x', language: 'fr', added: DateTime(2026))], book),
+          0);
       expect(asked, contains('modelFieldAdd'));
       expect(asked.contains('updateModelStyling'), updated, reason: css);
       expect(asked.contains('updateModelTemplates'), updated, reason: css);
@@ -167,7 +194,8 @@ void main() {
   });
 
   test('the line marks the word where it stands alone', () {
-    expect(AnkiCard.markedLine('Run, he runs <fast>', 'run', 'en'), '<b>Run</b>, he runs &lt;fast&gt;');
+    expect(AnkiCard.markedLine('Run, he runs <fast>', 'run', 'en'),
+        '<b>Run</b>, he runs &lt;fast&gt;');
     expect(AnkiCard.markedLine('我们一起学习中文吧', '学习', 'zh'), '我们一起<b>学习</b>中文吧');
     expect(AnkiCard.markedLine("l'école", 'école', 'fr'), "l'<b>école</b>");
   });
@@ -203,4 +231,5 @@ class _Redirect extends http.BaseClient {
 }
 
 /// The `notes` of an AnkiConnect request's params.
-List<Object?> _notesOf(Map<String, Object?> request) => (request['params']! as Map<String, Object?>)['notes']! as List<Object?>;
+List<Object?> _notesOf(Map<String, Object?> request) =>
+    (request['params']! as Map<String, Object?>)['notes']! as List<Object?>;

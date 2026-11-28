@@ -5,6 +5,7 @@ enum RightClick {
   /// The video fills the window, the page round it hidden, without going
   /// fullscreen; a second right click brings the page back.
   fillWindow,
+
   /// Out of fullscreen first, then back, as in wiliwili.
   back,
   off;

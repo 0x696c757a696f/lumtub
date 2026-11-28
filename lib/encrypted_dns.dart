@@ -19,9 +19,12 @@ class DnsServer {
   static const custom = 'custom';
 
   static const presets = [
-    DnsServer('cloudflare', 'Cloudflare', 'https://cloudflare-dns.com/dns-query', ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111']),
-    DnsServer('google', 'Google', 'https://dns.google/dns-query', ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888']),
-    DnsServer('quad9', 'Quad9', 'https://dns.quad9.net/dns-query', ['9.9.9.9', '149.112.112.112', '2620:fe::fe']),
+    DnsServer('cloudflare', 'Cloudflare', 'https://cloudflare-dns.com/dns-query',
+        ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111']),
+    DnsServer('google', 'Google', 'https://dns.google/dns-query',
+        ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888']),
+    DnsServer('quad9', 'Quad9', 'https://dns.quad9.net/dns-query',
+        ['9.9.9.9', '149.112.112.112', '2620:fe::fe']),
   ];
 
   /// The server for setting [id] (`''` is off), with [customUrl] for [custom].
@@ -39,7 +42,8 @@ class DnsServer {
   /// What the menu shows for setting [id].
   static String label(String id, String customUrl) => switch (id) {
         '' => tr('Off (system DNS)'),
-        custom => normalize(customUrl) == null ? tr('Custom') : tr('Custom: {0}', [normalize(customUrl)]),
+        custom =>
+          normalize(customUrl) == null ? tr('Custom') : tr('Custom: {0}', [normalize(customUrl)]),
         _ => of(id, customUrl)?.name ?? tr('Off (system DNS)'),
       };
 
@@ -63,15 +67,27 @@ typedef DnsTest = ({bool ok, List<String> addresses, int milliseconds, String er
 /// Looks [host] up over [server] alone, without the system fallback, off the
 /// UI thread.
 Future<DnsTest> testDnsServer(DnsServer server, {String host = 'www.youtube.com'}) async {
-  if (NativeCore.instance == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('The native core is missing'));
+  if (NativeCore.instance == null) {
+    return (
+      ok: false,
+      addresses: const <String>[],
+      milliseconds: 0,
+      error: tr('The native core is missing')
+    );
+  }
   final settings = jsonEncode(server.toJson());
   final answer = await Isolate.run(() {
     final core = NativeCore.instance!;
-    final test = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_dns_test');
-    return core.take(core.withText(settings, (s, sl) => core.withText(host, (h, hl) => test(s, sl, h, hl))));
+    final test = core.library.lookupFunction<
+        Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_dns_test');
+    return core.take(
+        core.withText(settings, (s, sl) => core.withText(host, (h, hl) => test(s, sl, h, hl))));
   });
   final json = answer == null ? null : jsonDecode(answer) as Map<String, Object?>;
-  if (json == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('No answer'));
+  if (json == null) {
+    return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('No answer'));
+  }
   return (
     ok: json['ok'] == true,
     addresses: [for (final a in (json['addresses'] as List?) ?? const []) a.toString()],

@@ -44,7 +44,10 @@ extension QueueActions on AppController {
     if (next == null) return false;
     _update(() => playQueue.remove(next.id));
     final at = playing == null ? -1 : _queueIndexOf(playing!.id);
-    final rest = [for (final other in queue) if (other.id != next.id) other];
+    final rest = [
+      for (final other in queue)
+        if (other.id != next.id) other
+    ];
     final from = at < 0 ? null : [...rest.take(at + 1), next, ...rest.skip(at + 1)];
     await play(next, from: from, keepMini: keepMini);
     return true;
@@ -80,7 +83,11 @@ extension QueueActions on AppController {
   /// Shows and plays playlist [id] last to first, or in its own order; the
   /// playlist playing now follows at once.
   Future<void> setReversed(String id, bool reversed) async {
-    final ids = [for (final other in preferences.reversedPlaylists) if (other != id) other, if (reversed) id];
+    final ids = [
+      for (final other in preferences.reversedPlaylists)
+        if (other != id) other,
+      if (reversed) id
+    ];
     final list = playingList;
     if (list != null && list.id == id && list.reversed != reversed) {
       _update(() {
@@ -94,7 +101,8 @@ extension QueueActions on AppController {
   /// Plays playlist [id] from [start], or from its first video in the
   /// order chosen for it.
   Future<void> playList(String id, String title, List<VideoItem> items, {VideoItem? start}) {
-    final list = PlayingList(id: id, title: title, items: List.unmodifiable(items), reversed: isReversed(id));
+    final list = PlayingList(
+        id: id, title: title, items: List.unmodifiable(items), reversed: isReversed(id));
     return play(start ?? list.ordered.first, list: list);
   }
 
@@ -105,13 +113,17 @@ extension QueueActions on AppController {
     if (loader == null || _loadingWhole == loader) return;
     _loadingWhole = loader;
     void more() {
-      if (!identical(loader, youtubePlaylistVideos) || !loader.hasMore || loader.error != null || loader.items.length >= 5000) {
+      if (!identical(loader, youtubePlaylistVideos) ||
+          !loader.hasMore ||
+          loader.error != null ||
+          loader.items.length >= 5000) {
         loader.removeListener(more);
         if (identical(_loadingWhole, loader)) _loadingWhole = null;
         return;
       }
       if (!loader.loading) scheduleMicrotask(loader.loadMore);
     }
+
     loader.addListener(more);
     more();
   }

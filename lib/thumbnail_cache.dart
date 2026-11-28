@@ -23,6 +23,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   final String url;
   final File? file;
+
   /// Loaded instead when [url] fails, such as YouTube's own thumbnail
   /// when DeArrow's frame is not ready.
   final CachedThumbnail? fallback;
@@ -34,13 +35,13 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   /// safe as file names.
   /// Sizes other than the default `hqdefault` are cached under their own
   /// name, so switching sizes never shows a stale image.
-  static File fileFor(Directory directory, String videoId, [String size = 'hqdefault']) =>
-      File('${directory.path}${Platform.pathSeparator}$videoId${size == 'hqdefault' ? '' : '_$size'}.jpg');
+  static File fileFor(Directory directory, String videoId, [String size = 'hqdefault']) => File(
+      '${directory.path}${Platform.pathSeparator}$videoId${size == 'hqdefault' ? '' : '_$size'}.jpg');
 
   /// The cache file for a picture known only by its address, such as a
   /// playlist's cover: named after a hash of it.
-  static File fileForUrl(Directory directory, String url) =>
-      File('${directory.path}${Platform.pathSeparator}cover_${sha1.convert(utf8.encode(url)).toString().substring(0, 20)}.jpg');
+  static File fileForUrl(Directory directory, String url) => File(
+      '${directory.path}${Platform.pathSeparator}cover_${sha1.convert(utf8.encode(url)).toString().substring(0, 20)}.jpg');
 
   @override
   Future<CachedThumbnail> obtainKey(ImageConfiguration configuration) => SynchronousFuture(this);
@@ -81,9 +82,15 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     final match = _youtubeJpeg.firstMatch(url);
     if (match == null) return [url];
     final id = match[1]!;
-    final names = [match[2]!, if (const {'maxresdefault', 'sddefault'}.contains(match[2])) 'hqdefault'];
+    final names = [
+      match[2]!,
+      if (const {'maxresdefault', 'sddefault'}.contains(match[2])) 'hqdefault'
+    ];
     return [
-      for (final name in names) ...['https://i.ytimg.com/vi_webp/$id/$name.webp', 'https://i.ytimg.com/vi/$id/$name.jpg'],
+      for (final name in names) ...[
+        'https://i.ytimg.com/vi_webp/$id/$name.webp',
+        'https://i.ytimg.com/vi/$id/$name.jpg'
+      ],
     ];
   }
 
@@ -114,7 +121,8 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
       await slot(wanted);
       try {
         for (final address in candidates(url)) {
-          (status, body) = await fetch(_client, Uri.parse(address)).timeout(const Duration(seconds: 10));
+          (status, body) =
+              await fetch(_client, Uri.parse(address)).timeout(const Duration(seconds: 10));
           if (status != 404) break;
         }
       } finally {
@@ -207,7 +215,9 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     unawaited(() async {
       try {
         final now = DateTime.now();
-        if (now.difference(await file.lastModified()) > const Duration(days: 1)) await file.setLastModified(now);
+        if (now.difference(await file.lastModified()) > const Duration(days: 1)) {
+          await file.setLastModified(now);
+        }
       } on FileSystemException {
         // Only the order of trimming suffers.
       }
@@ -238,7 +248,8 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   }
 
   @override
-  bool operator ==(Object other) => other is CachedThumbnail && other.url == url && other.file?.path == file?.path;
+  bool operator ==(Object other) =>
+      other is CachedThumbnail && other.url == url && other.file?.path == file?.path;
 
   @override
   int get hashCode => Object.hash(url, file?.path);

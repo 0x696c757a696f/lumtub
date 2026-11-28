@@ -21,7 +21,8 @@ class _Local extends IntelligenceProvider {
   @override
   String modelFor(Capability capability) => 'qwen3-4b';
   @override
-  Future<String> complete(String system, String prompt, {double temperature = 0.3}) async => 'local answer';
+  Future<String> complete(String system, String prompt, {double temperature = 0.3}) async =>
+      'local answer';
 }
 
 void main() {
@@ -33,17 +34,26 @@ void main() {
     client = MockClient((request) async {
       if (request.url.path.endsWith('/chat/completions')) {
         asked.add(jsonDecode(request.body) as Map<String, dynamic>);
-        return http.Response(jsonEncode({
-          'choices': [
-            {'message': {'content': 'cloud answer'}},
-          ],
-        }), 200, headers: {'content-type': 'application/json'});
+        return http.Response(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {'content': 'cloud answer'}
+                },
+              ],
+            }),
+            200,
+            headers: {'content-type': 'application/json'});
       }
       return http.Response('no', 404);
     });
   });
 
-  AiTranslator ai() => AiTranslator(client, baseUrl: 'https://api.example.com/v1', key: 'k', model: 'deepseek-chat', prompt: 'Translate into {target}.');
+  AiTranslator ai() => AiTranslator(client,
+      baseUrl: 'https://api.example.com/v1',
+      key: 'k',
+      model: 'deepseek-chat',
+      prompt: 'Translate into {target}.');
 
   test('the cloud provider asks the service set up, as before', () async {
     final intelligence = Intelligence([CloudIntelligence(ai: ai())]);
@@ -65,7 +75,8 @@ void main() {
     expect(asked, isEmpty);
     // Translation is still only in the cloud.
     expect(intelligence.providerFor(Capability.translate)!.id, 'cloud');
-    final cloudFirst = Intelligence([CloudIntelligence(ai: ai()), const _Local()], order: const [ProviderKind.cloud, ProviderKind.local]);
+    final cloudFirst = Intelligence([CloudIntelligence(ai: ai()), const _Local()],
+        order: const [ProviderKind.cloud, ProviderKind.local]);
     expect(await cloudFirst.complete('s', 'p'), 'cloud answer');
   });
 
@@ -84,19 +95,29 @@ void main() {
       final body = utf8.decode(request.bodyBytes, allowMalformed: true);
       final part = RegExp(r'part(\d)').firstMatch(body)!.group(1)!;
       heard.add(part);
-      return http.Response(jsonEncode({
-        'language': 'english',
-        'segments': [
-          {'start': 0.0, 'end': 1.5, 'text': 'part $part'},
-        ],
-      }), 200, headers: {'content-type': 'application/json'});
+      return http.Response(
+          jsonEncode({
+            'language': 'english',
+            'segments': [
+              {'start': 0.0, 'end': 1.5, 'text': 'part $part'},
+            ],
+          }),
+          200,
+          headers: {'content-type': 'application/json'});
     });
     final parts = <SpeechPart>[
-      for (var i = 0; i < 3; i++) (file: await File('${temp.path}/part$i.webm').writeAsBytes([1, 2, 3]), offset: Duration(minutes: 10 * i)),
+      for (var i = 0; i < 3; i++)
+        (
+          file: await File('${temp.path}/part$i.webm').writeAsBytes([1, 2, 3]),
+          offset: Duration(minutes: 10 * i)
+        ),
     ];
-    final cloud = CloudIntelligence(speech: SpeechRecognizer(speech, baseUrl: 'https://api.example.com/v1/', key: 'k', model: 'whisper-1'));
+    final cloud = CloudIntelligence(
+        speech: SpeechRecognizer(speech,
+            baseUrl: 'https://api.example.com/v1/', key: 'k', model: 'whisper-1'));
     final progress = <int>[];
-    final transcript = await Intelligence([cloud]).transcribe(parts, language: 'en', onProgress: (done, total) => progress.add(done));
+    final transcript = await Intelligence([cloud])
+        .transcribe(parts, language: 'en', onProgress: (done, total) => progress.add(done));
     expect(heard.toSet(), {'0', '1', '2'});
     expect(progress.last, 3);
     expect(transcript.origin, TextOrigin.machineCloud);
@@ -107,9 +128,16 @@ void main() {
   }, skip: NativeCore.instance == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : false);
 
   test('a hosted model known to read long texts gets the whole transcript at once', () {
-    expect(CloudIntelligence.longContextModel('deepseek-chat', 'https://api.deepseek.com/v1'), isTrue);
-    expect(CloudIntelligence.longContextModel('gemini-2.5-flash', 'https://generativelanguage.googleapis.com/v1beta/openai'), isTrue);
-    expect(CloudIntelligence.longContextModel('Qwen/Qwen2.5-7B-Instruct', 'https://api.siliconflow.cn/v1'), isFalse);
+    expect(
+        CloudIntelligence.longContextModel('deepseek-chat', 'https://api.deepseek.com/v1'), isTrue);
+    expect(
+        CloudIntelligence.longContextModel(
+            'gemini-2.5-flash', 'https://generativelanguage.googleapis.com/v1beta/openai'),
+        isTrue);
+    expect(
+        CloudIntelligence.longContextModel(
+            'Qwen/Qwen2.5-7B-Instruct', 'https://api.siliconflow.cn/v1'),
+        isFalse);
     // A model on this computer may be set to a short context.
     expect(CloudIntelligence.longContextModel('qwen3', 'http://localhost:11434/v1'), isFalse);
     expect(const CloudIntelligence().completeBudget, IntelligenceProvider.shortBudget);

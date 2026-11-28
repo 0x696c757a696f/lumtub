@@ -32,7 +32,9 @@ extension SkipSilenceActions on AppController {
     final rate = _silence.onMetadata(value);
     final platform = player.platform;
     if (rate == null || platform is! NativePlayer || this.player != player) return;
-    scheduleMicrotask(() => unawaited(platform.setProperty('speed', '$rate').catchError((Object e) => logWarn('Could not change the speed for silence: $e'))));
+    scheduleMicrotask(() => unawaited(platform
+        .setProperty('speed', '$rate')
+        .catchError((Object e) => logWarn('Could not change the speed for silence: $e'))));
   }
 
   /// Takes the filter labelled [label] out of libmpv's audio chain when it

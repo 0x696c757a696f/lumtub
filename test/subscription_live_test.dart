@@ -30,24 +30,38 @@ ${entry('ddddddddddd', 'Old video', now.subtract(const Duration(days: 30)))}
 </feed>''';
     final asked = <String>[];
     final client = MockClient((request) async {
-      if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
-      if (request.method == 'GET') return http.Response('<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
+      if (request.url.path == '/feeds/videos.xml') {
+        return http.Response.bytes(utf8.encode(feed), 200);
+      }
+      if (request.method == 'GET') {
+        return http.Response(
+            '<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
+      }
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
-      expect(request.headers['X-Goog-FieldMask'], 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming');
-      return http.Response(jsonEncode({
-        'videoDetails': {
-          if (id == 'aaaaaaaaaaa') 'isLive': true,
-          if (id == 'bbbbbbbbbbb') 'isUpcoming': true,
-        },
-      }), 200);
+      expect(request.headers['X-Goog-FieldMask'],
+          'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming');
+      return http.Response(
+          jsonEncode({
+            'videoDetails': {
+              if (id == 'aaaaaaaaaaa') 'isLive': true,
+              if (id == 'bbbbbbbbbbb') 'isUpcoming': true,
+            },
+          }),
+          200);
     });
     final dir = Directory.systemTemp.createTempSync('live');
-    final library = LibraryController(LibraryStore(File('${dir.path}/library.json')), client: client);
+    final library =
+        LibraryController(LibraryStore(File('${dir.path}/library.json')), client: client);
     library.store.toggleFollow(channel);
     await library.refreshFeed(force: true);
     final states = {for (final item in library.feed) item.id: item.liveStatus};
-    expect(states, {'aaaaaaaaaaa': 'is_live', 'bbbbbbbbbbb': 'is_upcoming', 'ccccccccccc': null, 'ddddddddddd': null});
+    expect(states, {
+      'aaaaaaaaaaa': 'is_live',
+      'bbbbbbbbbbb': 'is_upcoming',
+      'ccccccccccc': null,
+      'ddddddddddd': null
+    });
     expect(asked, isNot(contains('ddddddddddd')), reason: 'old videos are not asked about');
     dir.deleteSync(recursive: true);
   });
@@ -61,13 +75,20 @@ ${entry('ddddddddddd', 'Ended stream', now.subtract(const Duration(days: 30)))}
 </feed>''';
     final asked = <String>[];
     final client = MockClient((request) async {
-      if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
-      if (request.method == 'GET') return http.Response('<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
+      if (request.url.path == '/feeds/videos.xml') {
+        return http.Response.bytes(utf8.encode(feed), 200);
+      }
+      if (request.method == 'GET') {
+        return http.Response(
+            '<script>ytcfg.set({"VISITOR_DATA":"CgtWaXNpdG9yMTIz"})</script>', 200);
+      }
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
-      return http.Response(jsonEncode({
-        'videoDetails': {if (id == 'aaaaaaaaaaa') 'isLive': true},
-      }), 200);
+      return http.Response(
+          jsonEncode({
+            'videoDetails': {if (id == 'aaaaaaaaaaa') 'isLive': true},
+          }),
+          200);
     });
     final dir = Directory.systemTemp.createTempSync('live');
     final file = File('${dir.path}/library.json');
@@ -78,7 +99,8 @@ ${entry('ddddddddddd', 'Ended stream', now.subtract(const Duration(days: 30)))}
     expect(library.liveChannels, {channel.id}, reason: 'the last look shows before any request');
     await library.refreshFeed(force: true);
     expect(asked.first, 'ddddddddddd', reason: 'what was live is asked first');
-    expect({for (final item in library.feed) item.id: item.liveStatus}, {'aaaaaaaaaaa': 'is_live', 'ddddddddddd': 'was_live'});
+    expect({for (final item in library.feed) item.id: item.liveStatus},
+        {'aaaaaaaaaaa': 'is_live', 'ddddddddddd': 'was_live'});
     expect(store.liveVideos, {'aaaaaaaaaaa': (channel.id, 'is_live')});
     await library.flush();
     final again = LibraryStore(file);

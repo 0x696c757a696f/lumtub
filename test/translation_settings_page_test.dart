@@ -13,15 +13,28 @@ void main() {
     addTearDown(tester.view.reset);
     final controller = AppController();
     controller.preferences = controller.preferences.copyWith(translation: config);
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => openTranslationSettings(context, controller), child: const Text('open')))));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                onPressed: () => openTranslationSettings(context, controller),
+                child: const Text('open')))));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     return controller;
   }
 
   testWidgets('an AI model shows its provider, endpoint, model, key and prompt', (tester) async {
-    await open(tester, const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek'));
-    for (final text in ['Provider', 'DeepSeek', 'https://api.deepseek.com/v1', 'deepseek-chat', 'API key', 'Subtitles (line for line)', 'Test translation']) {
+    await open(
+        tester, const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek'));
+    for (final text in [
+      'Provider',
+      'DeepSeek',
+      'https://api.deepseek.com/v1',
+      'deepseek-chat',
+      'API key',
+      'Subtitles (line for line)',
+      'Test translation'
+    ]) {
       expect(find.text(text), findsWidgets, reason: text);
     }
     expect(find.text('Custom prompt'), findsNothing);
@@ -29,8 +42,18 @@ void main() {
   });
 
   testWidgets('the AI interface shows whichever service translates', (tester) async {
-    await open(tester, const TranslationConfig(service: TranslationService.deepl, aiPreset: 'deepseek'));
-    for (final text in ['AI interface', 'https://api.deepseek.com/v1', 'deepseek-chat', 'Test AI interface', 'Test translation', 'Speech recognition service', 'Groq (Whisper, free tier)', 'whisper-large-v3-turbo']) {
+    await open(
+        tester, const TranslationConfig(service: TranslationService.deepl, aiPreset: 'deepseek'));
+    for (final text in [
+      'AI interface',
+      'https://api.deepseek.com/v1',
+      'deepseek-chat',
+      'Test AI interface',
+      'Test translation',
+      'Speech recognition service',
+      'Groq (Whisper, free tier)',
+      'whisper-large-v3-turbo'
+    ]) {
       expect(find.text(text), findsWidgets, reason: text);
     }
     expect(find.text('AI translation'), findsNothing);

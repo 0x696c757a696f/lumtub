@@ -23,7 +23,13 @@ List<SubtitleCue> castSubtitleLines(List<SubtitleCue> main, List<SubtitleCue> se
   if (second.isEmpty) return main;
   return [
     for (final row in pairSubtitleCues(main, second))
-      (start: row.cue.start, end: row.cue.end, text: row.second == null || row.second!.isEmpty ? row.cue.text : '${row.second}\n${row.cue.text}'),
+      (
+        start: row.cue.start,
+        end: row.cue.end,
+        text: row.second == null || row.second!.isEmpty
+            ? row.cue.text
+            : '${row.second}\n${row.cue.text}'
+      ),
   ];
 }
 
@@ -33,7 +39,12 @@ List<SubtitleCue> cuesFrom(List<SubtitleCue> cues, Duration offset) {
   if (offset <= Duration.zero) return cues;
   return [
     for (final cue in cues)
-      if (cue.end > offset) (start: cue.start > offset ? cue.start - offset : Duration.zero, end: cue.end - offset, text: cue.text),
+      if (cue.end > offset)
+        (
+          start: cue.start > offset ? cue.start - offset : Duration.zero,
+          end: cue.end - offset,
+          text: cue.text
+        ),
   ];
 }
 
@@ -69,7 +80,8 @@ class CastSubtitleServer {
   /// Registers [cues] for a stream beginning [offset] into the video and
   /// returns their addresses as seen from [host]. Only the newest few are
   /// kept.
-  Future<CastSubtitles> register(List<SubtitleCue> cues, {required String host, Duration offset = Duration.zero, String? language}) async {
+  Future<CastSubtitles> register(List<SubtitleCue> cues,
+      {required String host, Duration offset = Duration.zero, String? language}) async {
     final binding = _server ??= HttpServer.bind(InternetAddress.anyIPv4, 0).then((server) {
       server.listen(_answer, onError: (Object e) => logWarn('Cast subtitle server: $e'));
       return server;
@@ -84,10 +96,12 @@ class CastSubtitleServer {
     final lines = cuesFrom(cues, offset);
     // A random path part, so another device on the network cannot guess the address.
     final random = Random.secure();
-    final token = List.generate(16, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+    final token =
+        List.generate(16, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
     final name = '$token/sub${++_serial}';
     _files['/$name.vtt'] = (type: 'text/vtt; charset=utf-8', body: utf8.encode(toVtt(lines)));
-    _files['/$name.srt'] = (type: 'application/x-subrip; charset=utf-8', body: utf8.encode(toSrt(lines)));
+    _files['/$name.srt'] =
+        (type: 'application/x-subrip; charset=utf-8', body: utf8.encode(toSrt(lines)));
     while (_files.length > 8) {
       _files.remove(_files.keys.first);
     }

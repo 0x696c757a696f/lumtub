@@ -10,10 +10,13 @@ import 'cast_device.dart';
 class CastController extends ChangeNotifier {
   CastDevice? device;
   CastStatus? status;
+
   /// The last failure, in a short message; cleared by the next action.
   String? error;
+
   /// The title being cast.
   String? title;
+
   /// The id of the video being cast.
   String? videoId;
   CastMedia? _media;
@@ -22,6 +25,7 @@ class CastController extends ChangeNotifier {
   var _misses = 0;
   var _disposed = false;
   var _hidden = false;
+
   /// Counts [start]s, so only the newest one keeps its device.
   var _starts = 0;
 
@@ -64,7 +68,10 @@ class CastController extends ChangeNotifier {
     _media = media;
     title = media.title;
     this.videoId = videoId;
-    status = CastStatus(state: CastState.loading, position: media.offset + media.start, duration: media.duration ?? Duration.zero);
+    status = CastStatus(
+        state: CastState.loading,
+        position: media.offset + media.start,
+        duration: media.duration ?? Duration.zero);
     _seenPlaying = false;
     _misses = 0;
     _startPolling();
@@ -97,7 +104,10 @@ class CastController extends ChangeNotifier {
     _misses = 0;
     final media = _media;
     if (media != null && (media.offset > Duration.zero || media.duration != null)) {
-      next = CastStatus(state: next.state, position: media.offset + next.position, duration: media.duration ?? next.duration);
+      next = CastStatus(
+          state: next.state,
+          position: media.offset + next.position,
+          duration: media.duration ?? next.duration);
     }
     if (next.state == CastState.playing) _seenPlaying = true;
     if (next.state == CastState.stopped && _seenPlaying) {
@@ -127,7 +137,12 @@ class CastController extends ChangeNotifier {
         final playing = status?.state == CastState.playing;
         await (playing ? d.pause() : d.play());
         final s = status;
-        if (s != null) status = CastStatus(state: playing ? CastState.paused : CastState.playing, position: s.position, duration: s.duration);
+        if (s != null) {
+          status = CastStatus(
+              state: playing ? CastState.paused : CastState.playing,
+              position: s.position,
+              duration: s.duration);
+        }
       });
 
   Future<void> seek(Duration position) => _run((d) async {
@@ -145,12 +160,17 @@ class CastController extends ChangeNotifier {
           _seenPlaying = false;
           await d.load(media);
           _media = media;
-          status = CastStatus(state: CastState.loading, position: media.offset, duration: media.duration ?? status?.duration ?? Duration.zero);
+          status = CastStatus(
+              state: CastState.loading,
+              position: media.offset,
+              duration: media.duration ?? status?.duration ?? Duration.zero);
           return;
         }
         await d.seek(position);
         final s = status;
-        if (s != null) status = CastStatus(state: s.state, position: position, duration: s.duration);
+        if (s != null) {
+          status = CastStatus(state: s.state, position: position, duration: s.duration);
+        }
       });
 
   /// Stops the device and ends the session; returns where it was, so local

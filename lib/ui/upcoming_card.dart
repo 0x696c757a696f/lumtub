@@ -24,8 +24,10 @@ String startsIn(Duration? left) {
 /// Covers the player while a live stream or premiere has not started: its
 /// thumbnail, when it starts and a countdown. Lumtub opens it by itself.
 class UpcomingCard extends StatefulWidget {
-  const UpcomingCard({super.key, required this.thumbnail, required this.start, required this.onRetry});
+  const UpcomingCard(
+      {super.key, required this.thumbnail, required this.start, required this.onRetry});
   final ImageProvider thumbnail;
+
   /// When it is scheduled to start, when known.
   final DateTime? start;
   final VoidCallback onRetry;
@@ -66,12 +68,19 @@ class _CountdownState extends State<_Countdown> {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Text(
         late ? tr('Starting soon') : startsIn(left),
-        style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
+        style: const TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+            fontFeatures: [FontFeature.tabularFigures()]),
       ),
       if (start != null) ...[
         const SizedBox(height: 8),
         Text(
-          late ? tr('Scheduled for {0}, waiting for the stream to begin', [formatScheduledStart(start)]) : tr('Starts {0}', [formatScheduledStart(start)]),
+          late
+              ? tr('Scheduled for {0}, waiting for the stream to begin',
+                  [formatScheduledStart(start)])
+              : tr('Starts {0}', [formatScheduledStart(start)]),
           style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 14),
         ),
       ],
@@ -100,7 +109,10 @@ class _UpcomingCardState extends State<UpcomingCard> {
           ),
           const DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x99000000), Color(0xCC000000)]),
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x99000000), Color(0xCC000000)]),
             ),
           ),
         ]),
@@ -113,20 +125,29 @@ class _UpcomingCardState extends State<UpcomingCard> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFE53935), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFE53935), borderRadius: BorderRadius.circular(6)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Icon(AppIcons.broadcast, size: 16, color: white),
                   const SizedBox(width: 4),
-                  Text(tr('Upcoming live'), style: const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(tr('Upcoming live'),
+                      style:
+                          const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w600)),
                 ]),
               ),
               const SizedBox(height: 16),
               _Countdown(start: widget.start),
               const SizedBox(height: 24),
               Row(mainAxisSize: MainAxisSize.min, children: [
-                const RepaintBoundary(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),
+                const RepaintBoundary(
+                    child: SizedBox(
+                        width: 14,
+                        height: 14,
+                        child:
+                            CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),
                 const SizedBox(width: 8),
-                Text(tr('Plays as soon as it begins'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 12)),
+                Text(tr('Plays as soon as it begins'),
+                    style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 12)),
                 const SizedBox(width: 12),
                 TextButton(
                   onPressed: widget.onRetry,

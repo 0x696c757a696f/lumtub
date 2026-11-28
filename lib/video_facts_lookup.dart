@@ -22,15 +22,24 @@ class VideoFacts {
   final int? length;
   final int? views;
   final DateTime? published;
+
   /// `is_live` or `is_upcoming` when the video was one when asked; a feed
   /// that does not say so would otherwise show it as a video with no length.
   final String? liveStatus;
+
   /// When YouTube was asked; views grow, so old answers are asked again.
   final DateTime asked;
 
-  VideoItem fill(VideoItem item) => item.filledIn(length: length, views: views, publishedAt: published, liveStatus: liveStatus);
+  VideoItem fill(VideoItem item) =>
+      item.filledIn(length: length, views: views, publishedAt: published, liveStatus: liveStatus);
 
-  List<Object?> toJson() => [length, views, published?.toUtc().toIso8601String(), asked.toUtc().toIso8601String(), if (liveStatus != null) liveStatus];
+  List<Object?> toJson() => [
+        length,
+        views,
+        published?.toUtc().toIso8601String(),
+        asked.toUtc().toIso8601String(),
+        if (liveStatus != null) liveStatus
+      ];
 
   static VideoFacts? fromJson(Object? raw) {
     if (raw is! List || raw.length < 4 || raw.length > 5) return null;
@@ -40,7 +49,9 @@ class VideoFacts {
       length: raw[0] is int ? raw[0] as int : null,
       views: raw[1] is int ? raw[1] as int : null,
       published: raw[2] is String ? DateTime.tryParse(raw[2] as String) : null,
-      liveStatus: raw.length == 5 && (raw[4] == 'is_live' || raw[4] == 'is_upcoming') ? raw[4] as String : null,
+      liveStatus: raw.length == 5 && (raw[4] == 'is_live' || raw[4] == 'is_upcoming')
+          ? raw[4] as String
+          : null,
       asked: asked,
     );
   }
@@ -60,7 +71,11 @@ class VideoFacts {
     var length = int.tryParse(_length.firstMatch(answer)?.group(1) ?? '');
     final views = int.tryParse(_views.firstMatch(answer)?.group(1) ?? '');
     final published = DateTime.tryParse(_published.firstMatch(answer)?.group(1) ?? '');
-    final liveStatus = _live.hasMatch(answer) ? 'is_live' : _upcoming.hasMatch(answer) ? 'is_upcoming' : null;
+    final liveStatus = _live.hasMatch(answer)
+        ? 'is_live'
+        : _upcoming.hasMatch(answer)
+            ? 'is_upcoming'
+            : null;
     if (liveStatus != null) {
       length = null;
     } else if (length == null || length == 0) {
@@ -68,7 +83,12 @@ class VideoFacts {
       length = streams.isEmpty ? null : streams.reduce((a, b) => a > b ? a : b) ~/ 1000;
     }
     if (length == null && views == null && published == null && liveStatus == null) return null;
-    return VideoFacts(length: length == 0 ? null : length, views: views, published: published, liveStatus: liveStatus, asked: asked);
+    return VideoFacts(
+        length: length == 0 ? null : length,
+        views: views,
+        published: published,
+        liveStatus: liveStatus,
+        asked: asked);
   }
 }
 
@@ -81,13 +101,17 @@ class VideoFactsLookup extends ChangeNotifier {
 
   /// Videos kept; the oldest go first.
   static const keep = 5000;
+
   /// Lookups at once.
   static const parallel = 2;
+
   /// Cards waiting at most; the ones asked for longest ago are dropped,
   /// as they have most likely scrolled away.
   static const waitingAtMost = 40;
+
   /// Views older than this are asked again when a card needs them.
   static const freshFor = Duration(days: 2);
+
   /// A video that had no length yet (live, upcoming, or a live just ended)
   /// is asked again after this.
   static const lengthlessFor = Duration(minutes: 20);
@@ -99,6 +123,7 @@ class VideoFactsLookup extends ChangeNotifier {
   final _waiting = <String>[];
   var _running = 0;
   Timer? _save;
+
   /// The cards showing each video, woken when its facts come; only they
   /// build again, not every card waiting for facts of its own.
   final _watchers = HashMap<String, List<VoidCallback>>();
@@ -112,6 +137,7 @@ class VideoFactsLookup extends ChangeNotifier {
     watchers.remove(onFacts);
     if (watchers.isEmpty) _watchers.remove(id);
   }
+
   @visibleForTesting
   DateTime Function() now = DateTime.now;
 
@@ -136,10 +162,18 @@ class VideoFactsLookup extends ChangeNotifier {
     }
   }
 
-  static bool _lacks(VideoItem item) => item.duration == null || item.viewCount == null || (item.published == null && item.age == null);
+  static bool _lacks(VideoItem item) =>
+      item.duration == null ||
+      item.viewCount == null ||
+      (item.published == null && item.age == null);
 
   /// Whether [of] may fill anything in for [item].
-  bool needs(VideoItem item) => _source != null && !item.isLive && !item.isUpcoming && _lacks(item) && _videoId.hasMatch(item.id);
+  bool needs(VideoItem item) =>
+      _source != null &&
+      !item.isLive &&
+      !item.isUpcoming &&
+      _lacks(item) &&
+      _videoId.hasMatch(item.id);
 
   /// [item] with what it lacked filled in from what is known, asking
   /// YouTube (once) when something is missing. Lives and upcoming lives are
@@ -149,7 +183,9 @@ class VideoFactsLookup extends ChangeNotifier {
     final known = _known[item.id];
     final filled = known?.fill(item) ?? item;
     final since = known == null ? null : now().difference(known.asked);
-    final stale = since == null || (item.viewCount == null && since > freshFor) || (filled.duration == null && since > lengthlessFor);
+    final stale = since == null ||
+        (item.viewCount == null && since > freshFor) ||
+        (filled.duration == null && since > lengthlessFor);
     if (stale && _source != null && _tried.add(item.id)) {
       _waiting.add(item.id);
       while (_waiting.length > waitingAtMost) {
@@ -200,7 +236,8 @@ class VideoFactsLookup extends ChangeNotifier {
     if (file == null) return;
     try {
       await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode({for (final e in _known.entries) e.key: e.value.toJson()}));
+      await file
+          .writeAsString(jsonEncode({for (final e in _known.entries) e.key: e.value.toJson()}));
     } catch (_) {
       // Kept in memory; written again with the next answer.
     }
@@ -215,7 +252,9 @@ class VideoFactsLookup extends ChangeNotifier {
   /// instead, and /player is left alone for a while.
   static Future<VideoFacts?> askYoutube(http.Client client, String id) async {
     final refused = _playerRefused;
-    if (refused != null && DateTime.now().difference(refused) < playerRestFor) return _withoutPlayer(client, id);
+    if (refused != null && DateTime.now().difference(refused) < playerRestFor) {
+      return _withoutPlayer(client, id);
+    }
     final request = NativeCore.instance?.quickRequest(id);
     if (request == null) return null;
     final parts = jsonDecode(request) as Map<String, dynamic>;
@@ -228,7 +267,8 @@ class VideoFactsLookup extends ChangeNotifier {
     final found = await _withoutPlayer(client, id);
     if (!_toldWhy) {
       _toldWhy = true;
-      logInfo('Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client neither (${second == null ? 'no answer' : playerWhy(second)}), watch page and search ${found == null ? 'neither' : 'did'}');
+      logInfo(
+          'Video facts of $id: quick start client gave none (${first == null ? 'no answer' : playerWhy(first)}), TV client neither (${second == null ? 'no answer' : playerWhy(second)}), watch page and search ${found == null ? 'neither' : 'did'}');
     }
     if (second != null && second.contains('"LOGIN_REQUIRED"')) _playerRefused = DateTime.now();
     return found;
@@ -262,7 +302,12 @@ class VideoFactsLookup extends ChangeNotifier {
             headers: YoutubeWeb.apiHeaders(),
             body: jsonEncode({
               'context': {
-                'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en', 'gl': 'US'},
+                'client': {
+                  'clientName': 'WEB',
+                  'clientVersion': YoutubeWeb.clientVersion,
+                  'hl': 'en',
+                  'gl': 'US'
+                },
               },
               'videoId': id,
             }),
@@ -272,7 +317,9 @@ class VideoFactsLookup extends ChangeNotifier {
       final bytes = response.bodyBytes;
       final facts = await Isolate.run(() {
         final core = NativeCore.instance;
-        final answer = core == null ? null : jsonDecode(core.take(core.withBytes(bytes, core.youtubeNext)) ?? 'null');
+        final answer = core == null
+            ? null
+            : jsonDecode(core.take(core.withBytes(bytes, core.youtubeNext)) ?? 'null');
         return answer is Map ? answer['facts'] : null;
       });
       return factsOfNext(facts, DateTime.now());
@@ -289,7 +336,11 @@ class VideoFactsLookup extends ChangeNotifier {
     final views = (facts['views'] as num?)?.toInt();
     final stamp = (facts['published'] as num?)?.toInt();
     if (views == null && stamp == null) return null;
-    return VideoFacts(views: views, published: stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true), asked: asked);
+    return VideoFacts(
+        views: views,
+        published:
+            stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true),
+        asked: asked);
   }
 
   /// How long /player is left alone once it wants sign-in.
@@ -302,7 +353,8 @@ class VideoFactsLookup extends ChangeNotifier {
     if (!YoutubeListing.available) return null;
     try {
       var seen = 0;
-      await for (final line in YoutubeListing(client).search(id).timeout(const Duration(seconds: 10))) {
+      await for (final line
+          in YoutubeListing(client).search(id).timeout(const Duration(seconds: 10))) {
         final facts = factsOfListing(line, id, DateTime.now());
         if (facts != null) return facts;
         // The video, when found, is among the first results.
@@ -334,7 +386,8 @@ class VideoFactsLookup extends ChangeNotifier {
     return VideoFacts(
       length: liveStatus != null || length == 0 ? null : length,
       views: views,
-      published: stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true),
+      published:
+          stamp == null ? null : DateTime.fromMillisecondsSinceEpoch(stamp * 1000, isUtc: true),
       liveStatus: liveStatus,
       asked: asked,
     );
@@ -343,20 +396,27 @@ class VideoFactsLookup extends ChangeNotifier {
   static var _toldWhy = false;
 
   static Future<String?> _ask(http.Client client, Map<String, dynamic> parts) async {
-    final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
+    final headers = {
+      'Content-Type': 'application/json',
+      ...(parts['headers'] as Map).cast<String, String>()
+    };
     final body = (parts['body'] as Map).cast<String, Object?>();
-    final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 8));
+    final response =
+        await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 8));
     if (response.statusCode != 200) return 'HTTP ${response.statusCode}';
     return utf8.decode(response.bodyBytes, allowMalformed: true);
   }
 
-  static final _status = RegExp(r'"playabilityStatus"\s*:\s*\{\s*"status"\s*:\s*"([A-Z_]+)"(?:\s*,\s*"reason"\s*:\s*"([^"]{0,120}))?');
+  static final _status = RegExp(
+      r'"playabilityStatus"\s*:\s*\{\s*"status"\s*:\s*"([A-Z_]+)"(?:\s*,\s*"reason"\s*:\s*"([^"]{0,120}))?');
 
   /// Why a /player answer had nothing, in a few words for the log.
   static String playerWhy(String answer) {
     if (answer.startsWith('HTTP ')) return answer;
     final m = _status.firstMatch(answer);
-    return m == null ? 'no playability status' : [m.group(1), if (m.group(2) != null) m.group(2)].join(': ');
+    return m == null
+        ? 'no playability status'
+        : [m.group(1), if (m.group(2) != null) m.group(2)].join(': ');
   }
 
   @visibleForTesting

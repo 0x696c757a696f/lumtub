@@ -27,7 +27,8 @@ const miniSubtitlesFrom = 120.0;
 Offset miniPosition(MiniCorner corner, Size area, Size size, {double margin = MiniPlayer.margin}) {
   final left = corner == MiniCorner.topLeft || corner == MiniCorner.bottomLeft;
   final top = corner == MiniCorner.topLeft || corner == MiniCorner.topRight;
-  return Offset(left ? margin : area.width - size.width - margin, top ? margin : area.height - size.height - margin);
+  return Offset(left ? margin : area.width - size.width - margin,
+      top ? margin : area.height - size.height - margin);
 }
 
 /// The corner a card whose top left is at [offset] is nearest to, by its centre.
@@ -35,7 +36,9 @@ MiniCorner nearestMiniCorner(Offset offset, Size area, Size size) {
   final centre = offset + Offset(size.width / 2, size.height / 2);
   final left = centre.dx < area.width / 2;
   final top = centre.dy < area.height / 2;
-  return top ? (left ? MiniCorner.topLeft : MiniCorner.topRight) : (left ? MiniCorner.bottomLeft : MiniCorner.bottomRight);
+  return top
+      ? (left ? MiniCorner.topLeft : MiniCorner.topRight)
+      : (left ? MiniCorner.bottomLeft : MiniCorner.bottomRight);
 }
 
 /// The card's size: [MiniPlayer.width] wide in the video's ratio, made
@@ -119,6 +122,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
     void changed(int? _) {
       if (mounted) setState(() {});
     }
+
     _subscriptions
       ..add(player.stream.width.listen(changed))
       ..add(player.stream.height.listen(changed));
@@ -163,10 +167,17 @@ class _MiniPlayerState extends State<MiniPlayer> {
       child: WarmLayer(
         child: Video(
           controller: video,
-          controls: null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
+          controls:
+              null, // No on-video controls; the vendored NoVideoControls constant is untyped (dynamic).
           pauseUponEnteringBackgroundMode: false,
           subtitleViewConfiguration: subtitles
-              ? subtitleViewFor(settings, smallWindow: size, secondary: _controller.secondarySubtitle?.label, byHeight: Platform.isAndroid || Platform.isIOS, libass: _controller.libassDraws, mainLanguage: _controller.mainSubtitleLanguage, secondLanguage: _controller.secondSubtitleLanguage)
+              ? subtitleViewFor(settings,
+                  smallWindow: size,
+                  secondary: _controller.secondarySubtitle?.label,
+                  byHeight: Platform.isAndroid || Platform.isIOS,
+                  libass: _controller.libassDraws,
+                  mainLanguage: _controller.mainSubtitleLanguage,
+                  secondLanguage: _controller.secondSubtitleLanguage)
               : const SubtitleViewConfiguration(visible: false),
         ),
       ),
@@ -182,8 +193,13 @@ class _MiniPlayerState extends State<MiniPlayer> {
           initialData: player.state.position,
           builder: (context, _) {
             final total = player.state.duration.inMilliseconds;
-            final value = total <= 0 ? 0.0 : (player.state.position.inMilliseconds / total).clamp(0.0, 1.0);
-            return LinearProgressIndicator(value: value, minHeight: 2, color: colors.inversePrimary, backgroundColor: Colors.white24);
+            final value =
+                total <= 0 ? 0.0 : (player.state.position.inMilliseconds / total).clamp(0.0, 1.0);
+            return LinearProgressIndicator(
+                value: value,
+                minHeight: 2,
+                color: colors.inversePrimary,
+                backgroundColor: Colors.white24);
           },
         ),
       ),
@@ -210,17 +226,36 @@ class _MiniPlayerState extends State<MiniPlayer> {
           Stack(children: [
             Positioned.fill(
               child: IgnorePointer(
-                child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent]))),
+                child: DecoratedBox(
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent]))),
               ),
             ),
             Row(children: [
               const SizedBox(width: 8),
               Expanded(
-                child: IgnorePointer(child: Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12))),
+                child: IgnorePointer(
+                    child: Text(_title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontSize: 12))),
               ),
-              IconButton(style: style(), tooltip: tr('Back to the watch page'), iconSize: 18, icon: Icon(AppIcons.arrowsOutSimple), onPressed: _controller.expandMini),
+              IconButton(
+                  style: style(),
+                  tooltip: tr('Back to the watch page'),
+                  iconSize: 18,
+                  icon: Icon(AppIcons.arrowsOutSimple),
+                  onPressed: _controller.expandMini),
               const SizedBox(width: 4),
-              IconButton(style: style(), tooltip: tr('Close the mini player and stop playback'), iconSize: 18, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
+              IconButton(
+                  style: style(),
+                  tooltip: tr('Close the mini player and stop playback'),
+                  iconSize: 18,
+                  icon: Icon(AppIcons.x),
+                  onPressed: _controller.stopWatching),
               const SizedBox(width: 4),
             ]),
           ]),
@@ -233,7 +268,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
                   style: style(),
                   tooltip: snapshot.data ?? false ? tr('Pause (Space)') : tr('Play (Space)'),
                   iconSize: 40,
-                  icon: Icon(snapshot.data ?? false ? AppIcons.pauseCircle : AppIcons.playCircleFill),
+                  icon:
+                      Icon(snapshot.data ?? false ? AppIcons.pauseCircle : AppIcons.playCircleFill),
                   onPressed: () => unawaited(player.playOrPause()),
                 ),
               ),
@@ -292,7 +328,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                 onPanStart: (_) => setState(() => _dragging = miniPosition(_corner, area, size)),
                 onPanUpdate: (details) {
                   final at = (_dragging ?? position) + details.delta;
-                  setState(() => _dragging = Offset(at.dx.clamp(0.0, math.max(0.0, area.width - size.width)), at.dy.clamp(0.0, math.max(0.0, area.height - size.height))));
+                  setState(() => _dragging = Offset(
+                      at.dx.clamp(0.0, math.max(0.0, area.width - size.width)),
+                      at.dy.clamp(0.0, math.max(0.0, area.height - size.height))));
                 },
                 onPanEnd: (_) => setState(() {
                   _corner = nearestMiniCorner(_dragging ?? position, area, size);
@@ -333,17 +371,32 @@ class _MiniPlayerState extends State<MiniPlayer> {
                 _progressLine(context, player),
                 Expanded(
                   child: Row(children: [
-                    SizedBox(width: size.width, height: size.height, child: ColoredBox(color: Colors.black, child: _picture(context, size))),
+                    SizedBox(
+                        width: size.width,
+                        height: size.height,
+                        child: ColoredBox(color: Colors.black, child: _picture(context, size))),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Semantics(
-                        button: true,
-                        hint: tr('Back to the watch page'),
-                        onTap: _controller.expandMini,
-                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                        if (_channel.isNotEmpty) Text(_channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                      ])),
+                          button: true,
+                          hint: tr('Back to the watch page'),
+                          onTap: _controller.expandMini,
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                                if (_channel.isNotEmpty)
+                                  Text(_channel,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                              ])),
                     ),
                     StreamBuilder<bool>(
                       stream: player.stream.playing,
@@ -355,7 +408,11 @@ class _MiniPlayerState extends State<MiniPlayer> {
                         onPressed: () => unawaited(player.playOrPause()),
                       ),
                     ),
-                    IconButton(tooltip: tr('Close the mini player and stop playback'), iconSize: 24, icon: Icon(AppIcons.x), onPressed: _controller.stopWatching),
+                    IconButton(
+                        tooltip: tr('Close the mini player and stop playback'),
+                        iconSize: 24,
+                        icon: Icon(AppIcons.x),
+                        onPressed: _controller.stopWatching),
                     const SizedBox(width: 4),
                   ]),
                 ),
@@ -373,7 +430,11 @@ class _MiniPlayerState extends State<MiniPlayer> {
     if (player == null) return const SizedBox.shrink();
     _watch(player);
     if (isPhone(context)) return _bar(context, player);
-    if (!_controlsShown && Accessibility.screenReader(context)) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _showControls() : null);
-    return LayoutBuilder(builder: (context, constraints) => Stack(children: [_card(context, player, constraints.biggest)]));
+    if (!_controlsShown && Accessibility.screenReader(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _showControls() : null);
+    }
+    return LayoutBuilder(
+        builder: (context, constraints) =>
+            Stack(children: [_card(context, player, constraints.biggest)]));
   }
 }

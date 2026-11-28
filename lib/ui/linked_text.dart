@@ -26,7 +26,8 @@ class LinkPart extends TextPart {
   const LinkPart(super.text);
 }
 
-final _pattern = RegExp(r'https?://[^\s<>"）)】」，。]+|(?<![\d:.])(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?![\d:])');
+final _pattern =
+    RegExp(r'https?://[^\s<>"）)】」，。]+|(?<![\d:.])(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?![\d:])');
 
 /// Splits [text] into plain text, times and links, for descriptions and
 /// comments.
@@ -43,7 +44,9 @@ List<TextPart> splitLinks(String text) {
       final minutes = int.parse(match[2]!);
       final seconds = int.parse(match[3]!);
       // 1:75 is not a time; with hours, minutes must be below 60 too.
-      if (seconds < 60 && (match[1] == null || minutes < 60)) part = TimePart(value, Duration(hours: hours, minutes: minutes, seconds: seconds));
+      if (seconds < 60 && (match[1] == null || minutes < 60)) {
+        part = TimePart(value, Duration(hours: hours, minutes: minutes, seconds: seconds));
+      }
     }
     if (part == null) continue;
     if (match.start > last) parts.add(PlainPart(text.substring(last, match.start)));
@@ -56,13 +59,20 @@ List<TextPart> splitLinks(String text) {
 
 /// [text] with its times and links tappable.
 class LinkedText extends StatefulWidget {
-  const LinkedText(this.text, {required this.onTime, required this.onLink, super.key, this.style, this.maxLines, this.emojis = const {}});
+  const LinkedText(this.text,
+      {required this.onTime,
+      required this.onLink,
+      super.key,
+      this.style,
+      this.maxLines,
+      this.emojis = const {}});
 
   final String text;
   final TextStyle? style;
   final int? maxLines;
   final ValueChanged<Duration> onTime;
   final ValueChanged<String> onLink;
+
   /// Custom emoji shortcuts in [text] and their pictures.
   final Map<String, String> emojis;
 
@@ -100,9 +110,18 @@ class _LinkedTextState extends State<LinkedText> {
       TextSpan(children: [
         for (final part in splitLinks(widget.text))
           switch (part) {
-            TimePart(:final time) => TextSpan(text: part.text, style: link, recognizer: _tap(() => widget.onTime(time)), mouseCursor: SystemMouseCursors.click),
-            LinkPart() => TextSpan(text: part.text, style: link, recognizer: _tap(() => widget.onLink(part.text)), mouseCursor: SystemMouseCursors.click),
-            PlainPart() => TextSpan(children: emojiSpans(context, part.text, widget.emojis, style: widget.style)),
+            TimePart(:final time) => TextSpan(
+                text: part.text,
+                style: link,
+                recognizer: _tap(() => widget.onTime(time)),
+                mouseCursor: SystemMouseCursors.click),
+            LinkPart() => TextSpan(
+                text: part.text,
+                style: link,
+                recognizer: _tap(() => widget.onLink(part.text)),
+                mouseCursor: SystemMouseCursors.click),
+            PlainPart() => TextSpan(
+                children: emojiSpans(context, part.text, widget.emojis, style: widget.style)),
           },
       ]),
       style: widget.style,
@@ -124,7 +143,9 @@ Color linkColor(ThemeData theme) {
   if (skin != null && skin.veil > 0) return colors.onSurface;
   final text = contrastRatio(colors.onSurface, colors.surface);
   final wanted = min(text * 0.9, 6.0);
-  final worst = [colors.surface, colors.surfaceContainerLow].map((bg) => contrastRatio(colors.primary, bg)).reduce((a, b) => a < b ? a : b);
+  final worst = [colors.surface, colors.surfaceContainerLow]
+      .map((bg) => contrastRatio(colors.primary, bg))
+      .reduce((a, b) => a < b ? a : b);
   return worst >= wanted ? colors.primary : colors.onSurface;
 }
 
@@ -133,5 +154,11 @@ Color linkColor(ThemeData theme) {
 TextStyle linkStyle(ThemeData theme) {
   final colors = theme.colorScheme;
   final color = linkColor(theme);
-  return color == colors.primary ? TextStyle(color: color) : TextStyle(color: color, decoration: TextDecoration.underline, decorationColor: colors.primary, decorationThickness: 1.5);
+  return color == colors.primary
+      ? TextStyle(color: color)
+      : TextStyle(
+          color: color,
+          decoration: TextDecoration.underline,
+          decorationColor: colors.primary,
+          decorationThickness: 1.5);
 }

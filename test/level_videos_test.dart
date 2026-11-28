@@ -10,7 +10,8 @@ import 'package:lumtub/learning/level_videos.dart';
 import 'package:lumtub/learning/video_words.dart';
 import 'package:lumtub/learning/word_token.dart';
 
-WordToken _w(String text, [String language = 'it']) => WordToken(text, null, isWord: true, language: language);
+WordToken _w(String text, [String language = 'it']) =>
+    WordToken(text, null, isWord: true, language: language);
 
 void main() {
   group('levels', () {
@@ -59,7 +60,8 @@ void main() {
         expect(gradedLevelQueries(language, 0).length, greaterThanOrEqualTo(3), reason: language);
         final native = nativeLevelQueries(language, 1);
         expect(native, hasLength(2), reason: language);
-        expect(native.first, isNot(equals(nativeLevelQueries(language, 2).first)), reason: language);
+        expect(native.first, isNot(equals(nativeLevelQueries(language, 2).first)),
+            reason: language);
       }
       expect(gradedLevelQueries('ja', 1).first, 'Japanese comprehensible input intermediate');
     });
@@ -71,30 +73,43 @@ void main() {
       final it = lessonQueries('zh', 1, ExploreLanguage.it, tag: 'HSK 3');
       expect(it.first.translated, isTrue);
       expect(it.first.words, 'learn Chinese intermediate');
-      expect(it.first.withTag('imparare il cinese intermedio'), 'imparare il cinese intermedio HSK 3');
+      expect(
+          it.first.withTag('imparare il cinese intermedio'), 'imparare il cinese intermedio HSK 3');
     });
   });
 
   group('subtitle tracks', () {
     List<int> answer(List<Map<String, Object?>> tracks) => utf8.encode(jsonEncode({
-          'captions': {'playerCaptionsTracklistRenderer': {'captionTracks': tracks}},
+          'captions': {
+            'playerCaptionsTracklistRenderer': {'captionTracks': tracks}
+          },
         }));
 
     test("the uploader's track first, else the automatic one; regions count", () {
       final tracks = captionTracksOf(answer([
-        {'baseUrl': 'https://www.youtube.com/api/timedtext?v=a&lang=ja&kind=asr', 'languageCode': 'ja', 'kind': 'asr'},
+        {
+          'baseUrl': 'https://www.youtube.com/api/timedtext?v=a&lang=ja&kind=asr',
+          'languageCode': 'ja',
+          'kind': 'asr'
+        },
         {'baseUrl': 'https://www.youtube.com/api/timedtext?v=a&lang=ja', 'languageCode': 'ja'},
-        {'baseUrl': 'https://www.youtube.com/api/timedtext?v=a&lang=zh-Hans', 'languageCode': 'zh-Hans'},
+        {
+          'baseUrl': 'https://www.youtube.com/api/timedtext?v=a&lang=zh-Hans',
+          'languageCode': 'zh-Hans'
+        },
       ]));
       expect(captionTrackIn(tracks, 'ja')!.automatic, isFalse);
       expect(captionTrackIn(tracks, 'zh')!.language, 'zh-Hans');
       expect(captionTrackIn(tracks, 'ko'), isNull);
-      expect(captionTrackIn(captionTracksOf(answer([tracks.first.toMap()])), 'ja')!.automatic, isTrue);
+      expect(
+          captionTrackIn(captionTracksOf(answer([tracks.first.toMap()])), 'ja')!.automatic, isTrue);
     });
 
     test('only YouTube timedtext addresses are fetched, as WebVTT', () {
-      ({String url, String language, bool automatic}) t(String url) => (url: url, language: 'ja', automatic: false);
-      final url = timedTextUrl(t('https://www.youtube.com/api/timedtext?v=abc&fmt=srv3&sparams=a&sparams=b'))!;
+      ({String url, String language, bool automatic}) t(String url) =>
+          (url: url, language: 'ja', automatic: false);
+      final url = timedTextUrl(
+          t('https://www.youtube.com/api/timedtext?v=abc&fmt=srv3&sparams=a&sparams=b'))!;
       expect(url.queryParameters['fmt'], 'vtt');
       expect(url.queryParametersAll['sparams'], ['a', 'b']);
       expect(timedTextUrl(t('/api/timedtext?v=abc'))!.host, 'www.youtube.com');
@@ -107,7 +122,11 @@ void main() {
     test('broken answers give no tracks', () {
       expect(captionTracksOf(utf8.encode('not json')), isEmpty);
       expect(captionTracksOf(utf8.encode('{"captions": 3}')), isEmpty);
-      expect(captionTracksOf(answer([{'languageCode': 'ja'}])), isEmpty);
+      expect(
+          captionTracksOf(answer([
+            {'languageCode': 'ja'}
+          ])),
+          isEmpty);
     });
 
     test('cue times are read in milliseconds', () {
@@ -148,7 +167,16 @@ void main() {
     });
 
     test('a Chinese word of known characters is half known', () {
-      final zh = LevelFeatures(language: 'zh', automatic: false, words: [_w('学生', 'zh'), _w('学', 'zh'), _w('生', 'zh')], lines: [[0, 1, 2]], starts: [0], speech: 60000, units: 4);
+      final zh = LevelFeatures(
+          language: 'zh',
+          automatic: false,
+          words: [_w('学生', 'zh'), _w('学', 'zh'), _w('生', 'zh')],
+          lines: [
+            [0, 1, 2]
+          ],
+          starts: [0],
+          speech: 60000,
+          units: 4);
       final m = measureLevel(zh, (w) => w.text.length == 1, const {});
       expect(m.known, closeTo(2.5 / 3, 1e-9));
     });
@@ -158,7 +186,10 @@ void main() {
       expect(again.words.map((w) => w.text), ['io', 'casa', 'Roma']);
       expect(again.lines[1], [0, -3]);
       expect(again.automatic, isTrue);
-      final bad = features.toJson()..['x'] = [[0, 7]];
+      final bad = features.toJson()
+        ..['x'] = [
+          [0, 7]
+        ];
       expect(LevelFeatures.fromJson(bad), isNull);
       expect(LevelFeatures.fromJson({'v': 99}), isNull);
     });
@@ -175,21 +206,47 @@ void main() {
     });
 
     test('a band orders by nearness to its middle, then by load', () {
-      LevelReading r(double known, {double perMinute = 150, double newPerMinute = 3, double? hardest}) => LevelReading(
-          language: 'en', known: known, automatic: false, newWords: 5, perMinute: perMinute, newPerMinute: newPerMinute, hardestMinute: hardest, at: 0, stamp: '');
-      expect(levelVideoScore(VideoLevel.right, r(0.965)), greaterThan(levelVideoScore(VideoLevel.right, r(0.951))));
-      expect(levelVideoScore(VideoLevel.right, r(0.96)), greaterThan(levelVideoScore(VideoLevel.right, r(0.96, perMinute: 220))));
-      expect(levelVideoScore(VideoLevel.right, r(0.96)), greaterThan(levelVideoScore(VideoLevel.right, r(0.96, newPerMinute: 14))));
-      expect(levelVideoScore(VideoLevel.right, r(0.96)), greaterThan(levelVideoScore(VideoLevel.right, r(0.96, hardest: 0.7))));
+      LevelReading r(double known,
+              {double perMinute = 150, double newPerMinute = 3, double? hardest}) =>
+          LevelReading(
+              language: 'en',
+              known: known,
+              automatic: false,
+              newWords: 5,
+              perMinute: perMinute,
+              newPerMinute: newPerMinute,
+              hardestMinute: hardest,
+              at: 0,
+              stamp: '');
+      expect(levelVideoScore(VideoLevel.right, r(0.965)),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.951))));
+      expect(levelVideoScore(VideoLevel.right, r(0.96)),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.96, perMinute: 220))));
+      expect(levelVideoScore(VideoLevel.right, r(0.96)),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.96, newPerMinute: 14))));
+      expect(levelVideoScore(VideoLevel.right, r(0.96)),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.96, hardest: 0.7))));
       expect(r(0.9, perMinute: 100).pace, SpeechPace.slow);
       expect(r(0.9, perMinute: 220).pace, SpeechPace.fast);
       // Broken subtitles sink below every reliable reading.
       LevelReading broken(double known) => LevelReading(
-          language: 'en', known: known, automatic: true, newWords: 5, perMinute: 150, newPerMinute: 3, hardestMinute: null, confidence: 40, at: 0, stamp: '');
-      expect(levelVideoScore(VideoLevel.right, broken(0.965)), lessThan(levelVideoScore(VideoLevel.right, r(0.80))));
+          language: 'en',
+          known: known,
+          automatic: true,
+          newWords: 5,
+          perMinute: 150,
+          newPerMinute: 3,
+          hardestMinute: null,
+          confidence: 40,
+          at: 0,
+          stamp: '');
+      expect(levelVideoScore(VideoLevel.right, broken(0.965)),
+          lessThan(levelVideoScore(VideoLevel.right, r(0.80))));
       // A length that suits the level and a channel that fits nudge ahead.
-      expect(levelVideoScore(VideoLevel.right, r(0.96), seconds: 300, tier: 0), greaterThan(levelVideoScore(VideoLevel.right, r(0.96), seconds: 7200, tier: 0)));
-      expect(levelVideoScore(VideoLevel.right, r(0.96), channelFit: 1), greaterThan(levelVideoScore(VideoLevel.right, r(0.96), channelFit: 0)));
+      expect(levelVideoScore(VideoLevel.right, r(0.96), seconds: 300, tier: 0),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.96), seconds: 7200, tier: 0)));
+      expect(levelVideoScore(VideoLevel.right, r(0.96), channelFit: 1),
+          greaterThan(levelVideoScore(VideoLevel.right, r(0.96), channelFit: 0)));
     });
 
     test('speech is counted in each language\'s own units', () {
@@ -210,8 +267,17 @@ void main() {
       expect(repeatedShare(['a', 'a', 'a', 'b']), closeTo(0.75, 1e-9));
       // English: 170 a minute, so more than about 71 words in ten seconds.
       expect(rushedShare('en', [0, 10000], [80, 20]), 0.5);
-      LevelFeatures f({bool automatic = false, double repeated = 0, double rushed = 0}) => LevelFeatures(
-          language: 'en', automatic: automatic, words: const [], lines: const [], starts: const [], speech: 0, units: 0, repeated: repeated, rushed: rushed);
+      LevelFeatures f({bool automatic = false, double repeated = 0, double rushed = 0}) =>
+          LevelFeatures(
+              language: 'en',
+              automatic: automatic,
+              words: const [],
+              lines: const [],
+              starts: const [],
+              speech: 0,
+              units: 0,
+              repeated: repeated,
+              rushed: rushed);
       expect(f().confidence, 100);
       expect(f(automatic: true).confidence, 90);
       expect(f(automatic: true, repeated: 0.3, rushed: 0.2).confidence, 40);
@@ -239,5 +305,6 @@ void main() {
 }
 
 extension on ({String url, String language, bool automatic}) {
-  Map<String, Object?> toMap() => {'baseUrl': url, 'languageCode': language, if (automatic) 'kind': 'asr'};
+  Map<String, Object?> toMap() =>
+      {'baseUrl': url, 'languageCode': language, if (automatic) 'kind': 'asr'};
 }

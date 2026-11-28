@@ -21,7 +21,8 @@ import 'translation.dart' show TranslationException;
 /// fetches the smallest audio stream, lumtub_core cuts long ones by
 /// copying whole clusters, and the timed text comes back to lumtub_core to become WebVTT.
 class SpeechRecognizer {
-  SpeechRecognizer(this._client, {required String baseUrl, required this.key, required this.model}) : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), '');
+  SpeechRecognizer(this._client, {required String baseUrl, required this.key, required this.model})
+      : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), '');
   final http.Client _client;
   final String baseUrl;
   final String key;
@@ -30,17 +31,21 @@ class SpeechRecognizer {
   /// The timed segments of [audio], as `verbose_json` has them.
   Future<Map<String, dynamic>> transcribe(File audio, {String? language}) async {
     final uri = Uri.tryParse('$baseUrl/audio/transcriptions');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('The speech recognition address is not valid'));
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
+      throw TranslationException(tr('The speech recognition address is not valid'));
+    }
     final request = http.MultipartRequest('POST', uri)
       ..fields['model'] = model
       ..fields['response_format'] = 'verbose_json'
       ..fields['timestamp_granularities[]'] = 'segment'
-      ..files.add(await http.MultipartFile.fromPath('file', audio.path, filename: audio.uri.pathSegments.last));
+      ..files.add(await http.MultipartFile.fromPath('file', audio.path,
+          filename: audio.uri.pathSegments.last));
     if (language != null && language.isNotEmpty) request.fields['language'] = language;
     if (key.isNotEmpty) request.headers['Authorization'] = 'Bearer $key';
     final http.Response response;
     try {
-      response = await http.Response.fromStream(await _client.send(request)).timeout(const Duration(minutes: 5));
+      response = await http.Response.fromStream(await _client.send(request))
+          .timeout(const Duration(minutes: 5));
     } on TranslationException {
       rethrow;
     } catch (e) {
@@ -56,13 +61,22 @@ class SpeechRecognizer {
       case 413:
         throw TranslationException(tr('The audio is too large for the speech recognition service'));
       case 429:
-        throw TranslationException(tr('Too many speech recognition requests or the quota is used up; try again later'));
+        throw TranslationException(
+            tr('Too many speech recognition requests or the quota is used up; try again later'));
       default:
-        throw TranslationException(tr('The speech recognition service failed ({0})', [response.statusCode]));
+        throw TranslationException(
+            tr('The speech recognition service failed ({0})', [response.statusCode]));
     }
-    final json = await decodeJsonInBackground(utf8.decode(response.bodyBytes, allowMalformed: true));
-    if (json is! Map<String, dynamic>) throw TranslationException(tr('The speech recognition service answered with something unreadable'));
-    if (json['segments'] is! List) throw TranslationException(tr('This speech recognition service returns no timing, so it cannot make subtitles'));
+    final json =
+        await decodeJsonInBackground(utf8.decode(response.bodyBytes, allowMalformed: true));
+    if (json is! Map<String, dynamic>) {
+      throw TranslationException(
+          tr('The speech recognition service answered with something unreadable'));
+    }
+    if (json['segments'] is! List) {
+      throw TranslationException(
+          tr('This speech recognition service returns no timing, so it cannot make subtitles'));
+    }
     return json;
   }
 }
@@ -83,7 +97,9 @@ class SpeechAudio {
 
   /// yt-dlp arguments that save the smallest audio stream of [videoId] to
   /// [folder] and print its length and path.
-  static List<String> arguments(String videoId, Directory folder, {String? proxy, String? cacheDirectory, String? deno}) => [
+  static List<String> arguments(String videoId, Directory folder,
+          {String? proxy, String? cacheDirectory, String? deno}) =>
+      [
         '--no-warnings',
         '--no-playlist',
         '--no-progress',
@@ -125,7 +141,10 @@ class SpeechAudio {
         environment: environment,
         onStart: (process) => lowerPriority(process.pid),
       );
-      printed = const LineSplitter().convert(result.stdout.toString()).where((l) => l.contains('|')).lastOrNull;
+      printed = const LineSplitter()
+          .convert(result.stdout.toString())
+          .where((l) => l.contains('|'))
+          .lastOrNull;
       if (result.exitCode != 0 || printed == null) {
         await _removeAudio(folder);
         throw TranslationException(tr("Could not download this video's audio"));
@@ -135,7 +154,9 @@ class SpeechAudio {
     final split = printed.indexOf('|');
     final seconds = double.tryParse(printed.substring(0, split)) ?? 0;
     final audio = File(printed.substring(split + 1).trim());
-    if (!await audio.exists()) throw TranslationException(tr("Could not download this video's audio"));
+    if (!await audio.exists()) {
+      throw TranslationException(tr("Could not download this video's audio"));
+    }
     final size = await audio.length();
     final length = Duration(milliseconds: (seconds * 1000).round());
     final count = max((size / partBytes).ceil(), (length.inSeconds / partLength.inSeconds).ceil());
@@ -148,7 +169,10 @@ class SpeechAudio {
       logWarn('Speech audio not cut: ${cut.error}');
       throw TranslationException(tr('Could not split the audio'));
     }
-    return [for (final p in parts) (file: File(p.path), offset: Duration(milliseconds: (p.start * 1000).round()))];
+    return [
+      for (final p in parts)
+        (file: File(p.path), offset: Duration(milliseconds: (p.start * 1000).round()))
+    ];
   }
 
   static Future<void> _removeAudio(Directory folder) async {
@@ -174,7 +198,8 @@ Future<String> speechVtt(List<({Duration offset, Map<String, dynamic> answer})> 
   });
   final vtt = await Isolate.run(() {
     final core = NativeCore.instance!;
-    final convert = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_speech_vtt');
+    final convert = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_speech_vtt');
     return core.take(core.withText(input, convert));
   });
   return vtt ?? 'WEBVTT\n\n';
@@ -190,11 +215,41 @@ String? speechLanguageTag(Object? language) {
 }
 
 const _whisperLanguages = {
-  'english': 'en', 'chinese': 'zh', 'japanese': 'ja', 'korean': 'ko', 'spanish': 'es', 'french': 'fr', 'german': 'de',
-  'russian': 'ru', 'portuguese': 'pt', 'italian': 'it', 'dutch': 'nl', 'arabic': 'ar', 'hindi': 'hi', 'turkish': 'tr',
-  'vietnamese': 'vi', 'thai': 'th', 'indonesian': 'id', 'malay': 'ms', 'polish': 'pl', 'ukrainian': 'uk', 'swedish': 'sv',
-  'czech': 'cs', 'greek': 'el', 'hebrew': 'he', 'persian': 'fa', 'finnish': 'fi', 'danish': 'da', 'norwegian': 'no',
-  'hungarian': 'hu', 'romanian': 'ro', 'tagalog': 'tl', 'cantonese': 'yue', 'bengali': 'bn', 'tamil': 'ta', 'urdu': 'ur',
+  'english': 'en',
+  'chinese': 'zh',
+  'japanese': 'ja',
+  'korean': 'ko',
+  'spanish': 'es',
+  'french': 'fr',
+  'german': 'de',
+  'russian': 'ru',
+  'portuguese': 'pt',
+  'italian': 'it',
+  'dutch': 'nl',
+  'arabic': 'ar',
+  'hindi': 'hi',
+  'turkish': 'tr',
+  'vietnamese': 'vi',
+  'thai': 'th',
+  'indonesian': 'id',
+  'malay': 'ms',
+  'polish': 'pl',
+  'ukrainian': 'uk',
+  'swedish': 'sv',
+  'czech': 'cs',
+  'greek': 'el',
+  'hebrew': 'he',
+  'persian': 'fa',
+  'finnish': 'fi',
+  'danish': 'da',
+  'norwegian': 'no',
+  'hungarian': 'hu',
+  'romanian': 'ro',
+  'tagalog': 'tl',
+  'cantonese': 'yue',
+  'bengali': 'bn',
+  'tamil': 'ta',
+  'urdu': 'ur',
 };
 
 /// Recognized subtitles, kept so a video is sent once: in `lumtub.db`
@@ -202,7 +257,8 @@ const _whisperLanguages = {
 /// `<video id>.<language>.vtt`. Files from before the database are moved
 /// into it when their video is next looked up. Past [keep], the oldest go.
 class SpeechSubtitleStore {
-  SpeechSubtitleStore(this.folder, {this.keep = 300, this.db, Directory? cache}) : cache = cache ?? folder;
+  SpeechSubtitleStore(this.folder, {this.keep = 300, this.db, Directory? cache})
+      : cache = cache ?? folder;
   final Directory folder;
   final int keep;
   final LocalDb? db;
@@ -219,7 +275,9 @@ class SpeechSubtitleStore {
     if (db != null) {
       try {
         final found = (await db.transcripts(videoId, origins: origins)).firstOrNull;
-        if (found != null) return (file: await _forPlayer(videoId, found.lang, found.body), language: found.lang);
+        if (found != null) {
+          return (file: await _forPlayer(videoId, found.lang, found.body), language: found.lang);
+        }
       } on LocalDbException catch (e) {
         logWarn('Could not read recognized subtitles from lumtub.db: $e');
       }
@@ -261,7 +319,8 @@ class SpeechSubtitleStore {
 
   /// Keeps [vtt] as [videoId]'s subtitles in [language], made by [model]
   /// on this device or a service ([origin]).
-  Future<File> save(String videoId, String language, String vtt, {String origin = 'machine-cloud', String model = ''}) async {
+  Future<File> save(String videoId, String language, String vtt,
+      {String origin = 'machine-cloud', String model = ''}) async {
     final db = this.db;
     if (db != null) {
       try {

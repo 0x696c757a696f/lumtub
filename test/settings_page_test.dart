@@ -86,10 +86,25 @@ void main() {
     await pump(tester);
     for (final (category, row, title, content) in [
       (SettingsCategory.play, 'Speed settings', 'Speed settings', 'Speed list'),
-      (SettingsCategory.subtitles, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
-      (SettingsCategory.subtitles, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
+      (
+        SettingsCategory.subtitles,
+        'Subtitle settings',
+        'Subtitle settings',
+        'First subtitle language'
+      ),
+      (
+        SettingsCategory.subtitles,
+        'Translation & AI',
+        'Translation & AI',
+        'Google Translate (free)'
+      ),
       (SettingsCategory.style, 'App font', 'App font', 'Microsoft YaHei'),
-      (SettingsCategory.storage, 'Components & data packs', 'Components & data packs', 'Preparing components…'),
+      (
+        SettingsCategory.storage,
+        'Components & data packs',
+        'Components & data packs',
+        'Preparing components…'
+      ),
       (SettingsCategory.about, 'Error log', 'Logs', 'No logs yet'),
     ]) {
       await openRow(tester, category, row);
@@ -111,8 +126,10 @@ void main() {
     await tester.tap(find.text('Forest green'));
     await tester.pumpAndSettle();
     final appearance = controller.appearance;
-    expect((appearance.accentIndex, appearance.customAccent, appearance.pureBlack), (-1, 0xFF2E7D32, false));
-    await tester.scrollUntilVisible(find.text('OLED black'), 60, scrollable: find.byType(Scrollable).last);
+    expect((appearance.accentIndex, appearance.customAccent, appearance.pureBlack),
+        (-1, 0xFF2E7D32, false));
+    await tester.scrollUntilVisible(find.text('OLED black'), 60,
+        scrollable: find.byType(Scrollable).last);
     await tester.tap(find.text('OLED black'));
     await tester.pumpAndSettle();
     expect(controller.appearance.pureBlack, isTrue);
@@ -128,7 +145,8 @@ void main() {
   });
 
   testWidgets('blocked channels can be removed', (tester) async {
-    await controller.savePreferences(controller.preferences.copyWith(blockedChannels: const [ChannelRef('UC0123456789abcdefghijkl', '测试频道')]));
+    await controller.savePreferences(controller.preferences
+        .copyWith(blockedChannels: const [ChannelRef('UC0123456789abcdefghijkl', '测试频道')]));
     await pump(tester);
     await openRow(tester, SettingsCategory.filters, 'Blocked channels');
     expect(find.text('测试频道'), findsOneWidget);
@@ -152,7 +170,11 @@ void main() {
     controller.preferences = controller.preferences.copyWith(blockGroups: true);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Builder(builder: (context) => Scaffold(body: TextButton(onPressed: () => openBlockedGroups(context, controller), child: const Text('open')))),
+      home: Builder(
+          builder: (context) => Scaffold(
+              body: TextButton(
+                  onPressed: () => openBlockedGroups(context, controller),
+                  child: const Text('open')))),
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -162,7 +184,8 @@ void main() {
     expect(find.textContaining('Channel names · '), findsOneWidget);
     await tester.tap(find.widgetWithText(CheckboxListTile, '文昭谈古论今'));
     await tester.pump();
-    expect(controller.preferences.allowedEntries.single, startsWith('falun-gong-linked-hosts-and-shows/'));
+    expect(controller.preferences.allowedEntries.single,
+        startsWith('falun-gong-linked-hosts-and-shows/'));
     expect(controller.preferences.blocksChannel('文昭談古論今'), isFalse);
     expect(controller.preferences.blocksChannel('江峰时刻'), isTrue);
     await tester.tap(find.text('Untick all'));
@@ -180,10 +203,12 @@ void main() {
     for (final category in SettingsCategory.values) {
       final entries = settingEntries(category, controller);
       expect(entries, isNotEmpty, reason: category.name);
-      expect(entries.length, lessThanOrEqualTo(25), reason: '${category.name} is getting crowded again');
+      expect(entries.length, lessThanOrEqualTo(25),
+          reason: '${category.name} is getting crowded again');
       for (final entry in entries) {
         if (entry.title.contains(RegExp(r'\d'))) continue;
-        expect(seen[entry.title], isNull, reason: '${entry.title} is in ${seen[entry.title]?.name} and ${category.name}');
+        expect(seen[entry.title], isNull,
+            reason: '${entry.title} is in ${seen[entry.title]?.name} and ${category.name}');
         seen[entry.title] = category;
       }
     }

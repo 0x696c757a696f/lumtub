@@ -32,7 +32,8 @@ void main() {
   });
 
   test('the recommendations library is there', () {
-    expect(NativeCore.instance, isNotNull, reason: 'build native/lumtub_core and point LUMTUB_CORE_DLL at it');
+    expect(NativeCore.instance, isNotNull,
+        reason: 'build native/lumtub_core and point LUMTUB_CORE_DLL at it');
   });
 
   // CI builds lumtub_core.dll first and points LUMTUB_CORE_DLL at it.
@@ -45,10 +46,14 @@ void main() {
           ])
         : await ProcessTree.start('/bin/sh', ['-c', r'sleep 60 & echo $!; wait']);
     expect(process, isA<ProcessTree>());
-    final grandchild = int.parse((await process.stdout.transform(utf8.decoder).transform(const LineSplitter()).first).trim());
+    final grandchild = int.parse(
+        (await process.stdout.transform(utf8.decoder).transform(const LineSplitter()).first)
+            .trim());
     expect(await _running(grandchild), isTrue);
     expect(process.kill(), isTrue);
     await process.exitCode;
     expect(await _goneSoon(grandchild), isTrue);
-  }, skip: NativeCore.instance == null ? 'lumtub_core.dll is not built' : null, timeout: const Timeout(Duration(seconds: 60)));
+  },
+      skip: NativeCore.instance == null ? 'lumtub_core.dll is not built' : null,
+      timeout: const Timeout(Duration(seconds: 60)));
 }

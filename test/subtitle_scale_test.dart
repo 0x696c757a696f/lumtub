@@ -13,19 +13,25 @@ void main() {
   });
 
   test('Android sizes subtitles by the player height, as ExoPlayer does', () {
-    double px(double width, double height, [double system = 1]) => 32 * androidSubtitleScale(Size(width, height), system);
-    expect(px(393, 221), 12, reason: 'the upright phone player keeps 12 px, not the 9 px scaling by area gives');
+    double px(double width, double height, [double system = 1]) =>
+        32 * androidSubtitleScale(Size(width, height), system);
+    expect(px(393, 221), 12,
+        reason: 'the upright phone player keeps 12 px, not the 9 px scaling by area gives');
     expect(px(852, 393), closeTo(20.9, 0.1), reason: 'full screen sideways');
     expect(px(1920, 1080), closeTo(57.6, 0.1), reason: 'a TV, read from afar');
-    expect(px(393, 852), closeTo(15.7, 0.1), reason: 'full screen upright: by the width, not the tall screen');
+    expect(px(393, 852), closeTo(15.7, 0.1),
+        reason: 'full screen upright: by the width, not the tall screen');
     expect(px(852, 393, 1.5), closeTo(31.4, 0.1), reason: "Android's caption size setting counts");
   });
 
   test("Android's picture in picture keeps the player's share of the height", () {
-    double px(double width, double height) => 32 * androidSubtitleScale(Size(width, height), 1, true);
-    expect(px(244, 137), closeTo(7.3, 0.1), reason: 'not the 12 px floor, which took two lines over half the window');
+    double px(double width, double height) =>
+        32 * androidSubtitleScale(Size(width, height), 1, true);
+    expect(px(244, 137), closeTo(7.3, 0.1),
+        reason: 'not the 12 px floor, which took two lines over half the window');
     expect(px(120, 68), 6, reason: 'never under 6 px');
-    final view = subtitleViewFor(const PlayerSettings(), smallWindow: const Size(244, 137), byHeight: true);
+    final view =
+        subtitleViewFor(const PlayerSettings(), smallWindow: const Size(244, 137), byHeight: true);
     expect(view.scaleFor?.call(const Size(244, 137)), const TextScaler.linear(137 * 0.0533 / 32));
   });
 
@@ -33,7 +39,8 @@ void main() {
     const settings = PlayerSettings();
     expect(settings.pipSubtitles, isTrue);
     expect(settings.miniPlayerSubtitles, isTrue);
-    final off = PlayerSettings.fromJson(settings.copyWith(pipSubtitles: false, miniPlayerSubtitles: false).toJson());
+    final off = PlayerSettings.fromJson(
+        settings.copyWith(pipSubtitles: false, miniPlayerSubtitles: false).toJson());
     expect(off.pipSubtitles, isFalse);
     expect(off.miniPlayerSubtitles, isFalse);
   });

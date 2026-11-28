@@ -20,7 +20,9 @@ void main() {
     final asked = <String>[];
     final client = MockClient((request) async {
       asked.add(request.url.pathSegments.last);
-      return http.Response('<meta property="og:image" content="https://yt3.googleusercontent.com/${request.url.pathSegments.last}=s900">', 200);
+      return http.Response(
+          '<meta property="og:image" content="https://yt3.googleusercontent.com/${request.url.pathSegments.last}=s900">',
+          200);
     });
     final file = File('${dir.path}/channel_avatars.json');
     lookup.configure(client, file);
@@ -43,7 +45,8 @@ void main() {
     for (var i = 0; i < 50 && !file.existsSync(); i++) {
       await Future<void>.delayed(const Duration(milliseconds: 20));
     }
-    expect(jsonDecode(file.readAsStringSync()), {id: 'https://yt3.googleusercontent.com/$id=s900', other: 'https://yt3.ggpht.com/given'});
+    expect(jsonDecode(file.readAsStringSync()),
+        {id: 'https://yt3.googleusercontent.com/$id=s900', other: 'https://yt3.ggpht.com/given'});
     lookup.reset();
     lookup.configure(MockClient((_) async => throw StateError('asked again')), file);
     expect(lookup.of(id), isNull);
@@ -53,8 +56,12 @@ void main() {
 
   testWidgets('an avatar shows the letter until the picture is found', (tester) async {
     final client = MockClient((request) async => http.Response('', 404));
-    lookup.configure(client, File('${Directory.systemTemp.path}/lumtub_none_${DateTime.now().microsecondsSinceEpoch}.json'));
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: ChannelAvatar(name: 'Anna', channelId: id))));
+    lookup.configure(
+        client,
+        File(
+            '${Directory.systemTemp.path}/lumtub_none_${DateTime.now().microsecondsSinceEpoch}.json'));
+    await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: ChannelAvatar(name: 'Anna', channelId: id))));
     await tester.pump();
     expect(find.text('A'), findsOneWidget);
     expect(find.byType(Image), findsNothing);

@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 
 /// [url]'s status and body, at most [limit] bytes: a server that is broken
 /// or hostile cannot fill the memory with a longer one, which is not read.
-Future<(int, Uint8List)> getBounded(http.Client client, Uri url, {required int limit, Map<String, String>? headers}) async {
+Future<(int, Uint8List)> getBounded(http.Client client, Uri url,
+    {required int limit, Map<String, String>? headers}) async {
   final request = http.Request('GET', url);
   if (headers != null) request.headers.addAll(headers);
   final response = await client.send(request);

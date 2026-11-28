@@ -11,7 +11,8 @@ import 'dlna.dart';
 /// Every DLNA renderer, Chromecast and AirPlay receiver found on the LAN
 /// within [timeout]; the stream ends when the search does, and cancelling
 /// it stops the search.
-Stream<CastDevice> discoverCastDevices({Duration timeout = const Duration(seconds: 6), AirPlayPairings? pairings}) {
+Stream<CastDevice> discoverCastDevices(
+    {Duration timeout = const Duration(seconds: 6), AirPlayPairings? pairings}) {
   final controller = StreamController<CastDevice>();
   final subscriptions = <StreamSubscription<CastDevice>>[];
   var cancelled = false;
@@ -30,7 +31,11 @@ Stream<CastDevice> discoverCastDevices({Duration timeout = const Duration(second
       if (--open == 0) unawaited(controller.close());
     }
 
-    for (final search in [discoverDlna(timeout: timeout), discoverChromecasts(timeout: timeout), discoverAirPlay(timeout: timeout, pairings: pairings)]) {
+    for (final search in [
+      discoverDlna(timeout: timeout),
+      discoverChromecasts(timeout: timeout),
+      discoverAirPlay(timeout: timeout, pairings: pairings)
+    ]) {
       subscriptions.add(search.listen(controller.add, onError: (_) {}, onDone: done));
     }
   };

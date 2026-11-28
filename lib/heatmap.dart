@@ -17,8 +17,15 @@ class Heatmap {
     if (raw is! List) return null;
     final bins = <(double, double, double)>[
       for (final b in raw.whereType<Map<dynamic, dynamic>>())
-        if (b['start_time'] is num && b['end_time'] is num && b['value'] is num && (b['end_time'] as num) > (b['start_time'] as num))
-          ((b['start_time'] as num).toDouble(), (b['end_time'] as num).toDouble(), (b['value'] as num).toDouble().clamp(0.0, 1.0)),
+        if (b['start_time'] is num &&
+            b['end_time'] is num &&
+            b['value'] is num &&
+            (b['end_time'] as num) > (b['start_time'] as num))
+          (
+            (b['start_time'] as num).toDouble(),
+            (b['end_time'] as num).toDouble(),
+            (b['value'] as num).toDouble().clamp(0.0, 1.0)
+          ),
     ];
     if (bins.length < 2) return null;
     final total = bins.map((b) => b.$2).reduce(max);

@@ -7,7 +7,11 @@ extension VideoDetailsActions on AppController {
     _summaries.remove(videoId);
     _staleSummaries.add(videoId);
     final db = _textsDb;
-    if (db != null) unawaited(db.forgetSummaries(video: videoId).catchError((Object e) => logDebug(() => 'Could not forget a summary: $e')));
+    if (db != null) {
+      unawaited(db
+          .forgetSummaries(video: videoId)
+          .catchError((Object e) => logDebug(() => 'Could not forget a summary: $e')));
+    }
   }
 
   String? summaryOf(String id) => _summaries[id];
@@ -25,20 +29,28 @@ extension VideoDetailsActions on AppController {
     if (item == null) throw TranslationException(tr('No video is playing'));
     if (_summaries[item.id] case final done?) return done;
     final intelligence = this.intelligence;
-    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    if (!intelligence.can(Capability.complete)) {
+      throw TranslationException(
+          tr('Set up the AI interface and key under Translation & AI first'));
+    }
     final db = _textsDb;
     final language = currentLanguage.tag;
     if (db != null && !_staleSummaries.contains(item.id)) {
       try {
-        if (await db.summary(item.id, language) case final saved?) return _keepSummary(item.id, saved);
+        if (await db.summary(item.id, language) case final saved?) {
+          return _keepSummary(item.id, saved);
+        }
       } on LocalDbException catch (e) {
         logWarn('Could not read a summary from lumtub.db: $e');
       }
     }
-    final summary = await jobs.run('summary:${item.id}', (job) => _summarize(item, details, intelligence, onProgress), priority: JobPriority.watching);
+    final summary = await jobs.run(
+        'summary:${item.id}', (job) => _summarize(item, details, intelligence, onProgress),
+        priority: JobPriority.watching);
     if (db != null) {
       try {
-        await db.putSummary(item.id, language, intelligence.makerOf(Capability.complete), summary, keep: 500);
+        await db.putSummary(item.id, language, intelligence.makerOf(Capability.complete), summary,
+            keep: 500);
         _staleSummaries.remove(item.id);
       } on LocalDbException catch (e) {
         logWarn('Could not keep a summary in lumtub.db: $e');
@@ -61,27 +73,38 @@ extension VideoDetailsActions on AppController {
   /// it has none of its own.
   void _aiChapters(String id, String summary) {
     final details = this.details;
-    if (playing?.id != id || details == null || (details.chapters.isNotEmpty && !chaptersByAi)) return;
+    if (playing?.id != id || details == null || (details.chapters.isNotEmpty && !chaptersByAi)) {
+      return;
+    }
     final overview = VideoOverview.parse(summary);
     if (overview == null || overview.chapters.length < 2) return;
     _update(() {
-      this.details = details.withChapters([for (final c in overview.chapters) Chapter(c.start, c.end, c.title)]);
+      this.details = details
+          .withChapters([for (final c in overview.chapters) Chapter(c.start, c.end, c.title)]);
       aiChaptersOf = id;
     });
     chaptersChanged.value++;
   }
 
-  Future<String> _summarize(VideoItem item, VideoDetails? details, Intelligence intelligence, void Function(int done, int total)? onProgress) async {
+  Future<String> _summarize(VideoItem item, VideoDetails? details, Intelligence intelligence,
+      void Function(int done, int total)? onProgress) async {
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
-    final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
+    final option =
+        originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
     final title = details?.title.isNotEmpty ?? false ? details!.title : item.title;
     Future<String> complete(String system, String user) => intelligence.complete(system, user);
     if (option == null) {
       // No subtitles, not even YouTube's automatic ones: the description
       // and chapters are all there is to go on.
       final description = details?.description ?? '';
-      final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) if (!chaptersByAi) (start: c.start, title: c.title)];
-      if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('This video has no subtitles and its description is too short to summarize'));
+      final chapters = [
+        for (final c in details?.chapters ?? const <Chapter>[])
+          if (!chaptersByAi) (start: c.start, title: c.title)
+      ];
+      if (!canSummarizeDescription(description, chapters)) {
+        throw TranslationException(
+            tr('This video has no subtitles and its description is too short to summarize'));
+      }
       final summary = await summarizeDescription(complete, title, description, chapters);
       logInfo('Summarized ${item.id} from its description');
       return summary;
@@ -91,26 +114,31 @@ extension VideoDetailsActions on AppController {
     // A model that reads long texts gets the whole transcript at once, as
     // the chapters and quotes then come from what was said, not from notes.
     final budget = intelligence.completeBudget;
-    var transcript = await summaryTranscript(source, budget: budget, most: budget > IntelligenceProvider.shortBudget ? 3 : 8);
+    var transcript = await summaryTranscript(source,
+        budget: budget, most: budget > IntelligenceProvider.shortBudget ? 3 : 8);
     String summary;
     try {
-      summary = await summarizeTranscript(complete, title, transcript, description: description, onProgress: onProgress);
+      summary = await summarizeTranscript(complete, title, transcript,
+          description: description, onProgress: onProgress);
     } on TranslationException catch (e) {
       if (budget <= IntelligenceProvider.shortBudget || e.busy) rethrow;
       // Refused as too long for this model after all: in parts, as before.
       logInfo('The whole transcript of ${item.id} was refused ($e); summarizing it in parts');
       transcript = await summaryTranscript(source);
-      summary = await summarizeTranscript(complete, title, transcript, description: description, onProgress: onProgress);
+      summary = await summarizeTranscript(complete, title, transcript,
+          description: description, onProgress: onProgress);
     }
     logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
     return summary;
   }
 
   /// lumtub.db, where notes are kept; older cores have none.
-  LocalDb get _notesDb => _textsDb ?? (throw TranslationException(tr('Notes need a newer Lumtub core')));
+  LocalDb get _notesDb =>
+      _textsDb ?? (throw TranslationException(tr('Notes need a newer Lumtub core')));
 
   /// The notes on [video], in the order of the video.
-  Future<List<VideoNote>> notesOf(String video) async => _textsDb == null ? const [] : _notesDb.notes(video: video);
+  Future<List<VideoNote>> notesOf(String video) async =>
+      _textsDb == null ? const [] : _notesDb.notes(video: video);
 
   /// Keeps a note on the playing video at [at]: the subtitle words
   /// [quote] and what the person wrote about them.
@@ -118,7 +146,8 @@ extension VideoDetailsActions on AppController {
     final item = playing;
     if (item == null) throw TranslationException(tr('No video is playing'));
     final title = details?.title.isNotEmpty ?? false ? details!.title : item.title;
-    await _notesDb.putNote(video: item.id, title: title, at: at, quote: quote.trim(), body: body.trim());
+    await _notesDb.putNote(
+        video: item.id, title: title, at: at, quote: quote.trim(), body: body.trim());
     notesChanged.value++;
   }
 
@@ -134,9 +163,13 @@ extension VideoDetailsActions on AppController {
 
   /// AI 讲解 of [text], a line of the playing video's subtitles, read with
   /// the lines [before] and [after] it, in the interface language.
-  Future<String> explainLine(String text, {List<String> before = const [], List<String> after = const []}) async {
+  Future<String> explainLine(String text,
+      {List<String> before = const [], List<String> after = const []}) async {
     final intelligence = this.intelligence;
-    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    if (!intelligence.can(Capability.complete)) {
+      throw TranslationException(
+          tr('Set up the AI interface and key under Translation & AI first'));
+    }
     final item = playing;
     final title = details?.title.isNotEmpty ?? false ? details!.title : item?.title ?? '';
     return explainSubtitle(intelligence.complete, text, title: title, before: before, after: after);
@@ -146,17 +179,24 @@ extension VideoDetailsActions on AppController {
   /// sentence they are part of, read with the lines [before] and [after].
   Future<String> completeQuote(String quote, List<String> before, List<String> after) async {
     final intelligence = this.intelligence;
-    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    if (!intelligence.can(Capability.complete)) {
+      throw TranslationException(
+          tr('Set up the AI interface and key under Translation & AI first'));
+    }
     final details = this.details;
     final item = playing;
     final title = details?.title.isNotEmpty ?? false ? details!.title : item?.title ?? '';
-    return completeQuoteText(intelligence.complete, quote, title: title, before: before, after: after);
+    return completeQuoteText(intelligence.complete, quote,
+        title: title, before: before, after: after);
   }
 
   /// [quote] and the person's [draft] made into a clear note by AI.
   Future<String> tidyNote(String quote, String draft) async {
     final intelligence = this.intelligence;
-    if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
+    if (!intelligence.can(Capability.complete)) {
+      throw TranslationException(
+          tr('Set up the AI interface and key under Translation & AI first'));
+    }
     return tidyNoteText(intelligence.complete, quote, draft);
   }
 
@@ -167,7 +207,9 @@ extension VideoDetailsActions on AppController {
     // Each one starts yt-dlp; on battery only the next video in line is.
     if (hover && Power.saving) return;
     if (hover && (player?.state.playing ?? false)) return;
-    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
+    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) {
+      _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
+    }
   }
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
@@ -182,9 +224,12 @@ extension VideoDetailsActions on AppController {
       } else {
         try {
           // The extraction playback uses carries the details too.
-          final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly);
+          final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id),
+              formatSort: _formatSort, membersOnly: item.membersOnly);
           loaded = resolved.details;
-          if (resolved.info['duration'] case final num seconds when seconds > 0) length = seconds.round();
+          if (resolved.info['duration'] case final num seconds when seconds > 0) {
+            length = seconds.round();
+          }
           if (serial == _playSerial) {
             _update(() {
               availableHeights = resolved.heightsFor(settings);
@@ -194,13 +239,18 @@ extension VideoDetailsActions on AppController {
             _tellSoftwareQuality();
             final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
             if (lost != null) {
-              _notice(tr("This video's {0}p is only in {1}, which is disabled; playing {2}p", [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
+              _notice(tr("This video's {0}p is only in {1}, which is disabled; playing {2}p",
+                  [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
             }
           }
         } catch (e) {
           // A second yt-dlp would meet the same 429, or the same network
           // the first one already tried twice.
-          if (DateTime.now().isBefore(_rateLimitedUntil) || RegExp(r'\b429\b|Too Many Requests').hasMatch('$e') || StreamResolver.isTransient(e)) rethrow;
+          if (DateTime.now().isBefore(_rateLimitedUntil) ||
+              RegExp(r'\b429\b|Too Many Requests').hasMatch('$e') ||
+              StreamResolver.isTransient(e)) {
+            rethrow;
+          }
           loaded = await _repository!.details(item.id);
         }
       }
@@ -212,19 +262,25 @@ extension VideoDetailsActions on AppController {
         _update(() {
           details = loaded;
           aiChaptersOf = null;
-          if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
+          if (preferences.showRelated) {
+            related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
+          }
         });
         if (_summaries[item.id] case final summary?) _aiChapters(item.id, summary);
         // Once yt-dlp names the start time, wait for it rather than poll.
-        if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
+        if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) {
+          _waitForStart(item);
+        }
         unawaited(_localizeDetails(item.id, serial));
         if (speech != null && loaded.subtitles.length == 1) {
           _subtitlesSettled(serial);
           unawaited(_showSpeech(speech, serial));
         } else if (saved) {
-          unawaited(_downloadedSubtitles(item, local, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
+          unawaited(_downloadedSubtitles(item, local, loaded, serial)
+              .whenComplete(() => _subtitlesSettled(serial)));
         } else {
-          unawaited(_autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
+          unawaited(
+              _autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         }
       } else {
         _subtitlesSettled(serial);
@@ -241,10 +297,14 @@ extension VideoDetailsActions on AppController {
   /// Subtitles for a downloaded video. Online, YouTube's, translations
   /// too, picked as when it streams; the download keeps only the ones
   /// saved with it, which are what plays offline.
-  Future<void> _downloadedSubtitles(VideoItem item, LocalVideo local, VideoDetails saved, int serial) async {
+  Future<void> _downloadedSubtitles(
+      VideoItem item, LocalVideo local, VideoDetails saved, int serial) async {
     VideoDetails? online;
     try {
-      final resolved = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly).timeout(const Duration(seconds: 40));
+      final resolved = await _repository!.streams
+          .resolve(item.id, _formatFor(item.id),
+              formatSort: _formatSort, membersOnly: item.membersOnly)
+          .timeout(const Duration(seconds: 40));
       online = resolved.details;
     } catch (e) {
       logInfo('The download of ${item.id} keeps its own subtitles: $e');
@@ -257,7 +317,11 @@ extension VideoDetailsActions on AppController {
       final own = local.subtitleOptions;
       if (own.isEmpty) {
         final player = this.player;
-        if (player != null && await _fileLoaded(player, item.id, serial) && _openedLocal == item.id) await _addLocalSubtitles(local, serial);
+        if (player != null &&
+            await _fileLoaded(player, item.id, serial) &&
+            _openedLocal == item.id) {
+          await _addLocalSubtitles(local, serial);
+        }
         return;
       }
       final offline = saved.withSubtitles(own);
@@ -278,13 +342,18 @@ extension VideoDetailsActions on AppController {
     final filled = filledFromDetails(current, loaded, length: length);
     if (!saysMore(current, filled)) return;
     if (playing?.id == item.id) _update(() => playing = filled);
-    if (_history?.byId(item.id) case final saved?) unawaited(_history?.update(filledFromDetails(saved, loaded, length: length)));
+    if (_history?.byId(item.id) case final saved?) {
+      unawaited(_history?.update(filledFromDetails(saved, loaded, length: length)));
+    }
   }
 
   /// Videos in the history opened from a link before their title was
   /// asked for: named by their id until now.
   Future<void> _nameLinkedVideos() async {
-    final unnamed = [for (final item in history) if (isLinkPlaceholder(item)) item.id].take(50).toList();
+    final unnamed = [
+      for (final item in history)
+        if (isLinkPlaceholder(item)) item.id
+    ].take(50).toList();
     if (unnamed.isEmpty) return;
     var named = 0;
     for (final id in unnamed) {
@@ -336,7 +405,10 @@ extension VideoDetailsActions on AppController {
       () => repository.videosOr(() => relatedVideos.forVideo(item.id), query),
       pageSize: 13,
       limit: 12,
-      where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),
+      where: (other) =>
+          other.id != item.id &&
+          !preferences.blocksGroup(other) &&
+          !preferences.isUnrecommended(other.channelId),
     )..addListener(_passOn('related'));
     loader.loadMore();
     return loader;
@@ -347,7 +419,9 @@ extension VideoDetailsActions on AppController {
     final item = playing;
     if (item == null) return null;
     final id = details?.channelId;
-    if (id != null) return ChannelRef(id, details!.channel.isNotEmpty ? details!.channel : item.channel);
+    if (id != null) {
+      return ChannelRef(id, details!.channel.isNotEmpty ? details!.channel : item.channel);
+    }
     return item.channelRef;
   }
 }

@@ -16,12 +16,14 @@ import '../translatable.dart' show TranslationView, standInNotice;
 
 /// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
 /// the one AI interface that AI 翻译 and AI 总结 share.
-Future<void> openTranslationSettings(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(
+Future<void> openTranslationSettings(BuildContext context, AppController controller) =>
+    Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
         appBar: SkinAppBar(AppBar(title: Text(tr('Translation & AI')))),
         body: ListenableBuilder(
           listenable: controller,
-          builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: _items(context, controller)),
+          builder: (context, _) => ListView(
+              padding: const EdgeInsets.only(bottom: 40), children: _items(context, controller)),
         ),
       ),
     ));
@@ -38,14 +40,19 @@ List<Widget> _items(BuildContext context, AppController controller) {
 
   Widget header(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Semantics(header: true, child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary))),
+        child: Semantics(
+            header: true,
+            child: Text(text,
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary))),
       );
   Widget tip(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(AppIcons.info, size: 16, color: colors.outline),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5))),
+          Expanded(
+              child:
+                  Text(text, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5))),
         ]),
       );
   Widget keyItem(TranslationService of, {bool optional = false, String? name}) {
@@ -56,26 +63,40 @@ List<Widget> _items(BuildContext context, AppController controller) {
       subtitle: saved.isEmpty ? tr('Not set') : tr('Set ({0})', [_masked(saved)]),
       leading: const Icon(AppIcons.keyFill),
       onTap: () async {
-        final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('API key for {0}', [of.label]), initial: saved));
+        final typed = await showDialog<String>(
+            context: context,
+            builder: (context) =>
+                _KeyDialog(title: tr('API key for {0}', [of.label]), initial: saved));
         if (typed != null) await controller.saveApiKey(keyName, typed);
       },
     );
   }
 
-  Widget textItem(String title, String value, String shown, IconData icon, String hint, void Function(String) onSaved, {int maxLines = 1}) => NormalItem(
+  Widget textItem(String title, String value, String shown, IconData icon, String hint,
+          void Function(String) onSaved,
+          {int maxLines = 1}) =>
+      NormalItem(
         title: title,
         subtitle: shown,
         leading: Icon(icon),
         onTap: () async {
           final typed = await showDialog<String>(
             context: context,
-            builder: (context) => TextEditDialog(title: title, initialText: value, hintText: hint, maxLines: maxLines, monospace: maxLines > 1),
+            builder: (context) => TextEditDialog(
+                title: title,
+                initialText: value,
+                hintText: hint,
+                maxLines: maxLines,
+                monospace: maxLines > 1),
           );
-          if (typed != null) onSaved(maxLines > 1 ? typed.trim() : typed.trim().replaceAll(RegExp(r'\s'), ''));
+          if (typed != null) {
+            onSaved(maxLines > 1 ? typed.trim() : typed.trim().replaceAll(RegExp(r'\s'), ''));
+          }
         },
       );
 
-  final ai = AiTranslator.aiPresets.firstWhere((p) => p.id == config.aiPreset, orElse: () => AiTranslator.aiPresets.first);
+  final ai = AiTranslator.aiPresets
+      .firstWhere((p) => p.id == config.aiPreset, orElse: () => AiTranslator.aiPresets.first);
   return [
     PopupItem<TranslationService>(
       title: tr('Translation service'),
@@ -96,35 +117,62 @@ List<Widget> _items(BuildContext context, AppController controller) {
       title: tr('Translation target language'),
       leading: Icon(AppIcons.translate),
       value: prefs.translateLanguage,
-      values: [('', tr('Interface language ({0})', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
-      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
+      values: [
+        ('', tr('Interface language ({0})', [interfaceTranslationLanguage.label])),
+        for (final l in TranslationLanguage.all) (l.code, l.label)
+      ],
+      onSelected: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
     ),
     SwitchItem(
       title: tr('Translate subtitles with this service too'),
       subtitle: service.subtitlesOnGoogle
-          ? tr("Available once another service is chosen; YouTube's own auto-translate is used by default")
-          : tr("When off, YouTube's own auto-translate is used, and this service only when YouTube refuses"),
+          ? tr(
+              "Available once another service is chosen; YouTube's own auto-translate is used by default")
+          : tr(
+              "When off, YouTube's own auto-translate is used, and this service only when YouTube refuses"),
       leading: Icon(AppIcons.subtitles),
       value: prefs.subtitlesByService && !service.subtitlesOnGoogle,
       enabled: !service.subtitlesOnGoogle,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
+      onChanged: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
     ),
     if (service == TranslationService.microsoft) ...[
       header(tr('Microsoft Translator')),
       keyItem(service, optional: true),
       if ((controller.translationKeys[service.name] ?? '').isNotEmpty)
-        textItem(tr('Azure region'), config.microsoftRegion, config.microsoftRegion.isEmpty ? tr('Global (not set)') : config.microsoftRegion, AppIcons.globe, tr('Region of the Azure resource, such as eastasia'), (v) => saveConfig((c) => c.copyWith(microsoftRegion: v))),
-      tip(tr('Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.')),
+        textItem(
+            tr('Azure region'),
+            config.microsoftRegion,
+            config.microsoftRegion.isEmpty ? tr('Global (not set)') : config.microsoftRegion,
+            AppIcons.globe,
+            tr('Region of the Azure resource, such as eastasia'),
+            (v) => saveConfig((c) => c.copyWith(microsoftRegion: v))),
+      tip(tr(
+          'Without a key it uses the free endpoint Microsoft Edge translates pages with; with an Azure key it uses the official API.')),
     ],
     if (service == TranslationService.deeplx) ...[
       header('DeepLX'),
-      textItem(tr('Server address'), config.deeplxServer, config.deeplxServer.isEmpty ? tr('Not set') : config.deeplxServer, AppIcons.hardDrives, tr('e.g. http://localhost:1188/translate'), (v) => saveConfig((c) => c.copyWith(deeplxServer: v))),
+      textItem(
+          tr('Server address'),
+          config.deeplxServer,
+          config.deeplxServer.isEmpty ? tr('Not set') : config.deeplxServer,
+          AppIcons.hardDrives,
+          tr('e.g. http://localhost:1188/translate'),
+          (v) => saveConfig((c) => c.copyWith(deeplxServer: v))),
       keyItem(service, optional: true),
-      tip(tr("DeepLX is an open-source bridge to DeepL's web translator that you can host yourself; use only servers you trust.")),
+      tip(tr(
+          "DeepLX is an open-source bridge to DeepL's web translator that you can host yourself; use only servers you trust.")),
     ],
     if (service == TranslationService.baidu) ...[
       header(tr('Baidu Translate')),
-      textItem('APP ID', config.baiduAppId, config.baiduAppId.isEmpty ? tr('Not set') : config.baiduAppId, AppIcons.identificationBadge, tr('APP ID from the Baidu Translate open platform'), (v) => saveConfig((c) => c.copyWith(baiduAppId: v))),
+      textItem(
+          'APP ID',
+          config.baiduAppId,
+          config.baiduAppId.isEmpty ? tr('Not set') : config.baiduAppId,
+          AppIcons.identificationBadge,
+          tr('APP ID from the Baidu Translate open platform'),
+          (v) => saveConfig((c) => c.copyWith(baiduAppId: v))),
       keyItem(service),
     ],
     if (service == TranslationService.deepl) ...[
@@ -136,13 +184,18 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header('MyMemory'),
       NormalItem(
         title: tr('Email (optional)'),
-        subtitle: (controller.translationKeys[service.name] ?? '').isEmpty ? tr('Not set') : controller.translationKeys[service.name]!,
+        subtitle: (controller.translationKeys[service.name] ?? '').isEmpty
+            ? tr('Not set')
+            : controller.translationKeys[service.name]!,
         leading: Icon(AppIcons.identificationBadge),
         onTap: () async {
           final saved = controller.translationKeys[service.name] ?? '';
           final typed = await showDialog<String>(
             context: context,
-            builder: (context) => TextEditDialog(title: tr('Email (optional)'), initialText: saved, hintText: tr('Raises the daily allowance; sent only to MyMemory')),
+            builder: (context) => TextEditDialog(
+                title: tr('Email (optional)'),
+                initialText: saved,
+                hintText: tr('Raises the daily allowance; sent only to MyMemory')),
           );
           if (typed != null) await controller.saveApiKey(service.name, typed.trim());
         },
@@ -150,53 +203,78 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ],
     if (service == TranslationService.libre) ...[
       header('LibreTranslate'),
-      textItem(tr('Server address'), config.libreServer, config.libreServer.isEmpty ? tr('Not set') : config.libreServer, AppIcons.hardDrives, tr('For example https://libretranslate.com'), (v) => saveConfig((c) => c.copyWith(libreServer: v))),
+      textItem(
+          tr('Server address'),
+          config.libreServer,
+          config.libreServer.isEmpty ? tr('Not set') : config.libreServer,
+          AppIcons.hardDrives,
+          tr('For example https://libretranslate.com'),
+          (v) => saveConfig((c) => c.copyWith(libreServer: v))),
       keyItem(service, optional: true),
     ],
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(key: ValueKey(service), controller: controller)),
+      child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _TestButton(key: ValueKey(service), controller: controller)),
     ),
     header(tr('AI interface')),
-    tip(tr('AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.')),
-      PopupItem<String>(
-        title: tr('Provider'),
-        leading: Icon(AppIcons.graph),
-        value: ai.id,
-        values: [for (final p in AiTranslator.aiPresets) (p.id, p.label)],
-        // A preset's own address and model replace those typed for another.
-        onSelected: (v) => saveConfig((c) => c.copyWith(aiPreset: v, aiBaseUrl: '', aiModel: '')),
+    tip(tr(
+        'AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.')),
+    PopupItem<String>(
+      title: tr('Provider'),
+      leading: Icon(AppIcons.graph),
+      value: ai.id,
+      values: [for (final p in AiTranslator.aiPresets) (p.id, p.label)],
+      // A preset's own address and model replace those typed for another.
+      onSelected: (v) => saveConfig((c) => c.copyWith(aiPreset: v, aiBaseUrl: '', aiModel: '')),
+    ),
+    textItem(
+        tr('Endpoint'),
+        config.aiBaseUrl,
+        config.effectiveAiBaseUrl.isEmpty ? tr('Not set') : config.effectiveAiBaseUrl,
+        AppIcons.link,
+        ai.baseUrl.isEmpty
+            ? tr('OpenAI-compatible endpoint, such as https://example.com/v1')
+            : ai.baseUrl,
+        (v) => saveConfig((c) => c.copyWith(aiBaseUrl: v))),
+    NormalItem(
+      title: tr('Model'),
+      subtitle: config.effectiveAiModel.isEmpty ? tr('Not set') : config.effectiveAiModel,
+      leading: const Icon(AppIcons.cpuFill),
+      trailing: IconButton(
+        tooltip: tr('Get the model list from the endpoint'),
+        icon: Icon(AppIcons.listDashes),
+        onPressed: () =>
+            _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v))),
       ),
-      textItem(tr('Endpoint'), config.aiBaseUrl, config.effectiveAiBaseUrl.isEmpty ? tr('Not set') : config.effectiveAiBaseUrl, AppIcons.link, ai.baseUrl.isEmpty ? tr('OpenAI-compatible endpoint, such as https://example.com/v1') : ai.baseUrl, (v) => saveConfig((c) => c.copyWith(aiBaseUrl: v))),
-      NormalItem(
-        title: tr('Model'),
-        subtitle: config.effectiveAiModel.isEmpty ? tr('Not set') : config.effectiveAiModel,
-        leading: const Icon(AppIcons.cpuFill),
-        trailing: IconButton(
-          tooltip: tr('Get the model list from the endpoint'),
-          icon: Icon(AppIcons.listDashes),
-          onPressed: () => _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v))),
-        ),
-        // The endpoint's own list first; typing a name when it lists none,
-        // can't be reached, or the one wanted is not in it.
-        onTap: () async {
-          Future<void> type() async {
-            final typed = await showDialog<String>(
-              context: context,
-              builder: (context) => TextEditDialog(title: tr('Model'), initialText: config.aiModel, hintText: ai.model.isEmpty ? tr('Model name') : ai.model),
-            );
-            if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
-          }
+      // The endpoint's own list first; typing a name when it lists none,
+      // can't be reached, or the one wanted is not in it.
+      onTap: () async {
+        Future<void> type() async {
+          final typed = await showDialog<String>(
+            context: context,
+            builder: (context) => TextEditDialog(
+                title: tr('Model'),
+                initialText: config.aiModel,
+                hintText: ai.model.isEmpty ? tr('Model name') : ai.model),
+          );
+          if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
+        }
 
-          await _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v)), orType: type);
-        },
-      ),
-      keyItem(TranslationService.ai, optional: ai.id == 'ollama' || ai.id == 'custom', name: aiKeyName(config)),
+        await _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v)),
+            orType: type);
+      },
+    ),
+    keyItem(TranslationService.ai,
+        optional: ai.id == 'ollama' || ai.id == 'custom', name: aiKeyName(config)),
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(key: const ValueKey(#aiTest), controller: controller, ai: true)),
+      child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _TestButton(key: const ValueKey(#aiTest), controller: controller, ai: true)),
     ),
     if (service == TranslationService.ai) ...[
       header(tr('AI translation')),
@@ -204,14 +282,19 @@ List<Widget> _items(BuildContext context, AppController controller) {
         title: tr('Prompt'),
         leading: Icon(AppIcons.notePencil),
         value: config.promptPreset,
-        values: [for (final p in AiTranslator.promptPresets) (p.id, p.label), ('custom', tr('Custom'))],
+        values: [
+          for (final p in AiTranslator.promptPresets) (p.id, p.label),
+          ('custom', tr('Custom'))
+        ],
         onSelected: (v) => saveConfig((c) => c.copyWith(promptPreset: v)),
       ),
       if (config.promptPreset == 'custom')
         textItem(
           tr('Custom prompt'),
           config.customPrompt.isEmpty ? AiTranslator.promptPresets.first.text : config.customPrompt,
-          config.customPrompt.isEmpty ? tr('Not set, using “{0}”', [AiTranslator.promptPresets.first.label]) : config.customPrompt,
+          config.customPrompt.isEmpty
+              ? tr('Not set, using “{0}”', [AiTranslator.promptPresets.first.label])
+              : config.customPrompt,
           AppIcons.notepad,
           '',
           (v) => saveConfig((c) => c.copyWith(customPrompt: v)),
@@ -227,7 +310,10 @@ List<Widget> _items(BuildContext context, AppController controller) {
       textItem(
         tr('Glossary'),
         config.aiGlossary,
-        config.aiGlossary.trim().isEmpty ? tr('Not set') : tr('{0} entries', [config.aiGlossary.split('\n').where((l) => l.contains('=')).length]),
+        config.aiGlossary.trim().isEmpty
+            ? tr('Not set')
+            : tr('{0} entries',
+                [config.aiGlossary.split('\n').where((l) => l.contains('=')).length]),
         AppIcons.bookOpen,
         tr('One per line: original=translation, e.g. Lumtub=Lumtub'),
         (v) => saveConfig((c) => c.copyWith(aiGlossary: v)),
@@ -235,58 +321,108 @@ List<Widget> _items(BuildContext context, AppController controller) {
       ),
       NormalItem(
         title: tr('Temperature'),
-        subtitle: tr('{0} (lower is steadier, higher is freer)', [config.aiTemperature.toStringAsFixed(1)]),
+        subtitle: tr(
+            '{0} (lower is steadier, higher is freer)', [config.aiTemperature.toStringAsFixed(1)]),
         leading: Icon(AppIcons.thermometer),
-        onTap: () => pickWithSlider(context, title: tr('Temperature'), value: config.aiTemperature, min: 0, max: 1.5, divisions: 15, precise: 1, onSelected: (v) => saveConfig((c) => c.copyWith(aiTemperature: v))),
+        onTap: () => pickWithSlider(context,
+            title: tr('Temperature'),
+            value: config.aiTemperature,
+            min: 0,
+            max: 1.5,
+            divisions: 15,
+            precise: 1,
+            onSelected: (v) => saveConfig((c) => c.copyWith(aiTemperature: v))),
       ),
       NormalItem(
         title: tr('Subtitle context'),
-        subtitle: config.aiContext == 0 ? tr('Close') : tr('Sends the previous {0} lines so names and tone stay consistent', [config.aiContext]),
+        subtitle: config.aiContext == 0
+            ? tr('Close')
+            : tr('Sends the previous {0} lines so names and tone stay consistent',
+                [config.aiContext]),
         leading: Icon(AppIcons.listNumbers),
-        onTap: () => pickWithSlider(context, title: tr('Subtitle context'), value: config.aiContext.toDouble(), min: 0, max: 10, divisions: 10, suffix: tr(' lines'), onSelected: (v) => saveConfig((c) => c.copyWith(aiContext: v.round()))),
+        onTap: () => pickWithSlider(context,
+            title: tr('Subtitle context'),
+            value: config.aiContext.toDouble(),
+            min: 0,
+            max: 10,
+            divisions: 10,
+            suffix: tr(' lines'),
+            onSelected: (v) => saveConfig((c) => c.copyWith(aiContext: v.round()))),
       ),
-      tip(tr('Uses an OpenAI-compatible /chat/completions endpoint. In the prompt, {target} becomes the target language and {lines} the number of lines. Subtitles are translated line by line, and a reply with the wrong number of lines is retried once.')),
+      tip(tr(
+          'Uses an OpenAI-compatible /chat/completions endpoint. In the prompt, {target} becomes the target language and {lines} the number of lines. Subtitles are translated line by line, and a reply with the wrong number of lines is retried once.')),
     ] else
       tip(tr('To translate with AI, set “Translation service” above to “AI model”.')),
     header(tr('Speech recognition')),
-    tip(tr('When a video has no subtitles, its audio can be sent to a speech recognition service to make timed subtitles for playback and AI summary. The audio is uploaded only when you click “Make subtitles with speech recognition”; the result is kept on this computer and not uploaded again.')),
+    tip(tr(
+        'When a video has no subtitles, its audio can be sent to a speech recognition service to make timed subtitles for playback and AI summary. The audio is uploaded only when you click “Make subtitles with speech recognition”; the result is kept on this computer and not uploaded again.')),
     PopupItem<String>(
       title: tr('Speech recognition service'),
       leading: Icon(AppIcons.waveform),
       value: config.speech.id,
       values: [for (final p in SpeechPreset.all) (p.id, tr(p.label))],
-      onSelected: (v) => saveConfig((c) => c.copyWith(speechPreset: v, speechBaseUrl: '', speechModel: '')),
+      onSelected: (v) =>
+          saveConfig((c) => c.copyWith(speechPreset: v, speechBaseUrl: '', speechModel: '')),
     ),
-    textItem(tr('Endpoint'), config.speechBaseUrl, config.effectiveSpeechBaseUrl.isEmpty ? tr('Not set') : config.effectiveSpeechBaseUrl, AppIcons.link,
-        config.speech.baseUrl.isEmpty ? tr('OpenAI-compatible interface, such as http://localhost:8000/v1') : config.speech.baseUrl, (v) => saveConfig((c) => c.copyWith(speechBaseUrl: v))),
-    textItem(tr('Model'), config.speechModel, config.effectiveSpeechModel.isEmpty ? tr('Not set') : config.effectiveSpeechModel, AppIcons.cpuFill,
-        config.speech.model, (v) => saveConfig((c) => c.copyWith(speechModel: v))),
+    textItem(
+        tr('Endpoint'),
+        config.speechBaseUrl,
+        config.effectiveSpeechBaseUrl.isEmpty ? tr('Not set') : config.effectiveSpeechBaseUrl,
+        AppIcons.link,
+        config.speech.baseUrl.isEmpty
+            ? tr('OpenAI-compatible interface, such as http://localhost:8000/v1')
+            : config.speech.baseUrl,
+        (v) => saveConfig((c) => c.copyWith(speechBaseUrl: v))),
+    textItem(
+        tr('Model'),
+        config.speechModel,
+        config.effectiveSpeechModel.isEmpty ? tr('Not set') : config.effectiveSpeechModel,
+        AppIcons.cpuFill,
+        config.speech.model,
+        (v) => saveConfig((c) => c.copyWith(speechModel: v))),
     Builder(builder: (context) {
       final own = controller.translationKeys[speechKeyName(config)] ?? '';
       final shared = own.isEmpty && speechKeyFor(config, controller.translationKeys).isNotEmpty;
       return NormalItem(
         title: config.speech.id == 'custom' ? tr('API key (optional)') : tr('API key'),
-        subtitle: own.isNotEmpty ? tr('Set ({0})', [_masked(own)]) : shared ? tr('Uses the AI interface key') : tr('Not set'),
+        subtitle: own.isNotEmpty
+            ? tr('Set ({0})', [_masked(own)])
+            : shared
+                ? tr('Uses the AI interface key')
+                : tr('Not set'),
         leading: const Icon(AppIcons.keyFill),
         onTap: () async {
-          final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('Speech recognition API key'), initial: own));
+          final typed = await showDialog<String>(
+              context: context,
+              builder: (context) =>
+                  _KeyDialog(title: tr('Speech recognition API key'), initial: own));
           if (typed != null) await controller.saveApiKey(speechKeyName(config), typed);
         },
       );
     }),
     if (config.speech.id == 'groq')
-      tip(tr('Get a free Groq key at console.groq.com; its free tier covers a few hours of audio a day.')),
+      tip(tr(
+          'Get a free Groq key at console.groq.com; its free tier covers a few hours of audio a day.')),
     header(tr('Show')),
     PopupItem<String>(
       title: tr('Immersive translation'),
       leading: Icon(AppIcons.translate),
       value: prefs.immersiveTranslation ? prefs.immersiveLanguage : _off,
-      values: [(_off, tr('Close')), ('', tr('Into the translation target language ({0})', [TranslationLanguage.byCode(prefs.translateTarget).label])), for (final l in TranslationLanguage.all) (l.code, tr('Into {0}', [l.label]))],
+      values: [
+        (_off, tr('Close')),
+        (
+          '',
+          tr('Into the translation target language ({0})',
+              [TranslationLanguage.byCode(prefs.translateTarget).label])
+        ),
+        for (final l in TranslationLanguage.all) (l.code, tr('Into {0}', [l.label]))
+      ],
       onSelected: (v) => controller.savePreferences(v == _off
           ? controller.preferences.copyWith(immersiveTranslation: false)
           : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),
     ),
-    tip(tr('When on, comments, posts and live chat in other languages are translated as you set under Translation layout; text already in the target language, or in one listed under Languages never translated, is left alone.')),
+    tip(tr(
+        'When on, comments, posts and live chat in other languages are translated as you set under Translation layout; text already in the target language, or in one listed under Languages never translated, is left alone.')),
     PopupItem<TitleTranslation>(
       title: tr('Translate titles in lists'),
       leading: Icon(AppIcons.listNumbers),
@@ -297,9 +433,11 @@ List<Widget> _items(BuildContext context, AppController controller) {
         (TitleTranslation.translationFirst, tr('Translation above, original below')),
         (TitleTranslation.originalFirst, tr('Original above, translation below')),
       ],
-      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(titleTranslation: v)),
+      onSelected: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(titleTranslation: v)),
     ),
-    tip(tr('Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.')),
+    tip(tr(
+        'Video and playlist titles on Home, Explore, Subscriptions, History, search, channel and playlist pages are translated into the same language as immersive translation. Only titles that stay on screen for a moment are sent, and only the title text; titles already in that language, or in one never translated, are left alone. Translations are kept on this computer.')),
     NormalItem(
       title: tr('Languages never translated'),
       subtitle: prefs.neverTranslate.isEmpty
@@ -307,16 +445,29 @@ List<Widget> _items(BuildContext context, AppController controller) {
           : prefs.neverTranslate.map((code) => TranslationLanguage.byCode(code).label).join(', '),
       leading: Icon(AppIcons.skipForward),
       onTap: () async {
-        final chosen = await showDialog<List<String>>(context: context, builder: (context) => _NeverTranslateDialog(initial: prefs.neverTranslate));
-        if (chosen != null) await controller.savePreferences(controller.preferences.copyWith(neverTranslate: chosen));
+        final chosen = await showDialog<List<String>>(
+            context: context,
+            builder: (context) => _NeverTranslateDialog(initial: prefs.neverTranslate));
+        if (chosen != null) {
+          await controller.savePreferences(controller.preferences.copyWith(neverTranslate: chosen));
+        }
       },
     ),
     PopupItem<_Layout>(
       title: tr('Translation layout'),
       leading: Icon(AppIcons.columns),
-      value: !prefs.bilingualTranslation ? _Layout.replace : prefs.translationFirst ? _Layout.above : _Layout.below,
-      values: [(_Layout.below, tr('Original above, translation below')), (_Layout.above, tr('Translation above, original below')), (_Layout.replace, tr('Translation replaces the original'))],
-      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v != _Layout.replace, translationFirst: v == _Layout.above)),
+      value: !prefs.bilingualTranslation
+          ? _Layout.replace
+          : prefs.translationFirst
+              ? _Layout.above
+              : _Layout.below,
+      values: [
+        (_Layout.below, tr('Original above, translation below')),
+        (_Layout.above, tr('Translation above, original below')),
+        (_Layout.replace, tr('Translation replaces the original'))
+      ],
+      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(
+          bilingualTranslation: v != _Layout.replace, translationFirst: v == _Layout.above)),
     ),
     PopupItem<TranslationStyle>(
       title: tr('Translation look'),
@@ -324,29 +475,38 @@ List<Widget> _items(BuildContext context, AppController controller) {
       value: prefs.translationStyle,
       values: [for (final v in TranslationStyle.values) (v, v.label)],
       enabled: prefs.bilingualTranslation,
-      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translationStyle: v)),
+      onSelected: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(translationStyle: v)),
     ),
     SwitchItem(
       title: tr('Skip text already in the target language'),
-      subtitle: tr('Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough'),
+      subtitle: tr(
+          'Judged from the script, reliable for Chinese, Japanese, Korean, Russian and the like; Latin-script languages are told apart by their words once a line is long enough'),
       leading: Icon(AppIcons.skipForward),
       value: prefs.skipSameLanguage,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
+      onChanged: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
     ),
     SwitchItem(
       title: tr('Take Simplified and Traditional Chinese as one language'),
       subtitle: tr('Chinese in either script is left untranslated when the target is the other'),
       leading: Icon(AppIcons.translate),
       value: prefs.chineseAsOne,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(chineseAsOne: v)),
+      onChanged: (v) =>
+          controller.savePreferences(controller.preferences.copyWith(chineseAsOne: v)),
     ),
     Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: _StylePreview(style: prefs.translationStyle, first: prefs.translationFirst, both: prefs.bilingualTranslation),
+      child: _StylePreview(
+          style: prefs.translationStyle,
+          first: prefs.translationFirst,
+          both: prefs.bilingualTranslation),
     ),
     tip(service == TranslationService.google
-        ? tr('Text is sent only when you tap Translate or use translated subtitles; no account needed. Translations are cached on this computer for 7 days and removed when you clear the cache.')
-        : tr('Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.')),
+        ? tr(
+            'Text is sent only when you tap Translate or use translated subtitles; no account needed. Translations are cached on this computer for 7 days and removed when you clear the cache.')
+        : tr(
+            'Text goes to the chosen service only when you tap Translate or use translated subtitles. Keys are encrypted with Windows on this computer and kept out of the settings file. Translations are cached on this computer for 7 days and removed when you clear the cache.')),
   ];
 }
 
@@ -378,14 +538,18 @@ class _NeverTranslateDialogState extends State<_NeverTranslateDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _chosen.contains(language.code),
                 title: Text(language.label),
-                onChanged: (v) => setState(() => v ?? false ? _chosen.add(language.code) : _chosen.remove(language.code)),
+                onChanged: (v) => setState(
+                    () => v ?? false ? _chosen.add(language.code) : _chosen.remove(language.code)),
               ),
           ]),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
           FilledButton(
-            onPressed: () => Navigator.pop(context, [for (final l in TranslationLanguage.all) if (_chosen.contains(l.code)) l.code]),
+            onPressed: () => Navigator.pop(context, [
+              for (final l in TranslationLanguage.all)
+                if (_chosen.contains(l.code)) l.code
+            ]),
             child: Text(tr('OK')),
           ),
         ],
@@ -395,7 +559,8 @@ class _NeverTranslateDialogState extends State<_NeverTranslateDialog> {
 /// Where 翻译 puts the translation; 沉浸式翻译 always keeps both.
 enum _Layout { below, above, replace }
 
-String _masked(String key) => key.length <= 8 ? '••••' : '${key.substring(0, 3)}••••${key.substring(key.length - 4)}';
+String _masked(String key) =>
+    key.length <= 8 ? '••••' : '${key.substring(0, 3)}••••${key.substring(key.length - 4)}';
 
 class _TestButton extends StatefulWidget {
   const _TestButton({super.key, required this.controller, this.ai = false});
@@ -419,7 +584,8 @@ class _TestButtonState extends State<_TestButton> {
       _result = null;
     });
     try {
-      final text = await (widget.ai ? widget.controller.testAi() : widget.controller.testTranslation());
+      final text =
+          await (widget.ai ? widget.controller.testAi() : widget.controller.testTranslation());
       if (mounted) {
         setState(() {
           _result = text;
@@ -444,13 +610,17 @@ class _TestButtonState extends State<_TestButton> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       FilledButton.tonalIcon(
         onPressed: _testing ? null : _test,
-        icon: _testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.playFill),
+        icon: _testing
+            ? const SizedBox(
+                width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(AppIcons.playFill),
         label: Text(widget.ai ? tr('Test AI interface') : tr('Test translation')),
       ),
       if (_result != null)
         Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: SelectableText(_result!, style: TextStyle(color: _failed ? colors.error : colors.onSurface)),
+          child: SelectableText(_result!,
+              style: TextStyle(color: _failed ? colors.error : colors.onSurface)),
         ),
     ]);
   }
@@ -498,9 +668,11 @@ class _KeyDialogState extends State<_KeyDialog> {
           ),
         ),
         actions: [
-          if (widget.initial.isNotEmpty) TextButton(onPressed: () => Navigator.pop(context, ''), child: Text(tr('Delete key'))),
+          if (widget.initial.isNotEmpty)
+            TextButton(onPressed: () => Navigator.pop(context, ''), child: Text(tr('Delete key'))),
           TextButton(onPressed: Navigator.of(context).pop, child: Text(tr('Cancel'))),
-          TextButton(onPressed: () => Navigator.pop(context, _text.text.trim()), child: Text(tr('Save'))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, _text.text.trim()), child: Text(tr('Save'))),
         ],
       );
 }
@@ -508,7 +680,9 @@ class _KeyDialogState extends State<_KeyDialog> {
 /// The models the AI endpoint lists, to pick one; with [orType], a last
 /// entry to type a name instead, and typing straight away when the list
 /// can't be had.
-Future<void> _pickModel(BuildContext context, AppController controller, ValueChanged<String> onSelected, {Future<void> Function()? orType}) async {
+Future<void> _pickModel(
+    BuildContext context, AppController controller, ValueChanged<String> onSelected,
+    {Future<void> Function()? orType}) async {
   const typeOwn = '\u0000type';
   final config = controller.preferences.translation;
   final messenger = ScaffoldMessenger.of(context);
@@ -523,7 +697,8 @@ Future<void> _pickModel(BuildContext context, AppController controller, ValueCha
   if (!context.mounted) return;
   if (models.isEmpty) {
     if (orType != null) return orType();
-    messenger.showSnackBar(SnackBar(content: Text(tr('The endpoint listed no models; type one in instead'))));
+    messenger.showSnackBar(
+        SnackBar(content: Text(tr('The endpoint listed no models; type one in instead'))));
     return;
   }
   final chosen = await showDialog<String>(
@@ -531,7 +706,10 @@ Future<void> _pickModel(BuildContext context, AppController controller, ValueCha
     builder: (context) => SelectDialog<String>(
       title: tr('Model'),
       value: config.effectiveAiModel,
-      values: [for (final m in models) (m, m), if (orType != null) (typeOwn, '${tr('Model name')}…')],
+      values: [
+        for (final m in models) (m, m),
+        if (orType != null) (typeOwn, '${tr('Model name')}…')
+      ],
     ),
   );
   if (chosen == typeOwn) return orType?.call();
@@ -553,9 +731,11 @@ class _StylePreview extends StatelessWidget {
     final translation = TranslationView(style: style, child: translated);
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: colors.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
+      decoration:
+          BoxDecoration(color: colors.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (!both) translated
+        if (!both)
+          translated
         else ...[
           if (first) ...[translation, const SizedBox(height: 4)],
           original,

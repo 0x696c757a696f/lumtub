@@ -14,12 +14,19 @@ import 'download_selection.dart';
 /// translation of them into any language.
 class SubtitleChoices {
   SubtitleChoices(List<SubtitleOption> offered, {this.language})
-      : own = [for (final o in offered) if (o.kind == SubtitleKind.uploaded || o.kind == SubtitleKind.automatic) o],
-        _listed = [for (final o in offered) if (o.kind == SubtitleKind.translated) o];
+      : own = [
+          for (final o in offered)
+            if (o.kind == SubtitleKind.uploaded || o.kind == SubtitleKind.automatic) o
+        ],
+        _listed = [
+          for (final o in offered)
+            if (o.kind == SubtitleKind.translated) o
+        ];
 
   /// The creator's and YouTube's automatic subtitles.
   final List<SubtitleOption> own;
   final List<SubtitleOption> _listed;
+
   /// yt-dlp's tag for the language spoken.
   final String? language;
 
@@ -27,7 +34,8 @@ class SubtitleChoices {
 
   /// The language [tag] names among the translation languages.
   static TranslationLanguage? targetOf(String tag) =>
-      TranslationLanguage.all.where((l) => l.youtube == tag).firstOrNull ?? TranslationLanguage.all.where((l) => speaks(tag, l)).firstOrNull;
+      TranslationLanguage.all.where((l) => l.youtube == tag).firstOrNull ??
+      TranslationLanguage.all.where((l) => speaks(tag, l)).firstOrNull;
 
   /// The name of [option]'s language, also for a translation YouTube
   /// gives no name.
@@ -45,7 +53,8 @@ class SubtitleChoices {
 
   /// YouTube's translation of the video's subtitles into [target], null
   /// when nothing can be translated.
-  SubtitleOption? translation(TranslationLanguage target) => translationOf([...own, ..._listed], target, language: language);
+  SubtitleOption? translation(TranslationLanguage target) =>
+      translationOf([...own, ..._listed], target, language: language);
 
   /// The subtitle [pick] names, or null when the video no longer has it.
   SubtitleOption? resolve(SubtitlePick pick) {
@@ -60,7 +69,9 @@ class SubtitleChoices {
   /// automatic one, else a translation.
   SubtitleOption? inLanguage(String tag) {
     for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic]) {
-      final match = own.where((o) => o.kind == kind && (o.language == tag || sameLanguage(o.language, tag))).firstOrNull;
+      final match = own
+          .where((o) => o.kind == kind && (o.language == tag || sameLanguage(o.language, tag)))
+          .firstOrNull;
       if (match != null) return match;
     }
     final target = targetOf(tag);
@@ -80,7 +91,10 @@ typedef BilingualLine = ({Duration start, Duration end, String top, String botto
 /// same lines are joined, and slivers left by lines that end a moment
 /// apart are dropped.
 List<BilingualLine> bilingualLines(List<SubtitleCue> top, List<SubtitleCue> bottom) {
-  final marks = <Duration>{for (final c in [...top, ...bottom]) ...[c.start, c.end]}.toList()..sort();
+  final marks = <Duration>{
+    for (final c in [...top, ...bottom]) ...[c.start, c.end]
+  }.toList()
+    ..sort();
   final upperAt = _ShownAt(top), lowerAt = _ShownAt(bottom);
   final out = <BilingualLine>[];
   for (var i = 0; i + 1 < marks.length; i++) {
@@ -97,21 +111,31 @@ List<BilingualLine> bilingualLines(List<SubtitleCue> top, List<SubtitleCue> bott
   }
   return [
     for (final (i, c) in out.indexed)
-      if (c.end - c.start >= const Duration(milliseconds: 120) || (i > 0 && out[i - 1].end != c.start) && (i + 1 == out.length || out[i + 1].start != c.end)) c,
+      if (c.end - c.start >= const Duration(milliseconds: 120) ||
+          (i > 0 && out[i - 1].end != c.start) &&
+              (i + 1 == out.length || out[i + 1].start != c.end))
+        c,
   ];
 }
 
 /// [bilingualLines] off the UI isolate: auto-captions of a long video
 /// hold thousands of lines.
-Future<List<BilingualLine>> bilingualLinesInBackground(List<SubtitleCue> top, List<SubtitleCue> bottom) =>
+Future<List<BilingualLine>> bilingualLinesInBackground(
+        List<SubtitleCue> top, List<SubtitleCue> bottom) =>
     Isolate.run(() => bilingualLines(top, bottom));
 
 /// The text of [cues] shown from one mark of [bilingualLines] to the next,
 /// asked for marks in order: one pass over the cues in all.
 class _ShownAt {
   _ShownAt(this.cues)
-      : _byStart = [for (final (i, c) in cues.indexed) if (c.end > c.start) i]..sort((a, b) => cues[a].start.compareTo(cues[b].start)),
-        _byEnd = [for (final (i, c) in cues.indexed) if (c.end > c.start) i]..sort((a, b) => cues[a].end.compareTo(cues[b].end));
+      : _byStart = [
+          for (final (i, c) in cues.indexed)
+            if (c.end > c.start) i
+        ]..sort((a, b) => cues[a].start.compareTo(cues[b].start)),
+        _byEnd = [
+          for (final (i, c) in cues.indexed)
+            if (c.end > c.start) i
+        ]..sort((a, b) => cues[a].end.compareTo(cues[b].end));
 
   final List<SubtitleCue> cues;
   final List<int> _byStart, _byEnd;
@@ -132,7 +156,8 @@ class _ShownAt {
 
 /// One track of [top] and [bottom] together, [top]'s line over [bottom]'s.
 List<SubtitleCue> bilingualCues(List<SubtitleCue> top, List<SubtitleCue> bottom) => [
-      for (final l in bilingualLines(top, bottom)) (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n')),
+      for (final l in bilingualLines(top, bottom))
+        (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n')),
     ];
 
 /// [lines] as an ASS file that looks as the subtitle settings make
@@ -142,8 +167,10 @@ List<SubtitleCue> bilingualCues(List<SubtitleCue> top, List<SubtitleCue> bottom)
 /// Lines are broken where Lumtub breaks them, as libass breaks only at
 /// spaces.
 String styledAss(List<BilingualLine> lines, PlayerSettings settings) {
-  final look = LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder);
-  String fontOf(String font) => font.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(font);
+  final look =
+      LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder);
+  String fontOf(String font) =>
+      font.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(font);
   final mainFont = fontOf(settings.subtitleFont), secondFont = fontOf(settings.secondaryFont);
   String colour(int rgb, double opacity) {
     final alpha = (255 * (1 - opacity.clamp(0, 1))).round();
@@ -166,10 +193,12 @@ String styledAss(List<BilingualLine> lines, PlayerSettings settings) {
         '${settings.subtitleBold ? -1 : 0},0,0,0,100,100,0,0,${box ? 3 : 1},${width.toStringAsFixed(2)},0,2,25,25,${look.margin},1';
   }
 
-  String text(String line, double scale, String font) => LibassLayout.wrap(line, LibassLayout.roomEms(em: look.em, scale: scale).floorToDouble(), font: font, bold: settings.subtitleBold)
-      .replaceAll('{', '(')
-      .replaceAll('}', ')')
-      .replaceAll(RegExp(r'\r?\n'), r'\N');
+  String text(String line, double scale, String font) =>
+      LibassLayout.wrap(line, LibassLayout.roomEms(em: look.em, scale: scale).floorToDouble(),
+              font: font, bold: settings.subtitleBold)
+          .replaceAll('{', '(')
+          .replaceAll('}', ')')
+          .replaceAll(RegExp(r'\r?\n'), r'\N');
   final out = StringBuffer()
     ..writeln('[Script Info]')
     ..writeln('ScriptType: v4.00+')
@@ -179,18 +208,23 @@ String styledAss(List<BilingualLine> lines, PlayerSettings settings) {
     ..writeln('WrapStyle: 0')
     ..writeln()
     ..writeln('[V4+ Styles]')
-    ..writeln('Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
-    ..writeln(style('Default', mainFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity))
-    ..writeln(style('Second', secondFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity))
+    ..writeln(
+        'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
+    ..writeln(style('Default', mainFont, settings.subtitleScale, settings.subtitleColor,
+        settings.subtitleOpacity))
+    ..writeln(style('Second', secondFont, settings.secondaryScale, settings.secondaryColor,
+        settings.secondaryOpacity))
     ..writeln()
     ..writeln('[Events]')
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   for (final line in lines) {
     final parts = [
       if (line.top.isNotEmpty) text(line.top, settings.subtitleScale, settings.subtitleFont),
-      if (line.bottom.isNotEmpty) '{\\rSecond}${text(line.bottom, settings.secondaryScale, settings.secondaryFont)}',
+      if (line.bottom.isNotEmpty)
+        '{\\rSecond}${text(line.bottom, settings.secondaryScale, settings.secondaryFont)}',
     ];
-    out.writeln('Dialogue: 0,${stamp(line.start)},${stamp(line.end)},Default,,0,0,0,,${parts.join(r'\N')}');
+    out.writeln(
+        'Dialogue: 0,${stamp(line.start)},${stamp(line.end)},Default,,0,0,0,,${parts.join(r'\N')}');
   }
   return out.toString();
 }
@@ -233,4 +267,3 @@ String shiftAss(String ass, Duration Function(Duration) shift) {
   final text = out.toString();
   return ass.endsWith('\n') ? text : text.substring(0, text.length - 1);
 }
-

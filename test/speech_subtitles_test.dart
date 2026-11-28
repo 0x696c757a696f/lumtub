@@ -27,15 +27,24 @@ void main() {
     final client = MockClient.streaming((request, body) async {
       seen = request;
       fields = utf8.decode(await body.toBytes(), allowMalformed: true);
-      final answer = {'language': 'english', 'segments': [{'start': 0.0, 'end': 1.5, 'text': 'Hi'}]};
+      final answer = {
+        'language': 'english',
+        'segments': [
+          {'start': 0.0, 'end': 1.5, 'text': 'Hi'}
+        ]
+      };
       return http.StreamedResponse(Stream.value(utf8.encode(jsonEncode(answer))), 200);
     });
     final audio = File('${dir.path}/audio.webm')..writeAsBytesSync([1, 2, 3]);
-    final recognizer = SpeechRecognizer(client, baseUrl: 'https://api.groq.com/openai/v1/', key: 'k', model: 'whisper-large-v3-turbo');
+    final recognizer = SpeechRecognizer(client,
+        baseUrl: 'https://api.groq.com/openai/v1/', key: 'k', model: 'whisper-large-v3-turbo');
     final answer = await recognizer.transcribe(audio, language: 'en');
     expect(seen.url.toString(), 'https://api.groq.com/openai/v1/audio/transcriptions');
     expect(seen.headers['Authorization'], 'Bearer k');
-    expect(fields, allOf(contains('verbose_json'), contains('whisper-large-v3-turbo'), contains('filename="audio.webm"'), contains('name="language"')));
+    expect(
+        fields,
+        allOf(contains('verbose_json'), contains('whisper-large-v3-turbo'),
+            contains('filename="audio.webm"'), contains('name="language"')));
     expect(answer['segments'], hasLength(1));
     expect(speechLanguageTag(answer['language']), 'en');
   });
@@ -45,7 +54,8 @@ void main() {
       final client = MockClient((_) async => http.Response(jsonEncode(body), status));
       final audio = File('${dir.path}/a.m4a')..writeAsBytesSync([1]);
       try {
-        await SpeechRecognizer(client, baseUrl: 'https://x.example/v1', key: '', model: 'm').transcribe(audio);
+        await SpeechRecognizer(client, baseUrl: 'https://x.example/v1', key: '', model: 'm')
+            .transcribe(audio);
         return '';
       } on TranslationException catch (e) {
         return e.message;
@@ -53,8 +63,10 @@ void main() {
     }
 
     expect(await failure(401, {}), 'The speech recognition key is not valid');
-    expect(await failure(429, {}), 'Too many speech recognition requests or the quota is used up; try again later');
-    expect(await failure(200, {'text': 'only text'}), 'This speech recognition service returns no timing, so it cannot make subtitles');
+    expect(await failure(429, {}),
+        'Too many speech recognition requests or the quota is used up; try again later');
+    expect(await failure(200, {'text': 'only text'}),
+        'This speech recognition service returns no timing, so it cannot make subtitles');
   });
 
   test('fetches the smallest audio stream with yt-dlp', () {
@@ -69,10 +81,13 @@ void main() {
   test('a long video is cut by lumtub_core, and the audio is kept when it cannot be', () async {
     final runs = File('${dir.path}/runs');
     final fake = File('${dir.path}/yt-dlp.sh')
-      ..writeAsStringSync('#!/bin/sh\necho run >> ${runs.path}\nhead -c 21000000 /dev/zero > ${dir.path}/work/audio.webm\necho "3600.0|${dir.path}/work/audio.webm"\n');
+      ..writeAsStringSync(
+          '#!/bin/sh\necho run >> ${runs.path}\nhead -c 21000000 /dev/zero > ${dir.path}/work/audio.webm\necho "3600.0|${dir.path}/work/audio.webm"\n');
     await Process.run('chmod', ['+x', fake.path]);
-    Future<List<SpeechPart>> fetch() => SpeechAudio.fetch('abc', Directory('${dir.path}/work'), ytDlp: fake.path, environment: const {});
-    final notAudio = throwsA(isA<TranslationException>().having((e) => e.message, 'message', 'Could not split the audio'));
+    Future<List<SpeechPart>> fetch() => SpeechAudio.fetch('abc', Directory('${dir.path}/work'),
+        ytDlp: fake.path, environment: const {});
+    final notAudio = throwsA(isA<TranslationException>()
+        .having((e) => e.message, 'message', 'Could not split the audio'));
     await expectLater(fetch(), notAudio);
     await expectLater(fetch(), notAudio);
     expect(runs.readAsLinesSync(), hasLength(1));
@@ -80,8 +95,22 @@ void main() {
 
   test('lumtub_core turns the answers into subtitles at their offsets', () async {
     final vtt = await speechVtt([
-      (offset: Duration.zero, answer: {'segments': [{'start': 0.0, 'end': 2.0, 'text': 'first'}]}),
-      (offset: const Duration(minutes: 10), answer: {'segments': [{'start': 1.0, 'end': 2.0, 'text': 'second'}]}),
+      (
+        offset: Duration.zero,
+        answer: {
+          'segments': [
+            {'start': 0.0, 'end': 2.0, 'text': 'first'}
+          ]
+        }
+      ),
+      (
+        offset: const Duration(minutes: 10),
+        answer: {
+          'segments': [
+            {'start': 1.0, 'end': 2.0, 'text': 'second'}
+          ]
+        }
+      ),
     ]);
     expect(vtt, contains('00:00:00.000 --> 00:00:02.000\nfirst'));
     expect(vtt, contains('00:10:01.000 --> 00:10:02.000\nsecond'));
@@ -99,12 +128,16 @@ void main() {
   });
 
   test('a recognized track is the original and can be translated', () async {
-    final file = File('${dir.path}/vid.en.vtt')..writeAsStringSync('WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nhello\n');
-    final speech = SubtitleOption(language: 'en', name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
+    final file = File('${dir.path}/vid.en.vtt')
+      ..writeAsStringSync('WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nhello\n');
+    final speech = SubtitleOption(
+        language: 'en', name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
     expect(speech.label, contains('speech recognition'));
     expect(originalSubtitle([speech]), same(speech));
-    final translated = translationOf([speech], TranslationLanguage.all.firstWhere((l) => l.code == 'zh-CN'))!;
-    final files = SubtitleFiles(MockClient((_) async => http.Response('', 500)), Directory('${dir.path}/subs'), _Upper.new);
+    final translated =
+        translationOf([speech], TranslationLanguage.all.firstWhere((l) => l.code == 'zh-CN'))!;
+    final files = SubtitleFiles(
+        MockClient((_) async => http.Response('', 500)), Directory('${dir.path}/subs'), _Upper.new);
     expect(await File(await files.pathFor(speech)).readAsString(), contains('hello'));
     expect(await File(await files.pathFor(translated)).readAsString(), contains('HELLO'));
   });

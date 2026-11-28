@@ -14,33 +14,54 @@ import 'package:material_ui/material_ui.dart';
 /// and the rail must read on what it sits on, not only the pairs a skin
 /// file names.
 void main() {
-  final dirs = Directory('skins').listSync().whereType<Directory>().where((d) => File('${d.path}/skin.jsonc').existsSync() && !d.path.endsWith('template'));
+  final dirs = Directory('skins')
+      .listSync()
+      .whereType<Directory>()
+      .where((d) => File('${d.path}/skin.jsonc').existsSync() && !d.path.endsWith('template'));
   Color solid(Color c, Color under) => Color.alphaBlend(c, under);
   // A picture behind: its colours averaged over patches about as big as a
   // line of text.
   Future<List<Color>> picture(String path) async {
-    final codec = await ui.instantiateImageCodec(File(path).readAsBytesSync(), targetWidth: 48, targetHeight: 27);
+    final codec = await ui.instantiateImageCodec(File(path).readAsBytesSync(),
+        targetWidth: 48, targetHeight: 27);
     final image = (await codec.getNextFrame()).image;
     final bytes = (await image.toByteData())!;
-    return [for (var i = 0; i < bytes.lengthInBytes; i += 4) Color.fromARGB(255, bytes.getUint8(i), bytes.getUint8(i + 1), bytes.getUint8(i + 2))];
+    return [
+      for (var i = 0; i < bytes.lengthInBytes; i += 4)
+        Color.fromARGB(255, bytes.getUint8(i), bytes.getUint8(i + 1), bytes.getUint8(i + 2))
+    ];
   }
 
   for (final dir in dirs) {
     test('${dir.path} keeps chosen things readable', () async {
-      final skin = Skin.parse(decodeJsonc(File('${dir.path}/skin.jsonc').readAsStringSync()), folder: dir.path, builtIn: true);
+      final skin = Skin.parse(decodeJsonc(File('${dir.path}/skin.jsonc').readAsStringSync()),
+          folder: dir.path, builtIn: true);
       for (final mode in Brightness.values) {
         final side = skin.forBrightness(mode);
         final theme = buildAppTheme(const Color(0xFF3366FF), side.brightness, skin: side);
         final scheme = theme.colorScheme;
         final page = side.colors.page;
         final selected = {WidgetState.selected};
-        final segmentBg = solid(theme.segmentedButtonTheme.style!.backgroundColor!.resolve(selected)!, page);
+        final segmentBg =
+            solid(theme.segmentedButtonTheme.style!.backgroundColor!.resolve(selected)!, page);
         final segmentFg = theme.segmentedButtonTheme.style!.foregroundColor!.resolve(selected)!;
         final pairs = <String, (Color, Color, double)>{
           'segmented button, chosen': (segmentFg, segmentBg, 4.5),
-          'list tile, chosen': (theme.listTileTheme.selectedColor!, solid(theme.listTileTheme.selectedTileColor!, page), 4.5),
-          'rail icon, chosen': (theme.navigationRailTheme.selectedIconTheme!.color!, solid(theme.navigationRailTheme.indicatorColor!, page), 3),
-          'secondary container': (scheme.onSecondaryContainer, solid(scheme.secondaryContainer, page), 4.5),
+          'list tile, chosen': (
+            theme.listTileTheme.selectedColor!,
+            solid(theme.listTileTheme.selectedTileColor!, page),
+            4.5
+          ),
+          'rail icon, chosen': (
+            theme.navigationRailTheme.selectedIconTheme!.color!,
+            solid(theme.navigationRailTheme.indicatorColor!, page),
+            3
+          ),
+          'secondary container': (
+            scheme.onSecondaryContainer,
+            solid(scheme.secondaryContainer, page),
+            4.5
+          ),
           'text on page': (scheme.onSurface, solid(scheme.surface, page), 4.5),
           // Up next, cards and comments draw channel names and views in these.
           'quiet text on page': (scheme.outline, page, 4.5),
@@ -50,13 +71,25 @@ void main() {
           'links on page': (linkColor(theme), page, 4.5),
           'links on cards': (linkColor(theme), solid(scheme.surfaceContainerLow, page), 4.5),
           // Filter chips: Explore's and search's menus, off and on.
-          'chip label': (theme.chipTheme.labelStyle!.color!, solid(theme.chipTheme.backgroundColor!, page), 4.5),
+          'chip label': (
+            theme.chipTheme.labelStyle!.color!,
+            solid(theme.chipTheme.backgroundColor!, page),
+            4.5
+          ),
           // Tooltips (whole titles of cut ones among them) follow the side.
-          'tooltip': (theme.tooltipTheme.textStyle!.color!, solid((theme.tooltipTheme.decoration! as BoxDecoration).color!, page), 4.5),
+          'tooltip': (
+            theme.tooltipTheme.textStyle!.color!,
+            solid((theme.tooltipTheme.decoration! as BoxDecoration).color!, page),
+            4.5
+          ),
           // What has the keyboard focus must stand out (WCAG 1.4.11).
           'focus ring': (solid(focusRingColor(scheme), page), page, 3),
           'focused card border': (scheme.primary, page, 3),
-          'chip label, chosen': ((theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected), solid(theme.chipTheme.selectedColor!, page), 4.5),
+          'chip label, chosen': (
+            (theme.chipTheme.labelStyle!.color! as WidgetStateColor).resolve(selected),
+            solid(theme.chipTheme.selectedColor!, page),
+            4.5
+          ),
         };
         // Every control's words on the control as drawn over the page,
         // every stop of a gradient and a see-through fill included.
@@ -72,7 +105,8 @@ void main() {
         for (final MapEntry(key: what, value: (fg, surface)) in controls.entries) {
           if (fg == null || surface == null || surface.baseColor == null) continue;
           for (final bg in surface.tones(page)) {
-            expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(4.45), reason: '$what text in ${mode.name}: $fg on $bg');
+            expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(4.45),
+                reason: '$what text in ${mode.name}: $fg on $bg');
           }
         }
         // Card words on the card in every state: a hover fill made for
@@ -85,18 +119,27 @@ void main() {
             ('focused', card.forState(focused: true)),
           ]) {
             for (final bg in look.tones(page)) {
-              expect(contrastRatio(solid(side.colors.text, bg), bg), greaterThanOrEqualTo(4.45), reason: 'card text, $state, in ${mode.name}: on $bg');
+              expect(contrastRatio(solid(side.colors.text, bg), bg), greaterThanOrEqualTo(4.45),
+                  reason: 'card text, $state, in ${mode.name}: on $bg');
             }
           }
         }
         // A dark side's tooltips are dark too, not the light inverse.
-        expect(ThemeData.estimateBrightnessForColor((theme.tooltipTheme.decoration! as BoxDecoration).color!), side.brightness, reason: 'tooltip ground in ${mode.name}');
+        expect(
+            ThemeData.estimateBrightnessForColor(
+                (theme.tooltipTheme.decoration! as BoxDecoration).color!),
+            side.brightness,
+            reason: 'tooltip ground in ${mode.name}');
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
-          expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
+          expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05),
+              reason: '$what in ${mode.name}');
         }
         // Pages opened over the window (settings and the like) are veiled
         // like the main page, not drawn straight on the picture.
-        if (side.veil > 0) expect(theme.scaffoldBackgroundColor, page.withValues(alpha: side.veil), reason: 'pushed pages veiled in ${mode.name}');
+        if (side.veil > 0) {
+          expect(theme.scaffoldBackgroundColor, page.withValues(alpha: side.veil),
+              reason: 'pushed pages veiled in ${mode.name}');
+        }
         // Glass made as clear as it goes still keeps what is on it readable.
         if (side.glass) {
           // Every colour of the backdrop the glass can lie over.
@@ -124,10 +167,13 @@ void main() {
           if (side.veil > 0) {
             for (final under in behind) {
               final bg = Color.alphaBlend(page.withValues(alpha: side.veil), under);
-              expect(contrastRatio(side.colors.text, bg), greaterThanOrEqualTo(4.45), reason: 'page text through the veil in ${mode.name}: on $bg');
-              expect(contrastRatio(linkColor(theme), bg), greaterThanOrEqualTo(4.45), reason: 'links through the veil in ${mode.name}: on $bg');
+              expect(contrastRatio(side.colors.text, bg), greaterThanOrEqualTo(4.45),
+                  reason: 'page text through the veil in ${mode.name}: on $bg');
+              expect(contrastRatio(linkColor(theme), bg), greaterThanOrEqualTo(4.45),
+                  reason: 'links through the veil in ${mode.name}: on $bg');
               if (side.colors.muted case final muted?) {
-                expect(contrastRatio(muted, bg), greaterThanOrEqualTo(4.45), reason: 'muted text through the veil in ${mode.name}: on $bg');
+                expect(contrastRatio(muted, bg), greaterThanOrEqualTo(4.45),
+                    reason: 'muted text through the veil in ${mode.name}: on $bg');
               }
             }
           }
@@ -135,7 +181,8 @@ void main() {
                 for (final under in behind) ...[
                   // With no pane of its own the text lies on the picture.
                   if (s == null || s.tones(const Color(0x00000000)).isEmpty) under,
-                  for (final c in s?.tones(const Color(0x00000000)) ?? <Color>[]) Color.alphaBlend(c.withValues(alpha: c.a * side.glassMin), under),
+                  for (final c in s?.tones(const Color(0x00000000)) ?? <Color>[])
+                    Color.alphaBlend(c.withValues(alpha: c.a * side.glassMin), under),
                 ],
               ];
           final glassPairs = <String, (Color?, SkinSurface?, double)>{
@@ -150,7 +197,8 @@ void main() {
           for (final MapEntry(key: what, value: (fg, surface, min)) in glassPairs.entries) {
             if (fg == null) continue;
             for (final bg in clear(surface)) {
-              expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what on clear glass in ${mode.name}: $fg on $bg');
+              expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05),
+                  reason: '$what on clear glass in ${mode.name}: $fg on $bg');
             }
           }
         }

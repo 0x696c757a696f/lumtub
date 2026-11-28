@@ -22,10 +22,17 @@ class _ScrobbleSettingsState extends State<ScrobbleSettings> {
 
   String get _status {
     final scrobbler = _scrobbler;
-    if (!scrobbler.connected) return tr('Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent');
-    if (scrobbler.tokenRefused) return tr('ListenBrainz no longer accepts the token. Tap to enter a new one');
+    if (!scrobbler.connected) {
+      return tr(
+          'Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent');
+    }
+    if (scrobbler.tokenRefused) {
+      return tr('ListenBrainz no longer accepts the token. Tap to enter a new one');
+    }
     final user = scrobbler.user ?? '';
-    return scrobbler.waiting > 0 ? tr('Connected as {0} · {1} listens waiting to be sent', [user, scrobbler.waiting]) : tr('Connected as {0}', [user]);
+    return scrobbler.waiting > 0
+        ? tr('Connected as {0} · {1} listens waiting to be sent', [user, scrobbler.waiting])
+        : tr('Connected as {0}', [user]);
   }
 
   @override
@@ -43,9 +50,12 @@ class _ScrobbleSettingsState extends State<ScrobbleSettings> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('ListenBrainz'),
-          content: Text(tr('Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.', [scrobbler.user ?? ''])),
+          content: Text(tr(
+              'Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.',
+              [scrobbler.user ?? ''])),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Disconnect'))),
+            TextButton(
+                onPressed: () => Navigator.pop(context, true), child: Text(tr('Disconnect'))),
             FilledButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Close'))),
           ],
         ),
@@ -56,11 +66,13 @@ class _ScrobbleSettingsState extends State<ScrobbleSettings> {
       }
       return;
     }
-    final connected = await showDialog<bool>(context: context, builder: (context) => _TokenDialog(scrobbler: scrobbler));
+    final connected = await showDialog<bool>(
+        context: context, builder: (context) => _TokenDialog(scrobbler: scrobbler));
     if (!mounted) return;
     setState(() {});
     if ((connected ?? false) && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Connected as {0}', [scrobbler.user ?? '']))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Connected as {0}', [scrobbler.user ?? '']))));
     }
   }
 }
@@ -98,7 +110,9 @@ class _TokenDialogState extends State<_TokenDialog> {
       if (mounted) {
         setState(() {
           _checking = false;
-          _error = e.badToken ? tr('ListenBrainz did not accept this token') : tr("Couldn't reach ListenBrainz. Check your network and try again");
+          _error = e.badToken
+              ? tr('ListenBrainz did not accept this token')
+              : tr("Couldn't reach ListenBrainz. Check your network and try again");
         });
       }
     } catch (_) {
@@ -118,7 +132,8 @@ class _TokenDialogState extends State<_TokenDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(tr('Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.')),
+            Text(tr(
+                'Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.')),
             const SizedBox(height: 4),
             TextButton.icon(
               onPressed: () => unawaited(openExternal('https://listenbrainz.org/settings/')),
@@ -136,8 +151,12 @@ class _TokenDialogState extends State<_TokenDialog> {
           ],
         ),
         actions: [
-          TextButton(onPressed: _checking ? null : () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
-          FilledButton(onPressed: _checking ? null : () => unawaited(_connect()), child: Text(_checking ? tr('Checking…') : tr('Connect'))),
+          TextButton(
+              onPressed: _checking ? null : () => Navigator.pop(context, false),
+              child: Text(tr('Cancel'))),
+          FilledButton(
+              onPressed: _checking ? null : () => unawaited(_connect()),
+              child: Text(_checking ? tr('Checking…') : tr('Connect'))),
         ],
       );
 }

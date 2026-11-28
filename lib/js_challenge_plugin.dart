@@ -21,7 +21,9 @@ class JsChallengePlugin {
   /// Sets up [desktop] under [folder]. Off on phones, which add the plugin
   /// themselves, and under tests.
   static Future<void> prepare(String folder) async {
-    if (Platform.isAndroid || Platform.isIOS || Platform.environment.containsKey('FLUTTER_TEST')) return;
+    if (Platform.isAndroid || Platform.isIOS || Platform.environment.containsKey('FLUTTER_TEST')) {
+      return;
+    }
     final core = NativeCore.path;
     if (core == null) return;
     final plugins = await install(folder);
@@ -35,9 +37,12 @@ class JsChallengePlugin {
   static Future<String?> install(String folder) async {
     try {
       final root = Directory('$folder${Platform.pathSeparator}yt-dlp-plugins');
-      final file = File([root.path, 'lumtub', 'yt_dlp_plugins', 'extractor', 'lumtub_jsc.py'].join(Platform.pathSeparator));
+      final file = File([root.path, 'lumtub', 'yt_dlp_plugins', 'extractor', 'lumtub_jsc.py']
+          .join(Platform.pathSeparator));
       final source = await rootBundle.loadString(asset);
-      if (!await file.exists() || await file.readAsString() != source) await writeFileAtomic(file, source);
+      if (!await file.exists() || await file.readAsString() != source) {
+        await writeFileAtomic(file, source);
+      }
       return root.path;
     } catch (e) {
       logWarn('Could not set up the yt-dlp challenge plugin: $e');

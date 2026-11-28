@@ -22,7 +22,11 @@ class SearchHistory {
     if (cached != null) return cached;
     try {
       final data = jsonDecode(await file.readAsString());
-      return _items ??= [if (data is List) for (final item in data) if (item is String && item.trim().isNotEmpty) item];
+      return _items ??= [
+        if (data is List)
+          for (final item in data)
+            if (item is String && item.trim().isNotEmpty) item
+      ];
     } catch (_) {
       return _items ??= [];
     }
@@ -95,8 +99,16 @@ class SearchSuggestions {
     final cached = _cache.remove(text);
     if (cached != null) return _cache[text] = cached;
     try {
-      final uri = Uri.https('suggestqueries-clients6.youtube.com', '/complete/search', {'client': 'firefox', 'ds': 'yt', 'hl': youtubeHl, 'ie': 'utf-8', 'oe': 'utf-8', 'q': text});
-      final (status, body) = await getBounded(_client, uri, limit: maxAnswer).timeout(const Duration(seconds: 4));
+      final uri = Uri.https('suggestqueries-clients6.youtube.com', '/complete/search', {
+        'client': 'firefox',
+        'ds': 'yt',
+        'hl': youtubeHl,
+        'ie': 'utf-8',
+        'oe': 'utf-8',
+        'q': text
+      });
+      final (status, body) =
+          await getBounded(_client, uri, limit: maxAnswer).timeout(const Duration(seconds: 4));
       if (status != 200) return const [];
       final list = parseBytes(body);
       _cache[text] = list;
@@ -112,7 +124,9 @@ class SearchSuggestions {
   /// The suggestions in the answer [body], read by the core when there is
   /// one.
   static List<String> parseBytes(List<int> body) {
-    if (NativeCore.instance?.searchSuggestions(body) case final json?) return (jsonDecode(json) as List).cast<String>();
+    if (NativeCore.instance?.searchSuggestions(body) case final json?) {
+      return (jsonDecode(json) as List).cast<String>();
+    }
     return parse(utf8.decode(body, allowMalformed: true));
   }
 
@@ -121,7 +135,10 @@ class SearchSuggestions {
     try {
       final data = jsonDecode(body);
       if (data is List && data.length > 1 && data[1] is List) {
-        return [for (final s in data[1] as List) if (s is String && s.runes.length <= maxLength) s].take(maxSuggestions).toList();
+        return [
+          for (final s in data[1] as List)
+            if (s is String && s.runes.length <= maxLength) s
+        ].take(maxSuggestions).toList();
       }
     } catch (e) {
       logDebug(() => 'The suggestion answer could not be read: $e');

@@ -24,7 +24,8 @@ abstract interface class WebInnerTube {
   bool get signedIn;
 
   /// [body] posted to `youtubei/v1/[endpoint]`; null when signed out.
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl});
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl});
 }
 
 /// YouTube's answer to a signed-in request: its status and body.
@@ -96,7 +97,9 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   void load() {
     final native = _native;
     if (native == null) return;
-    _read(_take(_withText(jsonEncode({'folder': folder, 'reason': reason, if (base != null) 'base': base}), native.open)));
+    _read(_take(_withText(
+        jsonEncode({'folder': folder, 'reason': reason, if (base != null) 'base': base}),
+        native.open)));
   }
 
   void _read(String? status) {
@@ -123,7 +126,8 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
       unawaited(_signInInApp());
       return;
     }
-    _start((port) => _withText(jsonEncode({'hello': presence}), (p, n) => native.browserSignIn(port.sendPort.nativePort, p, n)));
+    _start((port) => _withText(jsonEncode({'hello': presence}),
+        (p, n) => native.browserSignIn(port.sendPort.nativePort, p, n)));
   }
 
   /// Keeps the cookies of the cookies.txt at [path]; wipes and deletes the
@@ -131,7 +135,8 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   void importFile(String path, {bool presence = true, bool delete = false}) {
     final native = _native;
     if (native == null || waiting) return;
-    _start((port) => _withText(jsonEncode({'path': path, 'hello': presence, 'delete': delete}), (p, n) => native.import(port.sendPort.nativePort, p, n)));
+    _start((port) => _withText(jsonEncode({'path': path, 'hello': presence, 'delete': delete}),
+        (p, n) => native.import(port.sendPort.nativePort, p, n)));
   }
 
   /// Android and iOS: no other app's cookies can be read, so Google's sign-in
@@ -201,9 +206,11 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   }
 
   static String _why(String code) => switch (code) {
-        'no browser' => tr('No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead.'),
+        'no browser' => tr(
+            'No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead.'),
         'not signed in' => tr('These cookies are not signed in to YouTube'),
-        'closed before signing in' => tr('The browser window was closed before you signed in to YouTube. Sign in first, then close it.'),
+        'closed before signing in' => tr(
+            'The browser window was closed before you signed in to YouTube. Sign in first, then close it.'),
         'no youtube.com cookies' => tr('The file has no youtube.com cookies'),
         _ => tr('Cookie sign-in failed ({0})', [code]),
       };
@@ -228,11 +235,19 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   /// open the cookies. [ask] is for something the user did: the prompt
   /// comes up again even after it was closed.
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
     final native = _native;
     if (native == null || !signedIn) return null;
     final port = ReceivePort('lumtub web innertube');
-    final request = jsonEncode({'endpoint': endpoint, 'body': body, 'hl': hl ?? youtubeHl, 'language': youtubeAcceptLanguage, 'clientVersion': YoutubeWeb.clientVersion, 'ask': ask});
+    final request = jsonEncode({
+      'endpoint': endpoint,
+      'body': body,
+      'hl': hl ?? youtubeHl,
+      'language': youtubeAcceptLanguage,
+      'clientVersion': YoutubeWeb.clientVersion,
+      'ask': ask
+    });
     if (!_withText(request, (p, n) => native.innertube(port.sendPort.nativePort, p, n))) {
       port.close();
       return null;
@@ -249,12 +264,20 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   /// Adds [videoId], watched from [from] to [to] seconds of [length], to
   /// the account's YouTube history; the reason it could not, or null. It
   /// never brings up the system's prompt to open the cookies.
-  Future<String?> reportWatched(String videoId, {required double from, required double to, double length = 0}) async {
+  Future<String?> reportWatched(String videoId,
+      {required double from, required double to, double length = 0}) async {
     final native = _native;
     final watched = native?.watched;
     if (native == null || watched == null || !signedIn) return 'signed out';
     final port = ReceivePort('lumtub web history');
-    final request = jsonEncode({'video_id': videoId, 'from': from, 'to': to, 'length': length, 'hl': youtubeHl, 'clientVersion': YoutubeWeb.clientVersion});
+    final request = jsonEncode({
+      'video_id': videoId,
+      'from': from,
+      'to': to,
+      'length': length,
+      'hl': youtubeHl,
+      'clientVersion': YoutubeWeb.clientVersion
+    });
     if (!_withText(request, (p, n) => watched(port.sendPort.nativePort, p, n))) {
       port.close();
       return 'bad request';
@@ -273,7 +296,8 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
     final write = native?.cookiesFile;
     if (native == null || write == null || !signedIn) return false;
     final port = ReceivePort('lumtub cookies file');
-    if (!_withText(jsonEncode({'path': path, 'ask': true}), (p, n) => write(port.sendPort.nativePort, p, n))) {
+    if (!_withText(
+        jsonEncode({'path': path, 'ask': true}), (p, n) => write(port.sendPort.nativePort, p, n))) {
       port.close();
       return false;
     }
@@ -326,21 +350,30 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
 
 class _Bindings {
   _Bindings(DynamicLibrary library)
-      : open = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_web_open'),
-        status = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_web_status'),
-        import = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_import'),
-        browserSignIn = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_browser_sign_in'),
-        browserCancel = library.lookupFunction<Void Function(), void Function()>('lumtub_web_browser_cancel'),
+      : open = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_web_open'),
+        status = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
+            'lumtub_web_status'),
+        import = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+            bool Function(int, Pointer<Uint8>, int)>('lumtub_web_import'),
+        browserSignIn = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+            bool Function(int, Pointer<Uint8>, int)>('lumtub_web_browser_sign_in'),
+        browserCancel =
+            library.lookupFunction<Void Function(), void Function()>('lumtub_web_browser_cancel'),
         signOut = library.lookupFunction<Void Function(), void Function()>('lumtub_web_sign_out'),
-        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_innertube'),
+        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+            bool Function(int, Pointer<Uint8>, int)>('lumtub_web_innertube'),
         cookiesFile = library.providesSymbol('lumtub_web_cookies_file')
-            ? library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_cookies_file')
+            ? library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+                bool Function(int, Pointer<Uint8>, int)>('lumtub_web_cookies_file')
             : null,
         watched = library.providesSymbol('lumtub_web_watched')
-            ? library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_watched')
+            ? library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size),
+                bool Function(int, Pointer<Uint8>, int)>('lumtub_web_watched')
             : null,
         wipeCookies = library.providesSymbol('lumtub_web_wipe_cookies')
-            ? library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_web_wipe_cookies')
+            ? library.lookupFunction<Void Function(Pointer<Uint8>, Size),
+                void Function(Pointer<Uint8>, int)>('lumtub_web_wipe_cookies')
             : null;
 
   final Pointer<Utf8> Function(Pointer<Uint8>, int) open;

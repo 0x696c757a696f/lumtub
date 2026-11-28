@@ -10,7 +10,8 @@ import '../widgets/video_progress_bar.dart';
 /// a storyboard sprite sheet, fetched when first needed.
 ProgressPreview storyboardPreview(Storyboard board, StoryboardSheets sheets, {double width = 160}) {
   final size = Size(width, width * board.height / board.width);
-  return ProgressPreview(size, (time) => _TileView(board: board, sheets: sheets, tile: board.tileAt(time)));
+  return ProgressPreview(
+      size, (time) => _TileView(board: board, sheets: sheets, tile: board.tileAt(time)));
 }
 
 class _TileView extends StatefulWidget {
@@ -56,7 +57,11 @@ class _TileViewState extends State<_TileView> {
   @override
   Widget build(BuildContext context) => ColoredBox(
         color: Colors.black,
-        child: _image == null ? null : CustomPaint(painter: _TilePainter(_image!, widget.board, widget.tile, _loaded == widget.tile.sheet)),
+        child: _image == null
+            ? null
+            : CustomPaint(
+                painter:
+                    _TilePainter(_image!, widget.board, widget.tile, _loaded == widget.tile.sheet)),
       );
 }
 
@@ -65,6 +70,7 @@ class _TilePainter extends CustomPainter {
   final ui.Image image;
   final Storyboard board;
   final StoryboardTile tile;
+
   /// Whether [image] is the sheet [tile] is on; otherwise it is the last one
   /// shown and the tile is only a stand-in.
   final bool current;
@@ -72,10 +78,17 @@ class _TilePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (!current) return;
-    final source = Rect.fromLTWH(tile.column * board.width.toDouble(), tile.row * board.height.toDouble(), board.width.toDouble(), board.height.toDouble());
-    canvas.drawImageRect(image, source, Offset.zero & size, Paint()..filterQuality = FilterQuality.medium);
+    final source = Rect.fromLTWH(tile.column * board.width.toDouble(),
+        tile.row * board.height.toDouble(), board.width.toDouble(), board.height.toDouble());
+    canvas.drawImageRect(
+        image, source, Offset.zero & size, Paint()..filterQuality = FilterQuality.medium);
   }
 
   @override
-  bool shouldRepaint(_TilePainter old) => old.image != image || old.tile.row != tile.row || old.tile.column != tile.column || old.tile.sheet != tile.sheet || old.current != current;
+  bool shouldRepaint(_TilePainter old) =>
+      old.image != image ||
+      old.tile.row != tile.row ||
+      old.tile.column != tile.column ||
+      old.tile.sheet != tile.sheet ||
+      old.current != current;
 }

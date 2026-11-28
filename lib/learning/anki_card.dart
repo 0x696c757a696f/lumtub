@@ -17,7 +17,20 @@ abstract final class AnkiCard {
   static const modelId = 1763900000101;
   static const deckId = 1763900000102;
 
-  static const fields = ['Word', 'Reading', 'Meaning', 'Sentence', 'Translation', 'Audio', 'Picture', 'Video', 'Time', 'Link', 'Language', 'Notes'];
+  static const fields = [
+    'Word',
+    'Reading',
+    'Meaning',
+    'Sentence',
+    'Translation',
+    'Audio',
+    'Picture',
+    'Video',
+    'Time',
+    'Link',
+    'Language',
+    'Notes'
+  ];
 
   static const cardName = 'Recognition';
 
@@ -46,7 +59,8 @@ abstract final class AnkiCard {
   /// The first line of [css]. While a note type's style starts with this
   /// line, Lumtub may bring it up to date; anyone who changes the style
   /// deletes the line and keeps their own.
-  static const styleMarker = '/* Lumtub card style 1. Lumtub updates this style and the card templates while this line is here; delete it to keep your own changes. */';
+  static const styleMarker =
+      '/* Lumtub card style 1. Lumtub updates this style and the card templates while this line is here; delete it to keep your own changes. */';
 
   static const css = '''
 $styleMarker
@@ -111,21 +125,47 @@ $styleMarker
 ''';
 
   /// Stable for a word, so a word exported twice is the same note.
-  static String guid(VocabularyWord word) => 'lumtub-${sha1.convert(utf8.encode(word.key)).toString().substring(0, 20)}';
+  static String guid(VocabularyWord word) =>
+      'lumtub-${sha1.convert(utf8.encode(word.key)).toString().substring(0, 20)}';
 
   static String _html(String text) =>
       const HtmlEscape(HtmlEscapeMode.element).convert(text).replaceAll(RegExp(r'\r?\n'), '<br>');
 
   /// Languages written with spaces between words, where a word is marked
   /// only where it stands alone ("run", not the start of "running").
-  static const _spaced = {'en', 'fr', 'de', 'es', 'it', 'pt', 'nl', 'ru', 'uk', 'pl', 'sv', 'da', 'no', 'nb', 'fi', 'cs', 'tr', 'id', 'vi', 'la', 'el', 'ro', 'hu'};
+  static const _spaced = {
+    'en',
+    'fr',
+    'de',
+    'es',
+    'it',
+    'pt',
+    'nl',
+    'ru',
+    'uk',
+    'pl',
+    'sv',
+    'da',
+    'no',
+    'nb',
+    'fi',
+    'cs',
+    'tr',
+    'id',
+    'vi',
+    'la',
+    'el',
+    'ro',
+    'hu'
+  };
 
   /// [sentence] as HTML with each [word] in it bold.
   static String markedLine(String sentence, String word, String language) {
     if (word.trim().isEmpty) return _html(sentence);
     final escaped = RegExp.escape(word);
     final pattern = _spaced.contains(language)
-        ? RegExp('(?<![\\p{L}\\p{M}])$escaped(?![\\p{L}\\p{M}])', caseSensitive: false, unicode: true)
+        ? RegExp('(?<![\\p{L}\\p{M}])$escaped(?![\\p{L}\\p{M}])',
+            caseSensitive: false, unicode: true)
         : RegExp(escaped, caseSensitive: false, unicode: true);
     final out = StringBuffer();
     var at = 0;
@@ -141,15 +181,20 @@ $styleMarker
 
   /// The note's fields for [word]; [audio] and [picture] are the media
   /// file names the note uses, when it has them.
-  static Map<String, String> noteFields(VocabularyWord word, {String audio = '', String picture = ''}) => {
+  static Map<String, String> noteFields(VocabularyWord word,
+          {String audio = '', String picture = ''}) =>
+      {
         'Word': _html(word.word),
         'Reading': word.reading == word.word ? '' : _html(word.reading),
         'Meaning': _html(word.meaning),
-        'Sentence': word.sentence.isEmpty ? '' : markedLine(word.sentence, word.word, word.language),
+        'Sentence':
+            word.sentence.isEmpty ? '' : markedLine(word.sentence, word.word, word.language),
         'Translation': _html(word.translation),
         'Audio': audio.isEmpty ? '' : '[sound:$audio]',
         'Picture': picture.isEmpty ? '' : '<img src="${_attribute(picture)}">',
-        'Video': word.videoId.isEmpty ? '' : _html(word.videoTitle.isEmpty ? 'YouTube' : word.videoTitle),
+        'Video': word.videoId.isEmpty
+            ? ''
+            : _html(word.videoTitle.isEmpty ? 'YouTube' : word.videoTitle),
         'Time': word.videoId.isEmpty ? '' : clockOf(word.at),
         'Link': _attribute(word.link),
         'Language': _attribute(word.language),
@@ -158,9 +203,11 @@ $styleMarker
 
   static String _attribute(String text) => const HtmlEscape(HtmlEscapeMode.attribute).convert(text);
 
-  static List<String> tags(VocabularyWord word) => ['lumtub', if (word.language.isNotEmpty) 'lumtub::${word.language}'];
+  static List<String> tags(VocabularyWord word) =>
+      ['lumtub', if (word.language.isNotEmpty) 'lumtub::${word.language}'];
 
   /// The media name of [word]'s line, or of its video's picture.
   static String soundName(VocabularyWord word) => '${guid(word)}.wav';
-  static String pictureName(String videoId, {required bool webp}) => 'lumtub-$videoId.${webp ? 'webp' : 'jpg'}';
+  static String pictureName(String videoId, {required bool webp}) =>
+      'lumtub-$videoId.${webp ? 'webp' : 'jpg'}';
 }

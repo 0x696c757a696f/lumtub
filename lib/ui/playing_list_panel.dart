@@ -35,7 +35,8 @@ int _placeOf(List<VideoItem> items, String? id, {required bool last}) {
 /// The playlist the video was opened from, on the watch page: every video
 /// in the order it plays, the one playing marked, with 正序 / 倒序. Slivers,
 /// so a playlist of thousands builds only the tiles on screen.
-List<Widget> playingListSlivers(BuildContext context, {required AppController controller, required Widget trailing, bool shrinkWrap = false}) {
+List<Widget> playingListSlivers(BuildContext context,
+    {required AppController controller, required Widget trailing, bool shrinkWrap = false}) {
   final list = controller.playingList!;
   final ordered = list.ordered;
   final place = _placeOf(list.items, controller.playing?.id, last: list.reversed);
@@ -46,38 +47,57 @@ List<Widget> playingListSlivers(BuildContext context, {required AppController co
   final colors = context.colors;
   return [
     SliverToBoxAdapter(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Space.xs, 0, Space.xs, 0),
-          child: TitleText(list.title, about: [for (final item in list.items.take(20)) item.title].join('\n'), maxLines: 2, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600) ?? const TextStyle(fontWeight: FontWeight.w600)),
-        ),
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(Space.xs, Space.xxs, 0, Space.xs),
-          child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              Flexible(
-                child: Text(
-                  index < 0 ? tr('Playlist · {0} videos', [ordered.length]) : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.outline, fontSize: 12),
-                ),
-              ),
-              const SizedBox(width: Space.xs),
-              PlaylistOrderButton(controller: controller, id: list.id),
-            ]),
-            trailing,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Space.xs, 0, Space.xs, 0),
+              child: TitleText(list.title,
+                  about: [for (final item in list.items.take(20)) item.title].join('\n'),
+                  maxLines: 2,
+                  style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600) ??
+                      const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(Space.xs, Space.xxs, 0, Space.xs),
+              child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Flexible(
+                        child: Text(
+                          index < 0
+                              ? tr('Playlist · {0} videos', [ordered.length])
+                              : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: colors.outline, fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(width: Space.xs),
+                      PlaylistOrderButton(controller: controller, id: list.id),
+                    ]),
+                    trailing,
+                  ]),
+            ),
           ]),
-        ),
-      ]),
     ),
     SliverList.builder(
       itemCount: max(0, count),
       itemBuilder: (context, i) {
         final item = ordered[from + i];
         return Container(
-          decoration: from + i == index ? BoxDecoration(color: colors.secondaryContainer.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(Radii.l)) : null,
-          child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item)),
+          decoration: from + i == index
+              ? BoxDecoration(
+                  color: colors.secondaryContainer.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(Radii.l))
+              : null,
+          child: CompactVideoTile(
+              item: item,
+              thumbnails: controller.thumbnailDirectory,
+              onOpen: () => controller.play(item)),
         );
       },
     ),

@@ -36,7 +36,15 @@ class LibassLayout {
   /// room above the margin, but an ASS one ([whole], Lumtub's styled second
   /// subtitle) in the whole height; that one already holds the main
   /// subtitle's lines (see [secondAss]), so it goes where the main one does.
-  static double secondaryPosition(String main, {required int position, required double scale, double aspect = 16 / 9, double fontSize = _font, double? em, int margin = marginY, double? gap, bool whole = false}) {
+  static double secondaryPosition(String main,
+      {required int position,
+      required double scale,
+      double aspect = 16 / 9,
+      double fontSize = _font,
+      double? em,
+      int margin = marginY,
+      double? gap,
+      bool whole = false}) {
     final room = _canvas - margin;
     // Lumtub's copy holds the main subtitle too, drawn invisible under the
     // second one: libass itself makes the room for it, in the fonts it
@@ -49,7 +57,8 @@ class LibassLayout {
   }
 
   /// How many lines libass draws [text] on, wrapping at the canvas width.
-  static int lineCount(String text, {required double scale, double aspect = 16 / 9, double em = _font}) {
+  static int lineCount(String text,
+      {required double scale, double aspect = 16 / 9, double em = _font}) {
     final room = (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
     var lines = 0;
     for (final line in text.replaceAll(_invisible, '').trim().split('\n')) {
@@ -62,7 +71,8 @@ class LibassLayout {
 
   /// The ems of a line in libass's room for [aspect], with letters [em]
   /// units wide at [scale].
-  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) => (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
+  static double roomEms({required double em, required double scale, double aspect = 16 / 9}) =>
+      (_canvas * max(aspect, 0.2) - 2 * _margin) / (em * scale);
 
   /// [text] with line breaks where the Flutter subtitle view wraps it in
   /// [room] ems of [font]. libass breaks lines only at spaces, so Chinese,
@@ -88,7 +98,12 @@ class LibassLayout {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(fontSize: size, height: 1.3, fontFamily: font.isEmpty ? null : font, fontFamilyFallback: const [bundledFont], fontWeight: bold ? FontWeight.w700 : FontWeight.normal),
+        style: TextStyle(
+            fontSize: size,
+            height: 1.3,
+            fontFamily: font.isEmpty ? null : font,
+            fontFamilyFallback: const [bundledFont],
+            fontWeight: bold ? FontWeight.w700 : FontWeight.normal),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -161,7 +176,11 @@ class LibassLayout {
     if (_thin.contains(c)) return 0.33;
     if (_broad.contains(c)) return 0.85;
     if (rune >= 0x41 && rune <= 0x5A) return 0.66;
-    if ((rune >= 0x61 && rune <= 0x7A) || (rune >= 0x30 && rune <= 0x39) || (rune >= 0xC0 && rune <= 0x24F)) return 0.54;
+    if ((rune >= 0x61 && rune <= 0x7A) ||
+        (rune >= 0x30 && rune <= 0x39) ||
+        (rune >= 0xC0 && rune <= 0x24F)) {
+      return 0.54;
+    }
     return 0.58;
   }
 
@@ -186,12 +205,19 @@ class LibassLook {
   /// For a player [view] showing a picture of [aspect], whose subtitle view
   /// scales text by [textScale] and its padding by [paddingScale].
   /// [position] is the 字幕位置 setting, [border] the 描边 one.
-  factory LibassLook.of({required Size view, required double aspect, required double textScale, required int position, required double border, double paddingScale = 1}) {
+  factory LibassLook.of(
+      {required Size view,
+      required double aspect,
+      required double textScale,
+      required int position,
+      required double border,
+      double paddingScale = 1}) {
     final picture = view.isEmpty ? 720.0 : min(view.height, view.width / max(aspect, 0.1));
     final unit = LibassLayout._canvas / max(picture, 1);
     // The view's bottom padding, less the band below the picture that mpv
     // cannot draw in.
-    final below = (24 + (100 - position) * 4.0) * paddingScale - max(0.0, (view.height - picture) / 2);
+    final below =
+        (24 + (100 - position) * 4.0) * paddingScale - max(0.0, (view.height - picture) / 2);
     return LibassLook(
       em: 32 * textScale * unit,
       margin: (max(0.0, below) * unit).round(),
@@ -201,7 +227,8 @@ class LibassLook {
     );
   }
 
-  const LibassLook({required this.em, required this.margin, required this.border, required this.gap});
+  const LibassLook(
+      {required this.em, required this.margin, required this.border, required this.gap});
 
   /// A letter's size (an em) at subtitle size 1, in mpv's units.
   final double em;
@@ -218,10 +245,16 @@ class LibassLook {
   /// A video filling a 16:9 player 720 tall, before the player's own size
   /// is known. [byHeight] sizes text as Android does, [caption] times 5.33%
   /// of the player's height.
-  static LibassLook standard({required int position, required double border, bool byHeight = false, double caption = 1}) => LibassLook.of(
+  static LibassLook standard(
+          {required int position,
+          required double border,
+          bool byHeight = false,
+          double caption = 1}) =>
+      LibassLook.of(
         view: const Size(1280, 720),
         aspect: 16 / 9,
-        textScale: byHeight ? max(12.0, 720 * 0.0533 * caption) / 32 : sqrt(1280 * 720 / (1920 * 1080)),
+        textScale:
+            byHeight ? max(12.0, 720 * 0.0533 * caption) / 32 : sqrt(1280 * 720 / (1920 * 1080)),
         position: position,
         border: border,
       );
@@ -236,7 +269,15 @@ class LibassLook {
   /// Read from the fonts' OS/2 tables; others are taken as 1.3.
   static double lineEms(String font) => switch (font.toLowerCase()) {
         'microsoft yahei' || 'microsoft yahei ui' || '微软雅黑' => 1.32,
-        'noto sans cjk sc' || 'noto sans cjk tc' || 'noto sans cjk jp' || 'noto sans cjk kr' || 'noto sans sc' || 'noto sans kr' || 'source han sans sc' || 'source han sans' => 1.448,
+        'noto sans cjk sc' ||
+        'noto sans cjk tc' ||
+        'noto sans cjk jp' ||
+        'noto sans cjk kr' ||
+        'noto sans sc' ||
+        'noto sans kr' ||
+        'source han sans sc' ||
+        'source han sans' =>
+          1.448,
         'noto serif cjk sc' || 'noto serif cjk tc' || 'source han serif sc' => 1.438,
         'pingfang sc' || 'pingfang tc' || 'pingfang hk' => 1.4,
         'simhei' || 'simsun' || 'nsimsun' || 'kaiti' || 'fangsong' => 1.0,
@@ -276,7 +317,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
     double scale = 1,
     bool blurred = false,
     List<({String text, String? family})>? Function(String text, {required bool second})? runs}) {
-  font ??= settings.secondaryFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.secondaryFont);
+  font ??= settings.secondaryFont.isEmpty
+      ? 'sans-serif'
+      : PlayerSettings.fontForThisSystem(settings.secondaryFont);
   final unit = secondEm * scale;
   final size = unit * settings.secondaryScale * LibassLook.lineEms(font);
   String colour(int rgb, double opacity) {
@@ -307,29 +350,36 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
     ..writeln('WrapStyle: 0')
     ..writeln()
     ..writeln('[V4+ Styles]')
-    ..writeln('Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
-    ..writeln('Style: Default,${font.replaceAll(',', ' ')},${size.toStringAsFixed(2)},${colour(settings.secondaryColor, opacity)},&H000000FF,$edge,$edge,${settings.subtitleBold ? -1 : 0},0,0,0,100,100,0,0,${box ? 3 : 1},${width.toStringAsFixed(2)},0,2,25,25,0,1')
+    ..writeln(
+        'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
+    ..writeln(
+        'Style: Default,${font.replaceAll(',', ' ')},${size.toStringAsFixed(2)},${colour(settings.secondaryColor, opacity)},&H000000FF,$edge,$edge,${settings.subtitleBold ? -1 : 0},0,0,0,100,100,0,0,${box ? 3 : 1},${width.toStringAsFixed(2)},0,2,25,25,0,1')
     ..writeln()
     ..writeln('[Events]')
     ..writeln('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
   // Braces would open override tags; line breaks are ASS's own.
-  String ass(String text) => text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
+  String ass(String text) =>
+      text.replaceAll('{', '(').replaceAll('}', ')').replaceAll(RegExp(r'\r?\n'), r'\N');
   // Each stretch of a line mixing scripts in its own family.
   String fonts(String text, {required bool second}) {
     final parts = runs?.call(text, second: second);
     if (parts == null) return ass(text);
     // Back to the line's own font: the style's, or the main subtitle's.
     final own = second ? '' : main?.font ?? '';
-    return parts.map((r) => '{\\fn${(r.family ?? own).replaceAll(RegExp(r'[{}\\,]'), ' ')}}${ass(r.text)}').join();
+    return parts
+        .map((r) => '{\\fn${(r.family ?? own).replaceAll(RegExp(r'[{}\\,]'), ' ')}}${ass(r.text)}')
+        .join();
   }
 
   // 模糊翻译: libass blurs the outline alone when there is one, so the
   // letters lose it and are blurred themselves, as the Flutter view blurs.
   final blur = blurred ? '{\\bord0\\shad0\\blur${(size * blurEms).toStringAsFixed(1)}}' : '';
-  String second(String text) => '$blur${fonts(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold), second: true)}';
+  String second(String text) =>
+      '$blur${fonts(LibassLayout.wrap(text, room, font: settings.secondaryFont, bold: settings.subtitleBold), second: true)}';
   if (main == null || main.cues.isEmpty) {
     for (final cue in cues) {
-      out.writeln('Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
+      out.writeln(
+          'Dialogue: 0,${stamp(cue.start)},${stamp(cue.end)},Default,,0,0,0,,${second(cue.text)}');
     }
     return out.toString();
   }
@@ -339,19 +389,32 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
   // event for each stretch of time in which the same lines show, so libass
   // never stacks two events of this copy on each other.
   final mainSize = unit * settings.subtitleScale * LibassLook.lineEms(main.font);
-  final mainTag = '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
+  final mainTag =
+      '{\\fn${main.font.replaceAll(RegExp(r'[{}\\,]'), ' ')}\\fs${mainSize.toStringAsFixed(2)}\\b${settings.subtitleBold ? 1 : 0}}';
   // The gap the Flutter view leaves between the two, as a line that tall.
   final gap = '{\\alpha&HFF&\\fs${(unit * 6 / 32).toStringAsFixed(2)}}\\h';
   // Broken as Lumtub's copy of the main subtitle breaks them, blank lines
   // left out as there.
-  final mainText = [for (final cue in main.cues) fonts(LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold).replaceAll(RegExp(r'\n\s*\n'), '\n'), second: false)];
+  final mainText = [
+    for (final cue in main.cues)
+      fonts(
+          LibassLayout.wrap(cue.text, main.room, font: main.wrapFont, bold: settings.subtitleBold)
+              .replaceAll(RegExp(r'\n\s*\n'), '\n'),
+          second: false)
+  ];
   final secondText = [for (final cue in cues) second(cue.text)];
-  final times = <Duration>{for (final cue in cues) ...[cue.start, cue.end], for (final cue in main.cues) ...[cue.start, cue.end]}.toList()..sort();
+  final times = <Duration>{
+    for (final cue in cues) ...[cue.start, cue.end],
+    for (final cue in main.cues) ...[cue.start, cue.end]
+  }.toList()
+    ..sort();
   final seconds = _Showing(cues), mains = _Showing(main.cues);
   String? last;
   Duration? lastStart, lastEnd;
   void flush() {
-    if (last != null) out.writeln('Dialogue: 0,${stamp(lastStart!)},${stamp(lastEnd!)},Default,,0,0,0,,$last');
+    if (last != null) {
+      out.writeln('Dialogue: 0,${stamp(lastStart!)},${stamp(lastEnd!)},Default,,0,0,0,,$last');
+    }
   }
 
   for (var i = 0; i + 1 < times.length; i++) {
@@ -360,7 +423,11 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
     // libass stacks a later event above an earlier one.
     final above = [for (final i in seconds.at(from).toList().reversed) secondText[i]];
     final under = [for (final i in mains.at(from).toList().reversed) mainText[i]];
-    final text = above.isEmpty ? null : under.isEmpty ? above.join(r'\N') : '${above.join(r'\N')}\\N$gap\\N{\\alpha&HFF&}$mainTag${under.join(r'\N')}';
+    final text = above.isEmpty
+        ? null
+        : under.isEmpty
+            ? above.join(r'\N')
+            : '${above.join(r'\N')}\\N$gap\\N{\\alpha&HFF&}$mainTag${under.join(r'\N')}';
     if (text == last && lastEnd == from) {
       lastEnd = to;
       continue;
@@ -377,7 +444,9 @@ String secondAss(List<SubtitleCue> cues, PlayerSettings settings,
 /// The cues of a list showing from one time on, for times asked in order:
 /// one pass over the list, as a long video has thousands.
 class _Showing {
-  _Showing(this.cues) : _byStart = List.generate(cues.length, (i) => i)..sort((a, b) => cues[a].start.compareTo(cues[b].start));
+  _Showing(this.cues)
+      : _byStart = List.generate(cues.length, (i) => i)
+          ..sort((a, b) => cues[a].start.compareTo(cues[b].start));
 
   final List<SubtitleCue> cues;
   final List<int> _byStart;

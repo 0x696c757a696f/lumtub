@@ -16,11 +16,18 @@ import 'skin_paint.dart';
 /// players of the late 90s. The meter follows play and pause and the
 /// volume; it is a decoration, not an analysis of the sound.
 class SkinLcd extends StatefulWidget {
-  const SkinLcd({super.key, required this.skin, required this.player, required this.title, required this.subtitle, required this.still});
+  const SkinLcd(
+      {super.key,
+      required this.skin,
+      required this.player,
+      required this.title,
+      required this.subtitle,
+      required this.still});
   final Skin skin;
   final Player? player;
   final String title;
   final String subtitle;
+
   /// Nothing moves: Low resource mode or reduced motion.
   final bool still;
 
@@ -37,6 +44,7 @@ class _SkinLcdState extends State<SkinLcd> {
   final _random = Random(7);
   final _levels = List<double>.filled(_bars, 0);
   final _targets = List<double>.filled(_bars, 0);
+
   /// How far the title has run; the meter and the title repaint on it
   /// alone, without building the display again.
   final _scroll = ValueNotifier<double>(0);
@@ -92,7 +100,8 @@ class _SkinLcdState extends State<SkinLcd> {
   }
 
   void _run() {
-    final move = _shown && !widget.still && !Motion.reduced && (_playing || _levels.any((l) => l > 0.01));
+    final move =
+        _shown && !widget.still && !Motion.reduced && (_playing || _levels.any((l) => l > 0.01));
     if (move) {
       _timer ??= Timer.periodic(_frame, (_) => _tick());
     } else {
@@ -140,27 +149,45 @@ class _SkinLcdState extends State<SkinLcd> {
     return Container(
       height: 56,
       margin: const EdgeInsets.only(top: 8),
-      decoration: SurfaceDecoration.of(context, player.lcd ?? SkinSurface.solid(const Color(0xFF050A06)), radius: 6),
+      decoration: SurfaceDecoration.of(
+          context, player.lcd ?? SkinSurface.solid(const Color(0xFF050A06)),
+          radius: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: DefaultTextStyle(
-        style: TextStyle(color: text, fontFamily: player.lcdFont, shadows: widget.still ? null : glow, height: 1.1),
+        style: TextStyle(
+            color: text,
+            fontFamily: player.lcdFont,
+            shadows: widget.still ? null : glow,
+            height: 1.1),
         child: Row(children: [
-          Icon(_playing ? AppIcons.playFill : AppIcons.pauseFill, size: 14, color: player.lcdAccent),
+          Icon(_playing ? AppIcons.playFill : AppIcons.pauseFill,
+              size: 14, color: player.lcdAccent),
           const SizedBox(width: 6),
           Text(time, style: const TextStyle(fontSize: 30)),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-              _Marquee(text: widget.title, offset: widget.still || Motion.reduced ? null : _scroll, style: const TextStyle(fontSize: 18)),
-              Text('${widget.subtitle}  $time / $total', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: text.withValues(alpha: 0.75))),
-            ]),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _Marquee(
+                      text: widget.title,
+                      offset: widget.still || Motion.reduced ? null : _scroll,
+                      style: const TextStyle(fontSize: 18)),
+                  Text('${widget.subtitle}  $time / $total',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, color: text.withValues(alpha: 0.75))),
+                ]),
           ),
           if (player.spectrum) ...[
             const SizedBox(width: 12),
             SizedBox(
               width: 84,
               height: 36,
-              child: RepaintBoundary(child: CustomPaint(painter: _MeterPainter(_levels, text, player.lcdAccent, repaint: _scroll))),
+              child: RepaintBoundary(
+                  child: CustomPaint(
+                      painter: _MeterPainter(_levels, text, player.lcdAccent, repaint: _scroll))),
             ),
           ],
         ]),
@@ -180,7 +207,11 @@ class _Marquee extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
         final merged = DefaultTextStyle.of(context).style.merge(style);
-        final painter = TextPainter(text: TextSpan(text: text, style: merged), textDirection: Directionality.of(context), maxLines: 1)..layout();
+        final painter = TextPainter(
+            text: TextSpan(text: text, style: merged),
+            textDirection: Directionality.of(context),
+            maxLines: 1)
+          ..layout();
         final width = painter.width;
         final height = painter.height;
         painter.dispose();
@@ -192,8 +223,12 @@ class _Marquee extends StatelessWidget {
         // Laid out once; each frame only moves the kept picture of it.
         final strip = RepaintBoundary(
           child: Stack(clipBehavior: Clip.none, children: [
-            Positioned(left: 0, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
-            Positioned(left: width + gap, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
+            Positioned(
+                left: 0, top: 0, child: Text(text, maxLines: 1, softWrap: false, style: style)),
+            Positioned(
+                left: width + gap,
+                top: 0,
+                child: Text(text, maxLines: 1, softWrap: false, style: style)),
           ]),
         );
         return ClipRect(
@@ -201,7 +236,8 @@ class _Marquee extends StatelessWidget {
             height: height,
             child: ValueListenableBuilder<double>(
               valueListenable: offset,
-              builder: (context, offset, child) => Transform.translate(offset: Offset(-(offset % (width + gap)), 0), child: child),
+              builder: (context, offset, child) =>
+                  Transform.translate(offset: Offset(-(offset % (width + gap)), 0), child: child),
               child: strip,
             ),
           ),
@@ -226,12 +262,14 @@ class _MeterPainter extends CustomPainter {
     for (var i = 0; i < levels.length; i++) {
       final lit = (levels[i] * rows).round();
       for (var r = 0; r < rows; r++) {
-        final rect = Rect.fromLTWH(i * step + 1, size.height - (r + 1) * cell + 1, step - 2, cell - 2);
+        final rect =
+            Rect.fromLTWH(i * step + 1, size.height - (r + 1) * cell + 1, step - 2, cell - 2);
         canvas.drawRect(rect, r >= lit ? off : (r >= rows - 2 ? top : on));
       }
     }
   }
 
   @override
-  bool shouldRepaint(_MeterPainter old) => !identical(old.levels, levels) || old.color != color || old.peak != peak;
+  bool shouldRepaint(_MeterPainter old) =>
+      !identical(old.levels, levels) || old.color != color || old.peak != peak;
 }

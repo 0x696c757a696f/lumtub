@@ -104,13 +104,16 @@ class WordVoice {
       final tag = (code ?? '').toLowerCase().replaceAll('_', '-');
       if (!tag.startsWith('$language-')) continue;
       final region = tag.substring(language.length + 1);
-      if (language == 'pt') return region == 'pt' || region == 'ao' || region == 'mz' ? 'pt-PT' : 'pt-BR';
+      if (language == 'pt') {
+        return region == 'pt' || region == 'ao' || region == 'mz' ? 'pt-PT' : 'pt-BR';
+      }
       return region == 'es' ? 'es-ES' : 'es-MX';
     }
     return language == 'pt' ? 'pt-BR' : 'es-MX';
   }
 
-  static bool _provides(String symbol) => NativeCore.instance?.library.providesSymbol(symbol) ?? false;
+  static bool _provides(String symbol) =>
+      NativeCore.instance?.library.providesSymbol(symbol) ?? false;
 
   /// Whether the system has a voice for [language].
   static Future<bool> systemHasVoice(String language) async {
@@ -122,9 +125,11 @@ class WordVoice {
 
   /// [text] in [language] read by [service], as a sound file.
   /// [server] gives Lumtub's server and this device's id, for [VoiceService.lumtub].
-  Future<File> read(String text, String language, VoiceService service, Map<String, String> keys, {Future<(Uri, String)?> Function()? server}) async {
+  Future<File> read(String text, String language, VoiceService service, Map<String, String> keys,
+      {Future<(Uri, String)?> Function()? server}) async {
     final name = sha1.convert(utf8.encode('${service.name}\n$language\n$text')).toString();
-    final file = File('${cache.path}${Platform.pathSeparator}$name.${service == VoiceService.system ? 'wav' : 'mp3'}');
+    final file = File(
+        '${cache.path}${Platform.pathSeparator}$name.${service == VoiceService.system ? 'wav' : 'mp3'}');
     if (await file.exists() && await file.length() > 0) return file;
     await cache.create(recursive: true);
     switch (service) {
@@ -142,7 +147,9 @@ class WordVoice {
       case VoiceService.edge:
         final voice = azureVoices[language];
         if (voice == null) throw const VoiceException(true);
-        if (!_provides('lumtub_speak_online')) throw const VoiceException(false, 'Edge voice needs a newer core');
+        if (!_provides('lumtub_speak_online')) {
+          throw const VoiceException(false, 'Edge voice needs a newer core');
+        }
         final ask = jsonEncode({'text': text, 'voice': voice, 'out': file.path});
         final answer = await Isolate.run(() => callCoreJson('lumtub_speak_online', ask));
         final error = answer['error'];
@@ -152,9 +159,12 @@ class WordVoice {
         if (where == null) throw const VoiceException(false, 'server unknown');
         await file.writeAsBytes(await _lumtub(text, language, where.$1, where.$2), flush: true);
       case VoiceService.azure:
-        await file.writeAsBytes(await _azure(text, language, keys[azureVoiceKey] ?? '', keys[azureVoiceRegion] ?? ''), flush: true);
+        await file.writeAsBytes(
+            await _azure(text, language, keys[azureVoiceKey] ?? '', keys[azureVoiceRegion] ?? ''),
+            flush: true);
       case VoiceService.google:
-        await file.writeAsBytes(await _google(text, language, keys[googleVoiceKey] ?? ''), flush: true);
+        await file.writeAsBytes(await _google(text, language, keys[googleVoiceKey] ?? ''),
+            flush: true);
     }
     return file;
   }
@@ -162,19 +172,29 @@ class WordVoice {
   Future<List<int>> _lumtub(String text, String language, Uri server, String device) async {
     if (!azureVoices.containsKey(language)) throw const VoiceException(true);
     final response = await (_client ??= appHttpClient())
-        .post(server.resolve('/speak'), headers: {'content-type': 'application/json'}, body: jsonEncode({'text': text, 'language': language, 'device': device}))
+        .post(server.resolve('/speak'),
+            headers: {'content-type': 'application/json'},
+            body: jsonEncode({'text': text, 'language': language, 'device': device}))
         .timeout(const Duration(seconds: 15));
-    if (response.statusCode != 200 || !(response.headers['content-type'] ?? '').startsWith('audio/')) throw VoiceException(false, 'Lumtub voice HTTP ${response.statusCode}');
+    if (response.statusCode != 200 ||
+        !(response.headers['content-type'] ?? '').startsWith('audio/')) {
+      throw VoiceException(false, 'Lumtub voice HTTP ${response.statusCode}');
+    }
     return response.bodyBytes;
   }
 
   Future<List<int>> _azure(String text, String language, String key, String region) async {
     final voice = azureVoices[language];
-    if (key.isEmpty || region.isEmpty) throw const VoiceException(false, 'Azure key or region missing');
+    if (key.isEmpty || region.isEmpty) {
+      throw const VoiceException(false, 'Azure key or region missing');
+    }
     if (voice == null) throw const VoiceException(true);
-    if (!RegExp(r'^[a-z0-9]+$').hasMatch(region)) throw const VoiceException(false, 'Azure region looks wrong');
+    if (!RegExp(r'^[a-z0-9]+$').hasMatch(region)) {
+      throw const VoiceException(false, 'Azure region looks wrong');
+    }
     final escaped = const HtmlEscape(HtmlEscapeMode.element).convert(text);
-    final ssml = '<speak version="1.0" xml:lang="${voice.substring(0, 5)}"><voice name="$voice">$escaped</voice></speak>';
+    final ssml =
+        '<speak version="1.0" xml:lang="${voice.substring(0, 5)}"><voice name="$voice">$escaped</voice></speak>';
     final response = await (_client ??= appHttpClient())
         .post(
           Uri.https('$region.tts.speech.microsoft.com', '/cognitiveservices/v1'),
@@ -187,7 +207,9 @@ class WordVoice {
           body: utf8.encode(ssml),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw VoiceException(false, 'Azure HTTP ${response.statusCode}');
+    if (response.statusCode != 200) {
+      throw VoiceException(false, 'Azure HTTP ${response.statusCode}');
+    }
     return response.bodyBytes;
   }
 
@@ -206,7 +228,9 @@ class WordVoice {
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw VoiceException(false, 'Google HTTP ${response.statusCode}');
+    if (response.statusCode != 200) {
+      throw VoiceException(false, 'Google HTTP ${response.statusCode}');
+    }
     final audio = (jsonDecode(response.body) as Map)['audioContent'];
     if (audio is! String) throw const VoiceException(false, 'Google sent no sound');
     return base64Decode(audio);

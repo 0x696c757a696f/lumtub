@@ -15,7 +15,13 @@ import 'word_token.dart';
 /// one new word.
 @immutable
 class VideoWords {
-  const VideoWords({required this.known, required this.words, required this.newWords, required this.often, required this.oneNew, this.language = ''});
+  const VideoWords(
+      {required this.known,
+      required this.words,
+      required this.newWords,
+      required this.often,
+      required this.oneNew,
+      this.language = ''});
 
   /// From 0 to 1, each word counted every time it is said.
   final double known;
@@ -73,13 +79,15 @@ bool looksLikeName(WordToken t) {
 /// below the learner's level count as known. Cut into words a few lines
 /// at a time, so the interface never waits; counted by lumtub_core off
 /// the interface thread. Null without the core or a dictionary.
-Future<VideoWords?> videoWordsOf(Learning learning, KnownWords known, String id, List<String> lines, {int most = 12}) {
+Future<VideoWords?> videoWordsOf(Learning learning, KnownWords known, String id, List<String> lines,
+    {int most = 12}) {
   final key = '$id|${lines.length}|${known.revision}|${learning.levelKey}';
   if (_cache.length > 8) unawaited(_cache.remove(_cache.keys.first));
   return _cache[key] ??= _videoWords(learning, known, lines, most);
 }
 
-Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String> lines, int most) async {
+Future<VideoWords?> _videoWords(
+    Learning learning, KnownWords known, List<String> lines, int most) async {
   if (NativeCore.instance == null) return null;
   final keys = <List<String>>[];
   final tokens = <String, WordToken>{};
@@ -125,9 +133,12 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
   for (final MapEntry(:key, value: t) in tokens.entries) {
     final chars = characters[Learning.languageOf(t)];
     if (chars == null || knownKeys.contains(key) || t.text.runes.length < 2) continue;
-    if (t.text.runes.every((c) => _han.hasMatch(String.fromCharCode(c)) && chars.contains(c))) compounds.add(key);
+    if (t.text.runes.every((c) => _han.hasMatch(String.fromCharCode(c)) && chars.contains(c))) {
+      compounds.add(key);
+    }
   }
-  final input = jsonEncode({'lines': keys, 'known': knownKeys.toList(), 'half': compounds.toList(), 'most': most});
+  final input = jsonEncode(
+      {'lines': keys, 'known': knownKeys.toList(), 'half': compounds.toList(), 'most': most});
   final answer = await Isolate.run(() {
     final core = NativeCore.instance!;
     return core.take(core.withText(input, core.wordCoverage));
@@ -140,9 +151,20 @@ Future<VideoWords?> _videoWords(Learning learning, KnownWords known, List<String
     newWords: json['unknownWords'] as int? ?? 0,
     often: [
       for (final pair in (json['often'] as List? ?? const []))
-        if (pair is List && pair.length == 2 && pair[0] is String && tokens[pair[0] as String] != null) (tokens[pair[0] as String]!, pair[1] as int),
+        if (pair is List &&
+            pair.length == 2 &&
+            pair[0] is String &&
+            tokens[pair[0] as String] != null)
+          (tokens[pair[0] as String]!, pair[1] as int),
     ],
-    oneNew: [for (final i in (json['oneNew'] as List? ?? const [])) if (i is int) i],
-    language: languages.entries.fold<MapEntry<String, int>?>(null, (best, e) => best == null || e.value > best.value ? e : best)?.key ?? '',
+    oneNew: [
+      for (final i in (json['oneNew'] as List? ?? const []))
+        if (i is int) i
+    ],
+    language: languages.entries
+            .fold<MapEntry<String, int>?>(
+                null, (best, e) => best == null || e.value > best.value ? e : best)
+            ?.key ??
+        '',
   );
 }

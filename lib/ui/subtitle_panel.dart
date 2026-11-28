@@ -20,7 +20,9 @@ import 'subtitle_list_panel.dart';
 /// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
 /// chosen on one side is greyed out on the other, and tapping it there
 /// swaps the two sides.
-Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(
+Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player,
+        {required VoidCallback onSettings, VoidCallback? onList}) =>
+    showPlayerPanel(
       context,
       title: tr('Subtitles'),
       width: 560,
@@ -55,14 +57,22 @@ class _SubtitlePanel extends StatefulWidget {
 }
 
 /// One row: an option the video offers, or a track already in the player.
-typedef _Choice = ({String key, String label, String? detail, SubtitleOption? option, SubtitleTrack? track});
+typedef _Choice = ({
+  String key,
+  String label,
+  String? detail,
+  SubtitleOption? option,
+  SubtitleTrack? track
+});
 
 class _SubtitlePanelState extends State<_SubtitlePanel> {
   String _query = '';
   bool _allLanguages = false;
+
   /// The row being applied, per side.
   String? _busyMain;
   String? _busySecondary;
+
   /// The options shown, by row key, for swapping the two sides.
   var _options = <String, SubtitleOption>{};
   final _subscriptions = <StreamSubscription<Object?>>[];
@@ -94,7 +104,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
 
   static bool _real(SubtitleTrack t) => t.id != 'auto' && t.id != 'no';
 
-  _Choice _ofOption(SubtitleOption o) => (key: 'o:${o.label}', label: o.label, detail: o.language, option: o, track: null);
+  _Choice _ofOption(SubtitleOption o) =>
+      (key: 'o:${o.label}', label: o.label, detail: o.language, option: o, track: null);
 
   bool _matches(String text) => _query.isEmpty || text.toLowerCase().contains(_query);
 
@@ -111,7 +122,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final second = controller.settings.secondaryTarget;
     final near = languageRows(offered, spoken, [
       (tr('Interface language'), interfaceTranslationLanguage),
-      if (!controller.settings.subtitleOriginal && chosen != SubtitleLanguage.auto) (tr('First subtitle language'), chosen.translation),
+      if (!controller.settings.subtitleOriginal && chosen != SubtitleLanguage.auto)
+        (tr('First subtitle language'), chosen.translation),
       if (second != null) (tr('Second subtitle language'), second),
       (tr('System language'), SubtitleLanguage.systemTranslation),
     ]);
@@ -126,13 +138,20 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       final language = t.language ?? '';
       if (!language.endsWith('-orig')) return null;
       final code = language.substring(0, language.length - 5);
-      return offered.where((o) => o.kind == SubtitleKind.automatic && o.language == code).firstOrNull;
+      return offered
+          .where((o) => o.kind == SubtitleKind.automatic && o.language == code)
+          .firstOrNull;
     }
 
     final others = [
       for (final t in player.state.tracks.subtitle)
-        if (_real(t) && !widget.controller.isSubtitleCopy(t.id) && !labels.contains(t.title) && !nearLabels.contains(t.title) && listedAs(t) == null)
-          (key: 't:${t.id}', label: _trackLabel(t), detail: null, option: null, track: t) as _Choice,
+        if (_real(t) &&
+            !widget.controller.isSubtitleCopy(t.id) &&
+            !labels.contains(t.title) &&
+            !nearLabels.contains(t.title) &&
+            listedAs(t) == null)
+          (key: 't:${t.id}', label: _trackLabel(t), detail: null, option: null, track: t)
+              as _Choice,
     ];
     final main = player.state.track.subtitle;
     final mainKey = !_real(main)
@@ -145,23 +164,50 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final secondary = controller.secondarySubtitle;
     // Being fetched or translated still: shown as on its way, not 关闭.
     final loading = controller.secondaryLoading;
-    final secondaryKey = secondary == null ? (loading == null ? 'off' : 'o:${loading.label}') : 'o:${secondary.label}';
-    _options = {for (final o in [...nearOptions, ...offered]) 'o:${o.label}': o};
-    bool listedAbove(SubtitleOption o) => identical(o, spoken) || nearOptions.any((n) => identical(n, o));
+    final secondaryKey = secondary == null
+        ? (loading == null ? 'off' : 'o:${loading.label}')
+        : 'o:${secondary.label}';
+    _options = {
+      for (final o in [...nearOptions, ...offered]) 'o:${o.label}': o
+    };
+    bool listedAbove(SubtitleOption o) =>
+        identical(o, spoken) || nearOptions.any((n) => identical(n, o));
 
     final searching = _query.isNotEmpty;
     final groups = <(String, List<_Choice>)>[
       if (others.isNotEmpty) (tr('Loaded'), others),
-      (tr('From the video'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !listedAbove(o))) _ofOption(o)]),
-      (tr('Auto-generated'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !listedAbove(o))) _ofOption(o)]),
-      (tr('Speech recognition'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !listedAbove(o))) _ofOption(o)]),
+      (
+        tr('From the video'),
+        [
+          for (final o in offered)
+            if (o.kind == SubtitleKind.uploaded && (searching || !listedAbove(o))) _ofOption(o)
+        ]
+      ),
+      (
+        tr('Auto-generated'),
+        [
+          for (final o in offered)
+            if (o.kind == SubtitleKind.automatic && (searching || !listedAbove(o))) _ofOption(o)
+        ]
+      ),
+      (
+        tr('Speech recognition'),
+        [
+          for (final o in offered)
+            if (o.kind == SubtitleKind.speech && (searching || !listedAbove(o))) _ofOption(o)
+        ]
+      ),
     ];
-    final translated = [for (final o in offered) if (o.kind == SubtitleKind.translated) _ofOption(o)];
+    final translated = [
+      for (final o in offered)
+        if (o.kind == SubtitleKind.translated) _ofOption(o)
+    ];
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
     Widget column({required bool primary}) {
-      final busy = primary ? _busyMain : _busySecondary ?? (loading == null ? null : 'o:${loading.label}');
+      final busy =
+          primary ? _busyMain : _busySecondary ?? (loading == null ? null : 'o:${loading.label}');
       // A row shows as chosen the moment it is tapped; loading follows.
       final selected = busy ?? (primary ? mainKey : secondaryKey);
       final mine = primary ? mainKey : secondaryKey;
@@ -171,21 +217,36 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         // The other side's subtitle: tapping it swaps the two.
         final swap = choice.key != 'off' && choice.key == other;
         return InkWell(
-          onTap: isSelected || _busyMain != null || _busySecondary != null ? null : () => swap ? _swap(choice, primary: primary, mine: mine) : _choose(choice, primary: primary),
+          onTap: isSelected || _busyMain != null || _busySecondary != null
+              ? null
+              : () => swap
+                  ? _swap(choice, primary: primary, mine: mine)
+                  : _choose(choice, primary: primary),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(children: [
-              if (icon != null) ...[Icon(icon, size: 16, color: swap ? colors.outline : colors.primary), const SizedBox(width: 8)],
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: swap ? colors.outline : colors.primary),
+                const SizedBox(width: 8)
+              ],
               Expanded(
                 child: Text(
                   choice.label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: swap ? colors.outline : isSelected ? colors.primary : colors.onSurface, fontWeight: isSelected ? FontWeight.w600 : null),
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: swap
+                          ? colors.outline
+                          : isSelected
+                              ? colors.primary
+                              : colors.onSurface,
+                      fontWeight: isSelected ? FontWeight.w600 : null),
                 ),
               ),
               if (busy == choice.key)
-                const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                const SizedBox(
+                    width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
               else if (isSelected)
                 Icon(AppIcons.check, size: 18, color: colors.primary),
             ]),
@@ -200,35 +261,54 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
 
       final visible = [
         // mpv's own tracks are not offered as the secondary subtitle.
-        for (final (title, rows) in primary ? groups : groups.where((g) => !identical(g.$2, others)))
-          if (rows.where((c) => _matches('${c.label} ${c.detail ?? ''}')).toList() case final shown when shown.isNotEmpty) (title, shown),
+        for (final (title, rows)
+            in primary ? groups : groups.where((g) => !identical(g.$2, others)))
+          if (rows.where((c) => _matches('${c.label} ${c.detail ?? ''}')).toList() case final shown
+              when shown.isNotEmpty)
+            (title, shown),
       ];
-      final shownTranslated = translated.where((c) => _matches('${c.label} ${c.detail ?? ''}')).toList();
+      final shownTranslated =
+          translated.where((c) => _matches('${c.label} ${c.detail ?? ''}')).toList();
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-          child: Text(primary ? tr('First subtitle') : tr('Second subtitle (above)'), style: theme.textTheme.titleSmall),
+          child: Text(primary ? tr('First subtitle') : tr('Second subtitle (above)'),
+              style: theme.textTheme.titleSmall),
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
-            row((key: 'off', label: tr('Close'), detail: null, option: null, track: null), icon: AppIcons.prohibitFill),
-            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('Original: {0}', [spoken.label]), detail: null, option: spoken, track: null), icon: AppIcons.userSound),
+            row((key: 'off', label: tr('Close'), detail: null, option: null, track: null),
+                icon: AppIcons.prohibitFill),
+            if (spoken != null && !searching)
+              row((
+                key: 'o:${spoken.label}',
+                label: tr('Original: {0}', [spoken.label]),
+                detail: null,
+                option: spoken,
+                track: null
+              ), icon: AppIcons.userSound),
             if (!searching)
               for (final r in near)
                 row(
                   (
                     key: 'o:${r.option.label}',
-                    label: r.option.kind == SubtitleKind.translated ? tr('{0}: {1} (YouTube translation)', [r.name, r.language.label]) : tr('{0}: {1}', [r.name, r.option.label]),
+                    label: r.option.kind == SubtitleKind.translated
+                        ? tr('{0}: {1} (YouTube translation)', [r.name, r.language.label])
+                        : tr('{0}: {1}', [r.name, r.option.label]),
                     detail: null,
                     option: r.option,
                     track: null,
                   ),
-                  icon: r.option.kind == SubtitleKind.translated ? AppIcons.translate : AppIcons.subtitles,
+                  icon: r.option.kind == SubtitleKind.translated
+                      ? AppIcons.translate
+                      : AppIcons.subtitles,
                 ),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
-              if (searching || _allLanguages) ...[heading(tr('YouTube auto-translate')), for (final c in shownTranslated) row(c)]
-              else
+              if (searching || _allLanguages) ...[
+                heading(tr('YouTube auto-translate')),
+                for (final c in shownTranslated) row(c)
+              ] else
                 TextButton.icon(
                   onPressed: () => setState(() => _allLanguages = true),
                   icon: Icon(AppIcons.caretDown, size: 18),
@@ -236,7 +316,11 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
                 ),
             ],
             if (searching && visible.isEmpty && shownTranslated.isEmpty)
-              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('No matching languages'), style: TextStyle(color: colors.outline)))),
+              Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                      child: Text(tr('No matching languages'),
+                          style: TextStyle(color: colors.outline)))),
           ]),
         ),
       ]);
@@ -247,7 +331,10 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: TextField(
-            decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search language, e.g. Chinese, ja')),
+            decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
+                hintText: tr('Search language, e.g. Chinese, ja')),
             onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
         ),
@@ -290,7 +377,9 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         await controller.setSecondarySubtitle(choice.option);
       }
       // A track mpv loaded itself has no option to remember by.
-      if (choice.key == 'off' || choice.option != null) await controller.rememberSubtitleChoice(primary: primary, option: choice.option);
+      if (choice.key == 'off' || choice.option != null) {
+        await controller.rememberSubtitleChoice(primary: primary, option: choice.option);
+      }
     } finally {
       if (mounted) setState(() => primary ? _busyMain = null : _busySecondary = null);
     }
@@ -323,7 +412,10 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
   }
 
   static String _trackLabel(SubtitleTrack t) {
-    final parts = [if (t.title != null && t.title!.isNotEmpty) t.title!, if (t.language != null && t.language!.isNotEmpty) t.language!];
+    final parts = [
+      if (t.title != null && t.title!.isNotEmpty) t.title!,
+      if (t.language != null && t.language!.isNotEmpty) t.language!
+    ];
     return parts.isEmpty ? tr('Track {0}', [t.id]) : parts.join(' · ');
   }
 }
@@ -334,6 +426,7 @@ class SpeechOffer extends StatefulWidget {
   const SpeechOffer({super.key, required this.controller, this.onDone, this.message});
   final AppController controller;
   final VoidCallback? onDone;
+
   /// What is said above the button; 这个视频没有字幕 when null.
   final String? message;
 
@@ -367,7 +460,8 @@ class _SpeechOfferState extends State<SpeechOffer> {
         builder: (context, job, _) {
           final mine = job != null && job.videoId == controller.playing?.id;
           return Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(widget.message ?? tr('This video has no subtitles'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
+            Text(widget.message ?? tr('This video has no subtitles'),
+                textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
             const SizedBox(height: 12),
             if (mine) ...[
               SizedBox(
@@ -375,7 +469,8 @@ class _SpeechOfferState extends State<SpeechOffer> {
                 child: LinearProgressIndicator(value: job.total == 0 ? null : job.done / job.total),
               ),
               const SizedBox(height: 8),
-              Text(job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage, style: TextStyle(color: colors.outline, fontSize: 12)),
+              Text(job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage,
+                  style: TextStyle(color: colors.outline, fontSize: 12)),
             ] else if (controller.canRecognizeSpeech)
               FilledButton.tonalIcon(
                 onPressed: job == null ? _run : null,
@@ -383,8 +478,10 @@ class _SpeechOfferState extends State<SpeechOffer> {
                 label: Text(tr('Make subtitles with speech recognition')),
               )
             else ...[
-              Text(tr("Speech recognition sends this video's audio to the service you set up under Translation & AI (such as Groq or OpenAI) and makes timed subtitles."),
-                  textAlign: TextAlign.center, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5)),
+              Text(
+                  tr("Speech recognition sends this video's audio to the service you set up under Translation & AI (such as Groq or OpenAI) and makes timed subtitles."),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5)),
               const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: () async {
@@ -415,63 +512,85 @@ class LearningSwitches extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = controller.settings;
     final theme = Theme.of(context);
-    Widget toggle(String title, String detail, bool value, ValueChanged<bool> onChanged) => SwitchListTile(
+    Widget toggle(String title, String detail, bool value, ValueChanged<bool> onChanged) =>
+        SwitchListTile(
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-          subtitle: Text(detail, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+          subtitle: Text(detail,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
           value: value,
           onChanged: onChanged,
         );
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        child: Text(tr('Language learning'), style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
-      ),
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-          child: toggle(tr('Pause after each line'), tr('Playback pauses as each subtitle line ends.'), settings.pauseEachLine,
-              (on) => unawaited(controller.saveSettings(controller.settings.copyWith(pauseEachLine: on)))),
-        ),
-        Expanded(
-          child: toggle(tr('Blur the translation'), tr('Hover over the second subtitle or tap it to see it.'), settings.blurSecondary,
-              (on) => unawaited(controller.setBlurSecondary(on))),
-        ),
-      ]),
-      if (controller.learningOn)
-      ListenableBuilder(
-        listenable: controller.learning,
-        builder: (context, _) {
-          final learning = controller.learning;
-          if (learning.anyDictionary) {
-            return Row(children: [
-              Expanded(
-                child: toggle(tr('Pinyin and kana'), tr('Above each Chinese or Japanese word. Tap any word to look it up.'), learning.showPinyin,
-                    (on) => unawaited(learning.setShowPinyin(on))),
-              ),
-              Expanded(
-                child: ListTile(
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Text(tr('Language learning'),
+                style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
+          ),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: toggle(
+                  tr('Pause after each line'),
+                  tr('Playback pauses as each subtitle line ends.'),
+                  settings.pauseEachLine,
+                  (on) => unawaited(
+                      controller.saveSettings(controller.settings.copyWith(pauseEachLine: on)))),
+            ),
+            Expanded(
+              child: toggle(
+                  tr('Blur the translation'),
+                  tr('Hover over the second subtitle or tap it to see it.'),
+                  settings.blurSecondary,
+                  (on) => unawaited(controller.setBlurSecondary(on))),
+            ),
+          ]),
+          if (controller.learningOn)
+            ListenableBuilder(
+              listenable: controller.learning,
+              builder: (context, _) {
+                final learning = controller.learning;
+                if (learning.anyDictionary) {
+                  return Row(children: [
+                    Expanded(
+                      child: toggle(
+                          tr('Pinyin and kana'),
+                          tr('Above each Chinese or Japanese word. Tap any word to look it up.'),
+                          learning.showPinyin,
+                          (on) => unawaited(learning.setShowPinyin(on))),
+                    ),
+                    Expanded(
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        leading: Icon(AppIcons.bookOpenText, size: 20),
+                        title: Text(tr('Vocabulary book')),
+                        subtitle: Text(tr('{0} words', [learning.book?.words.length ?? 0]),
+                            style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+                        onTap: () => unawaited(openVocabularyBook(context, controller)),
+                      ),
+                    ),
+                  ]);
+                }
+                return ListTile(
                   dense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   leading: Icon(AppIcons.bookOpenText, size: 20),
-                  title: Text(tr('Vocabulary book')),
-                  subtitle: Text(tr('{0} words', [learning.book?.words.length ?? 0]), style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
-                  onTap: () => unawaited(openVocabularyBook(context, controller)),
-                ),
-              ),
-            ]);
-          }
-          return ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            leading: Icon(AppIcons.bookOpenText, size: 20),
-            title: Text(tr('Download a dictionary')),
-            subtitle: Text(learning.licensed ? tr('Nine languages, a few MB each, then everything works offline.') : learningTrialOffer(),
-                style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
-            onTap: () => unawaited(openLearningPage(context, controller)),
-          );
-        },
-      ),
-    ]);
+                  title: Text(tr('Download a dictionary')),
+                  subtitle: Text(
+                      learning.licensed
+                          ? tr('Nine languages, a few MB each, then everything works offline.')
+                          : learningTrialOffer(),
+                      style: TextStyle(fontSize: 11, color: theme.colorScheme.outline)),
+                  onTap: () => unawaited(openLearningPage(context, controller)),
+                );
+              },
+            ),
+        ]);
   }
 }

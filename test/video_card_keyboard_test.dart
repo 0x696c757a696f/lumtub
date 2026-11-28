@@ -6,14 +6,17 @@ import 'package:lumtub/ui/video_card.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('a card reached with the keyboard shows focus and its actions, and opens', (tester) async {
+  testWidgets('a card reached with the keyboard shows focus and its actions, and opens',
+      (tester) async {
     var opened = 0;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 320,
           height: 300,
-          child: VideoCard(item: const VideoItem(id: 'abcdefghijk', title: '标题', channel: 'Channel', url: 'u'), onOpen: () => opened++),
+          child: VideoCard(
+              item: const VideoItem(id: 'abcdefghijk', title: '标题', channel: 'Channel', url: 'u'),
+              onOpen: () => opened++),
         ),
       ),
     ));
@@ -22,7 +25,12 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(find.byIcon(AppIcons.dotsThreeVertical), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DecoratedBox && w.decoration is BoxDecoration && (w.decoration as BoxDecoration).border != null), findsOneWidget);
+    expect(
+        find.byWidgetPredicate((w) =>
+            w is DecoratedBox &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).border != null),
+        findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     expect(opened, 1);

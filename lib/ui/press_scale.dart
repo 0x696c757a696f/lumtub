@@ -32,7 +32,11 @@ class _PressScaleState extends State<PressScale> {
   }
 
   void _move(PointerMoveEvent event) {
-    if (event.pointer == _pointer && (event.position - _down).distance > computeHitSlop(event.kind, MediaQuery.maybeGestureSettingsOf(context))) _let(event);
+    if (event.pointer == _pointer &&
+        (event.position - _down).distance >
+            computeHitSlop(event.kind, MediaQuery.maybeGestureSettingsOf(context))) {
+      _let(event);
+    }
   }
 
   void _let(PointerEvent event) {

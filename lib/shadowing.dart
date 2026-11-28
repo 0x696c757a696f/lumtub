@@ -49,7 +49,8 @@ class CoreMicrophone implements Microphone {
   @override
   Future<bool> allowed() async {
     if (!_asks) return true;
-    return await _shell.invokeMethod<bool>('microphone', {'on': true, 'mix': mixWithOthers}) ?? false;
+    return await _shell.invokeMethod<bool>('microphone', {'on': true, 'mix': mixWithOthers}) ??
+        false;
   }
 
   @override
@@ -77,7 +78,8 @@ class CoreMicrophone implements Microphone {
 
   Future<void> _done() async {
     if (!Platform.isIOS) return;
-    await _shell.invokeMethod<bool>('microphone', {'on': false, 'mix': mixWithOthers}).catchError((Object _) => false);
+    await _shell.invokeMethod<bool>(
+        'microphone', {'on': false, 'mix': mixWithOthers}).catchError((Object _) => false);
   }
 }
 
@@ -95,7 +97,11 @@ class ShadowTake {
   double originalSeconds = 0;
 
   /// What the core joins for this line (NativeCore.micJoin).
-  Map<String, Object> get part => {if (original != null) 'original': original!.path, 'seconds': originalSeconds, 'take': file.path};
+  Map<String, Object> get part => {
+        if (original != null) 'original': original!.path,
+        'seconds': originalSeconds,
+        'take': file.path
+      };
 }
 
 /// Records the person saying lines, into [folder], as WAV files that only
@@ -123,9 +129,11 @@ class Shadowing {
   ShadowTake? last;
 
   /// The takes in the order of their lines.
-  List<ShadowTake> get inOrder => takes.values.toList()..sort((a, b) => a.line.start.compareTo(b.line.start));
+  List<ShadowTake> get inOrder =>
+      takes.values.toList()..sort((a, b) => a.line.start.compareTo(b.line.start));
 
-  File fileFor(SubtitleCue line, String kind, String extension) => File('${folder.path}${Platform.pathSeparator}$kind-${line.start.inMilliseconds}.$extension');
+  File fileFor(SubtitleCue line, String kind, String extension) =>
+      File('${folder.path}${Platform.pathSeparator}$kind-${line.start.inMilliseconds}.$extension');
 
   /// Starts recording; [onTooLong] is told when [longest] stops it.
   Future<void> start({void Function()? onTooLong}) async {

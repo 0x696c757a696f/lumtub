@@ -26,11 +26,15 @@ class HomeFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = controller.preferences;
-    if (prefs.focusHideHome) return _FocusHome(controller: controller, onFocusSearch: onFocusSearch);
+    if (prefs.focusHideHome) {
+      return _FocusHome(controller: controller, onFocusSearch: onFocusSearch);
+    }
     final feed = prefs.homeShowRecommended ? controller.homeFeed : null;
     final showFeed = feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null);
     // With the feed below, the history only needs a short row.
-    final recent = prefs.homeShowRecent ? controller.history.take(showFeed ? 6 : 12).toList() : const <VideoItem>[];
+    final recent = prefs.homeShowRecent
+        ? controller.history.take(showFeed ? 6 : 12).toList()
+        : const <VideoItem>[];
     final library = controller.library;
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
@@ -42,27 +46,50 @@ class HomeFeedPage extends StatelessWidget {
       onNearEnd: controller.loadMoreHomeFeed,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         // The search box is at the top already; the prompt greets a first start.
-        if (recent.isEmpty && unfinished.isEmpty && !showFeed) SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
+        if (recent.isEmpty && unfinished.isEmpty && !showFeed)
+          SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
         if (unfinished.isNotEmpty) ...[
-          SliverToBoxAdapter(child: PageHeader(tr('Continue watching'), subtitle: tr('Pick up where you left off'))),
-          SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished), watched: watched),
+          SliverToBoxAdapter(
+              child:
+                  PageHeader(tr('Continue watching'), subtitle: tr('Pick up where you left off'))),
+          SliverVideoGrid(
+              items: unfinished,
+              thumbnails: controller.thumbnailDirectory,
+              onOpen: (item) => controller.play(item, from: unfinished),
+              watched: watched),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (recent.isNotEmpty) ...[
-          SliverToBoxAdapter(child: PageHeader(
+          SliverToBoxAdapter(
+              child: PageHeader(
             tr('Recently watched'),
             subtitle: tr('From your watch history on this device'),
-            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: Text(tr('View all'))),
+            trailing: TextButton(
+                onPressed: () => controller.navigate(PageMode.history),
+                child: Text(tr('View all'))),
           )),
-          SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent), watched: watched),
+          SliverVideoGrid(
+              items: recent,
+              thumbnails: controller.thumbnailDirectory,
+              onOpen: (item) => controller.play(item, from: recent),
+              watched: watched),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (showFeed) ...[
-          SliverToBoxAdapter(child: PageHeader(
+          SliverToBoxAdapter(
+              child: PageHeader(
             tr('For you'),
-            subtitle: feed.loading && feed.items.isEmpty ? tr('Picking from your watch history…') : touchFirst ? null : tr('Picked on this device from what you watch; right-click a video for "Not interested"'),
+            subtitle: feed.loading && feed.items.isEmpty
+                ? tr('Picking from your watch history…')
+                : touchFirst
+                    ? null
+                    : tr(
+                        'Picked on this device from what you watch; right-click a video for "Not interested"'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: Icon(AppIcons.shuffle, size: 18), label: Text(tr('Shuffle'))),
+              TextButton.icon(
+                  onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed,
+                  icon: Icon(AppIcons.shuffle, size: 18),
+                  label: Text(tr('Shuffle'))),
               IconButton(
                 tooltip: tr('Pick again'),
                 onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
@@ -75,30 +102,38 @@ class HomeFeedPage extends StatelessWidget {
           for (final (i, part) in _seenSplit(feed.items, feed.seenFrom).indexed) ...[
             if (i == 1) const SliverToBoxAdapter(child: _SeenHere(onTap: PullToRefresh.refresh)),
             if (part.isNotEmpty)
-              SliverReveal(key: ValueKey('feed $i'), sliver: SliverVideoGrid(
-                items: part,
-                thumbnails: controller.thumbnailDirectory,
-                onOpen: (item) => controller.play(item, from: feed.items),
-                onRemove: controller.dismissRecommendation,
-                removeLabel: tr('Not interested'),
-                reasons: feed.reasons,
-              )),
+              SliverReveal(
+                  key: ValueKey('feed $i'),
+                  sliver: SliverVideoGrid(
+                    items: part,
+                    thumbnails: controller.thumbnailDirectory,
+                    onOpen: (item) => controller.play(item, from: feed.items),
+                    onRemove: controller.dismissRecommendation,
+                    removeLabel: tr('Not interested'),
+                    reasons: feed.reasons,
+                  )),
           ],
           if (feed.loading || feed.loadingMore) ...[
-            if (feed.items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+            if (feed.items.isNotEmpty)
+              const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
             SliverSkeletonGrid(rows: feed.items.isEmpty ? 2 : 1),
           ] else if (feed.error case final error? when feed.items.isEmpty)
-            SliverToBoxAdapter(child: Padding(
+            SliverToBoxAdapter(
+                child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-              child: ErrorBanner(tr("Couldn't load recommendations: {0}", [error]), onRetry: () => controller.refreshHomeFeed(force: true)),
+              child: ErrorBanner(tr("Couldn't load recommendations: {0}", [error]),
+                  onRetry: () => controller.refreshHomeFeed(force: true)),
             )),
         ],
         if (recent.isEmpty && !showFeed)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(
-            icon: AppIcons.playCircle,
-            title: tr('No watch history yet'),
-            message: tr("Search or paste a YouTube link to start watching. Videos you've watched will appear here."),
-          )),
+          SliverFillRemaining(
+              hasScrollBody: false,
+              child: StatusView(
+                icon: AppIcons.playCircle,
+                title: tr('No watch history yet'),
+                message: tr(
+                    "Search or paste a YouTube link to start watching. Videos you've watched will appear here."),
+              )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
@@ -110,9 +145,18 @@ class HomeFeedPage extends StatelessWidget {
 /// (positions are saved without a notify): with few of them unfinished the
 /// search runs through all of the history.
 List<VideoItem> _unfinished(List<VideoItem> history, LibraryController library, int count) {
-  final key = (history.length, history.firstOrNull?.id, history.lastOrNull?.id, library, library.revision, count, DateTime.now().millisecondsSinceEpoch ~/ 10000);
+  final key = (
+    history.length,
+    history.firstOrNull?.id,
+    history.lastOrNull?.id,
+    library,
+    library.revision,
+    count,
+    DateTime.now().millisecondsSinceEpoch ~/ 10000
+  );
   if (_unfinishedMemo case (final known, final kept) when known == key) return kept;
-  final kept = history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(count).toList();
+  final kept =
+      history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(count).toList();
   _unfinishedMemo = (key, kept);
   return kept;
 }
@@ -135,10 +179,12 @@ class _SeenHere extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, AppStyle.cardSpacing),
+      padding: const EdgeInsets.fromLTRB(
+          AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, AppStyle.cardSpacing),
       child: Material(
         color: colors.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
+        shape: RoundedRectangleBorder(
+            borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
         child: InkWell(
           borderRadius: AppStyle.cardRadius,
           onTap: onTap,
@@ -147,7 +193,9 @@ class _SeenHere extends StatelessWidget {
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(AppIcons.arrowsClockwise, size: 16, color: colors.primary),
               const SizedBox(width: 8),
-              Flexible(child: Text(tr('You were here last time · Tap to refresh'), style: TextStyle(color: colors.primary, fontSize: 13))),
+              Flexible(
+                  child: Text(tr('You were here last time · Tap to refresh'),
+                      style: TextStyle(color: colors.primary, fontSize: 13))),
             ]),
           ),
         ),
@@ -176,14 +224,27 @@ class _FocusHome extends StatelessWidget {
             const SizedBox(height: 16),
             Text(tr('Focus mode'), style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(tr('No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
+            Text(
+                tr('No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.'),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.outline, height: 1.5)),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onFocusSearch, icon: Icon(AppIcons.magnifyingGlass), label: Text(touchFirst ? tr('Search') : keyNames(tr('Search (Ctrl+K)')))),
+            FilledButton.icon(
+                onPressed: onFocusSearch,
+                icon: Icon(AppIcons.magnifyingGlass),
+                label: Text(touchFirst ? tr('Search') : keyNames(tr('Search (Ctrl+K)')))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
-              TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('Subscriptions'))),
-              TextButton(onPressed: () => controller.navigate(PageMode.playlists), child: Text(tr('Watch later and playlists'))),
-              TextButton(onPressed: () => controller.savePreferences(controller.preferences.copyWith(focusHideHome: false)), child: Text(tr('Show the home page'))),
+              TextButton(
+                  onPressed: () => controller.navigate(PageMode.subscriptions),
+                  child: Text(tr('Subscriptions'))),
+              TextButton(
+                  onPressed: () => controller.navigate(PageMode.playlists),
+                  child: Text(tr('Watch later and playlists'))),
+              TextButton(
+                  onPressed: () => controller
+                      .savePreferences(controller.preferences.copyWith(focusHideHome: false)),
+                  child: Text(tr('Show the home page'))),
             ]),
           ]),
         ),
@@ -203,17 +264,26 @@ class _Welcome extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 8),
       child: Material(
         color: colors.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
+        shape: RoundedRectangleBorder(
+            borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
         child: InkWell(
           borderRadius: const BorderRadius.all(Radius.circular(8)),
           onTap: onFocusSearch,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
             child: Row(children: [
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tr('What do you want to watch?'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onSurface)),
+              Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr('What do you want to watch?'),
+                    style: context.text.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w700, color: colors.onSurface)),
                 const SizedBox(height: 4),
-                Text(touchFirst ? tr('Search YouTube, or paste a video link') : keyNames(tr('Search YouTube, or paste a video link to play it. Press Ctrl+K to search anytime.')), style: TextStyle(color: colors.onSurfaceVariant)),
+                Text(
+                    touchFirst
+                        ? tr('Search YouTube, or paste a video link')
+                        : keyNames(tr(
+                            'Search YouTube, or paste a video link to play it. Press Ctrl+K to search anytime.')),
+                    style: TextStyle(color: colors.onSurfaceVariant)),
               ])),
               const SizedBox(width: 16),
               Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onSurfaceVariant),
@@ -240,7 +310,10 @@ class SearchResultsPage extends StatelessWidget {
         icon: AppIcons.compass,
         title: tr('Search YouTube'),
         message: tr('Enter keywords, or paste a youtube.com / youtu.be link.'),
-        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: Icon(AppIcons.magnifyingGlass), label: Text(tr('Start searching'))),
+        action: FilledButton.tonalIcon(
+            onPressed: onFocusSearch,
+            icon: Icon(AppIcons.magnifyingGlass),
+            label: Text(tr('Start searching'))),
       );
     }
     final results = controller.visible(controller.results, search: true);
@@ -256,10 +329,17 @@ class SearchResultsPage extends StatelessWidget {
         error: true,
         title: tr('Search failed'),
         message: error,
-        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
+        action: FilledButton.tonalIcon(
+            onPressed: controller.retrySearch,
+            icon: Icon(AppIcons.arrowsClockwise),
+            label: Text(tr('Retry'))),
       );
     } else if (empty && !controller.searching) {
-      status = StatusView(icon: AppIcons.magnifyingGlassMinus, title: filter == SearchFilter.all ? tr('Nothing found') : tr('No {0} found', [filter.label]), message: tr('Try other keywords.'));
+      status = StatusView(
+          icon: AppIcons.magnifyingGlassMinus,
+          title:
+              filter == SearchFilter.all ? tr('Nothing found') : tr('No {0} found', [filter.label]),
+          message: tr('Try other keywords.'));
     }
     final count = [
       if (results.isNotEmpty) tr('{0} videos', [results.length]),
@@ -270,19 +350,27 @@ class SearchResultsPage extends StatelessWidget {
       // Fetch the next page shortly before the end of the results is reached.
       onNearEnd: controller.loadMoreResults,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
-        SliverToBoxAdapter(child: PageHeader(
+        SliverToBoxAdapter(
+            child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? tr('Searching…') : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
+          trailing: IconButton(
+              tooltip: keyNames(tr('Back (Alt+←)')),
+              onPressed: controller.goBack,
+              icon: Icon(AppIcons.arrowLeft)),
         )),
-        SliverToBoxAdapter(child: Padding(
+        SliverToBoxAdapter(
+            child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: FilterFlow(children: [
             for (final value in SearchFilter.values)
-              ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) {
-                if (filter != value) Haptics.select();
-                controller.setSearchFilter(value);
-              }),
+              ChoiceChip(
+                  label: Text(value.label),
+                  selected: filter == value,
+                  onSelected: (_) {
+                    if (filter != value) Haptics.select();
+                    controller.setSearchFilter(value);
+                  }),
             const SizedBox(width: 8),
             OptionChip(
               icon: AppIcons.sortDescending,
@@ -317,27 +405,43 @@ class SearchResultsPage extends StatelessWidget {
           SliverFillRemaining(hasScrollBody: false, child: status)
         else ...[
           if (channels.isNotEmpty)
-            SliverReveal(key: const ValueKey('channels'), sliver: SliverPadding(
-              padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
-              sliver: SliverList.separated(
-                itemCount: channels.length,
-                separatorBuilder: (context, i) => const SizedBox(height: 8),
-                itemBuilder: (context, i) => ChannelResultTile(controller: controller, result: channels[i]),
-              ),
-            )),
+            SliverReveal(
+                key: const ValueKey('channels'),
+                sliver: SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+                  sliver: SliverList.separated(
+                    itemCount: channels.length,
+                    separatorBuilder: (context, i) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) =>
+                        ChannelResultTile(controller: controller, result: channels[i]),
+                  ),
+                )),
           if (playlists.isNotEmpty) ...[
-            SliverReveal(key: const ValueKey('playlists'), sliver: SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist)),
+            SliverReveal(
+                key: const ValueKey('playlists'),
+                sliver:
+                    SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist)),
             const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           ],
-          if (results.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results))),
+          if (results.isNotEmpty)
+            SliverReveal(
+                key: const ValueKey('videos'),
+                sliver: SliverVideoGrid(
+                    items: results,
+                    thumbnails: controller.thumbnailDirectory,
+                    onOpen: (item) => controller.play(item, from: results))),
           if (controller.searching) ...[
             if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
             SliverSkeletonGrid(rows: empty ? 3 : 1),
           ],
           if (error != null && !empty)
-            SliverToBoxAdapter(child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-              child: ErrorBanner(tr("Couldn't load more: {0}", [error]), onRetry: () => controller.loadMoreResults(retry: true)),
+            SliverToBoxAdapter(
+                child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+              child: ErrorBanner(tr("Couldn't load more: {0}", [error]),
+                  onRetry: () => controller.loadMoreResults(retry: true)),
             )),
         ],
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),

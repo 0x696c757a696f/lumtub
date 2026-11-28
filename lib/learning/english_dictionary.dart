@@ -19,7 +19,8 @@ class EnglishDictionary {
   int get size => _source.size;
 
   /// The word list in memory, for tests and packs not moved to SQLite.
-  static EnglishDictionary parse(String text) => EnglishDictionary(MemoryLines(const LineSplitter().convert(text), formsOf: formsOf));
+  static EnglishDictionary parse(String text) =>
+      EnglishDictionary(MemoryLines(const LineSplitter().convert(text), formsOf: formsOf));
 
   /// The forms a line names: ECDICT's forms field without the lemma
   /// (`0:`) and lemma kind (`1:`) parts.
@@ -28,7 +29,8 @@ class EnglishDictionary {
     if (columns.length < 4) return const [];
     return [
       for (final part in columns[3].split('/'))
-        if (part.length > 2 && part[1] == ':' && part[0] != '0' && part[0] != '1') part.substring(2),
+        if (part.length > 2 && part[1] == ':' && part[0] != '0' && part[0] != '1')
+          part.substring(2),
     ];
   }
 
@@ -71,7 +73,8 @@ class EnglishDictionary {
     // listed ones (skincare) is as hard as its full form or harder part,
     // not as rare as the corpus counts make it.
     if (!capital && best != null && lookup(word).every((e) => e.tags.isEmpty && e.cefr.isEmpty)) {
-      final easier = _listedLevel(_clippings[word.toLowerCase()]) ?? _compoundLevel(word.toLowerCase());
+      final easier =
+          _listedLevel(_clippings[word.toLowerCase()]) ?? _compoundLevel(word.toLowerCase());
       if (easier != null && easier < best) best = easier;
     }
     if (_levels.length > 20000) _levels.clear();
@@ -106,14 +109,55 @@ class EnglishDictionary {
 
   /// Common short forms and the words they stand for.
   static const _clippings = {
-    'vocab': 'vocabulary', 'info': 'information', 'app': 'application', 'apps': 'application', 'ad': 'advertisement', 'ads': 'advertisement',
-    'photo': 'photograph', 'photos': 'photograph', 'exam': 'examination', 'exams': 'examination', 'lab': 'laboratory', 'labs': 'laboratory',
-    'gym': 'gymnasium', 'math': 'mathematics', 'maths': 'mathematics', 'phone': 'telephone', 'fridge': 'refrigerator', 'bike': 'bicycle',
-    'flu': 'influenza', 'memo': 'memorandum', 'demo': 'demonstration', 'intro': 'introduction', 'promo': 'promotion', 'specs': 'specification',
-    'stats': 'statistics', 'pic': 'picture', 'pics': 'picture', 'vet': 'veterinary', 'uni': 'university', 'admin': 'administration',
-    'convo': 'conversation', 'congrats': 'congratulation', 'fave': 'favourite', 'fav': 'favourite', 'prof': 'professor', 'bro': 'brother',
-    'sis': 'sister', 'mic': 'microphone', 'doc': 'doctor', 'docs': 'document', 'rep': 'representative', 'reps': 'repetition', 'ref': 'referee',
-    'temp': 'temperature', 'max': 'maximum', 'min': 'minimum', 'approx': 'approximately', 'etc': 'etcetera', 'tech': 'technology',
+    'vocab': 'vocabulary',
+    'info': 'information',
+    'app': 'application',
+    'apps': 'application',
+    'ad': 'advertisement',
+    'ads': 'advertisement',
+    'photo': 'photograph',
+    'photos': 'photograph',
+    'exam': 'examination',
+    'exams': 'examination',
+    'lab': 'laboratory',
+    'labs': 'laboratory',
+    'gym': 'gymnasium',
+    'math': 'mathematics',
+    'maths': 'mathematics',
+    'phone': 'telephone',
+    'fridge': 'refrigerator',
+    'bike': 'bicycle',
+    'flu': 'influenza',
+    'memo': 'memorandum',
+    'demo': 'demonstration',
+    'intro': 'introduction',
+    'promo': 'promotion',
+    'specs': 'specification',
+    'stats': 'statistics',
+    'pic': 'picture',
+    'pics': 'picture',
+    'vet': 'veterinary',
+    'uni': 'university',
+    'admin': 'administration',
+    'convo': 'conversation',
+    'congrats': 'congratulation',
+    'fave': 'favourite',
+    'fav': 'favourite',
+    'prof': 'professor',
+    'bro': 'brother',
+    'sis': 'sister',
+    'mic': 'microphone',
+    'doc': 'doctor',
+    'docs': 'document',
+    'rep': 'representative',
+    'reps': 'repetition',
+    'ref': 'referee',
+    'temp': 'temperature',
+    'max': 'maximum',
+    'min': 'minimum',
+    'approx': 'approximately',
+    'etc': 'etcetera',
+    'tech': 'technology',
   };
 
   static final _word = RegExp(r"[A-Za-z]+(?:['’][A-Za-z]+)*");
@@ -139,7 +183,9 @@ class EnglishDictionary {
     for (final r in text.runes) {
       if ((r >= 0x41 && r <= 0x5a) || (r >= 0x61 && r <= 0x7a)) {
         latin++;
-      } else if (r >= 0x2e80 && r <= 0x9fff || r >= 0xac00 && r <= 0xd7af || r >= 0x0400 && r <= 0x06ff) {
+      } else if (r >= 0x2e80 && r <= 0x9fff ||
+          r >= 0xac00 && r <= 0xd7af ||
+          r >= 0x0400 && r <= 0x06ff) {
         other++;
       }
     }
@@ -178,10 +224,21 @@ enum EnglishLevel {
 }
 
 class EnglishEntry {
-  const EnglishEntry({required this.word, required this.phonetic, required this.meanings, required this.forms, this.tags = const [], this.collins = 0, this.rank = 0, this.english = const [], this.cefr = '', this.chineseReference = false});
+  const EnglishEntry(
+      {required this.word,
+      required this.phonetic,
+      required this.meanings,
+      required this.forms,
+      this.tags = const [],
+      this.collins = 0,
+      this.rank = 0,
+      this.english = const [],
+      this.cefr = '',
+      this.chineseReference = false});
 
   final String word;
   final String phonetic;
+
   /// Chinese meanings.
   final List<String> meanings;
 
@@ -239,7 +296,8 @@ class EnglishEntry {
       phonetic: at(1),
       meanings: at(2).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
       forms: at(3),
-      tags: at(4).split(' ').map(EnglishLevel.ofTag).whereType<EnglishLevel>().toSet().toList()..sort((a, b) => a.index - b.index),
+      tags: at(4).split(' ').map(EnglishLevel.ofTag).whereType<EnglishLevel>().toSet().toList()
+        ..sort((a, b) => a.index - b.index),
       collins: int.tryParse(at(5)) ?? 0,
       rank: int.tryParse(at(6)) ?? 0,
       english: at(7).split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
@@ -250,10 +308,19 @@ class EnglishEntry {
 
   /// The forms worth showing, such as `过去式 ran · 现在分词 running`.
   List<(String, String)> get namedForms {
-    const names = {'p': 'Past', 'd': 'Past participle', 'i': 'Present participle', '3': 'Third person', 'r': 'Comparative', 't': 'Superlative', 's': 'Plural'};
+    const names = {
+      'p': 'Past',
+      'd': 'Past participle',
+      'i': 'Present participle',
+      '3': 'Third person',
+      'r': 'Comparative',
+      't': 'Superlative',
+      's': 'Plural'
+    };
     return [
       for (final part in forms.split('/'))
-        if (part.length > 2 && part[1] == ':' && names.containsKey(part[0])) (names[part[0]]!, part.substring(2)),
+        if (part.length > 2 && part[1] == ':' && names.containsKey(part[0]))
+          (names[part[0]]!, part.substring(2)),
     ];
   }
 }

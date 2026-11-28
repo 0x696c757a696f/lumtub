@@ -14,16 +14,19 @@ import 'theme.dart';
 
 /// Lists the TVs and Chromecasts on the network and casts the playing video
 /// to the one picked.
-Future<void> showCastDialog(BuildContext context, AppController controller) =>
-    showPanel<void>(context, (_) => _CastDialog(controller: controller, messenger: ScaffoldMessenger.of(context)));
+Future<void> showCastDialog(BuildContext context, AppController controller) => showPanel<void>(
+    context, (_) => _CastDialog(controller: controller, messenger: ScaffoldMessenger.of(context)));
 
 /// Pauses the local player, hands the video to [device] at the current
 /// position and tells what went wrong in a short message. An AirPlay
 /// receiver that wants its PIN is paired first, in a dialog on [navigator].
-Future<void> castTo(AppController controller, CastDevice device, ScaffoldMessengerState messenger, {NavigatorState? navigator}) async {
+Future<void> castTo(AppController controller, CastDevice device, ScaffoldMessengerState messenger,
+    {NavigatorState? navigator}) async {
   final player = controller.player;
   if (player == null) return;
-  if (device is AirPlayDevice && device.needsPin && await controller.airPlayPairings.of(device.id) == null) {
+  if (device is AirPlayDevice &&
+      device.needsPin &&
+      await controller.airPlayPairings.of(device.id) == null) {
     if (navigator == null || !await _pairAirPlay(device, navigator, messenger)) return;
   }
   messenger.showSnackBar(SnackBar(content: Text(tr('Casting to {0}…', [device.name]))));
@@ -35,7 +38,9 @@ Future<void> castTo(AppController controller, CastDevice device, ScaffoldMesseng
       await controller.cast.start(device, media, videoId: controller.playing?.id);
     } on AirPlayPinNeeded {
       messenger.hideCurrentSnackBar();
-      if (device is! AirPlayDevice || navigator == null || !await _pairAirPlay(device, navigator, messenger)) {
+      if (device is! AirPlayDevice ||
+          navigator == null ||
+          !await _pairAirPlay(device, navigator, messenger)) {
         if (wasPlaying) unawaited(player.play());
         return;
       }
@@ -52,7 +57,8 @@ Future<void> castTo(AppController controller, CastDevice device, ScaffoldMesseng
 
 /// Has [device] show a PIN and pairs with the one typed in; false when the
 /// user gave up or the device would not pair.
-Future<bool> _pairAirPlay(AirPlayDevice device, NavigatorState navigator, ScaffoldMessengerState messenger) async {
+Future<bool> _pairAirPlay(
+    AirPlayDevice device, NavigatorState navigator, ScaffoldMessengerState messenger) async {
   void fail(CastException e) => messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(tr('Pairing failed: {0}', [e.message]))));
@@ -65,7 +71,8 @@ Future<bool> _pairAirPlay(AirPlayDevice device, NavigatorState navigator, Scaffo
   }
   while (true) {
     if (!navigator.mounted) return false;
-    final pin = await showDialog<String>(context: navigator.context, builder: (_) => _PinDialog(name: device.name));
+    final pin = await showDialog<String>(
+        context: navigator.context, builder: (_) => _PinDialog(name: device.name));
     if (pin == null) return false;
     try {
       await device.finishPairing(pairing, pin);
@@ -109,19 +116,23 @@ class _PinDialogState extends State<_PinDialog> {
         title: Text(tr('Pair with {0}', [widget.name])),
         content: SizedBox(
           width: 320,
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('Enter the PIN shown on the TV.'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _pin,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              maxLength: 8,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8),
-              decoration: const InputDecoration(counterText: ''),
-              onSubmitted: (_) => _done(),
-            ),
-          ]),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tr('Enter the PIN shown on the TV.'),
+                    style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _pin,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 8,
+                  style: const TextStyle(fontSize: 24, letterSpacing: 8),
+                  decoration: const InputDecoration(counterText: ''),
+                  onSubmitted: (_) => _done(),
+                ),
+              ]),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Cancel'))),
@@ -208,77 +219,105 @@ class _CastDialogState extends State<_CastDialog> {
         width: 380,
         child: ListenableBuilder(
           listenable: cast,
-          builder: (context, _) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (cast.device case final current?)
-              ListTile(
-                leading: Icon(AppIcons.airplay),
-                title: Text(tr('Casting to {0}', [current.name])),
-                trailing: TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    unawaited(stopCasting(widget.controller));
-                  },
-                  child: Text(tr('Stop casting')),
-                ),
-              ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(tr('Cast quality')),
-              subtitle: Text(switch (widget.controller.preferences.castMaxHeight) {
-                > 1080 => tr('Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast'),
-                < 1080 => tr('720p H.264, for a slow network or an older TV'),
-                _ => tr('1080p H.264, which nearly every TV plays'),
-              }),
-              trailing: DropdownButton<int>(
-                value: widget.controller.preferences.castMaxHeight,
-                underline: const SizedBox.shrink(),
-                items: [
-                  const DropdownMenuItem(value: 720, child: Text('720p')),
-                  DropdownMenuItem(value: 1080, child: Text(tr('Auto (1080p)'))),
-                  const DropdownMenuItem(value: 1440, child: Text('2K (1440p)')),
-                  const DropdownMenuItem(value: 2160, child: Text('4K (2160p)')),
-                  const DropdownMenuItem(value: 4320, child: Text('8K (4320p)')),
-                ],
-                onChanged: (height) async {
-                  if (height == null) return;
-                  await widget.controller.savePreferences(widget.controller.preferences.copyWith(castMaxHeight: height));
-                  if (mounted) setState(() {});
-                },
-              ),
-            ),
-            if (_searching) ...[
-              const LinearProgressIndicator(),
-              Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(tr('Searching for devices…'), style: TextStyle(color: context.colors.onSurfaceVariant))),
-            ] else if (_devices.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(Platform.isWindows ? tr('No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is turned on, and this app is allowed through the Windows firewall.') : tr('No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is on on the TV, and Lumtub may use the local network.'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
-              ),
-            Flexible(
-              child: ListView(shrinkWrap: true, children: [
-                for (final device in _devices)
+          builder: (context, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (cast.device case final current?)
                   ListTile(
-                    leading: Icon(switch (device.protocol) {
-                      CastProtocol.chromecast => AppIcons.screencast,
-                      CastProtocol.airplay => AppIcons.airplay,
-                      CastProtocol.dlna => AppIcons.television,
-                    }),
-                    title: Text(device.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text([const {CastProtocol.chromecast: 'Chromecast', CastProtocol.airplay: 'AirPlay', CastProtocol.dlna: 'DLNA'}[device.protocol]!, if (_formatName(widget.controller.preferences.castFormats[device.id]) case final format?) format].join(' · ')),
-                    onTap: () => _pick(device),
-                    trailing: PopupMenuButton<String>(
-                      tooltip: tr('Cast format'),
-                      icon: Icon(AppIcons.dotsThreeVertical),
-                      onSelected: (format) => _setFormat(device, format),
-                      itemBuilder: (context) => [
-                        for (final format in const ['', 'ts', 'hls', 'mp4', 'mkv'])
-                          CheckedPopupMenuItem(value: format, checked: (widget.controller.preferences.castFormats[device.id] ?? '') == format, child: Text(_formatName(format) ?? tr('Auto'))),
-                      ],
+                    leading: Icon(AppIcons.airplay),
+                    title: Text(tr('Casting to {0}', [current.name])),
+                    trailing: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        unawaited(stopCasting(widget.controller));
+                      },
+                      child: Text(tr('Stop casting')),
                     ),
                   ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(tr('Cast quality')),
+                  subtitle: Text(switch (widget.controller.preferences.castMaxHeight) {
+                    > 1080 => tr(
+                        'Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast'),
+                    < 1080 => tr('720p H.264, for a slow network or an older TV'),
+                    _ => tr('1080p H.264, which nearly every TV plays'),
+                  }),
+                  trailing: DropdownButton<int>(
+                    value: widget.controller.preferences.castMaxHeight,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      const DropdownMenuItem(value: 720, child: Text('720p')),
+                      DropdownMenuItem(value: 1080, child: Text(tr('Auto (1080p)'))),
+                      const DropdownMenuItem(value: 1440, child: Text('2K (1440p)')),
+                      const DropdownMenuItem(value: 2160, child: Text('4K (2160p)')),
+                      const DropdownMenuItem(value: 4320, child: Text('8K (4320p)')),
+                    ],
+                    onChanged: (height) async {
+                      if (height == null) return;
+                      await widget.controller.savePreferences(
+                          widget.controller.preferences.copyWith(castMaxHeight: height));
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+                if (_searching) ...[
+                  const LinearProgressIndicator(),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(tr('Searching for devices…'),
+                          style: TextStyle(color: context.colors.onSurfaceVariant))),
+                ] else if (_devices.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                        Platform.isWindows
+                            ? tr(
+                                'No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is turned on, and this app is allowed through the Windows firewall.')
+                            : tr(
+                                'No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is on on the TV, and Lumtub may use the local network.'),
+                        style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
+                  ),
+                Flexible(
+                  child: ListView(shrinkWrap: true, children: [
+                    for (final device in _devices)
+                      ListTile(
+                        leading: Icon(switch (device.protocol) {
+                          CastProtocol.chromecast => AppIcons.screencast,
+                          CastProtocol.airplay => AppIcons.airplay,
+                          CastProtocol.dlna => AppIcons.television,
+                        }),
+                        title: Text(device.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text([
+                          const {
+                            CastProtocol.chromecast: 'Chromecast',
+                            CastProtocol.airplay: 'AirPlay',
+                            CastProtocol.dlna: 'DLNA'
+                          }[device.protocol]!,
+                          if (_formatName(widget.controller.preferences.castFormats[device.id])
+                              case final format?)
+                            format
+                        ].join(' · ')),
+                        onTap: () => _pick(device),
+                        trailing: PopupMenuButton<String>(
+                          tooltip: tr('Cast format'),
+                          icon: Icon(AppIcons.dotsThreeVertical),
+                          onSelected: (format) => _setFormat(device, format),
+                          itemBuilder: (context) => [
+                            for (final format in const ['', 'ts', 'hls', 'mp4', 'mkv'])
+                              CheckedPopupMenuItem(
+                                  value: format,
+                                  checked: (widget.controller.preferences.castFormats[device.id] ??
+                                          '') ==
+                                      format,
+                                  child: Text(_formatName(format) ?? tr('Auto'))),
+                          ],
+                        ),
+                      ),
+                  ]),
+                ),
               ]),
-            ),
-          ]),
         ),
       ),
       actions: [
@@ -314,7 +353,8 @@ class _CastBarState extends State<CastBar> {
         final status = cast.status;
         final duration = status?.duration ?? Duration.zero;
         final max = duration.inMilliseconds / 1000;
-        final seconds = (_drag ?? (status?.position.inMilliseconds ?? 0) / 1000).clamp(0.0, max > 0 ? max : 1.0);
+        final seconds = (_drag ?? (status?.position.inMilliseconds ?? 0) / 1000)
+            .clamp(0.0, max > 0 ? max : 1.0);
         final playing = status?.state == CastState.playing;
         final colors = context.colors;
         return Padding(
@@ -329,17 +369,25 @@ class _CastBarState extends State<CastBar> {
                   Icon(AppIcons.airplay, size: 20, color: colors.onSecondaryContainer),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(tr('Casting to {0}', [device.name]), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall?.copyWith(color: colors.onSecondaryContainer)),
+                    child: Text(tr('Casting to {0}', [device.name]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            context.text.titleSmall?.copyWith(color: colors.onSecondaryContainer)),
                   ),
                   IconButton(
                     tooltip: playing ? tr('Pause') : tr('Play'),
                     icon: Icon(playing ? AppIcons.pauseFill : AppIcons.playFill),
                     onPressed: () => unawaited(cast.togglePlay()),
                   ),
-                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: Icon(AppIcons.screencast, size: 18), label: Text(tr('Stop casting'))),
+                  TextButton.icon(
+                      onPressed: () => unawaited(stopCasting(widget.controller)),
+                      icon: Icon(AppIcons.screencast, size: 18),
+                      label: Text(tr('Stop casting'))),
                 ]),
                 Row(children: [
-                  Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())), style: context.text.labelMedium),
+                  Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())),
+                      style: context.text.labelMedium),
                   Expanded(
                     child: Slider(
                       value: seconds,
@@ -353,7 +401,9 @@ class _CastBarState extends State<CastBar> {
                   ),
                   Text(formatPlaybackTime(duration), style: context.text.labelMedium),
                 ]),
-                if (cast.error case final error?) Text(tr('Cannot cast: {0}', [error]), style: TextStyle(color: colors.error, fontSize: 12)),
+                if (cast.error case final error?)
+                  Text(tr('Cannot cast: {0}', [error]),
+                      style: TextStyle(color: colors.error, fontSize: 12)),
               ]),
             ),
           ),

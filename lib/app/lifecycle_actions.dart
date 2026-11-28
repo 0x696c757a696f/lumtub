@@ -31,7 +31,9 @@ extension LifecycleActions on AppController {
     await Accessibility.reading;
     if (!Accessibility.systemCaptions || preferences.systemCaptionsSeen) return;
     await savePreferences(preferences.copyWith(systemCaptionsSeen: true));
-    if (settings.subtitleMode == SubtitleMode.off) await saveSettings(settings.copyWith(subtitleMode: SubtitleMode.always));
+    if (settings.subtitleMode == SubtitleMode.off) {
+      await saveSettings(settings.copyWith(subtitleMode: SubtitleMode.always));
+    }
   }
 
   /// Starts Lumtub up: once at a time, and not again once it is ready.
@@ -57,16 +59,31 @@ extension LifecycleActions on AppController {
       await AppLog.open(directories.logs);
       logInfo('Lumtub $appVersion started · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
-      searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
-      final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
-      final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
-      final channelPlayback = ChannelPlayback(File('${directories.data.path}${Platform.pathSeparator}channel_playback.json'));
-      final watchTime = WatchTime(File('${directories.data.path}${Platform.pathSeparator}watch_time.json'));
+      searchHistory = SearchHistory(
+          File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
+      final notInterested = NotInterested(
+          File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
+      final libraryStore =
+          LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
+      final channelPlayback = ChannelPlayback(
+          File('${directories.data.path}${Platform.pathSeparator}channel_playback.json'));
+      final watchTime =
+          WatchTime(File('${directories.data.path}${Platform.pathSeparator}watch_time.json'));
       final settingsStore = PlayerSettingsStore(directories);
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
-      final supportReminder = SupportReminder(File('${directories.config.path}${Platform.pathSeparator}support_reminder.json'));
-      final (_, _, _, settings, preferences, _, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load(), supportReminder.load()).wait;
+      final supportReminder = SupportReminder(
+          File('${directories.config.path}${Platform.pathSeparator}support_reminder.json'));
+      final (_, _, _, settings, preferences, _, _, _) = await (
+        history.initialize(),
+        notInterested.load(),
+        libraryStore.load(),
+        settingsStore.load(),
+        preferencesStore.load(),
+        channelPlayback.load(),
+        watchTime.load(),
+        supportReminder.load()
+      ).wait;
       this.supportReminder = supportReminder..used(DateTime.now());
       AppLog.level = preferences.logLevel;
       unawaited(writeLogsOff(preferences.logLevel == LogLevel.off));
@@ -75,12 +92,15 @@ extension LifecycleActions on AppController {
       final sep = Platform.pathSeparator;
       speechStore = SpeechSubtitleStore(
         Directory('${directories.data.path}${sep}speech'),
-        db: _textsDb = LocalDbTexts.available ? LocalDb('${directories.data.path}${sep}lumtub.db') : null,
+        db: _textsDb =
+            LocalDbTexts.available ? LocalDb('${directories.data.path}${sep}lumtub.db') : null,
         cache: Directory('${directories.cache.path}${sep}transcripts'),
       );
       // An earlier attempt that failed may have left one.
       homeFeed?.dispose();
-      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
+      homeFeed = HomeFeed(notInterested,
+          cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))
+        ..addListener(_passOn('home feed'));
       this.settings = settings;
       final cacheManager = CacheManager(directories);
       final manager = ToolManager(directories, (message, logged) {
@@ -100,12 +120,14 @@ extension LifecycleActions on AppController {
         await useDownloadedCjkFonts();
         await ensureCjkFont(currentLanguage.tag);
       }).catchError((Object e) => logWarn('Could not read the data packs: $e')));
-      await YtDlpTls.configure(directories.data, roots: settings.certificateRoots, quantum: settings.postQuantum);
+      await YtDlpTls.configure(directories.data,
+          roots: settings.certificateRoots, quantum: settings.postQuantum);
       await JsChallengePlugin.prepare(directories.data.path);
       final paths = await manager.ensureReady();
       addToPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
-      final player = madePlayer = Player(configuration: PlayerConfiguration(
+      final player = madePlayer = Player(
+          configuration: PlayerConfiguration(
         bufferSize: settings.cacheMemoryMb * 1024 * 1024,
         // With libass, libmpv draws the subtitles and the Flutter subtitle
         // view is turned off on the watch page. It is off by default: the
@@ -130,8 +152,13 @@ extension LifecycleActions on AppController {
       final platform = player.platform;
       if (platform is NativePlayer) {
         if (Platform.isAndroid) {
-          final fonts = await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
-          if (fonts != null) await platform.setProperty('sub-fonts-dir', fonts).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+          final fonts =
+              await AndroidSubtitleFonts.prepare('${directories.cache.path}/subtitle-fonts');
+          if (fonts != null) {
+            await platform
+                .setProperty('sub-fonts-dir', fonts)
+                .catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+          }
         }
         if (Platform.isIOS) {
           // libass draws in the app's own fonts only, as on Android, picked
@@ -141,7 +168,9 @@ extension LifecycleActions on AppController {
           // stalled playback and got the app killed in the background.
           await _prepareIosSubtitleFonts(platform, cache: directories.cache.path);
         }
-        if (Platform.isLinux) await _useDownloadedSubtitleFonts(platform, cache: directories.cache.path);
+        if (Platform.isLinux) {
+          await _useDownloadedSubtitleFonts(platform, cache: directories.cache.path);
+        }
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
         try {
           shaders.createSync(recursive: true);
@@ -155,9 +184,11 @@ extension LifecycleActions on AppController {
       await _applyProxy(player);
       unawaited(_relay?.close());
       _relay = madeRelay = await _startRelay();
-      _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
+      _piped.catalogFile =
+          File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
-      _invidious.catalogFile = File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
+      _invidious.catalogFile =
+          File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
       switch (settings.playbackSource) {
         case PlaybackSource.pipedAuto:
           unawaited(_piped.servers());
@@ -183,28 +214,40 @@ extension LifecycleActions on AppController {
         this.settings = settings;
         _preferencesStore = preferencesStore;
         this.preferences = preferences;
-        mode = PageMode.values.where((m) => m.name == preferences.startPage).firstOrNull ?? PageMode.home;
+        mode = PageMode.values.where((m) => m.name == preferences.startPage).firstOrNull ??
+            PageMode.home;
         if (mode == PageMode.learning && !preferences.learningMode) mode = PageMode.home;
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
         // Answers saved before 0.2.57 may have taken an automatic dub for the
         // spoken language (and its channel with it): asked again.
-        unawaited(File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json').delete().then((_) {}, onError: (_) {}));
-        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages_2.json'));
+        unawaited(File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json')
+            .delete()
+            .then((_) {}, onError: (_) {}));
+        _videoLanguages = VideoLanguages(_http,
+            file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages_2.json'));
         unawaited(levelVideos.open(
           File('${directories.data.path}${Platform.pathSeparator}level-videos.json'),
-          Directory('${directories.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}level-videos'),
+          Directory(
+              '${directories.data.path}${Platform.pathSeparator}learn${Platform.pathSeparator}level-videos'),
         ));
-        ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
-        VideoFactsLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
-        unawaited(EmojiPictures.configure(File('${directories.cache.path}${Platform.pathSeparator}emoji_pictures.json')));
-        unawaited(PortraitThumbnails.configure(File('${directories.cache.path}${Platform.pathSeparator}portrait_thumbnails.json')));
-        unawaited(ChurchWording.configure(File('${directories.cache.path}${Platform.pathSeparator}catholic_channels.json')));
+        ChannelAvatarLookup.instance.configure(
+            _http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
+        VideoFactsLookup.instance.configure(
+            _http, File('${directories.cache.path}${Platform.pathSeparator}video_facts.json'));
+        unawaited(EmojiPictures.configure(
+            File('${directories.cache.path}${Platform.pathSeparator}emoji_pictures.json')));
+        unawaited(PortraitThumbnails.configure(
+            File('${directories.cache.path}${Platform.pathSeparator}portrait_thumbnails.json')));
+        unawaited(ChurchWording.configure(
+            File('${directories.cache.path}${Platform.pathSeparator}catholic_channels.json')));
         // Answers kept before 0.2.12 went by titles, which took some Chinese
         // ones for Japanese and every Italian one for English.
         for (final old in ['video_languages.json', 'spoken_languages.json']) {
-          unawaited(File('${directories.cache.path}${Platform.pathSeparator}$old').delete().then((_) {}, onError: (_) {}));
+          unawaited(File('${directories.cache.path}${Platform.pathSeparator}$old')
+              .delete()
+              .then((_) {}, onError: (_) {}));
         }
         _aiFilter = AiFilter(
           _http,
@@ -218,13 +261,16 @@ extension LifecycleActions on AppController {
           ..addListener(_passOn('library'));
         account = AccountController(
           clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
-          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), SecretProtector.forThisSystem()),
+          credentials: SecureJsonFile(
+              File('${directories.data.path}${Platform.pathSeparator}google-account.bin'),
+              SecretProtector.forThisSystem()),
           client: _http,
           library: library,
           notice: _notice,
         )..addListener(_passOn('account'));
         // Before the first home feed, which mixes in YouTube's own.
-        final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
+        final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)
+          ..addListener(_webSignInChanged);
         comments.web = web;
         account!.web = web;
         web.load();
@@ -237,7 +283,11 @@ extension LifecycleActions on AppController {
         madeRelay = null;
         // Android draws into a surface of its own size; media_kit has no
         // output size there.
-        _outputSize = Platform.isAndroid ? null : VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height), onError: (e) => logWarn('Could not size the video output: $e'));
+        _outputSize = Platform.isAndroid
+            ? null
+            : VideoOutputSize(
+                (width, height) async => videoController?.setSize(width: width, height: height),
+                onError: (e) => logWarn('Could not size the video output: $e'));
         _outputSize?.cover = _coverVideo;
         _syncSubtitleCanvas();
         _listenTo(player);
@@ -245,7 +295,9 @@ extension LifecycleActions on AppController {
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
-        status = ignoredOptions.isEmpty ? tr('Ready · Decoding method will be verified during playback') : tr('Ready · Ignored unsupported settings: {0}', [ignoredOptions.join(', ')]);
+        status = ignoredOptions.isEmpty
+            ? tr('Ready · Decoding method will be verified during playback')
+            : tr('Ready · Ignored unsupported settings: {0}', [ignoredOptions.join(', ')]);
         error = null;
       });
       if (mode == PageMode.explore) _loadExplore();
@@ -253,9 +305,14 @@ extension LifecycleActions on AppController {
       unawaited(checkHistoryLive());
       unawaited(_followSystemCaptions());
       if (mode == PageMode.subscriptions && preferences.feedAutoRefresh) {
-        unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
+        unawaited(
+            library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
       }
-      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(_passOn('updater'));
+      final updater = AppUpdater(
+          client: _http,
+          directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'),
+          download: manager.downloadVerified)
+        ..addListener(_passOn('updater'));
       appUpdater = updater;
       // Housekeeping waits until the first page has loaded and drawn, so
       // update checks and folder scans do not compete with it.
@@ -263,27 +320,41 @@ extension LifecycleActions on AppController {
       _afterStart = Timer(const Duration(seconds: 8), () {
         if (_disposed) return;
         if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
-        if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
-        (blockListUpdates = BlockListUpdates(client: _http, data: directories.data, cache: directories.cache)).start(wanted: () => preferences.updateBlockLists);
+        if (preferences.autoCheckUpdates || preferences.autoUpdateApp) {
+          updater.start(download: () => preferences.autoUpdateApp);
+        }
+        (blockListUpdates =
+                BlockListUpdates(client: _http, data: directories.data, cache: directories.cache))
+            .start(wanted: () => preferences.updateBlockLists);
         unawaited(_refreshCacheSize());
         unawaited(_trimThumbnails());
         unawaited(_nameLinkedVideos());
       });
       unawaited(downloads?.load());
       unawaited(account?.load());
-      _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
-      _titleCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}title_translations.json'), maxEntries: 6000);
+      _translationCache = TranslationCache(
+          file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
+      _titleCache = TranslationCache(
+          file: File('${directories.cache.path}${Platform.pathSeparator}title_translations.json'),
+          maxEntries: 6000);
       _titleTranslator = null;
       _translationCache.persist = _titleCache.persist = !incognito;
       _useTranslator();
-      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
+      _translationKeyFile = SecureJsonFile(
+          File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'),
+          SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
       scrobbler
-        ..accountFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}scrobble-account.bin'), SecretProtector.forThisSystem())
+        ..accountFile = SecureJsonFile(
+            File('${directories.data.path}${Platform.pathSeparator}scrobble-account.bin'),
+            SecretProtector.forThisSystem())
         ..queueFile = File('${directories.data.path}${Platform.pathSeparator}scrobble-queue.json');
       unawaited(scrobbler.load().then((_) => scrobbler.retryWaiting()));
-      airPlayPairings.file = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'), SecretProtector.forThisSystem());
-      logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
+      airPlayPairings.file = SecureJsonFile(
+          File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'),
+          SecretProtector.forThisSystem());
+      logInfo(
+          'Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       // What this attempt made goes, so a retry starts clean.
       if (madePlayer case final made?) {

@@ -22,7 +22,8 @@ class ChannelFeed {
   final _missing = <String, DateTime>{};
   static const missingFor = Duration(days: 1);
 
-  static Uri feedUri(ChannelRef channel) => Uri.https('www.youtube.com', '/feeds/videos.xml', {'channel_id': channel.id});
+  static Uri feedUri(ChannelRef channel) =>
+      Uri.https('www.youtube.com', '/feeds/videos.xml', {'channel_id': channel.id});
 
   /// Feeds read in the last minutes: the library's refresh and the home
   /// feed right after it ask for the same channels. [fresh] reads again,
@@ -34,7 +35,10 @@ class ChannelFeed {
   final _inFlight = <String, Future<List<VideoItem>>>{};
 
   Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) {
-    if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return Future.value(items);
+    if (_recent[channel.id] case (final at, final items)
+        when !fresh && _clock().difference(at) < recentFor) {
+      return Future.value(items);
+    }
     return _inFlight[channel.id] ??= _fetch(channel).whenComplete(() {
       unawaited(_inFlight.remove(channel.id));
     });
@@ -50,22 +54,30 @@ class ChannelFeed {
 
   Future<List<VideoItem>> _read(ChannelRef channel) async {
     final missingSince = _missing[channel.id];
-    if (missingSince != null && _clock().difference(missingSince) < missingFor) throw StateError(tr('Channel feed returned HTTP {0}', [404]));
-    final response = await _client.get(feedUri(channel), headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));
+    if (missingSince != null && _clock().difference(missingSince) < missingFor) {
+      throw StateError(tr('Channel feed returned HTTP {0}', [404]));
+    }
+    final response = await _client.get(feedUri(channel),
+        headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));
     if (response.statusCode == 404) _missing[channel.id] = _clock();
-    if (response.statusCode != 200) throw StateError(tr('Channel feed returned HTTP {0}', [response.statusCode]));
+    if (response.statusCode != 200) {
+      throw StateError(tr('Channel feed returned HTTP {0}', [response.statusCode]));
+    }
     _missing.remove(channel.id);
     return parse(response.body, channel);
   }
 
   /// Parses the feed: in the Rust core (`lumtub_channel_feed`), which
   /// decodes every XML character reference, else with a few patterns.
-  static List<VideoItem> parse(String xml, ChannelRef channel) => _nativeParse(xml, channel) ?? _parse(xml, channel);
+  static List<VideoItem> parse(String xml, ChannelRef channel) =>
+      _nativeParse(xml, channel) ?? _parse(xml, channel);
 
   static List<VideoItem>? _nativeParse(String xml, ChannelRef channel) {
     final core = NativeCore.instance;
     if (core == null || !core.library.providesSymbol('lumtub_channel_feed')) return null;
-    final call = _native ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_feed');
+    final call = _native ??= core.library.lookupFunction<
+        Pointer<Utf8> Function(Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_feed');
     final text = core.take(core.withText(xml, call));
     final list = text == null ? null : jsonDecode(text);
     if (list is! List) return null;
@@ -92,16 +104,20 @@ class ChannelFeed {
     final items = <VideoItem>[];
     for (final entry in RegExp(r'<entry>([\s\S]*?)</entry>').allMatches(xml)) {
       final body = entry.group(1)!;
-      String? field(String pattern) => (_patterns[pattern] ??= RegExp(pattern)).firstMatch(body)?.group(1);
+      String? field(String pattern) =>
+          (_patterns[pattern] ??= RegExp(pattern)).firstMatch(body)?.group(1);
       final id = field(r'<yt:videoId>([\w-]{11})</yt:videoId>');
       if (id == null) continue;
       final views = field(r'<media:statistics views="(\d+)"');
       // Shorts link to /shorts/ here; nothing else in the feed tells them apart.
-      final short = field(r'<link rel="alternate" href="https://www\.youtube\.com/(shorts)/') != null;
+      final short =
+          field(r'<link rel="alternate" href="https://www\.youtube\.com/(shorts)/') != null;
       items.add(VideoItem(
         id: id,
         title: _unescape(field(r'<title>([\s\S]*?)</title>') ?? ''),
-        channel: channel.name.isNotEmpty ? channel.name : _unescape(field(r'<name>([\s\S]*?)</name>') ?? ''),
+        channel: channel.name.isNotEmpty
+            ? channel.name
+            : _unescape(field(r'<name>([\s\S]*?)</name>') ?? ''),
         url: 'https://www.youtube.com/watch?v=$id',
         viewCount: views == null ? null : int.tryParse(views),
         channelId: channel.id,

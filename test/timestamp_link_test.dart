@@ -3,8 +3,10 @@ import 'package:lumtub/timestamp_link.dart';
 
 void main() {
   test('links to the current second', () {
-    expect(timestampLink('dQw4w9WgXcQ', const Duration(seconds: 83, milliseconds: 900)), 'https://youtu.be/dQw4w9WgXcQ?t=83');
-    expect(timestampLink('dQw4w9WgXcQ', const Duration(hours: 1, seconds: 5)), 'https://youtu.be/dQw4w9WgXcQ?t=3605');
+    expect(timestampLink('dQw4w9WgXcQ', const Duration(seconds: 83, milliseconds: 900)),
+        'https://youtu.be/dQw4w9WgXcQ?t=83');
+    expect(timestampLink('dQw4w9WgXcQ', const Duration(hours: 1, seconds: 5)),
+        'https://youtu.be/dQw4w9WgXcQ?t=3605');
   });
 
   test('gives no link at the start, for live streams or other ids', () {

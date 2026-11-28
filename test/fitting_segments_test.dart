@@ -7,15 +7,27 @@ import 'package:lumtub/ui/chip_strip.dart';
 import 'package:lumtub/ui/fitting_segments.dart';
 import 'package:material_ui/material_ui.dart';
 
-const _tabs = ['Humanities', 'Social sciences', 'Natural sciences', 'Engineering & technology', 'Medicine', 'Frontier research'];
+const _tabs = [
+  'Humanities',
+  'Social sciences',
+  'Natural sciences',
+  'Engineering & technology',
+  'Medicine',
+  'Frontier research'
+];
 
-Future<void> _show(WidgetTester tester, double width, {String selected = 'Frontier research'}) async {
+Future<void> _show(WidgetTester tester, double width,
+    {String selected = 'Frontier research'}) async {
   tester.view.physicalSize = Size(width, 600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(MaterialApp(
     theme: ThemeData(fontFamily: 'Segments Sans'),
-    home: Scaffold(body: Padding(padding: const EdgeInsets.all(16), child: FittingSegments<String>(values: _tabs, label: (s) => s, selected: selected, onSelected: (_) {}))),
+    home: Scaffold(
+        body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: FittingSegments<String>(
+                values: _tabs, label: (s) => s, selected: selected, onSelected: (_) {}))),
   ));
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 100));
@@ -38,7 +50,8 @@ void main() {
     await (FontLoader('Segments Sans')..addFont(Future.value(ByteData.sublistView(bytes)))).load();
   });
 
-  testWidgets('a wide window shows one segment per tab, every label whole on one line', (tester) async {
+  testWidgets('a wide window shows one segment per tab, every label whole on one line',
+      (tester) async {
     await _show(tester, 1280);
     expect(find.byType(SegmentedButton<String>), findsOneWidget);
     expect(tester.takeException(), isNull);

@@ -24,8 +24,10 @@ void main() {
     final dir = Directory('cache');
     const url = 'https://i.ytimg.com/vi/x/hqdefault.jpg?sqp=abc';
     expect(CachedThumbnail.fileForUrl(dir, url).path, CachedThumbnail.fileForUrl(dir, url).path);
-    expect(CachedThumbnail.fileForUrl(dir, url).path, isNot(CachedThumbnail.fileForUrl(dir, '$url&rs=1').path));
-    expect(CachedThumbnail.fileForUrl(dir, url).uri.pathSegments.last, matches(RegExp(r'^cover_[0-9a-f]{20}\.jpg$')));
+    expect(CachedThumbnail.fileForUrl(dir, url).path,
+        isNot(CachedThumbnail.fileForUrl(dir, '$url&rs=1').path));
+    expect(CachedThumbnail.fileForUrl(dir, url).uri.pathSegments.last,
+        matches(RegExp(r'^cover_[0-9a-f]{20}\.jpg$')));
     expect(const CachedThumbnail(url, null), const CachedThumbnail(url, null));
   });
 
@@ -40,11 +42,15 @@ void main() {
       'https://i.ytimg.com/vi_webp/a-b_c/hqdefault.webp',
       'https://i.ytimg.com/vi/a-b_c/hqdefault.jpg',
     ]);
-    expect(CachedThumbnail.candidates('https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1'), ['https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1']);
+    expect(
+        CachedThumbnail.candidates(
+            'https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1'),
+        ['https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1']);
   });
 
   test('a thumbnail larger than the limit is refused', () async {
-    final big = MockClient.streaming((request, _) async => http.StreamedResponse(Stream.fromIterable([for (var i = 0; i < 80; i++) List.filled(64 << 10, 1)]), 200));
+    final big = MockClient.streaming((request, _) async => http.StreamedResponse(
+        Stream.fromIterable([for (var i = 0; i < 80; i++) List.filled(64 << 10, 1)]), 200));
     expect((await CachedThumbnail.fetch(big, Uri.parse('https://i.ytimg.com/x'))).$1, 413);
     final small = MockClient((request) async => http.Response.bytes([1, 2, 3], 200));
     final (status, body) = await CachedThumbnail.fetch(small, Uri.parse('https://i.ytimg.com/x'));
@@ -72,7 +78,8 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await CachedThumbnail.slot(() => true);
     }
-    final provider = CachedThumbnail('https://i.ytimg.com/vi/gone/hqdefault.jpg', File('${Directory.systemTemp.path}/lumtub-missing/gone.jpg'));
+    final provider = CachedThumbnail('https://i.ytimg.com/vi/gone/hqdefault.jpg',
+        File('${Directory.systemTemp.path}/lumtub-missing/gone.jpg'));
     final stream = provider.resolve(ImageConfiguration.empty);
     final card = ImageStreamListener((image, sync) {}, onError: (error, stack) {});
     stream.addListener(card);

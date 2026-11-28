@@ -5,7 +5,8 @@ import 'package:crypto/crypto.dart';
 /// Ed25519 signature checking (RFC 8032), for the learning pack's license
 /// codes. It only verifies; nothing here signs. Plain integers keep it
 /// short: one check takes some milliseconds, and it runs once at start.
-bool ed25519Verify({required List<int> publicKey, required List<int> message, required List<int> signature}) {
+bool ed25519Verify(
+    {required List<int> publicKey, required List<int> message, required List<int> signature}) {
   if (publicKey.length != 32 || signature.length != 64) return false;
   final a = _decode(publicKey);
   final r = _decode(signature.sublist(0, 32));

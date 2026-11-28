@@ -31,18 +31,24 @@ void addToPath(Iterable<String> directories) {
     final key = 'PATH'.toNativeUtf16();
     final native = value.toNativeUtf16();
     try {
-      if (setEnv(key, native) == 0) throw const FileSystemException('Could not update PATH for player');
+      if (setEnv(key, native) == 0) {
+        throw const FileSystemException('Could not update PATH for player');
+      }
     } finally {
       calloc.free(key);
       calloc.free(native);
     }
     return;
   }
-  final setEnv = DynamicLibrary.process().lookupFunction<Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32), int Function(Pointer<Utf8>, Pointer<Utf8>, int)>('setenv');
+  final setEnv = DynamicLibrary.process().lookupFunction<
+      Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32),
+      int Function(Pointer<Utf8>, Pointer<Utf8>, int)>('setenv');
   final key = 'PATH'.toNativeUtf8();
   final native = value.toNativeUtf8();
   try {
-    if (setEnv(key, native, 1) != 0) throw const FileSystemException('Could not update PATH for player');
+    if (setEnv(key, native, 1) != 0) {
+      throw const FileSystemException('Could not update PATH for player');
+    }
   } finally {
     calloc.free(key);
     calloc.free(native);
@@ -68,15 +74,27 @@ Future<void> restartApp() async {
   }
   if (Platform.isWindows) {
     // The new copy waits for this one to end: only one Lumtub runs at a time.
-    await Process.start(Platform.resolvedExecutable, ['--restart-after=$pid'], mode: ProcessStartMode.detached);
+    await Process.start(Platform.resolvedExecutable, ['--restart-after=$pid'],
+        mode: ProcessStartMode.detached);
   } else {
     // Started once this process has ended: on Linux a copy started now
     // would only hand itself to this one, which then quits, and an
     // AppImage's mounted folder goes away with it, so the image itself is
     // started.
     final appImage = Platform.environment['APPIMAGE'];
-    final target = Platform.isLinux && appImage != null && appImage.isNotEmpty ? appImage : Platform.resolvedExecutable;
-    await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"', 'lumtub-restart', '$pid', target], mode: ProcessStartMode.detached);
+    final target = Platform.isLinux && appImage != null && appImage.isNotEmpty
+        ? appImage
+        : Platform.resolvedExecutable;
+    await Process.start(
+        '/bin/sh',
+        [
+          '-c',
+          r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"',
+          'lumtub-restart',
+          '$pid',
+          target
+        ],
+        mode: ProcessStartMode.detached);
   }
   await AppLog.current?.flush();
   exit(0);
@@ -126,7 +144,8 @@ Future<void> openWithDesktop(String target) async {
     return;
   }
   try {
-    await Process.start(Platform.isMacOS ? 'open' : 'xdg-open', [target], mode: ProcessStartMode.detached);
+    await Process.start(Platform.isMacOS ? 'open' : 'xdg-open', [target],
+        mode: ProcessStartMode.detached);
   } catch (e) {
     logWarn('Could not open $target: $e');
   }

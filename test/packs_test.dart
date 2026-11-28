@@ -20,7 +20,9 @@ void main() {
   late List<String?> ranges;
   late PackManager packs;
 
-  Pack pack(String version, Map<String, List<int>> files, {List<String> platforms = const [], String minApp = ''}) => Pack(
+  Pack pack(String version, Map<String, List<int>> files,
+          {List<String> platforms = const [], String minApp = ''}) =>
+      Pack(
         id: 'shaders-upscale',
         version: version,
         kind: PackKind.shader,
@@ -30,7 +32,12 @@ void main() {
         platforms: platforms,
         files: [
           for (final MapEntry(:key, :value) in files.entries)
-            PackFile(path: key, url: 'https://github.com/0x696c757a696f/lumtub/releases/download/packs/${key.split('/').last}', sha256: '${sha256.convert(value)}', size: value.length),
+            PackFile(
+                path: key,
+                url:
+                    'https://github.com/0x696c757a696f/lumtub/releases/download/packs/${key.split('/').last}',
+                sha256: '${sha256.convert(value)}',
+                size: value.length),
         ],
       );
 
@@ -62,7 +69,9 @@ void main() {
     final shader = utf8.encode('//!HOOK MAIN\n');
     final notes = utf8.encode('notes');
     served = {'FSR.glsl': shader, 'README.txt': notes};
-    packs.catalogForTesting = [pack('1.0.0', {'glsl/FSR.glsl': shader, 'README.txt': notes})];
+    packs.catalogForTesting = [
+      pack('1.0.0', {'glsl/FSR.glsl': shader, 'README.txt': notes})
+    ];
     expect(packs.offered.map((p) => p.id), ['shaders-upscale']);
     final installed = await packs.install('shaders-upscale');
     expect(await installed.file('glsl/FSR.glsl').readAsBytes(), shader);
@@ -77,25 +86,34 @@ void main() {
 
     await packs.remove('shaders-upscale');
     expect(packs.installed, isEmpty);
-    expect(Directory('${packs.root.path}${Platform.pathSeparator}shaders-upscale').existsSync(), isFalse);
+    expect(Directory('${packs.root.path}${Platform.pathSeparator}shaders-upscale').existsSync(),
+        isFalse);
   });
 
   test('a newer version replaces the old one', () async {
     served = {'FSR.glsl': utf8.encode('old')};
-    packs.catalogForTesting = [pack('1.0.0', {'FSR.glsl': utf8.encode('old')})];
+    packs.catalogForTesting = [
+      pack('1.0.0', {'FSR.glsl': utf8.encode('old')})
+    ];
     await packs.install('shaders-upscale');
     served = {'FSR.glsl': utf8.encode('new one')};
-    packs.catalogForTesting = [pack('1.1.0', {'FSR.glsl': utf8.encode('new one')})];
+    packs.catalogForTesting = [
+      pack('1.1.0', {'FSR.glsl': utf8.encode('new one')})
+    ];
     expect(packs.offered.single.version, '1.1.0');
     final installed = await packs.install('shaders-upscale');
     expect(installed.pack.version, '1.1.0');
-    final folders = Directory('${packs.root.path}${Platform.pathSeparator}shaders-upscale').listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last);
+    final folders = Directory('${packs.root.path}${Platform.pathSeparator}shaders-upscale')
+        .listSync()
+        .map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last);
     expect(folders, ['1.1.0']);
   });
 
   test('a file that does not match the catalog is not installed', () async {
     served = {'FSR.glsl': utf8.encode('tampered')};
-    packs.catalogForTesting = [pack('1.0.0', {'FSR.glsl': utf8.encode('original')})];
+    packs.catalogForTesting = [
+      pack('1.0.0', {'FSR.glsl': utf8.encode('original')})
+    ];
     await expectLater(packs.install('shaders-upscale'), throwsA(anything));
     expect(packs.installed, isEmpty);
     await packs.load();
@@ -106,7 +124,9 @@ void main() {
   test('a download stopped halfway goes on from where it stopped', () async {
     final body = List<int>.generate(5000, (i) => i % 251);
     served = {'model.bin': body};
-    packs.catalogForTesting = [pack('1.0.0', {'model.bin': body})];
+    packs.catalogForTesting = [
+      pack('1.0.0', {'model.bin': body})
+    ];
     final staging = Directory('${packs.root.path}/shaders-upscale/1.0.0.new');
     await staging.create(recursive: true);
     await File('${staging.path}/model.bin.part').writeAsBytes(body.sublist(0, 1200));
@@ -116,10 +136,24 @@ void main() {
   });
 
   test('a pack for another build or a newer app is not offered', () {
-    packs.catalogForTesting = [pack('1.0.0', {'a': [1]}, minApp: '999.0.0')];
+    packs.catalogForTesting = [
+      pack(
+          '1.0.0',
+          {
+            'a': [1]
+          },
+          minApp: '999.0.0')
+    ];
     // Builds made outside CI have no version and take every pack.
     expect(packs.offered.length, 1);
-    expect(Pack.fromJson(pack('1.0.0', {'a': [1]}).toJson())!.toJson(), pack('1.0.0', {'a': [1]}).toJson());
+    expect(
+        Pack.fromJson(pack('1.0.0', {
+          'a': [1]
+        }).toJson())!
+            .toJson(),
+        pack('1.0.0', {
+          'a': [1]
+        }).toJson());
   });
 
   test('a missing catalog says none are published', () async {
@@ -131,7 +165,10 @@ void main() {
   test('an installed pack whose entry was changed to leave its folder is ignored', () async {
     final folder = Directory('${packs.root.path}/evil/1.0.0');
     await folder.create(recursive: true);
-    final entry = pack('1.0.0', {'../../outside': [1]}).toJson()..['id'] = 'evil';
+    final entry = pack('1.0.0', {
+      '../../outside': [1]
+    }).toJson()
+      ..['id'] = 'evil';
     await File('${folder.path}/pack.json').writeAsString(jsonEncode(entry));
     await packs.load();
     expect(packs.installed, isEmpty);
@@ -146,9 +183,15 @@ void main() {
       kind: PackKind.model,
       titles: const {'en': 'Whisper small'},
       license: 'MIT',
-      files: [PackFile(path: 'm.bin', url: 'https://huggingface.co/x/m.bin', sha256: 'a' * 64, size: 3 << 20)],
+      files: [
+        PackFile(
+            path: 'm.bin', url: 'https://huggingface.co/x/m.bin', sha256: 'a' * 64, size: 3 << 20)
+      ],
     );
-    packs.catalogForTesting = [pack('1.0.0', {'FSR.glsl': shader}), other];
+    packs.catalogForTesting = [
+      pack('1.0.0', {'FSR.glsl': shader}),
+      other
+    ];
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
       home: Scaffold(body: ListView(children: [PacksSection(packs)])),

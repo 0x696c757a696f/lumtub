@@ -15,11 +15,19 @@ void main() {
   });
 
   test('a listed video takes its approximate time, an upcoming one does not', () {
-    final listed = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 'A', 'timestamp': 1_700_000_000});
-    expect(listed.published, DateTime.fromMillisecondsSinceEpoch(1_700_000_000_000, isUtc: true).toLocal());
-    final upcoming = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 'A', 'timestamp': 1_700_000_000, 'live_status': 'is_upcoming'});
+    final listed =
+        VideoItem.fromJson({'id': 'abcdefghijk', 'title': 'A', 'timestamp': 1_700_000_000});
+    expect(listed.published,
+        DateTime.fromMillisecondsSinceEpoch(1_700_000_000_000, isUtc: true).toLocal());
+    final upcoming = VideoItem.fromJson({
+      'id': 'abcdefghijk',
+      'title': 'A',
+      'timestamp': 1_700_000_000,
+      'live_status': 'is_upcoming'
+    });
     expect(upcoming.published, isNull);
-    final saved = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 'A', 'published': '2026-01-02T03:04:05Z', 'timestamp': 1});
+    final saved = VideoItem.fromJson(
+        {'id': 'abcdefghijk', 'title': 'A', 'published': '2026-01-02T03:04:05Z', 'timestamp': 1});
     expect(saved.published, DateTime.utc(2026, 1, 2, 3, 4, 5));
   });
 }

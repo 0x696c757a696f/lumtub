@@ -15,7 +15,8 @@ final lightsOffHole = GlobalKey(debugLabel: 'lightsOffHole');
 /// Darkens what is under it except [lightsOffHole]. A click on the dark
 /// part turns the lights back on; the player stays usable through the hole.
 class LightsOffLayer extends StatefulWidget {
-  const LightsOffLayer({super.key, required this.dim, this.radius = AppStyle.cardRadius, this.visible = true});
+  const LightsOffLayer(
+      {super.key, required this.dim, this.radius = AppStyle.cardRadius, this.visible = true});
 
   /// How dark, from 0 to 1.
   final double dim;
@@ -30,7 +31,8 @@ class LightsOffLayer extends StatefulWidget {
 }
 
 class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProviderStateMixin {
-  late final _fade = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 250)));
+  late final _fade =
+      AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 250)));
   Rect? _hole;
   bool _measuring = false;
 
@@ -92,17 +94,23 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
     // only, not the page under it.
     return _HoleHitTest(
       hole: hole,
-      child: RepaintBoundary(child: IgnorePointer(ignoring: !widget.visible, child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => lightsOff.value = false,
-        child: AnimatedBuilder(
-          animation: _fade,
-          builder: (context, _) => CustomPaint(
-            size: Size.infinite,
-            painter: _DarkPainter(hole: widget.radius.toRRect(hole), color: Colors.black.withValues(alpha: widget.dim * Ease.out.transform(_fade.value))),
-          ),
-        ),
-      ))),
+      child: RepaintBoundary(
+          child: IgnorePointer(
+              ignoring: !widget.visible,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => lightsOff.value = false,
+                child: AnimatedBuilder(
+                  animation: _fade,
+                  builder: (context, _) => CustomPaint(
+                    size: Size.infinite,
+                    painter: _DarkPainter(
+                        hole: widget.radius.toRRect(hole),
+                        color: Colors.black
+                            .withValues(alpha: widget.dim * Ease.out.transform(_fade.value))),
+                  ),
+                ),
+              ))),
     );
   }
 }
@@ -110,7 +118,14 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
 /// Where [key]'s box is inside [layer], or null when either is not laid out.
 Rect? holeRect(GlobalKey key, RenderObject? layer) {
   final target = key.currentContext?.findRenderObject();
-  if (target is! RenderBox || layer is! RenderBox || !target.attached || !layer.attached || !target.hasSize || !layer.hasSize) return null;
+  if (target is! RenderBox ||
+      layer is! RenderBox ||
+      !target.attached ||
+      !layer.attached ||
+      !target.hasSize ||
+      !layer.hasSize) {
+    return null;
+  }
   final topLeft = layer.globalToLocal(target.localToGlobal(Offset.zero));
   return topLeft & target.size;
 }
@@ -142,7 +157,8 @@ class _HoleHitTest extends SingleChildRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) => _RenderHoleHitTest(hole);
 
   @override
-  void updateRenderObject(BuildContext context, _RenderHoleHitTest renderObject) => renderObject.hole = hole;
+  void updateRenderObject(BuildContext context, _RenderHoleHitTest renderObject) =>
+      renderObject.hole = hole;
 }
 
 class _RenderHoleHitTest extends RenderProxyBox {
@@ -150,5 +166,6 @@ class _RenderHoleHitTest extends RenderProxyBox {
   Rect hole;
 
   @override
-  bool hitTest(BoxHitTestResult result, {required Offset position}) => !hole.contains(position) && super.hitTest(result, position: position);
+  bool hitTest(BoxHitTestResult result, {required Offset position}) =>
+      !hole.contains(position) && super.hitTest(result, position: position);
 }

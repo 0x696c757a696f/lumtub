@@ -21,9 +21,23 @@ Map<String, Object?> _entity(String id, String text, {String replies = '0'}) => 
       'entityKey': 'key-$id',
       'payload': {
         'commentEntityPayload': {
-          'properties': {'commentId': id, 'content': {'content': text}, 'publishedTime': '3天前'},
-          'author': {'displayName': '@作者$id', 'channelId': 'UCabcdefghijklmnopqrstuv', 'avatarThumbnailUrl': 'https://yt3.example/a.jpg', 'isCreator': id == 'b'},
-          'toolbar': {'likeCountNotliked': '1.2万', 'replyCount': replies, 'creatorThumbnailUrl': 'https://yt3.example/c.jpg', 'heartActiveTooltip': '@owner 送上了 ❤'},
+          'properties': {
+            'commentId': id,
+            'content': {'content': text},
+            'publishedTime': '3天前'
+          },
+          'author': {
+            'displayName': '@作者$id',
+            'channelId': 'UCabcdefghijklmnopqrstuv',
+            'avatarThumbnailUrl': 'https://yt3.example/a.jpg',
+            'isCreator': id == 'b'
+          },
+          'toolbar': {
+            'likeCountNotliked': '1.2万',
+            'replyCount': replies,
+            'creatorThumbnailUrl': 'https://yt3.example/c.jpg',
+            'heartActiveTooltip': '@owner 送上了 ❤'
+          },
         },
       },
     };
@@ -44,12 +58,27 @@ void main() {
             'continuationItems': [
               {
                 'commentsHeaderRenderer': {
-                  'countText': {'runs': [{'text': '1,234'}, {'text': ' 条评论'}]},
+                  'countText': {
+                    'runs': [
+                      {'text': '1,234'},
+                      {'text': ' 条评论'}
+                    ]
+                  },
                   'sortMenu': {
                     'sortFilterSubMenuRenderer': {
                       'subMenuItems': [
-                        {'title': '热门评论', 'serviceEndpoint': {'continuationCommand': {'token': 'TOP'}}},
-                        {'title': '最新', 'serviceEndpoint': {'continuationCommand': {'token': 'NEW'}}},
+                        {
+                          'title': '热门评论',
+                          'serviceEndpoint': {
+                            'continuationCommand': {'token': 'TOP'}
+                          }
+                        },
+                        {
+                          'title': '最新',
+                          'serviceEndpoint': {
+                            'continuationCommand': {'token': 'NEW'}
+                          }
+                        },
                       ],
                     },
                   },
@@ -60,7 +89,8 @@ void main() {
         },
       ],
     });
-    expect((page.count, page.topToken, page.newestToken, page.comments.length), ('1,234 条评论', 'TOP', 'NEW', 0));
+    expect((page.count, page.topToken, page.newestToken, page.comments.length),
+        ('1,234 条评论', 'TOP', 'NEW', 0));
   });
 
   test('reads view-model comments from the entity payloads', () {
@@ -72,7 +102,11 @@ void main() {
               {
                 'commentThreadRenderer': {
                   'commentViewModel': {
-                    'commentViewModel': {'commentKey': 'key-a', 'toolbarStateKey': 'toolbar-a', 'pinnedText': '已置顶'},
+                    'commentViewModel': {
+                      'commentKey': 'key-a',
+                      'toolbarStateKey': 'toolbar-a',
+                      'pinnedText': '已置顶'
+                    },
                   },
                   'replies': {
                     'commentRepliesRenderer': {
@@ -98,14 +132,37 @@ void main() {
           'mutations': [
             _entity('a', '第一条 1:23', replies: '12'),
             _entity('b', '作者回复'),
-            {'entityKey': 'toolbar-a', 'payload': {'engagementToolbarStateEntityPayload': {'heartState': 'TOOLBAR_HEART_STATE_HEARTED'}}},
+            {
+              'entityKey': 'toolbar-a',
+              'payload': {
+                'engagementToolbarStateEntityPayload': {'heartState': 'TOOLBAR_HEART_STATE_HEARTED'}
+              }
+            },
           ],
         },
       },
     });
     expect(page.comments.map((c) => c.id), ['a', 'b']);
     final a = page.comments.first;
-    expect((a.text, a.author, a.likes, a.replyCount, a.repliesToken, a.pinned, a.hearted, a.byUploader), ('第一条 1:23', '@作者a', '1.2万', 12, 'REPLIES-A', true, true, false));
+    expect((
+      a.text,
+      a.author,
+      a.likes,
+      a.replyCount,
+      a.repliesToken,
+      a.pinned,
+      a.hearted,
+      a.byUploader
+    ), (
+      '第一条 1:23',
+      '@作者a',
+      '1.2万',
+      12,
+      'REPLIES-A',
+      true,
+      true,
+      false
+    ));
     expect((a.heartAvatar, a.heartTooltip), ('https://yt3.example/c.jpg', '@owner 送上了 ❤'));
     expect((page.comments[1].repliesToken, page.comments[1].byUploader), (null, true));
     expect(page.continuation, 'PAGE-2');
@@ -121,10 +178,23 @@ void main() {
                 'commentRenderer': {
                   'commentId': 'old',
                   'authorText': {'simpleText': '@old'},
-                  'contentText': {'runs': [{'text': '旧格式'}]},
-                  'publishedTimeText': {'runs': [{'text': '1年前'}]},
+                  'contentText': {
+                    'runs': [
+                      {'text': '旧格式'}
+                    ]
+                  },
+                  'publishedTimeText': {
+                    'runs': [
+                      {'text': '1年前'}
+                    ]
+                  },
                   'voteCount': {'simpleText': '5'},
-                  'authorThumbnail': {'thumbnails': [{'url': '//yt3.example/s.jpg'}, {'url': '//yt3.example/l.jpg'}]},
+                  'authorThumbnail': {
+                    'thumbnails': [
+                      {'url': '//yt3.example/s.jpg'},
+                      {'url': '//yt3.example/l.jpg'}
+                    ]
+                  },
                   'authorIsChannelOwner': true,
                 },
               },
@@ -132,7 +202,9 @@ void main() {
                 'continuationItemRenderer': {
                   'button': {
                     'buttonRenderer': {
-                      'command': {'continuationCommand': {'token': 'MORE-REPLIES'}},
+                      'command': {
+                        'continuationCommand': {'token': 'MORE-REPLIES'}
+                      },
                     },
                   },
                 },
@@ -143,15 +215,26 @@ void main() {
       ],
     });
     final old = page.comments.single;
-    expect((old.author, old.text, old.published, old.likes, old.avatar, old.byUploader), ('@old', '旧格式', '1年前', '5', 'https://yt3.example/l.jpg', true));
+    expect((old.author, old.text, old.published, old.likes, old.avatar, old.byUploader),
+        ('@old', '旧格式', '1年前', '5', 'https://yt3.example/l.jpg', true));
     expect(page.continuation, 'MORE-REPLIES');
   });
 
   test('finds the comment section of a post page', () {
     final data = {
       'contents': [
-        {'itemSectionRenderer': {'sectionIdentifier': 'other', 'contents': [_continuation('NO')]}},
-        {'itemSectionRenderer': {'sectionIdentifier': 'comment-item-section', 'contents': [_continuation('POST-COMMENTS')]}},
+        {
+          'itemSectionRenderer': {
+            'sectionIdentifier': 'other',
+            'contents': [_continuation('NO')]
+          }
+        },
+        {
+          'itemSectionRenderer': {
+            'sectionIdentifier': 'comment-item-section',
+            'contents': [_continuation('POST-COMMENTS')]
+          }
+        },
       ],
     };
     final core = NativeCore.instance!;
@@ -166,7 +249,12 @@ void main() {
       asked.add('${request.url.path} ${token.length > 10 ? 'SECTION' : token}');
       final items = token == 'NEW'
           ? [
-              {'commentRenderer': {'commentId': 'n', 'contentText': {'simpleText': '新'}}},
+              {
+                'commentRenderer': {
+                  'commentId': 'n',
+                  'contentText': {'simpleText': '新'}
+                }
+              },
             ]
           : [
               {
@@ -175,19 +263,31 @@ void main() {
                   'sortMenu': {
                     'sortFilterSubMenuRenderer': {
                       'subMenuItems': [
-                        {'serviceEndpoint': {'continuationCommand': {'token': 'TOP'}}},
-                        {'serviceEndpoint': {'continuationCommand': {'token': 'NEW'}}},
+                        {
+                          'serviceEndpoint': {
+                            'continuationCommand': {'token': 'TOP'}
+                          }
+                        },
+                        {
+                          'serviceEndpoint': {
+                            'continuationCommand': {'token': 'NEW'}
+                          }
+                        },
                       ],
                     },
                   },
                 },
               },
             ];
-      return http.Response.bytes(utf8.encode(jsonEncode({
-        'onResponseReceivedEndpoints': [
-          {'reloadContinuationItemsCommand': {'continuationItems': items}},
-        ],
-      })), 200);
+      return http.Response.bytes(
+          utf8.encode(jsonEncode({
+            'onResponseReceivedEndpoints': [
+              {
+                'reloadContinuationItemsCommand': {'continuationItems': items}
+              },
+            ],
+          })),
+          200);
     }));
     final page = await comments.video('dQw4w9WgXcQ', newest: true);
     expect(asked, ['/youtubei/v1/next SECTION', '/youtubei/v1/next NEW']);
@@ -198,13 +298,32 @@ void main() {
     final signedOut = <String>[];
     final ratingPage = utf8.encode(jsonEncode({
       'onResponseReceivedEndpoints': [
-        {'appendContinuationItemsAction': {'continuationItems': [
-          {'commentRenderer': {'commentId': 'C', 'actionButtons': {'commentActionButtonsRenderer': {
-            'likeButton': {'toggleButtonRenderer': {'isToggled': true,
-              'defaultServiceEndpoint': {'performCommentActionEndpoint': {'action': 'LIKE'}},
-              'toggledServiceEndpoint': {'performCommentActionEndpoint': {'action': 'UNLIKE'}}}},
-          }}}},
-        ]}},
+        {
+          'appendContinuationItemsAction': {
+            'continuationItems': [
+              {
+                'commentRenderer': {
+                  'commentId': 'C',
+                  'actionButtons': {
+                    'commentActionButtonsRenderer': {
+                      'likeButton': {
+                        'toggleButtonRenderer': {
+                          'isToggled': true,
+                          'defaultServiceEndpoint': {
+                            'performCommentActionEndpoint': {'action': 'LIKE'}
+                          },
+                          'toggledServiceEndpoint': {
+                            'performCommentActionEndpoint': {'action': 'UNLIKE'}
+                          }
+                        }
+                      },
+                    }
+                  }
+                }
+              },
+            ]
+          }
+        },
       ],
     }));
     final sign = _FakeSignIn((endpoint, body) {
@@ -217,9 +336,20 @@ void main() {
     final comments = YoutubeComments(MockClient((request) async {
       signedOut.add(request.url.path);
       return http.Response.bytes(ratingPage, 200);
-    }))..web = sign;
+    }))
+      ..web = sign;
     final rating = (await comments.more('X')).comments.single.rating!;
-    expect((rating.state, rating.actionFor('like', 'like'), rating.actionFor('', 'like'), rating.actionFor('like', 'dislike')), ('like', 'UNLIKE', 'LIKE', null));
+    expect((
+      rating.state,
+      rating.actionFor('like', 'like'),
+      rating.actionFor('', 'like'),
+      rating.actionFor('like', 'dislike')
+    ), (
+      'like',
+      'UNLIKE',
+      'LIKE',
+      null
+    ));
     await comments.rate('UNLIKE');
     expect(sign.asked, ['next', 'comment/perform_comment_action']);
     expect(signedOut, isEmpty);
@@ -232,44 +362,136 @@ void main() {
   test('signed in, a video\'s comments load as the website', () async {
     final sign = _FakeSignIn((endpoint, body) {
       final data = body['continuation'] == YoutubeComments.videoSectionToken('dQw4w9WgXcQ')
-          ? {'engagementPanels': [
-              {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
-                {'continuation': {'reloadContinuationData': {'continuation': 'TOP'}}},
-              ]}}}}}},
-            ]}
-          : {'continuationContents': {'itemSectionContinuation': {'contents': [
-              {'commentThreadRenderer': {'comment': {'commentRenderer': {'commentId': 'tv', 'contentText': {'simpleText': '电视'}}}}},
-            ]}}};
+          ? {
+              'engagementPanels': [
+                {
+                  'engagementPanelSectionListRenderer': {
+                    'panelIdentifier': 'comment-item-section',
+                    'header': {
+                      'engagementPanelTitleHeaderRenderer': {
+                        'menu': {
+                          'sortFilterSubMenuRenderer': {
+                            'subMenuItems': [
+                              {
+                                'continuation': {
+                                  'reloadContinuationData': {'continuation': 'TOP'}
+                                }
+                              },
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+              ]
+            }
+          : {
+              'continuationContents': {
+                'itemSectionContinuation': {
+                  'contents': [
+                    {
+                      'commentThreadRenderer': {
+                        'comment': {
+                          'commentRenderer': {
+                            'commentId': 'tv',
+                            'contentText': {'simpleText': '电视'}
+                          }
+                        }
+                      }
+                    },
+                  ]
+                }
+              }
+            };
       return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(data))));
     });
-    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = sign;
+    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))
+      ..web = sign;
     final page = await comments.video('dQw4w9WgXcQ');
-    expect(sign.bodies.map((b) => b['continuation']), [YoutubeComments.videoSectionToken('dQw4w9WgXcQ'), 'TOP']);
+    expect(sign.bodies.map((b) => b['continuation']),
+        [YoutubeComments.videoSectionToken('dQw4w9WgXcQ'), 'TOP']);
     expect(page.comments.single.text, '电视');
   }, skip: NativeCore.instance == null);
 
-  test('with the cookie sign-in, a post\'s comments load as the website and can be written to', () async {
+  test('with the cookie sign-in, a post\'s comments load as the website and can be written to',
+      () async {
     final web = _FakeWeb((endpoint, body) {
       final data = body['browseId'] == 'FEpost_detail'
-          ? {'onResponseReceivedEndpoints': [{'reloadContinuationItemsCommand': {'continuationItems': [
-              {'commentsHeaderRenderer': {
-                'countText': {'runs': [{'text': '7'}]},
-                'sortMenu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
-                  {'serviceEndpoint': {'continuationCommand': {'token': 'TOP'}}},
-                  {'serviceEndpoint': {'continuationCommand': {'token': 'NEW'}}},
-                ]}},
-                'createRenderer': {'commentSimpleboxRenderer': {'submitButton': {'buttonRenderer': {'serviceEndpoint': {'createCommentEndpoint': {'createCommentParams': 'CREATE'}}}}}},
-              }},
-            ]}}]}
+          ? {
+              'onResponseReceivedEndpoints': [
+                {
+                  'reloadContinuationItemsCommand': {
+                    'continuationItems': [
+                      {
+                        'commentsHeaderRenderer': {
+                          'countText': {
+                            'runs': [
+                              {'text': '7'}
+                            ]
+                          },
+                          'sortMenu': {
+                            'sortFilterSubMenuRenderer': {
+                              'subMenuItems': [
+                                {
+                                  'serviceEndpoint': {
+                                    'continuationCommand': {'token': 'TOP'}
+                                  }
+                                },
+                                {
+                                  'serviceEndpoint': {
+                                    'continuationCommand': {'token': 'NEW'}
+                                  }
+                                },
+                              ]
+                            }
+                          },
+                          'createRenderer': {
+                            'commentSimpleboxRenderer': {
+                              'submitButton': {
+                                'buttonRenderer': {
+                                  'serviceEndpoint': {
+                                    'createCommentEndpoint': {'createCommentParams': 'CREATE'}
+                                  }
+                                }
+                              }
+                            }
+                          },
+                        }
+                      },
+                    ]
+                  }
+                }
+              ]
+            }
           : endpoint == 'browse'
-              ? {'onResponseReceivedEndpoints': [{'appendContinuationItemsAction': {'continuationItems': [
-                  {'commentThreadRenderer': {'comment': {'commentRenderer': {'commentId': 'c1', 'contentText': {'simpleText': '好'}}}}},
-                ]}}]}
+              ? {
+                  'onResponseReceivedEndpoints': [
+                    {
+                      'appendContinuationItemsAction': {
+                        'continuationItems': [
+                          {
+                            'commentThreadRenderer': {
+                              'comment': {
+                                'commentRenderer': {
+                                  'commentId': 'c1',
+                                  'contentText': {'simpleText': '好'}
+                                }
+                              }
+                            }
+                          },
+                        ]
+                      }
+                    }
+                  ]
+                }
               : <String, Object?>{};
       return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(data))));
     });
-    final html = '<script>var ytInitialData = {"x":{"browseEndpoint":{"browseId":"FEpost_detail","params":"DETAIL"}}};</script>';
-    final comments = YoutubeComments(MockClient((request) async => http.Response(html, 200)))..web = web;
+    final html =
+        '<script>var ytInitialData = {"x":{"browseEndpoint":{"browseId":"FEpost_detail","params":"DETAIL"}}};</script>';
+    final comments = YoutubeComments(MockClient((request) async => http.Response(html, 200)))
+      ..web = web;
     final loader = CommentsLoader(comments, postId: 'Ugkx1');
     await loader.loadMore();
     expect(web.bodies.first.$2, {'browseId': 'FEpost_detail', 'params': 'DETAIL'});
@@ -292,7 +514,8 @@ class _FakeSignIn implements WebInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
     asked.add(endpoint);
     bodies.add(body);
     return answer(endpoint, body);
@@ -308,7 +531,8 @@ class _FakeWeb implements WebInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
     bodies.add((endpoint, body, ask));
     return answer(endpoint, body);
   }

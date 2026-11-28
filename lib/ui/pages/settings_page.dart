@@ -10,7 +10,8 @@ import '../update_notice.dart';
 import 'account_settings.dart';
 import 'settings_sections.dart';
 
-void openSettingsCategory(BuildContext context, AppController controller, SettingsCategory category) {
+void openSettingsCategory(
+    BuildContext context, AppController controller, SettingsCategory category) {
   Navigator.of(context).push(MaterialPageRoute<void>(
     builder: (_) => Scaffold(
       appBar: SkinAppBar(AppBar(title: Text(category.title))),
@@ -20,7 +21,8 @@ void openSettingsCategory(BuildContext context, AppController controller, Settin
 }
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
+  const SettingsPage(
+      {super.key, required this.controller, this.initial = SettingsCategory.account});
   final AppController controller;
   final SettingsCategory initial;
 
@@ -67,7 +69,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final forget = await confirmSignOut(
       context,
       title: tr('Sign out?'),
-      content: tr('The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'),
+      content: tr(
+          'The sign-ins saved on this device will be deleted. Subscriptions and playlists stay on this device.'),
     );
     if (forget == null) return;
     _controller.webSignIn?.signOut();
@@ -87,7 +90,9 @@ class _SettingsPageState extends State<SettingsPage> {
       return [
         Padding(
           padding: const EdgeInsets.all(32),
-          child: Center(child: Text(tr('No matching settings'), style: TextStyle(color: context.colors.outline))),
+          child: Center(
+              child: Text(tr('No matching settings'),
+                  style: TextStyle(color: context.colors.outline))),
         ),
       ];
     }
@@ -106,21 +111,31 @@ class _SettingsPageState extends State<SettingsPage> {
               fillColor: context.colors.onInverseSurface,
               hintText: tr('Search settings'),
               prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
-              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('Clear'), icon: Icon(AppIcons.x, size: 18), onPressed: _clearSearch),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+              suffixIcon: _query.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: tr('Clear'),
+                      icon: Icon(AppIcons.x, size: 18),
+                      onPressed: _clearSearch),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
             ),
           ),
         ),
       );
 
-  Widget _categoryTile(SettingsCategory category, bool wide, {bool withSubtitle = true, Widget? leading}) {
+  Widget _categoryTile(SettingsCategory category, bool wide,
+      {bool withSubtitle = true, Widget? leading}) {
     final theme = Theme.of(context);
     final highlighted = wide && _query.isEmpty && category == _selected;
     return ListTile(
       tileColor: highlighted ? theme.colorScheme.onInverseSurface : null,
       leading: leading ?? Icon(category.icon),
       title: Text(category.title, style: theme.textTheme.titleMedium),
-      subtitle: withSubtitle ? Text(category.subtitle, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline)) : null,
+      subtitle: withSubtitle
+          ? Text(category.subtitle,
+              style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline))
+          : null,
       onTap: () => _choose(category, wide),
     );
   }
@@ -135,7 +150,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ..._matchingRows(context)
             else ...[
               for (final c in SettingsCategory.values)
-                if (c != SettingsCategory.account && c != SettingsCategory.about) _categoryTile(c, wide),
+                if (c != SettingsCategory.account && c != SettingsCategory.about)
+                  _categoryTile(c, wide),
               _categoryTile(SettingsCategory.account, wide, withSubtitle: false),
               if (_controller.account?.active ?? false)
                 ListTile(
@@ -147,7 +163,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 SettingsCategory.about,
                 wide,
                 withSubtitle: false,
-                leading: UpdateDot(controller: _controller, child: Icon(SettingsCategory.about.icon)),
+                leading:
+                    UpdateDot(controller: _controller, child: Icon(SettingsCategory.about.icon)),
               ),
             ],
           ]);
@@ -158,7 +175,8 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_query.isEmpty) return _CategoryRows(controller: _controller, category: _selected);
     return ListenableBuilder(
       listenable: _controller,
-      builder: (context, _) => ListView(padding: const EdgeInsets.only(top: 4, bottom: 24), children: _matchingRows(context)),
+      builder: (context, _) => ListView(
+          padding: const EdgeInsets.only(top: 4, bottom: 24), children: _matchingRows(context)),
     );
   }
 
@@ -169,7 +187,8 @@ class _SettingsPageState extends State<SettingsPage> {
           if (!wide) return _categoryList(false);
           return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Expanded(flex: 4, child: _categoryList(true)),
-            VerticalDivider(width: 1, thickness: 1, color: context.colors.outline.withValues(alpha: 0.1)),
+            VerticalDivider(
+                width: 1, thickness: 1, color: context.colors.outline.withValues(alpha: 0.1)),
             Expanded(flex: 6, child: _rightPane()),
           ]);
         },

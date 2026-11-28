@@ -62,6 +62,7 @@ enum SearchQuality {
   const SearchQuality(this._label, this.bytes);
   final String _label;
   String get label => tr(_label);
+
   /// The filter's field in YouTube's `sp` (HD 4, 4K 14, HDR 25), encoded.
   final List<int> bytes;
 }
@@ -97,5 +98,9 @@ String? searchParams({
   ];
   if (bytes.isEmpty) return null;
   // Escaped twice, as YouTube's own result URLs carry it.
-  return base64.encode(bytes).replaceAll('=', '%253D').replaceAll('+', '%252B').replaceAll('/', '%252F');
+  return base64
+      .encode(bytes)
+      .replaceAll('=', '%253D')
+      .replaceAll('+', '%252B')
+      .replaceAll('/', '%252F');
 }

@@ -29,13 +29,16 @@ class SortMenu<T extends Enum> extends StatelessWidget {
   final T value;
   final String Function(T value) labelOf;
   final ValueChanged<T> onSelected;
+
   /// Whether the list is shown last to first; with [onReversed], the menu
   /// offers 倒序.
   final bool? reversed;
   final ValueChanged<bool>? onReversed;
+
   /// Opens the dialog that drags the list into the user's own order.
   final VoidCallback? onArrange;
   final String? tooltip;
+
   /// Only the icon, for a crowded row.
   final bool compact;
 
@@ -57,13 +60,21 @@ class SortMenu<T extends Enum> extends StatelessWidget {
         }
       },
       itemBuilder: (context) => [
-        for (final order in values) CheckedPopupMenuItem<Object>(value: order, checked: order == value, child: Text(labelOf(order))),
+        for (final order in values)
+          CheckedPopupMenuItem<Object>(
+              value: order, checked: order == value, child: Text(labelOf(order))),
         if (onReversed != null || onArrange != null) const PopupMenuDivider(),
-        if (onReversed != null) CheckedPopupMenuItem<Object>(value: _Extra.reverse, checked: back, child: Text(tr('Reverse order'))),
+        if (onReversed != null)
+          CheckedPopupMenuItem<Object>(
+              value: _Extra.reverse, checked: back, child: Text(tr('Reverse order'))),
         if (onArrange != null)
           PopupMenuItem<Object>(
             value: _Extra.arrange,
-            child: ListTile(contentPadding: EdgeInsets.zero, leading: Icon(AppIcons.dotsSixVertical), title: Text(tr('Arrange by dragging…'), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(AppIcons.dotsSixVertical),
+                title:
+                    Text(tr('Arrange by dragging…'), maxLines: 1, overflow: TextOverflow.ellipsis)),
           ),
       ],
       child: compact
@@ -75,7 +86,11 @@ class SortMenu<T extends Enum> extends StatelessWidget {
                 const SizedBox(width: 6),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 220),
-                  child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.onSurface, fontWeight: FontWeight.w600)),
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          TextStyle(color: context.colors.onSurface, fontWeight: FontWeight.w600)),
                 ),
               ]),
             ),
@@ -92,10 +107,14 @@ Future<List<T>?> showArrangeDialog<T extends Object>(
   required String Function(T item) labelOf,
   String Function(T item)? detailOf,
 }) =>
-    showDialog<List<T>>(context: context, builder: (_) => _ArrangeDialog<T>(title: title, items: items, labelOf: labelOf, detailOf: detailOf));
+    showDialog<List<T>>(
+        context: context,
+        builder: (_) =>
+            _ArrangeDialog<T>(title: title, items: items, labelOf: labelOf, detailOf: detailOf));
 
 class _ArrangeDialog<T extends Object> extends StatefulWidget {
-  const _ArrangeDialog({required this.title, required this.items, required this.labelOf, this.detailOf});
+  const _ArrangeDialog(
+      {required this.title, required this.items, required this.labelOf, this.detailOf});
   final String title;
   final List<T> items;
   final String Function(T item) labelOf;
@@ -119,9 +138,11 @@ class _ArrangeDialogState<T extends Object> extends State<_ArrangeDialog<T>> {
         width: dialogWidth(context, 460),
         height: 480,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(tr('Drag to reorder, pin to move to the top.'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+          Text(tr('Drag to reorder, pin to move to the top.'),
+              style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
           const SizedBox(height: 8),
-          Expanded(child: ReorderableListView.builder(
+          Expanded(
+              child: ReorderableListView.builder(
             buildDefaultDragHandles: false,
             itemCount: _items.length,
             onReorderItem: _move,
@@ -131,10 +152,18 @@ class _ArrangeDialogState<T extends Object> extends State<_ArrangeDialog<T>> {
                 key: ObjectKey(item),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                leading: ReorderableDragStartListener(index: i, child: Padding(padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
+                leading: ReorderableDragStartListener(
+                    index: i,
+                    child: Padding(
+                        padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
                 title: Text(widget.labelOf(item), maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: detailOf == null ? null : Text(detailOf(item), maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: IconButton(tooltip: tr('Move to top'), icon: Icon(AppIcons.alignTop), onPressed: i == 0 ? null : () => _move(i, 0)),
+                subtitle: detailOf == null
+                    ? null
+                    : Text(detailOf(item), maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: IconButton(
+                    tooltip: tr('Move to top'),
+                    icon: Icon(AppIcons.alignTop),
+                    onPressed: i == 0 ? null : () => _move(i, 0)),
               );
             },
           )),
@@ -166,14 +195,18 @@ class LengthMenu extends StatelessWidget {
         if (picked != value) onSelected(picked);
       },
       itemBuilder: (context) => [
-        for (final length in SearchDuration.values) CheckedPopupMenuItem(value: length, checked: length == value, child: Text(length.label)),
+        for (final length in SearchDuration.values)
+          CheckedPopupMenuItem(value: length, checked: length == value, child: Text(length.label)),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(AppIcons.timer, size: 18, color: color),
           const SizedBox(width: 6),
-          Text(value.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+          Text(value.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: color, fontWeight: FontWeight.w600)),
         ]),
       ),
     );

@@ -3,8 +3,13 @@ import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/models.dart';
 
 void main() {
-  VideoItem video(String id, {bool members = false}) =>
-      VideoItem(id: id, title: 'A video', channel: 'C', duration: 600, url: 'https://www.youtube.com/watch?v=$id', membersOnly: members);
+  VideoItem video(String id, {bool members = false}) => VideoItem(
+      id: id,
+      title: 'A video',
+      channel: 'C',
+      duration: 600,
+      url: 'https://www.youtube.com/watch?v=$id',
+      membersOnly: members);
 
   test('members-only videos are hidden only when asked', () {
     const prefs = AppPreferences(hideMembersOnly: true);

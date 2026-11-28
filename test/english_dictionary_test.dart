@@ -38,12 +38,18 @@ void main() {
   });
 
   test('words have levels from exam lists, then from how common they are', () {
-    final levels = EnglishDictionary.parse('add\tæd\tv. 加\tp:added/d:added/i:adding/3:adds\tzk gk cet4 ky\t5\t330\n'
+    final levels = EnglishDictionary.parse(
+        'add\tæd\tv. 加\tp:added/d:added/i:adding/3:adds\tzk gk cet4 ky\t5\t330\n'
         'ubiquitous\tju:\ta. 无所不在的\t\tgre\t1\t8148\n'
         'abruptly\t\tad. 突然地\t\t\t0\t7000\n'
         'aaron\t\tn. 亚伦\t\t\t0\t15000\n'
         'zymurgy\t\tn. 酿造学\t\t\t0\t40000\n');
-    expect(levels.lookup('add').single.tags, [EnglishLevel.middleSchool, EnglishLevel.highSchool, EnglishLevel.cet4, EnglishLevel.postgraduate]);
+    expect(levels.lookup('add').single.tags, [
+      EnglishLevel.middleSchool,
+      EnglishLevel.highSchool,
+      EnglishLevel.cet4,
+      EnglishLevel.postgraduate
+    ]);
     expect(levels.lookup('add').single.collins, 5);
     expect(levels.levelOf('added'), EnglishLevel.middleSchool.index);
     expect(levels.levelOf('ubiquitous'), EnglishLevel.gre.index);
@@ -60,9 +66,11 @@ void main() {
   });
 
   test('English meanings come from the eighth column', () {
-    final d = EnglishDictionary.parse('run\trʌn\tv. 跑\tp:ran\t\t5\t100\tv. To move swiftly on foot.\\nn. An act of running.\n'
+    final d = EnglishDictionary.parse(
+        'run\trʌn\tv. 跑\tp:ran\t\t5\t100\tv. To move swiftly on foot.\\nn. An act of running.\n'
         'walk\twɔ:k\tv. 走\t\t\t5\t200\n');
-    expect(d.lookup('run').single.english, ['v. To move swiftly on foot.', 'n. An act of running.']);
+    expect(
+        d.lookup('run').single.english, ['v. To move swiftly on foot.', 'n. An act of running.']);
     expect(d.lookup('run').single.meanings, ['v. 跑']);
     expect(d.lookup('walk').single.english, isEmpty);
   });
@@ -93,9 +101,10 @@ void main() {
   });
 
   test('WikDict meanings are marked as a reference; a word without Chinese keeps its English', () {
-    final d = EnglishDictionary.parse('bank\tbaŋk\tn. 银行；岸\t\tcet4\t0\t900\tn. An institution\t\tw\n'
-        'zymurgy\t\tn. 酿造学\t\t\t0\t40000\t\t\td\n'
-        'quark\t\t\t\t\t0\t30000\tn. A particle\t\t\n');
+    final d =
+        EnglishDictionary.parse('bank\tbaŋk\tn. 银行；岸\t\tcet4\t0\t900\tn. An institution\t\tw\n'
+            'zymurgy\t\tn. 酿造学\t\t\t0\t40000\t\t\td\n'
+            'quark\t\t\t\t\t0\t30000\tn. A particle\t\t\n');
     expect(d.lookup('bank').single.chineseReference, isFalse);
     expect(d.lookup('zymurgy').single.chineseReference, isTrue);
     final quark = d.lookup('quark').single;

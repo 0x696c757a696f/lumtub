@@ -26,9 +26,14 @@ void main() {
   tearDown(() => dir.deleteSync(recursive: true));
 
   // The narrowest iPhone (SE) and Android phones, at normal and large text.
-  for (final (width, scale) in [for (final w in [320.0, 360.0, 375.0, 412.0]) for (final s in [1.0, 1.3]) (w, s)]) {
+  for (final (width, scale) in [
+    for (final w in [320.0, 360.0, 375.0, 412.0])
+      for (final s in [1.0, 1.3]) (w, s)
+  ]) {
     for (final (google, waiting) in [(false, false), (false, true), (true, false)]) {
-      testWidgets('sign-ins (Google $google, browser waiting $waiting) fit $width wide at text ×$scale', (tester) async {
+      testWidgets(
+          'sign-ins (Google $google, browser waiting $waiting) fit $width wide at text ×$scale',
+          (tester) async {
         tester.view.physicalSize = Size(width, 900);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
@@ -44,7 +49,14 @@ void main() {
         final web = YoutubeWebSignIn(folder: dir.path)
           ..waiting = waiting
           ..browser = 'Chrome';
-        await tester.pumpWidget(MaterialApp(builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: child!), home: Scaffold(body: SingleChildScrollView(child: AccountSettings(account: account, webSignIn: web, note: const TextStyle())))));
+        await tester.pumpWidget(MaterialApp(
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!),
+            home: Scaffold(
+                body: SingleChildScrollView(
+                    child: AccountSettings(
+                        account: account, webSignIn: web, note: const TextStyle())))));
         // Signed in to Google, its section is open already.
         if (!google) {
           await tester.ensureVisible(find.text('Google sign-in'));

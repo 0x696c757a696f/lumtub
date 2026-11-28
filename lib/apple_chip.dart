@@ -12,7 +12,8 @@ abstract final class AppleChip {
 
   static String _readModel() {
     try {
-      final uname = DynamicLibrary.process().lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>('uname');
+      final uname = DynamicLibrary.process()
+          .lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>('uname');
       // Darwin's struct utsname: five fields of 256 characters, the
       // machine last.
       final buffer = calloc<Uint8>(5 * 256);

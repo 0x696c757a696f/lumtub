@@ -24,7 +24,8 @@ Future<Map<String, dynamic>> airPlayAsk(Map<String, Object?> ask) async {
 String _airPlayCall(String text) {
   final core = NativeCore.instance;
   if (core == null) return '{"error":"no lumtub_core"}';
-  final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_airplay');
+  final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_airplay');
   return core.take(core.withText(text, call)) ?? '{"error":"no answer"}';
 }
 
@@ -71,19 +72,31 @@ class AirPlayPairings {
 
 /// An Apple TV, or a TV with AirPlay, that plays the address it is given.
 class AirPlayDevice implements CastDevice {
-  AirPlayDevice({required this.id, required this.name, required this.address, required this.port, required this.features, this.flags = 0, this.pairings});
+  AirPlayDevice(
+      {required this.id,
+      required this.name,
+      required this.address,
+      required this.port,
+      required this.features,
+      this.flags = 0,
+      this.pairings});
 
   /// A receiver found by mDNS, or null for one that plays no video.
   static AirPlayDevice? fromService(MdnsService service, AirPlayPairings? pairings) {
     final features = airPlayFeatures(service.txt['features'] ?? service.txt['ft']);
-    if (features & 1 == 0 || RegExp(r'^Mac\d+,\d+$').hasMatch(service.txt['model'] ?? '')) return null;
+    if (features & 1 == 0 || RegExp(r'^Mac\d+,\d+$').hasMatch(service.txt['model'] ?? '')) {
+      return null;
+    }
     return AirPlayDevice(
       id: 'airplay:${service.txt['deviceid'] ?? service.id}',
       name: service.name,
       address: service.host,
       port: service.port,
       features: features,
-      flags: int.tryParse((service.txt['sf'] ?? service.txt['flags'] ?? '0').replaceFirst(RegExp('^0[xX]'), ''), radix: 16) ?? 0,
+      flags: int.tryParse(
+              (service.txt['sf'] ?? service.txt['flags'] ?? '0').replaceFirst(RegExp('^0[xX]'), ''),
+              radix: 16) ??
+          0,
       pairings: pairings,
     );
   }
@@ -112,10 +125,13 @@ class AirPlayDevice implements CastDevice {
   /// Whether the device asks for the PIN it shows.
   bool get needsPin => flags & (0x8 | 0x200) != 0;
 
-  String get _target => address.type == InternetAddressType.IPv6 ? '[${address.address}]:$port' : '${address.address}:$port';
+  String get _target => address.type == InternetAddressType.IPv6
+      ? '[${address.address}]:$port'
+      : '${address.address}:$port';
 
   /// Asks the device to show a PIN; the pairing to finish with it.
-  Future<int> startPairing() async => (await airPlayAsk({'op': 'pairStart', 'address': _target}))['pairing'] as int;
+  Future<int> startPairing() async =>
+      (await airPlayAsk({'op': 'pairStart', 'address': _target}))['pairing'] as int;
 
   /// Pairs with the PIN the user read off the TV and keeps the keys.
   Future<void> finishPairing(int pairing, String pin) async {
@@ -144,7 +160,9 @@ class AirPlayDevice implements CastDevice {
         await pairings?.forget(id);
         throw const AirPlayPinNeeded();
       }
-      if (credentials == null && RegExp('needs a PIN|needs pairing|refused').hasMatch(e.message)) throw const AirPlayPinNeeded();
+      if (credentials == null && RegExp('needs a PIN|needs pairing|refused').hasMatch(e.message)) {
+        throw const AirPlayPinNeeded();
+      }
       rethrow;
     }
   }
@@ -160,7 +178,8 @@ class AirPlayDevice implements CastDevice {
   @override
   Future<void> pause() => _steer({'op': 'rate', 'value': 0.0});
   @override
-  Future<void> seek(Duration position) => _steer({'op': 'seek', 'seconds': position.inMilliseconds / 1000});
+  Future<void> seek(Duration position) =>
+      _steer({'op': 'seek', 'seconds': position.inMilliseconds / 1000});
 
   @override
   Future<CastStatus?> status() async {
@@ -200,5 +219,9 @@ class AirPlayDevice implements CastDevice {
 }
 
 /// Searches the LAN for AirPlay receivers that play video.
-Stream<CastDevice> discoverAirPlay({Duration timeout = const Duration(seconds: 6), AirPlayPairings? pairings}) =>
-    discoverMdns(service: airPlayService, timeout: timeout).map((s) => AirPlayDevice.fromService(s, pairings)).where((d) => d != null).cast<CastDevice>();
+Stream<CastDevice> discoverAirPlay(
+        {Duration timeout = const Duration(seconds: 6), AirPlayPairings? pairings}) =>
+    discoverMdns(service: airPlayService, timeout: timeout)
+        .map((s) => AirPlayDevice.fromService(s, pairings))
+        .where((d) => d != null)
+        .cast<CastDevice>();

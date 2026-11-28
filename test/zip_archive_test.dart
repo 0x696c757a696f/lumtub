@@ -82,13 +82,15 @@ void main() {
       expect(File('${temp.path}/evil.dll').existsSync(), isFalse);
 
       final flat = Directory('${temp.path}/flat')..createSync();
-      final picked = await extractZip(archive, flat, select: (name) => name.endsWith('.exe') ? name.split('/').last : null);
+      final picked = await extractZip(archive, flat,
+          select: (name) => name.endsWith('.exe') ? name.split('/').last : null);
       expect(picked, ['tool.exe']);
       expect(flat.listSync().map((e) => e.uri.pathSegments.last), ['tool.exe']);
     });
 
     test('refuses a damaged entry and a file that is not a zip', () async {
-      final bad = File('${temp.path}/bad.zip')..writeAsBytesSync(_zip({'x/bin/tool.exe': exe}, corruptCrc: true));
+      final bad = File('${temp.path}/bad.zip')
+        ..writeAsBytesSync(_zip({'x/bin/tool.exe': exe}, corruptCrc: true));
       final out = Directory('${temp.path}/out')..createSync();
       await expectLater(extractZip(bad, out), throwsFormatException);
       final junk = File('${temp.path}/junk.zip')..writeAsBytesSync(List.filled(100, 7));
@@ -126,11 +128,13 @@ void main() {
         at++;
       }
       data.setUint16(at + 28, 60000, Endian.little);
-      await expectLater(extractZip(File('${temp.path}/n.zip')..writeAsBytesSync(bytes), out), throwsFormatException);
+      await expectLater(extractZip(File('${temp.path}/n.zip')..writeAsBytesSync(bytes), out),
+          throwsFormatException);
       final big = _zip({'name.txt': exe});
       data = ByteData.sublistView(big);
       data.setUint32(big.length - 22 + 12, 0x7FFFFFFF, Endian.little);
-      await expectLater(extractZip(File('${temp.path}/d.zip')..writeAsBytesSync(big), out), throwsFormatException);
+      await expectLater(extractZip(File('${temp.path}/d.zip')..writeAsBytesSync(big), out),
+          throwsFormatException);
     });
   });
 }

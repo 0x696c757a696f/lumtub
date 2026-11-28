@@ -7,7 +7,10 @@ void main() {
   Future<TestGesture> hover(WidgetTester tester, String text, double width) async {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: Center(child: SizedBox(width: width, child: TitleText(text, maxLines: 2, style: const TextStyle(fontSize: 14)))),
+        body: Center(
+            child: SizedBox(
+                width: width,
+                child: TitleText(text, maxLines: 2, style: const TextStyle(fontSize: 14)))),
       ),
     ));
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -35,7 +38,11 @@ void main() {
   testWidgets('a long press on a cut title opens nothing', (tester) async {
     final long = List.filled(40, 'word').join(' ');
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: Center(child: SizedBox(width: 120, child: TitleText(long, maxLines: 2, style: const TextStyle(fontSize: 14))))),
+      home: Scaffold(
+          body: Center(
+              child: SizedBox(
+                  width: 120,
+                  child: TitleText(long, maxLines: 2, style: const TextStyle(fontSize: 14))))),
     ));
     await tester.longPress(find.byType(TitleText));
     await tester.pump(const Duration(seconds: 1));

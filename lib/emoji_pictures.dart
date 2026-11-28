@@ -42,7 +42,11 @@ abstract final class EmojiPictures {
       _save?.cancel();
       _save = Timer(const Duration(seconds: 5), () {
         final file = _file;
-        if (file != null) unawaited(_writes.run(() => writeFileAtomic(file, jsonEncode(_known))).then((_) {}, onError: (_) {}));
+        if (file != null) {
+          unawaited(_writes
+              .run(() => writeFileAtomic(file, jsonEncode(_known)))
+              .then((_) {}, onError: (_) {}));
+        }
       });
     }
   }

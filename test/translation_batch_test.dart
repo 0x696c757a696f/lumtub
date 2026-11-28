@@ -19,7 +19,9 @@ void main() {
   test('short lines asked together go out as one request and come back split', () async {
     final inner = _Upper();
     final translator = CachingTranslator(inner, TranslationCache(), 'test', batch: true);
-    final results = await Future.wait([for (final t in ['one', 'two', 'three']) translator.translate(t, 'en')]);
+    final results = await Future.wait([
+      for (final t in ['one', 'two', 'three']) translator.translate(t, 'en')
+    ]);
     expect(results, ['ONE', 'TWO', 'THREE']);
     expect(inner.asked, ['one\ntwo\nthree']);
     expect(await translator.translate('two', 'en'), 'TWO');
@@ -29,7 +31,8 @@ void main() {
   test('the same text asked twice while in flight is sent once', () async {
     final inner = _Upper();
     final translator = CachingTranslator(inner, TranslationCache(), 'test');
-    final both = await Future.wait([translator.translate('a\nb', 'en'), translator.translate('a\nb', 'en')]);
+    final both =
+        await Future.wait([translator.translate('a\nb', 'en'), translator.translate('a\nb', 'en')]);
     expect(both, ['A\nB', 'A\nB']);
     expect(inner.asked, ['a\nb']);
   });
@@ -37,7 +40,8 @@ void main() {
   test('an answer that loses the line breaks is asked again line by line', () async {
     final inner = _Upper()..joinLines = true;
     final translator = CachingTranslator(inner, TranslationCache(), 'test', batch: true);
-    final results = await Future.wait([translator.translate('x', 'en'), translator.translate('y', 'en')]);
+    final results =
+        await Future.wait([translator.translate('x', 'en'), translator.translate('y', 'en')]);
     expect(results, ['X', 'Y']);
     expect(inner.asked, ['x\ny', 'x', 'y']);
   });

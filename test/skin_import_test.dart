@@ -26,14 +26,16 @@ void main() {
   test('a font file changed while Lumtub runs is loaded again under a new name', () async {
     final skins = Directory('${temp.path}/skins');
     final folder = Directory('${skins.path}/font-skin')..createSync(recursive: true);
-    final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync())! as Map<String, Object?>;
+    final json =
+        decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync())! as Map<String, Object?>;
     File('${folder.path}/skin.jsonc').writeAsStringSync(jsonEncode({
       ...json,
       'id': 'font-skin',
       'fonts': {'Skin Face': 'face.ttf'},
       'text': {'font': 'Skin Face'},
     }));
-    final face = File('${folder.path}/face.ttf')..writeAsBytesSync(File('assets/fonts/LumtubQuotes-Regular.ttf').readAsBytesSync());
+    final face = File('${folder.path}/face.ttf')
+      ..writeAsBytesSync(File('assets/fonts/LumtubQuotes-Regular.ttf').readAsBytesSync());
     await SkinLibrary.instance.load(folder: skins);
     expect(SkinLibrary.instance.byId('font-skin')!.font, 'Skin Face');
     await SkinLibrary.instance.reload();
@@ -57,7 +59,8 @@ void main() {
     }));
     expect(await SkinLibrary.instance.importFile(zip), 'shared-skin');
     expect(File('${skins.path}/shared-skin/note.txt').readAsStringSync(), 'kept');
-    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toSet(), {'my-paper', 'shared-skin'});
+    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toSet(),
+        {'my-paper', 'shared-skin'});
 
     final wrong = File('${temp.path}/x.jsonc')..writeAsStringSync(skinText('paper'));
     await expectLater(SkinLibrary.instance.importFile(wrong.path), throwsFormatException);
@@ -74,7 +77,8 @@ void main() {
     File('${skins.path}/again/old.txt').writeAsStringSync('old');
     expect(await SkinLibrary.instance.importFile(first.path), 'again');
     expect(File('${skins.path}/again/old.txt').existsSync(), isFalse);
-    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toList(), ['again']);
+    expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toList(),
+        ['again']);
     // A replaced skin left over from a failed removal is not listed.
     Directory('${skins.path}/again.replaced-1').createSync();
     File('${skins.path}/again.replaced-1/skin.jsonc').writeAsStringSync(skinText('again'));
@@ -83,7 +87,8 @@ void main() {
   });
 
   test('on a TV a skin without a focused look gets a ring in its accent', () {
-    Skin parse() => Skin.parse(decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()), folder: 'skins/paper', builtIn: true);
+    Skin parse() => Skin.parse(decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()),
+        folder: 'skins/paper', builtIn: true);
     Skin.formFactor = 'desktop';
     expect(parse().button?.focused, isNull);
     Skin.formFactor = 'tv';
@@ -121,7 +126,10 @@ Uint8List _storedZip(Map<String, List<int>> files) {
       ..setUint32(18, data.length, Endian.little)
       ..setUint32(22, data.length, Endian.little)
       ..setUint16(26, nameBytes.length, Endian.little);
-    out..add(local.buffer.asUint8List())..add(nameBytes)..add(data);
+    out
+      ..add(local.buffer.asUint8List())
+      ..add(nameBytes)
+      ..add(data);
     final entry = head(46)
       ..setUint32(0, 0x02014b50, Endian.little)
       ..setUint16(4, 20, Endian.little)
@@ -131,7 +139,9 @@ Uint8List _storedZip(Map<String, List<int>> files) {
       ..setUint32(24, data.length, Endian.little)
       ..setUint16(28, nameBytes.length, Endian.little)
       ..setUint32(42, offset, Endian.little);
-    central..add(entry.buffer.asUint8List())..add(nameBytes);
+    central
+      ..add(entry.buffer.asUint8List())
+      ..add(nameBytes);
   }
   final start = out.length;
   out.add(central.toBytes());

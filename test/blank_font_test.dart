@@ -7,10 +7,15 @@ import 'package:lumtub/appearance_settings.dart';
 
 void main() {
   testWidgets('invisible characters in names take no room and draw nothing', (tester) async {
-    final loader = FontLoader(blankFont)..addFont(Future.value(ByteData.sublistView(File('assets/fonts/LumtubBlank-Regular.ttf').readAsBytesSync())));
+    final loader = FontLoader(blankFont)
+      ..addFont(Future.value(
+          ByteData.sublistView(File('assets/fonts/LumtubBlank-Regular.ttf').readAsBytesSync())));
     await loader.load();
     double width(String text) {
-      final painter = TextPainter(text: TextSpan(text: text, style: const TextStyle(fontFamily: blankFont, fontSize: 20)), textDirection: TextDirection.ltr)..layout();
+      final painter = TextPainter(
+          text: TextSpan(text: text, style: const TextStyle(fontFamily: blankFont, fontSize: 20)),
+          textDirection: TextDirection.ltr)
+        ..layout();
       final w = painter.width;
       painter.dispose();
       return w;

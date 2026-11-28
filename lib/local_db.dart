@@ -24,7 +24,8 @@ class LocalDb {
   LocalDb._(this.path);
 
   /// The database next to [file], such as `data/library.json`.
-  factory LocalDb.beside(File file) => LocalDb('${file.parent.path}${Platform.pathSeparator}lumtub.db');
+  factory LocalDb.beside(File file) =>
+      LocalDb('${file.parent.path}${Platform.pathSeparator}lumtub.db');
 
   static final _open = <String, LocalDb>{};
 
@@ -39,7 +40,8 @@ class LocalDb {
   /// Whether stores keep their data here: the core is there and has the
   /// database. Without it they keep their JSON files.
   static bool get enabled =>
-      enabledForTesting ?? (!_underTest && (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false));
+      enabledForTesting ??
+      (!_underTest && (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false));
 
   static final _underTest = Platform.environment['FLUTTER_TEST'] == 'true';
 
@@ -53,12 +55,16 @@ class LocalDb {
   Future<DbContents> read(List<String> lists, {List<String> prefixes = const []}) async {
     final ask = jsonEncode({'path': path, 'lists': lists, 'prefixes': prefixes});
     final (answer, bodies) = await Isolate.run(() => _readWithBodies(ask));
-    if (answer['error'] case final String error) throw LocalDbException(error, answer['setAside'] as String?);
+    if (answer['error'] case final String error) {
+      throw LocalDbException(error, answer['setAside'] as String?);
+    }
     final found = <String, List<(String, Object?)>>{};
     for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries) {
       final entries = <(String, Object?)>[];
       for (final pair in value is List ? value : const []) {
-        if (pair is List && pair.length == 2 && pair[0] is String) entries.add((pair[0] as String, pair[1]));
+        if (pair is List && pair.length == 2 && pair[0] is String) {
+          entries.add((pair[0] as String, pair[1]));
+        }
       }
       found[key as String] = entries;
       _sent[key] = bodies[key] ?? const {};
@@ -74,7 +80,8 @@ class LocalDb {
   /// removes the lists in [drop]; [meta] is set as well. All of it is one
   /// transaction. On failure nothing is changed, and the next write sends
   /// everything again.
-  Future<void> write(Map<String, List<(String, String)>> lists, {Iterable<String> drop = const [], Map<String, String> meta = const {}}) async {
+  Future<void> write(Map<String, List<(String, String)>> lists,
+      {Iterable<String> drop = const [], Map<String, String> meta = const {}}) async {
     final ask = StringBuffer('{"path":')
       ..write(jsonEncode(path))
       ..write(',"drop":')
@@ -135,7 +142,10 @@ class LocalDb {
           ..write('{"name":')
           ..write(jsonEncode(name))
           ..write(',"remove":')
-          ..write(jsonEncode([for (final key in known.keys) if (!now.containsKey(key)) key]))
+          ..write(jsonEncode([
+            for (final key in known.keys)
+              if (!now.containsKey(key)) key
+          ]))
           ..write(',"insert":[')
           ..write(added)
           ..write('],"bodies":{')
@@ -180,19 +190,31 @@ bool _inOrder(Map<String, String> before, Map<String, String> now) {
 /// same `lumtub.db` as the library by the core's `store_texts`.
 extension LocalDbTexts on LocalDb {
   /// Whether this core keeps texts; older cores and tests keep files.
-  static bool get available => LocalDb.enabled && (NativeCore.instance?.library.providesSymbol('lumtub_store_texts') ?? false);
+  static bool get available =>
+      LocalDb.enabled &&
+      (NativeCore.instance?.library.providesSymbol('lumtub_store_texts') ?? false);
 
   Future<Map<String, dynamic>> _texts(String op, Map<String, Object?> fields) async {
     final ask = jsonEncode({'path': path, 'op': op, ...fields});
     final answer = await Isolate.run(() => callCoreJson('lumtub_store_texts', ask));
-    if (answer['error'] case final String error) throw LocalDbException(error, answer['setAside'] as String?);
+    if (answer['error'] case final String error) {
+      throw LocalDbException(error, answer['setAside'] as String?);
+    }
     return answer;
   }
 
   /// Keeps [body] as [video]'s transcript in [lang]; of [origin], only the
   /// newest [keep] stay (0 keeps all).
-  Future<void> putTranscript(String video, String lang, String origin, String body, {String model = '', int keep = 0}) =>
-      _texts('transcript.put', {'video': video, 'lang': lang, 'origin': origin, 'model': model, 'body': body, 'keep': keep});
+  Future<void> putTranscript(String video, String lang, String origin, String body,
+          {String model = '', int keep = 0}) =>
+      _texts('transcript.put', {
+        'video': video,
+        'lang': lang,
+        'origin': origin,
+        'model': model,
+        'body': body,
+        'keep': keep
+      });
 
   /// [video]'s transcripts, newest first.
   Future<List<SavedTranscript>> transcripts(String video, {List<String> origins = const []}) async {
@@ -205,17 +227,21 @@ extension LocalDbTexts on LocalDb {
             origin: '${t['origin']}',
             model: '${t['model'] ?? ''}',
             body: '${t['body'] ?? ''}',
-            created: DateTime.fromMillisecondsSinceEpoch(((t['created'] as num?) ?? 0).toInt() * 1000),
+            created:
+                DateTime.fromMillisecondsSinceEpoch(((t['created'] as num?) ?? 0).toInt() * 1000),
           ),
     ];
   }
 
   /// Forgets [video]'s transcripts (all videos when empty), of [origin]
   /// only when given.
-  Future<void> forgetTranscripts({String video = '', String origin = ''}) => _texts('transcript.forget', {'video': video, 'origin': origin});
+  Future<void> forgetTranscripts({String video = '', String origin = ''}) =>
+      _texts('transcript.forget', {'video': video, 'origin': origin});
 
-  Future<void> putSummary(String video, String lang, String provider, String body, {int keep = 0}) =>
-      _texts('summary.put', {'video': video, 'lang': lang, 'provider': provider, 'body': body, 'keep': keep});
+  Future<void> putSummary(String video, String lang, String provider, String body,
+          {int keep = 0}) =>
+      _texts('summary.put',
+          {'video': video, 'lang': lang, 'provider': provider, 'body': body, 'keep': keep});
 
   Future<String?> summary(String video, String lang) async {
     final found = (await _texts('summary.get', {'video': video, 'lang': lang}))['summary'];
@@ -227,8 +253,21 @@ extension LocalDbTexts on LocalDb {
 
   /// Keeps a note on [video] at [at], or changes note [id]'s words.
   /// Answers the note's id.
-  Future<int> putNote({required String video, int id = 0, String title = '', Duration at = Duration.zero, String quote = '', String body = ''}) async {
-    final answer = await _texts('note.put', {'id': id, 'video': video, 'title': title, 'at': at.inMilliseconds, 'quote': quote, 'body': body});
+  Future<int> putNote(
+      {required String video,
+      int id = 0,
+      String title = '',
+      Duration at = Duration.zero,
+      String quote = '',
+      String body = ''}) async {
+    final answer = await _texts('note.put', {
+      'id': id,
+      'video': video,
+      'title': title,
+      'at': at.inMilliseconds,
+      'quote': quote,
+      'body': body
+    });
     return (answer['id'] as num?)?.toInt() ?? 0;
   }
 
@@ -248,7 +287,14 @@ extension LocalDbTexts on LocalDb {
 /// A note on a moment of a video: the subtitle words it is about and what
 /// the person wrote, or had AI write, about them.
 class VideoNote {
-  const VideoNote({required this.id, required this.video, required this.at, required this.created, this.title = '', this.quote = '', this.body = ''});
+  const VideoNote(
+      {required this.id,
+      required this.video,
+      required this.at,
+      required this.created,
+      this.title = '',
+      this.quote = '',
+      this.body = ''});
   factory VideoNote.fromJson(Map<dynamic, dynamic> json) => VideoNote(
         id: (json['id'] as num?)?.toInt() ?? 0,
         video: '${json['video'] ?? ''}',
@@ -256,7 +302,8 @@ class VideoNote {
         at: Duration(milliseconds: (json['at'] as num?)?.toInt() ?? 0),
         quote: '${json['quote'] ?? ''}',
         body: '${json['body'] ?? ''}',
-        created: DateTime.fromMillisecondsSinceEpoch(((json['created'] as num?) ?? 0).toInt() * 1000),
+        created:
+            DateTime.fromMillisecondsSinceEpoch(((json['created'] as num?) ?? 0).toInt() * 1000),
       );
   final int id;
   final String video;
@@ -269,11 +316,18 @@ class VideoNote {
 
 /// A transcript kept in `lumtub.db`. [origin] is `human`, `youtube-auto`,
 /// `machine-local` or `machine-cloud`.
-typedef SavedTranscript = ({String lang, String origin, String model, String body, DateTime created});
+typedef SavedTranscript = ({
+  String lang,
+  String origin,
+  String model,
+  String body,
+  DateTime created
+});
 
 class LocalDbException implements Exception {
   const LocalDbException(this.message, this.setAside);
   final String message;
+
   /// Where a damaged database was moved, if it was.
   final String? setAside;
 
@@ -287,7 +341,8 @@ Map<String, dynamic> callCoreJson(String symbol, String ask) {
   final core = NativeCore.instance;
   if (core == null) return {'error': NativeCore.missingMessage};
   try {
-    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>(symbol);
+    final call = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int)>(symbol);
     final text = core.take(core.withText(ask, call));
     final answer = text == null ? null : jsonDecode(text);
     return answer is Map<String, dynamic> ? answer : {'error': 'No answer from $symbol'};
@@ -303,13 +358,17 @@ Map<String, dynamic> _read(String ask) => callCoreJson('lumtub_store_read', ask)
 /// rather than on the UI isolate.
 (Map<String, dynamic>, Map<String, Map<String, String>>) _readWithBodies(String ask) {
   final answer = _read(ask);
-  return (answer, {
-    for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries)
-      key as String: {
-        for (final pair in value is List ? value : const [])
-          if (pair is List && pair.length == 2 && pair[0] is String) pair[0] as String: jsonEncode(pair[1]),
-      },
-  });
+  return (
+    answer,
+    {
+      for (final MapEntry(:key, :value) in (answer['lists'] as Map? ?? const {}).entries)
+        key as String: {
+          for (final pair in value is List ? value : const [])
+            if (pair is List && pair.length == 2 && pair[0] is String)
+              pair[0] as String: jsonEncode(pair[1]),
+        },
+    }
+  );
 }
 
 Map<String, dynamic> _write(String ask) => callCoreJson('lumtub_store_write', ask);

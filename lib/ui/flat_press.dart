@@ -17,12 +17,13 @@ class FlatPress extends InteractiveInkFeature {
         _customBorder = customBorder,
         _borderRadius = borderRadius ?? BorderRadius.zero,
         _rectCallback = rectCallback {
-    _alpha = AnimationController(duration: const Duration(milliseconds: 40), vsync: controller.vsync)
-      ..addListener(controller.markNeedsPaint)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.dismissed) dispose();
-      })
-      ..forward();
+    _alpha =
+        AnimationController(duration: const Duration(milliseconds: 40), vsync: controller.vsync)
+          ..addListener(controller.markNeedsPaint)
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.dismissed) dispose();
+          })
+          ..forward();
     controller.addInkFeature(this);
   }
 
@@ -57,7 +58,8 @@ class FlatPress extends InteractiveInkFeature {
 
   @override
   void paintFeature(Canvas canvas, Matrix4 transform) {
-    final paint = Paint()..color = color.withValues(alpha: color.a * Curves.easeOut.transform(_alpha.value));
+    final paint = Paint()
+      ..color = color.withValues(alpha: color.a * Curves.easeOut.transform(_alpha.value));
     final rect = _rectCallback?.call() ?? Offset.zero & referenceBox.size;
     canvas.save();
     canvas.transform(transform.storage);

@@ -5,19 +5,25 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   List<LiveChatMessage> messages(int count) => [
-        for (var i = 0; i < count; i++) LiveChatMessage(id: 'm$i', author: 'a', text: 'message $i', kind: LiveChatKind.message),
+        for (var i = 0; i < count; i++)
+          LiveChatMessage(id: 'm$i', author: 'a', text: 'message $i', kind: LiveChatKind.message),
       ];
 
   Widget chat(List<LiveChatMessage> list) => MaterialApp(
         home: Scaffold(
-          body: SizedBox(height: 300, child: LiveChatList(messages: list, messageAt: (i) => SizedBox(height: 40, child: Text(list[i].text)))),
+          body: SizedBox(
+              height: 300,
+              child: LiveChatList(
+                  messages: list,
+                  messageAt: (i) => SizedBox(height: 40, child: Text(list[i].text)))),
         ),
       );
 
   testWidgets('the newest message stands at the bottom and new ones follow', (tester) async {
     await tester.pumpWidget(chat(messages(20)));
     expect(find.text('message 19'), findsOneWidget);
-    expect(tester.getTopLeft(find.text('message 19')).dy, greaterThan(tester.getTopLeft(find.text('message 18')).dy));
+    expect(tester.getTopLeft(find.text('message 19')).dy,
+        greaterThan(tester.getTopLeft(find.text('message 18')).dy));
     await tester.pumpWidget(chat(messages(21)));
     expect(find.text('message 20'), findsOneWidget);
   });

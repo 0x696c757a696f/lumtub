@@ -20,11 +20,14 @@ Future<void> importSubscriptionsFromFile(BuildContext context, LibraryController
   final SubscriptionImport data;
   try {
     final file = await openFile(acceptedTypeGroups: [
-      XTypeGroup(label: tr('Subscription export'), extensions: const ['json', 'db', 'csv', 'opml', 'xml', 'txt'])
+      XTypeGroup(
+          label: tr('Subscription export'),
+          extensions: const ['json', 'db', 'csv', 'opml', 'xml', 'txt'])
     ]);
     if (file == null) return;
     if (await file.length() > maxSubscriptionFileBytes) {
-      say(tr('That file is too large to be a subscription export (over {0} MB)', [maxSubscriptionFileBytes >> 20]));
+      say(tr('That file is too large to be a subscription export (over {0} MB)',
+          [maxSubscriptionFileBytes >> 20]));
       return;
     }
     data = await parseSubscriptionsInBackground(await file.readAsBytes());
@@ -33,11 +36,13 @@ Future<void> importSubscriptionsFromFile(BuildContext context, LibraryController
     return;
   }
   if (data.channels.isEmpty) {
-    say(tr('No YouTube channels were found in this file. Use a NewPipe, FreeTube or Google Takeout subscriptions export.'));
+    say(tr(
+        'No YouTube channels were found in this file. Use a NewPipe, FreeTube or Google Takeout subscriptions export.'));
     return;
   }
   final outcome = followImported(library, data);
-  say(tr('Imported: {0} added, {1} already followed, {2} skipped', [outcome.added, outcome.already, outcome.skipped]));
+  say(tr('Imported: {0} added, {1} already followed, {2} skipped',
+      [outcome.added, outcome.already, outcome.skipped]));
 }
 
 /// Saves the followed channels as a NewPipe subscriptions file, which
@@ -51,10 +56,14 @@ Future<void> exportSubscriptionsToFile(BuildContext context, LibraryController l
     return;
   }
   final now = DateTime.now();
-  final name = 'Lumtub_subscriptions_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.json';
+  final name =
+      'Lumtub_subscriptions_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.json';
   try {
     final bytes = await Isolate.run(() => utf8.encode(newPipeSubscriptions(channels)));
-    if (!await saveFileAs(name, bytes, mime: 'application/json', label: 'JSON', extension: 'json')) return;
+    if (!await saveFileAs(name, bytes,
+        mime: 'application/json', label: 'JSON', extension: 'json')) {
+      return;
+    }
     say(tr('Exported {0} channels', [channels.length]));
   } catch (e) {
     logError('Could not export subscriptions', e);

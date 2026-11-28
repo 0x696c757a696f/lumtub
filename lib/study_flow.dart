@@ -32,7 +32,8 @@ class StudyUnit {
   Duration get length => end - start;
 
   @override
-  bool operator ==(Object other) => other is StudyUnit && other.first == first && other.last == last;
+  bool operator ==(Object other) =>
+      other is StudyUnit && other.first == first && other.last == last;
 
   @override
   int get hashCode => Object.hash(first, last);
@@ -56,17 +57,20 @@ bool endsSentence(String text) => _sentenceEnd.hasMatch(text.trim());
 /// A stretch ends where a sentence ends; a chapter start in [breaks] that
 /// falls between two lines ends it there instead, so chapters stay whole
 /// unless they are too long. A short end joins the stretch before it.
-List<StudyUnit> studyUnits(List<SubtitleCue> lines, {List<Duration> breaks = const [], Duration target = studyUnitDefault}) {
+List<StudyUnit> studyUnits(List<SubtitleCue> lines,
+    {List<Duration> breaks = const [], Duration target = studyUnitDefault}) {
   if (lines.isEmpty) return const [];
   final shortest = target * 0.5, longest = target * 1.5;
   const slack = Duration(milliseconds: 1500);
   bool chapterAfter(int j) {
     if (j + 1 >= lines.length) return false;
     final before = lines[j].end, after = lines[j + 1].start;
-    return breaks.any((b) => b > lines[j].start + slack && b >= before - slack && b <= after + slack);
+    return breaks
+        .any((b) => b > lines[j].start + slack && b >= before - slack && b <= after + slack);
   }
 
-  Duration gapAfter(int j) => j + 1 < lines.length ? lines[j + 1].start - lines[j].end : Duration.zero;
+  Duration gapAfter(int j) =>
+      j + 1 < lines.length ? lines[j + 1].start - lines[j].end : Duration.zero;
   final units = <StudyUnit>[];
   var first = 0;
   while (first < lines.length) {
@@ -85,7 +89,9 @@ List<StudyUnit> studyUnits(List<SubtitleCue> lines, {List<Duration> breaks = con
       if (length < shortest) continue;
       if (endsSentence(lines[j].text)) {
         final off = (length - target).abs();
-        if (sentenceOff == null || off < sentenceOff || off == sentenceOff && gapAfter(j) > gapAfter(sentence!)) {
+        if (sentenceOff == null ||
+            off < sentenceOff ||
+            off == sentenceOff && gapAfter(j) > gapAfter(sentence!)) {
           sentence = j;
           sentenceOff = off;
         }
@@ -105,7 +111,11 @@ List<StudyUnit> studyUnits(List<SubtitleCue> lines, {List<Duration> breaks = con
     // What is left after this cut is too short to be a stretch of its own.
     if (cut + 1 < lines.length && chapter == null) {
       final rest = lines.last.end - lines[cut + 1].start;
-      if (rest < shortest * 0.5 && lines.last.end - start <= longest + shortest * 0.5 && !breaks.any((b) => b > lines[cut! + 1].start + slack)) cut = lines.length - 1;
+      if (rest < shortest * 0.5 &&
+          lines.last.end - start <= longest + shortest * 0.5 &&
+          !breaks.any((b) => b > lines[cut! + 1].start + slack)) {
+        cut = lines.length - 1;
+      }
     }
     units.add(StudyUnit(first, cut, start, lines[cut].end));
     first = cut + 1;
@@ -179,7 +189,8 @@ List<ReverseChunk> reverseChunks(String text) {
   if (count <= size) return [(text: clean, before: '', from: 0)];
   // A part starts after a comma or other pause in the line when one is
   // near, so it is a phrase said in one breath rather than a cut word run.
-  bool pauseBefore(int unit) => unit > 0 && _clauseEnd.hasMatch(clean.substring(0, starts[unit]).trimRight());
+  bool pauseBefore(int unit) =>
+      unit > 0 && _clauseEnd.hasMatch(clean.substring(0, starts[unit]).trimRight());
   final cuts = <int>[];
   var next = count - size;
   while (next > 0) {
@@ -198,7 +209,12 @@ List<ReverseChunk> reverseChunks(String text) {
     next = cut - size;
   }
   final chunks = [
-    for (final cut in cuts) (text: clean.substring(starts[cut]), before: clean.substring(0, starts[cut]).trimRight(), from: starts[cut] / clean.length),
+    for (final cut in cuts)
+      (
+        text: clean.substring(starts[cut]),
+        before: clean.substring(0, starts[cut]).trimRight(),
+        from: starts[cut] / clean.length
+      ),
   ];
   chunks.add((text: clean, before: '', from: 0));
   return chunks;
@@ -230,7 +246,12 @@ enum StudyEvent {
 /// One video studied: which unit and step, and what this session learned
 /// about its lines. Hard lines are kept only while it lasts.
 class StudyRun {
-  StudyRun({required this.videoId, required this.lines, required this.units, this.unit = 0, this.step = StudyStep.blind});
+  StudyRun(
+      {required this.videoId,
+      required this.lines,
+      required this.units,
+      this.unit = 0,
+      this.step = StudyStep.blind});
 
   final String videoId;
   final List<SubtitleCue> lines;
@@ -275,7 +296,10 @@ class StudyRun {
   /// The hard lines of this unit, most replayed first.
   List<int> get hardLines {
     final unit = current;
-    final hard = [for (var i = unit.first; i <= unit.last; i++) if (isHard(i)) i];
+    final hard = [
+      for (var i = unit.first; i <= unit.last; i++)
+        if (isHard(i)) i
+    ];
     hard.sort((a, b) {
       final byMarked = (marked[b] ?? false ? 1 : 0) - (marked[a] ?? false ? 1 : 0);
       if (byMarked != 0) return byMarked;
@@ -301,7 +325,8 @@ class StudyRun {
   /// The line shadowed now.
   int? get shadowLine => shadowAt < shadowLines.length ? shadowLines[shadowAt] : null;
 
-  List<ReverseChunk> get chunks => switch (shadowLine) { final line? => reverseChunks(lines[line].text), null => const [] };
+  List<ReverseChunk> get chunks =>
+      switch (shadowLine) { final line? => reverseChunks(lines[line].text), null => const [] };
 
   /// The line [position] is in, within the unit; null outside it.
   int? lineAt(Duration position) {
@@ -359,7 +384,10 @@ class StudyRun {
     return switch (step) {
       StudyStep.blind => blindEnd(lines, unit),
       StudyStep.read => LinePause.pauseAt(lines[unit.last]),
-      StudyStep.shadow => switch (shadowLine) { final line? => LinePause.pauseAt(lines[line]), null => null },
+      StudyStep.shadow => switch (shadowLine) {
+          final line? => LinePause.pauseAt(lines[line]),
+          null => null
+        },
       StudyStep.relisten => unit.end,
     };
   }
@@ -368,7 +396,8 @@ class StudyRun {
   /// and tells when the step's stretch ended.
   StudyEvent? observe(Duration position, {double rate = 1}) {
     if (_target case final target?) {
-      final there = position >= target - const Duration(milliseconds: 300) && position <= target + const Duration(seconds: 2);
+      final there = position >= target - const Duration(milliseconds: 300) &&
+          position <= target + const Duration(seconds: 2);
       if (!there && ++_stale < 40) return null;
       _target = null;
       _last = position;
@@ -385,10 +414,14 @@ class StudyRun {
       return null;
     }
     final speed = rate.clamp(0.25, 4.0);
-    if (position <= last || position - last > const Duration(milliseconds: 1500) * speed) return null;
+    if (position <= last || position - last > const Duration(milliseconds: 1500) * speed) {
+      return null;
+    }
     var stop = stopAt;
     if (stop == null) return null;
-    if (step != StudyStep.relisten && step != StudyStep.blind) stop = stop + LinePause.lead - LinePause.lead * speed;
+    if (step != StudyStep.relisten && step != StudyStep.blind) {
+      stop = stop + LinePause.lead - LinePause.lead * speed;
+    }
     if (!(last < stop && position >= stop)) return null;
     return switch (step) {
       StudyStep.blind => StudyEvent.blindDone,
@@ -427,15 +460,22 @@ class StudyStore {
 
   void readFrom(Map<Object?, Object?> raw) {
     if (raw['unitSeconds'] case final num seconds) {
-      unitLength = Duration(seconds: seconds.round().clamp(studyUnitShortest.inSeconds, studyUnitLongest.inSeconds));
+      unitLength = Duration(
+          seconds: seconds.round().clamp(studyUnitShortest.inSeconds, studyUnitLongest.inSeconds));
     }
     if (raw['slowRate'] case final num rate) slowRate = rate.toDouble().clamp(0.5, 1.0);
     if (raw['videos'] case final Map<Object?, Object?> videos) {
       for (final MapEntry(:key, :value) in videos.entries) {
         if (value is! Map || key is! String) continue;
-        final start = value['unitStart'], step = value['step'], at = DateTime.tryParse('${value['at']}');
+        final start = value['unitStart'],
+            step = value['step'],
+            at = DateTime.tryParse('${value['at']}');
         if (start is! num || step is! num || at == null) continue;
-        _videos[key] = (unitStart: Duration(milliseconds: start.round()), step: StudyStep.values[step.round().clamp(0, StudyStep.values.length - 1)], at: at);
+        _videos[key] = (
+          unitStart: Duration(milliseconds: start.round()),
+          step: StudyStep.values[step.round().clamp(0, StudyStep.values.length - 1)],
+          at: at
+        );
       }
     }
   }
@@ -446,12 +486,18 @@ class StudyStore {
       'unitSeconds': unitLength.inSeconds,
       'slowRate': slowRate,
       'videos': {
-        for (final MapEntry(:key, :value) in videos.take(kept)) key: {'unitStart': value.unitStart.inMilliseconds, 'step': value.step.index, 'at': value.at.toUtc().toIso8601String()},
+        for (final MapEntry(:key, :value) in videos.take(kept))
+          key: {
+            'unitStart': value.unitStart.inMilliseconds,
+            'step': value.step.index,
+            'at': value.at.toUtc().toIso8601String()
+          },
       },
     };
   }
 
-  void remember(String videoId, Duration unitStart, StudyStep step) => _videos[videoId] = (unitStart: unitStart, step: step, at: DateTime.now());
+  void remember(String videoId, Duration unitStart, StudyStep step) =>
+      _videos[videoId] = (unitStart: unitStart, step: step, at: DateTime.now());
 
   void forget(String videoId) => _videos.remove(videoId);
 

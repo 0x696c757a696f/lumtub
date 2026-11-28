@@ -90,7 +90,13 @@ class DanmakuPainter {
 
   TextPainter _painter(List<DanmakuPart> parts, double scale, {Paint? stroke, Color? colour}) {
     final px = size * scale;
-    final style = TextStyle(fontFamily: font, fontWeight: FontWeight.bold, fontSize: px, height: 1.2, foreground: stroke, color: stroke == null ? colour : null);
+    final style = TextStyle(
+        fontFamily: font,
+        fontWeight: FontWeight.bold,
+        fontSize: px,
+        height: 1.2,
+        foreground: stroke,
+        color: stroke == null ? colour : null);
     final painter = TextPainter(
       textDirection: TextDirection.ltr,
       maxLines: 1,
@@ -105,7 +111,8 @@ class DanmakuPainter {
     final emoji = px * 1.15;
     painter.setPlaceholderDimensions([
       for (final part in parts)
-        if (part is! DanmakuText) PlaceholderDimensions(size: Size(emoji, emoji), alignment: PlaceholderAlignment.middle),
+        if (part is! DanmakuText)
+          PlaceholderDimensions(size: Size(emoji, emoji), alignment: PlaceholderAlignment.middle),
     ]);
     painter.layout();
     return painter;
@@ -140,7 +147,8 @@ class DanmakuPainter {
       done.complete(image);
     }
 
-    listener = ImageStreamListener((info, _) => finish(info.image.clone()), onError: (error, stack) => finish(null));
+    listener = ImageStreamListener((info, _) => finish(info.image.clone()),
+        onError: (error, stack) => finish(null));
     stream.addListener(listener);
     final loading = done.future;
     Timer(const Duration(seconds: 10), () {
@@ -156,11 +164,13 @@ class DanmakuPainter {
 
   /// [parts] recorded for a picture [osdHeight] pixels high: the picture,
   /// its size and the room left of the text for the outline.
-  (ui.Picture, int, int, double)? _record(List<DanmakuPart> parts, Map<String, ui.Image?> images, {required double osdHeight, required bool paid}) {
+  (ui.Picture, int, int, double)? _record(List<DanmakuPart> parts, Map<String, ui.Image?> images,
+      {required double osdHeight, required bool paid}) {
     final scale = osdHeight / 1080;
     final border = _border(scale);
     final edge = Color.fromARGB((opacity * 0.6 * 255).round(), 0, 0, 0);
-    final fillColour = (paid ? const Color(0xFFFFC838) : const Color(0xFFFFFFFF)).withValues(alpha: opacity);
+    final fillColour =
+        (paid ? const Color(0xFFFFC838) : const Color(0xFFFFFFFF)).withValues(alpha: opacity);
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = border * 2
@@ -192,12 +202,22 @@ class DanmakuPainter {
         case DanmakuEmojiPicture(:final url):
           final image = images[url];
           if (image != null) {
-            canvas.drawImageRect(image, Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), box, imagePaint);
+            canvas.drawImageRect(
+                image,
+                Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+                box,
+                imagePaint);
           }
         case DanmakuEmojiGlyph(:final emoji):
           final glyph = TextPainter(
             textDirection: TextDirection.ltr,
-            text: TextSpan(text: emoji, style: TextStyle(fontSize: box.height * 0.85, height: 1, fontFamilyFallback: _emojiFonts, color: Color.fromRGBO(0, 0, 0, opacity))),
+            text: TextSpan(
+                text: emoji,
+                style: TextStyle(
+                    fontSize: box.height * 0.85,
+                    height: 1,
+                    fontFamilyFallback: _emojiFonts,
+                    color: Color.fromRGBO(0, 0, 0, opacity))),
           )..layout();
           glyph.paint(canvas, box.center - Offset(glyph.width / 2, glyph.height / 2));
           glyph.dispose();
@@ -212,7 +232,8 @@ class DanmakuPainter {
   /// [parts] as an image for a picture [osdHeight] pixels high, gold when
   /// [paid], with the room left of the text for the outline; null when
   /// nothing could be drawn.
-  Future<(ui.Image, double)?> image(List<DanmakuPart> parts, {required double osdHeight, required bool paid}) async {
+  Future<(ui.Image, double)?> image(List<DanmakuPart> parts,
+      {required double osdHeight, required bool paid}) async {
     final images = <String, ui.Image?>{};
     try {
       for (final part in parts) {

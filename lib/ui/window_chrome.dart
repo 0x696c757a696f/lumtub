@@ -16,7 +16,8 @@ import 'theme.dart';
 /// navigator, so the settings and other pages opened over the main window
 /// keep the same frame and background.
 class WindowChrome extends StatefulWidget {
-  const WindowChrome({super.key, required this.controller, required this.title, required this.child});
+  const WindowChrome(
+      {super.key, required this.controller, required this.title, required this.child});
   final AppController controller;
   final String title;
   final Widget child;
@@ -34,7 +35,8 @@ class WindowChrome extends StatefulWidget {
 
 class _WindowChromeState extends State<WindowChrome> {
   bool? _customFrame;
-  late final _changes = Listenable.merge([widget.controller, WindowChrome.menus, WindowChrome.fullscreen, fillingWindow]);
+  late final _changes = Listenable.merge(
+      [widget.controller, WindowChrome.menus, WindowChrome.fullscreen, fillingWindow]);
 
   /// Takes the system title bar away while a skin draws its own, and gives
   /// it back when not.
@@ -56,7 +58,9 @@ class _WindowChromeState extends State<WindowChrome> {
           final glass = context.glass;
           // Picture in picture shows the video alone, in its own frame,
           // solid even while the window is glass.
-          if (c.pip && c.playing != null && c.videoController != null) return glass == null ? child! : ColoredBox(color: Colors.black, child: child);
+          if (c.pip && c.playing != null && c.videoController != null) {
+            return glass == null ? child! : ColoredBox(color: Colors.black, child: child);
+          }
           final appearance = c.appearance;
           // 铺满窗口 takes the system title bar away too, so only the video
           // is left in the window; leaving it brings the bar back.
@@ -64,19 +68,31 @@ class _WindowChromeState extends State<WindowChrome> {
           final bare = WindowChrome.fullscreen.value || filling;
           final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: appearance.systemTitleBar);
           _useCustomFrame(ownTitleBar || filling);
-          final menuBar = !bare && WindowFrame.supported && !appearance.systemTitleBar ? skin?.menuBar : null;
-          final menus = menuBar == null ? const <SkinMenu>[] : WindowChrome.menus.value?.call(appMenu: menuBar.appMenu) ?? const <SkinMenu>[];
-          Widget menuView(SkinMenuBar bar) => CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock));
+          final menuBar =
+              !bare && WindowFrame.supported && !appearance.systemTitleBar ? skin?.menuBar : null;
+          final menus = menuBar == null
+              ? const <SkinMenu>[]
+              : WindowChrome.menus.value?.call(appMenu: menuBar.appMenu) ?? const <SkinMenu>[];
+          Widget menuView(SkinMenuBar bar) => CallbackShortcuts(
+              bindings: menuShortcuts(menus),
+              child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock));
           // With the title bar hidden, the menu bar takes its place and
           // holds the window buttons.
-          final merged = ownTitleBar && !bare && appearance.hideTitleBar && menuBar != null && menus.isNotEmpty;
+          final merged = ownTitleBar &&
+              !bare &&
+              appearance.hideTitleBar &&
+              menuBar != null &&
+              menus.isNotEmpty;
           Widget content = Column(children: [
             if (merged)
               SkinTitleBarView(
                 bar: skin!.titleBar!,
                 title: widget.title,
                 menuBar: menuBar,
-                menus: CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: menuBar, menus: menus, clock: menuBar.clock, embedded: true)),
+                menus: CallbackShortcuts(
+                    bindings: menuShortcuts(menus),
+                    child: SkinMenuBarView(
+                        bar: menuBar, menus: menus, clock: menuBar.clock, embedded: true)),
               )
             else ...[
               if (menuBar case final bar? when bar.top && menus.isNotEmpty) menuView(bar),
@@ -86,16 +102,24 @@ class _WindowChromeState extends State<WindowChrome> {
             Expanded(child: child!),
           ]);
           if (skin != null) {
-            content = SkinBackdrop(skin: skin, plain: appearance.lowResource, pictures: appearance.skinBackground, child: content);
+            content = SkinBackdrop(
+                skin: skin,
+                plain: appearance.lowResource,
+                pictures: appearance.skinBackground,
+                child: content);
           } else if (glass != null) {
             // The standard look has no backdrop of its own, only its page
             // colour, which the glass takes.
-            content = Stack(fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: appearance.lowResource), content]);
+            content = Stack(
+                fit: StackFit.expand,
+                children: [GlassBackdrop(look: glass, plain: appearance.lowResource), content]);
           }
           // Filling the window still leaves it a window: its edges size it.
           // (Windows and macOS keep their own sizing borders; ResizeEdges
           // only draws them where the desktop takes them away.)
-          if ((ownTitleBar && !bare) || (filling && !WindowChrome.fullscreen.value)) content = ResizeEdges(child: content);
+          if ((ownTitleBar && !bare) || (filling && !WindowChrome.fullscreen.value)) {
+            content = ResizeEdges(child: content);
+          }
           // Above the navigator there is no page yet: the bars get the text
           // style and ink a page would give them, and an overlay of their
           // own for their menus and tooltips.

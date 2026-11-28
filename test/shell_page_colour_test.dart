@@ -16,9 +16,11 @@ void main() {
       final controller = AppController(appearance: AppearanceSettings(themeMode: mode));
       await tester.pumpWidget(LumtubApp(controller: controller));
       await tester.pump();
-      final scaffold = find.descendant(of: find.byType(AppShell), matching: find.byType(Scaffold)).first;
+      final scaffold =
+          find.descendant(of: find.byType(AppShell), matching: find.byType(Scaffold)).first;
       final theme = Theme.of(tester.element(scaffold));
-      final page = tester.widget<Scaffold>(scaffold).backgroundColor ?? theme.scaffoldBackgroundColor;
+      final page =
+          tester.widget<Scaffold>(scaffold).backgroundColor ?? theme.scaffoldBackgroundColor;
       expect(page.a, 1);
       expect(page, theme.colorScheme.surface);
       expect(theme.brightness, mode == ThemeMode.light ? Brightness.light : Brightness.dark);

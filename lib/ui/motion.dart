@@ -23,7 +23,12 @@ abstract final class Ease {
 /// Brings [child] in once, when it first appears: it fades in while growing
 /// from [scale] to its full size. With animations reduced it is simply there.
 class Entrance extends StatefulWidget {
-  const Entrance({required this.child, super.key, this.duration = Ease.move, this.curve = Ease.curve, this.scale = 0.92});
+  const Entrance(
+      {required this.child,
+      super.key,
+      this.duration = Ease.move,
+      this.curve = Ease.curve,
+      this.scale = 0.92});
   final Duration duration;
   final Curve curve;
   final double scale;
@@ -34,7 +39,8 @@ class Entrance extends StatefulWidget {
 }
 
 class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this, duration: Motion.of(widget.duration));
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: Motion.of(widget.duration));
   late final Animation<double> _opacity = CurvedAnimation(parent: _controller, curve: widget.curve);
   late final Animation<double> _scale = Tween(begin: widget.scale, end: 1.0).animate(_opacity);
 
@@ -55,7 +61,8 @@ class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin
   }
 
   @override
-  Widget build(BuildContext context) => FadeTransition(opacity: _opacity, child: ScaleTransition(scale: _scale, child: widget.child));
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _opacity, child: ScaleTransition(scale: _scale, child: widget.child));
 }
 
 /// 减少动画 for the whole app: page changes, expanding sections and hover
@@ -80,13 +87,16 @@ abstract final class Motion {
 
   /// Scrolls [controller] to [offset], with a short animation unless
   /// animations are reduced.
-  static Future<void> scrollTo(ScrollController controller, double offset, {Duration duration = const Duration(milliseconds: 220), Curve curve = Ease.curve}) async {
+  static Future<void> scrollTo(ScrollController controller, double offset,
+      {Duration duration = const Duration(milliseconds: 220), Curve curve = Ease.curve}) async {
     if (reduced) return controller.jumpTo(offset);
     return controller.animateTo(offset, duration: duration, curve: curve);
   }
 
   static final _systemParametersInfo = Platform.isWindows
-      ? DynamicLibrary.open('user32.dll').lookupFunction<Int32 Function(Uint32, Uint32, Pointer<Int32>, Uint32), int Function(int, int, Pointer<Int32>, int)>('SystemParametersInfoW')
+      ? DynamicLibrary.open('user32.dll').lookupFunction<
+          Int32 Function(Uint32, Uint32, Pointer<Int32>, Uint32),
+          int Function(int, int, Pointer<Int32>, int)>('SystemParametersInfoW')
       : null;
   static const _spiGetClientAreaAnimation = 0x1042;
 
@@ -108,6 +118,10 @@ abstract final class Motion {
 /// fades in, over [under] when given; one already in memory is there at once.
 Widget fadeInFrame(Widget child, int? frame, bool sync, {Widget? under}) {
   if (sync) return child;
-  final picture = AnimatedOpacity(opacity: frame == null ? 0 : 1, duration: Motion.of(Ease.fade), curve: Ease.out, child: child);
+  final picture = AnimatedOpacity(
+      opacity: frame == null ? 0 : 1,
+      duration: Motion.of(Ease.fade),
+      curve: Ease.out,
+      child: child);
   return under == null ? picture : Stack(fit: StackFit.expand, children: [under, picture]);
 }

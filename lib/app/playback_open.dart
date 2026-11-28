@@ -13,17 +13,31 @@ extension PlaybackOpening on AppController {
   Future<void> _fillDuration(String id, int serial, Future<Duration> reported) async {
     try {
       final length = await reported;
-      if (serial == _playSerial && playing?.id == id) await _history?.fillDuration(id, length.inSeconds);
+      if (serial == _playSerial && playing?.id == id) {
+        await _history?.fillDuration(id, length.inSeconds);
+      }
     } on Object {
       // Never reported: the card stays without a length.
     }
   }
 
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true, bool quickAgain = false}) async {
+  Future<bool> _open(VideoItem item, int serial,
+      {Duration? start,
+      bool play = true,
+      bool resolved = true,
+      bool piped = true,
+      bool allowLocal = true,
+      bool quickAgain = false}) async {
     // Opened again (reconnecting, another quality): the subtitles shown
     // come back, as the new file starts with none of the ones added.
     final kept = _tracking?.id == item.id ? _shownSubtitles() : null;
-    final opened = await _openOnce(item, serial, start: start, play: play, resolved: resolved, piped: piped, allowLocal: allowLocal, quickAgain: quickAgain);
+    final opened = await _openOnce(item, serial,
+        start: start,
+        play: play,
+        resolved: resolved,
+        piped: piped,
+        allowLocal: allowLocal,
+        quickAgain: quickAgain);
     if (opened && kept != null) unawaited(_restoreSubtitles(kept, serial));
     return opened;
   }
@@ -32,7 +46,11 @@ extension PlaybackOpening on AppController {
   /// off) and the second one.
   ({String? main, SubtitleOption? second}) _shownSubtitles() {
     final track = player?.state.track.subtitle;
-    final main = track == null || track.id == 'auto' ? null : track.id == 'no' ? '' : track.title;
+    final main = track == null || track.id == 'auto'
+        ? null
+        : track.id == 'no'
+            ? ''
+            : track.title;
     return (main: main, second: secondarySubtitle);
   }
 
@@ -47,12 +65,17 @@ extension PlaybackOpening on AppController {
     final folder = File(Platform.resolvedExecutable).parent.path;
     final mpv = paths?.mpv;
     // Android's executable is the system's app_process, in a folder apps may not list.
-    final bytes = Platform.isAndroid || Platform.isIOS ? 0 : await Isolate.run(_readingPlayerFiles(folder, mpv));
+    final bytes = Platform.isAndroid || Platform.isIOS
+        ? 0
+        : await Isolate.run(_readingPlayerFiles(folder, mpv));
     logDebug(() => 'Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
     final directories = this.directories;
     if (directories != null) {
       try {
-        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
+        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders')
+            .listSync()
+            .whereType<File>()
+            .length;
         logDebug(() => 'Shader cache holds $shaders shaders');
       } catch (e) {
         logDebug(() => 'Could not count the shader cache: $e');
@@ -69,22 +92,33 @@ extension PlaybackOpening on AppController {
   void _ensureVideo(Player player) {
     if (videoController != null) return;
     final made = Stopwatch()..start();
-    final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    final controller = videoController =
+        VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
     _watchIosPip(player);
     // It is made after the next frame, and an idle window draws none.
     WidgetsBinding.instance.scheduleFrame();
-    unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
+    unawaited(controller.platform.future.then(
+        (_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'),
+        onError: (Object error) => logError('Video output failed', error)));
   }
 
   /// [quickAgain] also asks YouTube directly on a reopen, after addresses
   /// resolved ahead were refused.
-  Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true, bool quickAgain = false}) async {
+  Future<bool> _openOnce(VideoItem item, int serial,
+      {Duration? start,
+      bool play = true,
+      bool resolved = true,
+      bool piped = true,
+      bool allowLocal = true,
+      bool quickAgain = false}) async {
     final player = this.player!;
     _ensureVideo(player);
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
-      final local = allowLocal && resolved && piped && !item.isLive ? await downloads?.localVideo(item.id) : null;
+      final local = allowLocal && resolved && piped && !item.isLive
+          ? await downloads?.localVideo(item.id)
+          : null;
       // Closed, or another video asked for, meanwhile.
       if (serial != _playSerial) return false;
       _openedLocal = null;
@@ -92,8 +126,11 @@ extension PlaybackOpening on AppController {
       // software, say) streams instead, in a codec the rules allow.
       final localCodec = local?.videoCodec;
       if (local != null && !FormatPolicy.allows(settings, localCodec)) {
-        logWarn('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
-        _notice(tr('The downloaded file is {0}, which the playback rules disable; streaming instead', [localCodec.label]));
+        logWarn(
+            'The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
+        _notice(tr(
+            'The downloaded file is {0}, which the playback rules disable; streaming instead',
+            [localCodec.label]));
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
       }
@@ -121,24 +158,45 @@ extension PlaybackOpening on AppController {
           if (Platform.isAndroid || Platform.isIOS) {
             if (!item.isLive && !item.membersOnly) {
               try {
-                video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback, audioLanguage: _audioLanguageFor(item.id)));
+                video = await streams.quick(
+                    item.id,
+                    format,
+                    FormatPolicy.settingsJson(_playback,
+                        audioLanguage: _audioLanguageFor(item.id)));
               } catch (e) {
                 logWarn('Quick start of ${item.id} failed: $e');
               }
             }
             if (video == null && streams.ytDlpPath.isEmpty) {
-              throw StateError(item.isLive || item.membersOnly ? 'Live streams and members-only videos need yt-dlp, which could not be started' : 'YouTube gave no streams this version can play');
+              throw StateError(item.isLive || item.membersOnly
+                  ? 'Live streams and members-only videos need yt-dlp, which could not be started'
+                  : 'YouTube gave no streams this version can play');
             }
           }
-          var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
+          var pending = video != null
+              ? Future.value(video)
+              : streams.resolve(item.id, format,
+                  formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (video == null && !Platform.isAndroid && !Platform.isIOS && (_quickSerial != serial || quickAgain) && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null &&
+              !Platform.isAndroid &&
+              !Platform.isIOS &&
+              (_quickSerial != serial || quickAgain) &&
+              !item.isLive &&
+              !item.membersOnly &&
+              !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = firstSuccess([
               full,
-              streams.quick(item.id, format, FormatPolicy.settingsJson(_playback, audioLanguage: _audioLanguageFor(item.id))).then((quick) {
+              streams
+                  .quick(
+                      item.id,
+                      format,
+                      FormatPolicy.settingsJson(_playback,
+                          audioLanguage: _audioLanguageFor(item.id)))
+                  .then((quick) {
                 if (quick == null) return full;
                 streams.unhurried(item.id);
                 return quick;
@@ -151,7 +209,9 @@ extension PlaybackOpening on AppController {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
-            if (_mayFallBack(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
+            if (_mayFallBack(failure.kind)) {
+              return await _fallBack(item, serial, failure, start: start, play: play);
+            }
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -175,10 +235,12 @@ extension PlaybackOpening on AppController {
         if (playing?.id == item.id) _update(() => playing = item);
         // Asked as a live stream, yt-dlp also asks the clients whose live
         // addresses a phone can play (see StreamResolver.liveClients).
-        if ((Platform.isAndroid || Platform.isIOS) && LiveSplit.hls(video!.info, _playback) == null) {
+        if ((Platform.isAndroid || Platform.isIOS) &&
+            LiveSplit.hls(video!.info, _playback) == null) {
           logInfo('${item.id} turned out live; asking yt-dlp again for its live streams');
           try {
-            video = await _repository!.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, live: true);
+            video = await _repository!.streams
+                .resolve(item.id, _formatFor(item.id), formatSort: _formatSort, live: true);
           } catch (e) {
             logWarn('Asking again for the live streams of ${item.id} failed: $e');
           }
@@ -197,25 +259,50 @@ extension PlaybackOpening on AppController {
       // need ytdl_hook: through it libmpv reads the streams itself, slowly
       // once its cache is full, and YouTube cuts those connections.
       final direct = video != null && video.format == format && !live
-          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
+          ? video.directAddress(
+              relay: relay == null
+                  ? null
+                  : (url, size) =>
+                      relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _openedDirect = direct != null ? item.id : null;
-      final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
+      final split = live && video != null && relay != null && _liveSplitOff != item.id
+          ? _liveSplitAddress(video, relay)
+          : null;
       _liveSplit = split != null ? item.id : null;
       // A live stream's HLS through the relay too, so its playlists and
       // segments use the core's TLS rather than libmpv's own.
-      final relayedLive = live && split == null && video != null && relay != null ? _liveHlsAddress(video, relay) : null;
+      final relayedLive = live && split == null && video != null && relay != null
+          ? _liveHlsAddress(video, relay)
+          : null;
       _relayed = (direct != null || relayedLive != null) && relay != null ? item.id : null;
       // libmpv cannot start yt-dlp on a phone, so a live stream's address
       // is not left to its ytdl_hook there: mpv given the watch page itself
       // answers "Failed to recognize file format".
-      final mobileLive = live && split == null && relayedLive == null && video != null && (Platform.isAndroid || Platform.isIOS) ? LiveSplit.hls(video.info, _playback) : null;
-      if (live && split == null && relayedLive == null && (Platform.isAndroid || Platform.isIOS) && mobileLive == null) {
-        final formats = [for (final f in (video?.info['formats'] as List? ?? const [])) if (f is Map) '${f['format_id']}:${f['protocol']}'];
-        logWarn('Live ${item.id}: no HLS stream among ${formats.length} formats ${formats.join(' ')}');
+      final mobileLive = live &&
+              split == null &&
+              relayedLive == null &&
+              video != null &&
+              (Platform.isAndroid || Platform.isIOS)
+          ? LiveSplit.hls(video.info, _playback)
+          : null;
+      if (live &&
+          split == null &&
+          relayedLive == null &&
+          (Platform.isAndroid || Platform.isIOS) &&
+          mobileLive == null) {
+        final formats = [
+          for (final f in (video?.info['formats'] as List? ?? const []))
+            if (f is Map) '${f['format_id']}:${f['protocol']}'
+        ];
+        logWarn(
+            'Live ${item.id}: no HLS stream among ${formats.length} formats ${formats.join(' ')}');
         throw StateError('YouTube gave no live stream this version can play');
       }
-      if (mobileLive != null) logInfo('Live ${item.id} plays HLS ${mobileLive['format_id'] ?? 'manifest'} (${mobileLive['height'] ?? '?'}p ${mobileLive['vcodec'] ?? ''})');
+      if (mobileLive != null) {
+        logInfo(
+            'Live ${item.id} plays HLS ${mobileLive['format_id'] ?? 'manifest'} (${mobileLive['height'] ?? '?'}p ${mobileLive['vcodec'] ?? ''})');
+      }
       // Which TLS carries the streams: only the core's relay uses the
       // post-quantum setting.
       final path = split != null || _relayed == item.id
@@ -229,12 +316,22 @@ extension PlaybackOpening on AppController {
         // A live stream plays from one HLS stream with picture and sound
         // together up to 1080p: a picture and a sound stream apart can
         // drift out of sync, so they are taken only above it.
-        await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
+        await platform.setProperty(
+            'ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         final infoJson = direct == null ? video?.file.path : null;
         // ytdl_hook asking YouTube itself leaves out the TV clients too
         // while their addresses are being refused.
-        final extractorArgs = infoJson == null && !live && (_repository?.streams.avoidingTv ?? false) ? StreamResolver.visionOnly : null;
-        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: infoJson, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort, extractorArgs: extractorArgs));
+        final extractorArgs =
+            infoJson == null && !live && (_repository?.streams.avoidingTv ?? false)
+                ? StreamResolver.visionOnly
+                : null;
+        await platform.setProperty(
+            'ytdl-raw-options',
+            PlayerOptionApplicator.ytdlRawOptions(settings,
+                infoJson: infoJson,
+                proxy: proxy.ytDlpValue(settings.proxyMode),
+                formatSort: _formatSort,
+                extractorArgs: extractorArgs));
         final liveAgent = (mobileLive?['http_headers'] as Map?)?['User-Agent'] as String? ?? agent;
         if (direct != null && agent != null) {
           await platform.setProperty('user-agent', agent);
@@ -244,7 +341,8 @@ extension PlaybackOpening on AppController {
         // The relay asks YouTube in chunks and reads each reply to its end
         // itself; libmpv asking it in small pieces would only cut those
         // chunks short.
-        await platform.setProperty('curl-max-request-size', _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
+        await platform.setProperty('curl-max-request-size',
+            _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
       }
       if (serial != _playSerial) return false;
       _tracking = null;
@@ -269,7 +367,10 @@ extension PlaybackOpening on AppController {
       await AppController._forgetCrop(player);
       if (serial != _playSerial) return false;
       _fileSerial = serial;
-      await player.open(Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url, start: start), play: play);
+      await player.open(
+          Media(direct ?? split ?? relayedLive ?? mobileLive?['url'] as String? ?? item.url,
+              start: start),
+          play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
@@ -295,8 +396,10 @@ extension PlaybackOpening on AppController {
     if (split == null) return null;
     final pair = '${video.info['id']}-${DateTime.now().microsecondsSinceEpoch}';
     final proxy = this.proxy.url;
-    final picture = relay.registerLive(split.videoUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
-    final sound = relay.registerLive(split.audioUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    final picture =
+        relay.registerLive(split.videoUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    final sound =
+        relay.registerLive(split.audioUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
     if (picture == null || sound == null) return null;
     logInfo('Live ${video.info['id']} plays ${split.label} through the relay');
     return NativeCore.instance?.edl([picture, sound]);
@@ -309,15 +412,24 @@ extension PlaybackOpening on AppController {
     final hls = LiveSplit.hls(video.info, _playback);
     final url = hls?['url'];
     if (hls == null || url is! String) return null;
-    if (!_strictTls && !Platform.isAndroid && !Platform.isIOS && LiveSplit.tallerSplitHls(video.info, _playback, hls)) return null;
+    if (!_strictTls &&
+        !Platform.isAndroid &&
+        !Platform.isIOS &&
+        LiveSplit.tallerSplitHls(video.info, _playback, hls)) {
+      return null;
+    }
     final agent = (hls['http_headers'] as Map?)?['User-Agent'] as String? ?? video.userAgent;
     final address = relay.registerHls(url, userAgent: agent, proxy: proxy.url);
-    if (address != null) logInfo('Live ${video.info['id']} plays HLS ${hls['format_id'] ?? 'manifest'} (${hls['height'] ?? '?'}p ${hls['vcodec'] ?? ''}) through the relay');
+    if (address != null) {
+      logInfo(
+          'Live ${video.info['id']} plays HLS ${hls['format_id'] ?? 'manifest'} (${hls['height'] ?? '?'}p ${hls['vcodec'] ?? ''}) through the relay');
+    }
     return address;
   }
 
   /// Plays the downloaded file of [item] instead of asking YouTube.
-  Future<bool> _openLocal(VideoItem item, int serial, LocalVideo local, {Duration? start, bool play = true}) async {
+  Future<bool> _openLocal(VideoItem item, int serial, LocalVideo local,
+      {Duration? start, bool play = true}) async {
     final player = this.player!;
     _recentErrors.clear();
     _openedVia = null;
@@ -364,7 +476,8 @@ extension PlaybackOpening on AppController {
 
   /// Opens [item] from the next server [_nextRelay] names, moving on to the
   /// one after when a server cannot resolve it; false when none plays it.
-  Future<bool> _openViaRelays(VideoItem item, int serial, {Duration? start, bool play = true}) async {
+  Future<bool> _openViaRelays(VideoItem item, int serial,
+      {Duration? start, bool play = true}) async {
     final player = this.player!;
     while (true) {
       final kind = _nextRelay(item);
@@ -397,12 +510,23 @@ extension PlaybackOpening on AppController {
 
   /// YouTube would not play [item]: plays it from the Piped or Invidious
   /// server not yet tried, and only when there is none shows the error.
-  Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
-    if (failure.kind == FailureKind.rateLimited) _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
-    if (_youtubeRefused == null) logWarn('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+  Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure,
+      {Duration? start, bool play = true}) async {
+    if (failure.kind == FailureKind.rateLimited) {
+      _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
+    }
+    if (_youtubeRefused == null) {
+      logWarn(
+          'YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+    }
     _youtubeRefused = failure;
     if (await _openViaRelays(item, serial, start: start, play: play)) return true;
-    if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
+    if (serial == _playSerial) {
+      _fail(
+          item,
+          PlaybackFailure(failure.kind, failure.detail,
+              tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
+    }
     return false;
   }
 
@@ -412,9 +536,13 @@ extension PlaybackOpening on AppController {
     final name = kind == RelayKind.piped ? 'Piped' : 'Invidious';
     try {
       final source = settings.playbackSource;
-      final named = source.relay == kind && source.isCustom ? (kind == RelayKind.piped ? settings.pipedServer : settings.invidiousServer) : '';
+      final named = source.relay == kind && source.isCustom
+          ? (kind == RelayKind.piped ? settings.pipedServer : settings.invidiousServer)
+          : '';
       final server = named.isEmpty ? null : named;
-      final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
+      final video = await (kind == RelayKind.piped
+          ? _piped.fetch(item.id, server: server)
+          : _invidious.fetch(item.id, server: server));
       final address = video.edl(_playback);
       if (address == null) return null;
       _update(() {
@@ -423,7 +551,8 @@ extension PlaybackOpening on AppController {
         availableAudioLanguages = const [];
       });
       _tellSoftwareQuality();
-      logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
+      logInfo(
+          'Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
       logWarn('$e; not using $name');
@@ -436,8 +565,14 @@ extension PlaybackOpening on AppController {
     _recoveryTimer?.cancel();
     _recovery.cancelPending();
     logError('Playback failed ${item.id} (${failure.kind.name}): ${failure.detail}');
-    if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
-    if (failure.kind == FailureKind.membersOnly) failure = PlaybackFailure(failure.kind, failure.detail, signedIn: webSignIn?.signedIn ?? false);
+    if (failure.kind == FailureKind.noFormat) {
+      failure = PlaybackFailure(failure.kind, failure.detail,
+          disabled: FormatPolicy.disabledNames(settings));
+    }
+    if (failure.kind == FailureKind.membersOnly) {
+      failure =
+          PlaybackFailure(failure.kind, failure.detail, signedIn: webSignIn?.signedIn ?? false);
+    }
     switch (failure.kind) {
       case FailureKind.rateLimited:
         _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
@@ -464,7 +599,8 @@ extension PlaybackOpening on AppController {
   void _waitForStart(VideoItem item) {
     _startTimer?.cancel();
     final serial = _playSerial;
-    final scheduled = (playing?.id == item.id ? scheduledStart : item.scheduledStart)?.difference(DateTime.now());
+    final scheduled =
+        (playing?.id == item.id ? scheduledStart : item.scheduledStart)?.difference(DateTime.now());
     final delay = scheduled != null && scheduled > const Duration(minutes: 1)
         ? scheduled + const Duration(seconds: 15)
         : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
@@ -490,7 +626,8 @@ extension PlaybackOpening on AppController {
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
-    logWarn('Playback interrupted, reconnecting ${item.id} at ${AppController._clock(position)}: $message');
+    logWarn(
+        'Playback interrupted, reconnecting ${item.id} at ${AppController._clock(position)}: $message');
     // Refused by the relay itself, whose socket the system took away: it
     // listens again and keeps serving this video.
     final revived = loopbackRefused(message) && _relayed == item.id ? reviveRelay() : null;
@@ -503,7 +640,8 @@ extension PlaybackOpening on AppController {
     // A split live stream that broke at once twice is played from HLS; one
     // that played a while, or broke once, gets new addresses and stays
     // split.
-    if (_liveSplit == item.id && DateTime.now().difference(_openedAt) < const Duration(minutes: 1)) {
+    if (_liveSplit == item.id &&
+        DateTime.now().difference(_openedAt) < const Duration(minutes: 1)) {
       if (_liveSplitBroke == item.id) {
         _liveSplitOff = item.id;
         logWarn('Playing live ${item.id} from HLS, up to 1080p');
@@ -549,14 +687,16 @@ extension PlaybackOpening on AppController {
     if (_outputRemade.length >= 3) {
       if (_outputRemade.length == 3) {
         _outputRemade.add(now);
-        logError('The graphics device keeps getting lost; leaving the video output as it is', reason);
+        logError(
+            'The graphics device keeps getting lost; leaving the video output as it is', reason);
         _notice(tr('The graphics driver keeps resetting; please restart Lumtub'));
       }
       _remakingOutput = false;
       return;
     }
     final again = _outputRemade.isNotEmpty;
-    logWarn('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
+    logWarn(
+        'The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
     _recovering = true;
     try {
       await player.pause();
@@ -566,12 +706,16 @@ extension PlaybackOpening on AppController {
       _ensureVideo(player);
       _outputRemade.add(now);
       _update(() {});
-      _notice(again ? tr('The graphics driver reset again; decoding in software until Lumtub restarts') : tr('The graphics driver reset; the picture was made again'));
+      _notice(again
+          ? tr('The graphics driver reset again; decoding in software until Lumtub restarts')
+          : tr('The graphics driver reset; the picture was made again'));
       await videoController?.platform.future;
       // Making the output sets hwdec from the settings again.
       final platform = player.platform;
       if (again && platform is NativePlayer) await platform.setProperty('hwdec', 'no');
-      if (item != null && !_disposed && playing?.id == item.id) await _open(item, _playSerial, start: position > Duration.zero ? position : null);
+      if (item != null && !_disposed && playing?.id == item.id) {
+        await _open(item, _playSerial, start: position > Duration.zero ? position : null);
+      }
     } catch (e) {
       logError('Could not make the video output again', e);
     } finally {

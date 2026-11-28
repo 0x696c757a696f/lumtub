@@ -27,34 +27,51 @@ void main() {
   });
   test('subtitle preferences become slang and yt-dlp options', () {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['slang'], '');
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['ytdl-raw-options'], 'ignore-config=,no-plugin-dirs=');
-    final options = PlayerOptionApplicator.optionsFor(const PlayerSettings(subtitleMode: SubtitleMode.always, subtitleLanguage: SubtitleLanguage.en));
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['ytdl-raw-options'],
+        'ignore-config=,no-plugin-dirs=');
+    final options = PlayerOptionApplicator.optionsFor(const PlayerSettings(
+        subtitleMode: SubtitleMode.always, subtitleLanguage: SubtitleLanguage.en));
     expect(options['slang'], startsWith('en,'));
-    expect(options['ytdl-raw-options'], 'ignore-config=,no-plugin-dirs=,sub-langs=en.*,write-auto-subs=');
+    expect(options['ytdl-raw-options'],
+        'ignore-config=,no-plugin-dirs=,sub-langs=en.*,write-auto-subs=');
     expect(
-      PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: r'C:\Users\A,B\info\dQw4w9WgXcQ.json'),
+      PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(),
+          infoJson: r'C:\Users\A,B\info\dQw4w9WgXcQ.json'),
       r'ignore-config=,no-plugin-dirs=,load-info-json=%34%C:\Users\A,B\info\dQw4w9WgXcQ.json',
     );
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'), 'ignore-config=,no-plugin-dirs=,load-info-json=/tmp/x.json');
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'),
+        'ignore-config=,no-plugin-dirs=,load-info-json=/tmp/x.json');
   });
 
   test('the low-resource strategy reads less ahead and keeps less behind', () {
-    final light = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource));
-    expect([light['cache-secs'], light['demuxer-max-bytes'], light['demuxer-max-back-bytes']], ['30', '64MiB', '16MiB']);
-    final lower = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource, cacheSeconds: 10, cacheMemoryMb: 32));
+    final light = PlayerOptionApplicator.optionsFor(
+        const PlayerSettings(strategy: PlaybackStrategy.lowResource));
+    expect([light['cache-secs'], light['demuxer-max-bytes'], light['demuxer-max-back-bytes']],
+        ['30', '64MiB', '16MiB']);
+    final lower = PlayerOptionApplicator.optionsFor(const PlayerSettings(
+        strategy: PlaybackStrategy.lowResource, cacheSeconds: 10, cacheMemoryMb: 32));
     expect([lower['cache-secs'], lower['demuxer-max-bytes']], ['10', '32MiB']);
     final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
-    expect([normal['cache-secs'], normal['demuxer-max-bytes'], normal['demuxer-max-back-bytes']], ['60', '100MiB', '25MiB']);
+    expect([normal['cache-secs'], normal['demuxer-max-bytes'], normal['demuxer-max-back-bytes']],
+        ['60', '100MiB', '25MiB']);
   });
 
   test('single cycle loops the file in mpv', () {
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(playOrder: PlayOrder.singleCycle))['loop-file'], 'inf');
+    expect(
+        PlayerOptionApplicator.optionsFor(
+            const PlayerSettings(playOrder: PlayOrder.singleCycle))['loop-file'],
+        'inf');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['loop-file'], 'no');
   });
 
   test('interpolation times video to the display when sync follows the audio', () {
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(interpolation: true))['video-sync'], 'display-resample');
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(interpolation: true, videoSync: VideoSync.displayTempo))['video-sync'], 'display-tempo');
+    expect(
+        PlayerOptionApplicator.optionsFor(const PlayerSettings(interpolation: true))['video-sync'],
+        'display-resample');
+    expect(
+        PlayerOptionApplicator.optionsFor(const PlayerSettings(
+            interpolation: true, videoSync: VideoSync.displayTempo))['video-sync'],
+        'display-tempo');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['video-sync'], 'audio');
   });
 
@@ -83,7 +100,8 @@ void main() {
   });
 
   test('low resource use scales the cheapest way, other strategies keep the user scaler', () {
-    final fast = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource));
+    final fast = PlayerOptionApplicator.optionsFor(
+        const PlayerSettings(strategy: PlaybackStrategy.lowResource));
     expect(fast['dscale'], 'bilinear');
     expect(fast['scale'], 'bilinear');
     final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
@@ -92,7 +110,8 @@ void main() {
   });
 
   test('frame drawing is busy when it takes most of a frame', () {
-    const stats = 'render=240/13.2ms/30.0ms coalesced=0 1420x800 draw=240/13.1ms/29.9ms read=240/1.3ms/9.4ms';
+    const stats =
+        'render=240/13.2ms/30.0ms coalesced=0 1420x800 draw=240/13.1ms/29.9ms read=240/1.3ms/9.4ms';
     expect(drawBusy(stats, 60), closeTo(13.1, 0.01));
     expect(drawBusy(stats, 24), isNull);
     expect(drawBusy('draw=20/30.0ms/40.0ms', 60), isNull);
@@ -114,14 +133,19 @@ void main() {
     expect(ProcessTree.ytDlpIsolation, ['--ignore-config', '--no-plugin-dirs']);
   });
   test('mpv resolving keeps the codec ranking and picks no stray subtitle', () {
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), formatSort: 'res,fps,vcodec:avc'), 'ignore-config=,no-plugin-dirs=,format-sort=%18%res,fps,vcodec:avc');
+    expect(
+        PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(),
+            formatSort: 'res,fps,vcodec:avc'),
+        'ignore-config=,no-plugin-dirs=,format-sort=%18%res,fps,vcodec:avc');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['subs-fallback'], 'default');
   });
 
   test('a phone in the background reads less ahead and keeps little of what was played', () {
     const settings = PlayerSettings(cacheMemoryMb: 64);
-    expect(PlayerOptionApplicator.cacheOptions(settings), {'cache-secs': '60', 'demuxer-max-bytes': '64MiB', 'demuxer-max-back-bytes': '16MiB'});
-    expect(PlayerOptionApplicator.cacheOptions(settings, background: true), {'cache-secs': '30', 'demuxer-max-bytes': '24MiB', 'demuxer-max-back-bytes': '4MiB'});
+    expect(PlayerOptionApplicator.cacheOptions(settings),
+        {'cache-secs': '60', 'demuxer-max-bytes': '64MiB', 'demuxer-max-back-bytes': '16MiB'});
+    expect(PlayerOptionApplicator.cacheOptions(settings, background: true),
+        {'cache-secs': '30', 'demuxer-max-bytes': '24MiB', 'demuxer-max-back-bytes': '4MiB'});
     expect(PlayerOptionApplicator.optionsFor(settings)['demuxer-max-bytes'], '64MiB');
   });
 
@@ -129,18 +153,28 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     final data = await Directory.systemTemp.createTemp('lumtub_upscale');
     addTearDown(() => data.delete(recursive: true));
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders'], '');
+    expect(
+        PlayerOptionApplicator.optionsFor(
+            const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders'],
+        '');
     await UpscaleShaders.prepare(data, Upscaling.anime);
-    final shaders = PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders']!;
+    final shaders = PlayerOptionApplicator.optionsFor(
+        const PlayerSettings(upscaling: Upscaling.anime))['glsl-shaders']!;
     expect(shaders, endsWith('anime4k-a.glsl'));
     expect(File(shaders).readAsStringSync(), contains('//!HOOK MAIN'));
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['glsl-shaders'], '');
     // 低资源占用优先 leaves the shaders out.
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(upscaling: Upscaling.anime, strategy: PlaybackStrategy.lowResource))['glsl-shaders'], '');
+    expect(
+        PlayerOptionApplicator.optionsFor(const PlayerSettings(
+            upscaling: Upscaling.anime, strategy: PlaybackStrategy.lowResource))['glsl-shaders'],
+        '');
     final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
     expect(normal['tone-mapping'], 'bt.2390');
     expect(normal['hdr-compute-peak'], 'auto');
-    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource))['hdr-compute-peak'], 'no');
+    expect(
+        PlayerOptionApplicator.optionsFor(
+            const PlayerSettings(strategy: PlaybackStrategy.lowResource))['hdr-compute-peak'],
+        'no');
   });
 
   test('picture enhancement and HDR choices are saved', () {
@@ -160,7 +194,10 @@ void main() {
     const settings = PlayerSettings(scale: 'lanczos', audioFilter: 'lavfi=[dynaudnorm]');
     final before = PlayerOptionApplicator.appliedOptions(settings, lightened: true);
     final wanted = PlayerOptionApplicator.optionsFor(settings);
-    final changed = {for (final MapEntry(:key, :value) in wanted.entries) if (before[key] != value) key};
+    final changed = {
+      for (final MapEntry(:key, :value) in wanted.entries)
+        if (before[key] != value) key
+    };
     expect(changed, contains('scale'));
     expect(changed, isNot(contains('hwdec')), reason: 'hwdec again restarts the decoder');
     expect(changed, isNot(contains('af')), reason: 'af again drops the silence and volume filters');

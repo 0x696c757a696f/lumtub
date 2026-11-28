@@ -1,4 +1,3 @@
-
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,11 +11,14 @@ import 'player_controls_test.dart' show FakePlayer;
 void main() {
   final core = NativeCore.instance;
 
-  LiveChatMessage message(String id, String text, int ms) => LiveChatMessage(id: id, kind: LiveChatKind.message, text: text, offset: Duration(milliseconds: ms));
+  LiveChatMessage message(String id, String text, int ms) => LiveChatMessage(
+      id: id, kind: LiveChatKind.message, text: text, offset: Duration(milliseconds: ms));
 
   test('a replay message is where the layout puts it, moving right to left', () {
-    final player = FakePlayer()..state = FakePlayer().state.copyWith(position: const Duration(seconds: 6), playing: false);
-    final overlay = DanmakuOverlay(player)..start(const DanmakuSettings(enabled: true, seconds: 16), live: false);
+    final player = FakePlayer()
+      ..state = FakePlayer().state.copyWith(position: const Duration(seconds: 6), playing: false);
+    final overlay = DanmakuOverlay(player)
+      ..start(const DanmakuSettings(enabled: true, seconds: 16), live: false);
     addTearDown(overlay.stop);
     overlay.add([message('a', 'hello', 5000), message('b', 'later', 40000)]);
     // Given to the layout up to 30 s ahead of the clock.
@@ -27,12 +29,16 @@ void main() {
     final at6 = item.x(6000, overlay.duration), at7 = item.x(7000, overlay.duration);
     expect(at6, closeTo(1920 - 1000 * (1920 + item.width) / 16000, 1e-9));
     expect(at7, lessThan(at6));
-    expect(item.x(5000 + overlay.duration, overlay.duration), closeTo(-item.width, 1e-9), reason: 'it has just left on the left');
+    expect(item.x(5000 + overlay.duration, overlay.duration), closeTo(-item.width, 1e-9),
+        reason: 'it has just left on the left');
   }, skip: core == null ? 'needs lumtub_core' : null);
 
   testWidgets('the layer draws a message at its place over the picture', (tester) async {
-    final player = FakePlayer()..state = FakePlayer().state.copyWith(position: const Duration(milliseconds: 9000), playing: false);
-    final overlay = DanmakuOverlay(player)..start(const DanmakuSettings(enabled: true, seconds: 16, opacity: 1), live: false);
+    final player = FakePlayer()
+      ..state =
+          FakePlayer().state.copyWith(position: const Duration(milliseconds: 9000), playing: false);
+    final overlay = DanmakuOverlay(player)
+      ..start(const DanmakuSettings(enabled: true, seconds: 16, opacity: 1), live: false);
     addTearDown(overlay.stop);
     overlay.add([message('a', 'HELLO WORLD', 1000)]);
     final shown = ValueNotifier<DanmakuOverlay?>(overlay);
@@ -42,14 +48,17 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(Directionality(
       textDirection: TextDirection.ltr,
-      child: RepaintBoundary(key: key, child: ColoredBox(color: const Color(0xFF000000), child: DanmakuLayer(overlay: shown))),
+      child: RepaintBoundary(
+          key: key,
+          child: ColoredBox(color: const Color(0xFF000000), child: DanmakuLayer(overlay: shown))),
     ));
     // The message is drawn into an image off the frame, then shown.
     for (var i = 0; i < 20; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump(const Duration(milliseconds: 16));
     }
-    final image = (await tester.runAsync(() => (key.currentContext!.findRenderObject()! as RenderRepaintBoundary).toImage()))!;
+    final image = (await tester.runAsync(
+        () => (key.currentContext!.findRenderObject()! as RenderRepaintBoundary).toImage()))!;
     final bytes = (await tester.runAsync(image.toByteData))!;
     final width = image.width;
     image.dispose();

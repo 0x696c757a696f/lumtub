@@ -9,7 +9,12 @@ import 'translation.dart';
 /// title or subtitle line is not sent again. Only text the person already
 /// chose to translate is kept, in the cache folder; 清除缓存 removes it.
 class TranslationCache {
-  TranslationCache({this.file, this.maxEntries = 3000, this.maxAge = const Duration(days: 7), DateTime Function()? now}) : _now = now ?? DateTime.now;
+  TranslationCache(
+      {this.file,
+      this.maxEntries = 3000,
+      this.maxAge = const Duration(days: 7),
+      DateTime Function()? now})
+      : _now = now ?? DateTime.now;
   final File? file;
   final int maxEntries;
   final Duration maxAge;
@@ -19,9 +24,11 @@ class TranslationCache {
   final _entries = <String, (String, int)>{};
   Timer? _saveTimer;
   Future<void>? _loading;
+
   /// Saves and deletions run one after another, so a save that started
   /// before [clear] cannot write the cleared translations back.
   Future<void> _writes = Future.value();
+
   /// Raised by [clear], so a load still reading drops what it read.
   int _generation = 0;
 
@@ -42,7 +49,12 @@ class TranslationCache {
       if (data is! Map || generation != _generation) return;
       final oldest = _now().subtract(maxAge).millisecondsSinceEpoch;
       for (final MapEntry(:key, :value) in data.entries) {
-        if (key is String && value is List && value.length == 2 && value[0] is String && value[1] is int && (value[1] as int) >= oldest) {
+        if (key is String &&
+            value is List &&
+            value.length == 2 &&
+            value[0] is String &&
+            value[1] is int &&
+            (value[1] as int) >= oldest) {
           _entries.putIfAbsent(key, () => (value[0] as String, value[1] as int));
         }
       }
@@ -125,7 +137,10 @@ class TranslationCache {
     if (file == null) return Future.value();
     _saveTimer?.cancel();
     final generation = _generation;
-    final data = {for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]};
+    final data = {
+      for (final MapEntry(:key, :value) in _entries.entries)
+        if (!_private.contains(key)) key: [value.$1, value.$2]
+    };
     return _write(() async {
       // A clear since this save was asked for wins.
       if (generation != _generation) return;
@@ -150,9 +165,11 @@ class TranslationCache {
 /// Several megabytes of subtitle lines are encoded and decoded on another
 /// isolate, so translating does not stall the window every few seconds.
 /// Functions of their own, so the closure sent there holds only the data.
-Future<String> _encode(Map<String, List<Object>> data) => data.length > 200 ? Isolate.run(() => jsonEncode(data)) : Future.value(jsonEncode(data));
+Future<String> _encode(Map<String, List<Object>> data) =>
+    data.length > 200 ? Isolate.run(() => jsonEncode(data)) : Future.value(jsonEncode(data));
 
-Future<Object?> _decode(String text) => text.length > 64 * 1024 ? Isolate.run(() => jsonDecode(text)) : Future.value(jsonDecode(text));
+Future<Object?> _decode(String text) =>
+    text.length > 64 * 1024 ? Isolate.run(() => jsonDecode(text)) : Future.value(jsonDecode(text));
 
 /// [inner] with answers kept in [cache] under [scope], which names the
 /// service and its settings so another one translates afresh.
@@ -171,9 +188,11 @@ class CachingTranslator implements Translator {
   final bool batch;
 
   static const gather = Duration(milliseconds: 80);
+
   /// Lines and characters one batch holds at most.
   static const batchLines = 25;
   static const batchChars = 1800;
+
   /// Longer texts are sent on their own.
   static const lineChars = 400;
 
@@ -196,7 +215,9 @@ class CachingTranslator implements Translator {
   }
 
   Future<String> _fetch(String text, String target) async {
-    final result = batch && !text.contains('\n') && text.length <= lineChars ? await _gathered(text, target) : await inner.translate(text, target);
+    final result = batch && !text.contains('\n') && text.length <= lineChars
+        ? await _gathered(text, target)
+        : await inner.translate(text, target);
     cache.put(scope, target, text, result);
     return result;
   }
@@ -224,7 +245,8 @@ class CachingTranslator implements Translator {
   Future<void> _send(List<(String, Completer<String>)> items, String target) async {
     if (items.length > 1) {
       try {
-        final lines = (await inner.translate(items.map((e) => e.$1).join('\n'), target)).split('\n');
+        final lines =
+            (await inner.translate(items.map((e) => e.$1).join('\n'), target)).split('\n');
         if (lines.length == items.length && lines.every((l) => l.trim().isNotEmpty)) {
           for (final (i, item) in items.indexed) {
             item.$2.complete(lines[i].trim());

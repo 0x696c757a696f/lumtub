@@ -19,7 +19,8 @@ class WiktionaryDictionary {
   int get size => _source.size;
 
   /// The word list in memory, for tests.
-  static WiktionaryDictionary parse(String text, String language) => WiktionaryDictionary(language, MemoryLines(const LineSplitter().convert(text)));
+  static WiktionaryDictionary parse(String text, String language) =>
+      WiktionaryDictionary(language, MemoryLines(const LineSplitter().convert(text)));
 
   /// The entries for [word]: the word itself, then the words it is a form
   /// of (`hablo` gives `hablar`). Korean words carry their particles and
@@ -33,13 +34,26 @@ class WiktionaryDictionary {
       // may only start the sentence (Я, Qué) prefers the lower-case word,
       // except German, where nouns keep theirs.
       final lower = key.toLowerCase();
-      final first = key != lower && key.length > 1 && key.substring(1) == key.substring(1).toLowerCase() && language != 'de' ? lower : key;
+      final first = key != lower &&
+              key.length > 1 &&
+              key.substring(1) == key.substring(1).toLowerCase() &&
+              language != 'de'
+          ? lower
+          : key;
       final single = key.length == 1 && language != 'de' ? lower : first;
       int rank(String line) {
         final word = line.substring(0, line.contains('\t') ? line.indexOf('\t') : line.length);
-        return word == single ? 0 : word == key ? 1 : word.toLowerCase() == lower ? 2 : 3;
+        return word == single
+            ? 0
+            : word == key
+                ? 1
+                : word.toLowerCase() == lower
+                    ? 2
+                    : 3;
       }
-      final order = [for (final (i, row) in rows.indexed) (rank(row.line), i, row)]..sort((a, b) => a.$1 != b.$1 ? a.$1.compareTo(b.$1) : a.$2.compareTo(b.$2));
+
+      final order = [for (final (i, row) in rows.indexed) (rank(row.line), i, row)]
+        ..sort((a, b) => a.$1 != b.$1 ? a.$1.compareTo(b.$1) : a.$2.compareTo(b.$2));
       for (final (_, _, row) in order) {
         if (!seen.add(row.line)) continue;
         final entry = WiktionaryEntry.parse(row.line, form: form || row.form);
@@ -92,7 +106,18 @@ class WiktionaryDictionary {
         final open = last - 20;
         final base = String.fromCharCodes([...syllables.take(n - 1), open]);
         stems.add('$base다');
-        const contracted = {'와': '오', '워': '우', '해': '하', '봐': '보', '줘': '주', '돼': '되', '셔': '시', '써': '쓰', '져': '지', '쳐': '치'};
+        const contracted = {
+          '와': '오',
+          '워': '우',
+          '해': '하',
+          '봐': '보',
+          '줘': '주',
+          '돼': '되',
+          '셔': '시',
+          '써': '쓰',
+          '져': '지',
+          '쳐': '치'
+        };
         final plain = contracted[String.fromCharCode(open)];
         if (plain != null) stems.add('${String.fromCharCodes(syllables.take(n - 1))}$plain다');
       }
@@ -108,13 +133,19 @@ class WiktionaryDictionary {
     final tokens = <WordToken>[];
     var last = 0;
     for (final m in _word.allMatches(text)) {
-      if (m.start > last) tokens.add(WordToken(text.substring(last, m.start), null, isWord: false, language: language));
+      if (m.start > last) {
+        tokens
+            .add(WordToken(text.substring(last, m.start), null, isWord: false, language: language));
+      }
       final word = m[0]!;
       final reading = language == 'ko' ? romanizeKorean(word) : null;
-      tokens.add(WordToken(word, reading, isWord: true, lookup: word.replaceAll('’', "'"), language: language));
+      tokens.add(WordToken(word, reading,
+          isWord: true, lookup: word.replaceAll('’', "'"), language: language));
       last = m.end;
     }
-    if (last < text.length) tokens.add(WordToken(text.substring(last), null, isWord: false, language: language));
+    if (last < text.length) {
+      tokens.add(WordToken(text.substring(last), null, isWord: false, language: language));
+    }
     return tokens;
   }
 
@@ -122,11 +153,83 @@ class WiktionaryDictionary {
 
   static bool looksKorean(String text) => text.runes.where(_isHangul).length >= 2;
 
-  static bool looksCyrillic(String text) => text.runes.where((r) => r >= 0x0400 && r <= 0x04ff).length >= 2;
+  static bool looksCyrillic(String text) =>
+      text.runes.where((r) => r >= 0x0400 && r <= 0x04ff).length >= 2;
 
-  static const _initials = ['g', 'kk', 'n', 'd', 'tt', 'r', 'm', 'b', 'pp', 's', 'ss', '', 'j', 'jj', 'ch', 'k', 't', 'p', 'h'];
-  static const _vowels = ['a', 'ae', 'ya', 'yae', 'eo', 'e', 'yeo', 'ye', 'o', 'wa', 'wae', 'oe', 'yo', 'u', 'wo', 'we', 'wi', 'yu', 'eu', 'ui', 'i'];
-  static const _finals = ['', 'k', 'k', 'k', 'n', 'n', 'n', 't', 'l', 'k', 'm', 'l', 'l', 'l', 'p', 'l', 'm', 'p', 'p', 't', 't', 'ng', 't', 't', 'k', 't', 'p', 't'];
+  static const _initials = [
+    'g',
+    'kk',
+    'n',
+    'd',
+    'tt',
+    'r',
+    'm',
+    'b',
+    'pp',
+    's',
+    'ss',
+    '',
+    'j',
+    'jj',
+    'ch',
+    'k',
+    't',
+    'p',
+    'h'
+  ];
+  static const _vowels = [
+    'a',
+    'ae',
+    'ya',
+    'yae',
+    'eo',
+    'e',
+    'yeo',
+    'ye',
+    'o',
+    'wa',
+    'wae',
+    'oe',
+    'yo',
+    'u',
+    'wo',
+    'we',
+    'wi',
+    'yu',
+    'eu',
+    'ui',
+    'i'
+  ];
+  static const _finals = [
+    '',
+    'k',
+    'k',
+    'k',
+    'n',
+    'n',
+    'n',
+    't',
+    'l',
+    'k',
+    'm',
+    'l',
+    'l',
+    'l',
+    'p',
+    'l',
+    'm',
+    'p',
+    'p',
+    't',
+    't',
+    'ng',
+    't',
+    't',
+    'k',
+    't',
+    'p',
+    't'
+  ];
 
   /// Revised Romanization, syllable by syllable: 학교 → hakgyo. A final
   /// consonant before a vowel moves on (한국어 → hangugeo); other sound
@@ -147,7 +250,23 @@ class WiktionaryDictionary {
       final next = i + 1 < runes.length && _isHangul(runes[i + 1]) ? runes[i + 1] - 0xac00 : null;
       if (last != 0 && next != null && next ~/ 588 == 11 && last != 21) {
         // Linked to the next vowel: the final's sound as an initial.
-        const moved = {1: 'g', 2: 'kk', 4: 'n', 7: 'd', 8: 'r', 16: 'm', 17: 'b', 19: 's', 20: 'ss', 22: 'j', 23: 'ch', 24: 'k', 25: 't', 26: 'p', 27: 'h'};
+        const moved = {
+          1: 'g',
+          2: 'kk',
+          4: 'n',
+          7: 'd',
+          8: 'r',
+          16: 'm',
+          17: 'b',
+          19: 's',
+          20: 'ss',
+          22: 'j',
+          23: 'ch',
+          24: 'k',
+          25: 't',
+          26: 'p',
+          27: 'h'
+        };
         out.write(moved[last] ?? _finals[last]);
       } else {
         out.write(_finals[last]);
@@ -158,7 +277,17 @@ class WiktionaryDictionary {
 }
 
 class WiktionaryEntry {
-  const WiktionaryEntry({required this.word, this.reading = '', this.ipa = '', this.pos = const [], this.chinese = const [], this.english = const [], this.lemmas = const [], this.form = false, this.level = 0, this.source = ''});
+  const WiktionaryEntry(
+      {required this.word,
+      this.reading = '',
+      this.ipa = '',
+      this.pos = const [],
+      this.chinese = const [],
+      this.english = const [],
+      this.lemmas = const [],
+      this.form = false,
+      this.level = 0,
+      this.source = ''});
 
   final String word;
 
@@ -185,7 +314,8 @@ class WiktionaryEntry {
   static WiktionaryEntry parse(String line, {bool form = false}) {
     final parts = line.split('\t');
     String at(int i) => i < parts.length ? parts[i] : '';
-    List<String> lines(String text) => text.split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    List<String> lines(String text) =>
+        text.split(r'\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
     List<String> list(String text) => text.split('|').where((s) => s.isNotEmpty).toList();
     return WiktionaryEntry(
       word: at(0),

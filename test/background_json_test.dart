@@ -8,7 +8,10 @@ void main() {
     final small = jsonEncode({'id': 'a', 'formats': <Object?>[]});
     final large = jsonEncode({
       'id': 'b',
-      'formats': [for (var i = 0; i < 5000; i++) {'format_id': '$i', 'url': 'https://example.com/${'x' * 40}', 'height': i % 2160}],
+      'formats': [
+        for (var i = 0; i < 5000; i++)
+          {'format_id': '$i', 'url': 'https://example.com/${'x' * 40}', 'height': i % 2160}
+      ],
     });
     expect(large.length, greaterThan(64 * 1024));
     for (final text in [small, large]) {

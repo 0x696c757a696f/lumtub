@@ -10,6 +10,7 @@ class PostsLoader extends ChangeNotifier {
 
   final CommunityPosts _source;
   final ChannelRef channel;
+
   /// Keeps only posts whose text passes, for a search inside the channel.
   final bool Function(String text)? matches;
 
@@ -84,11 +85,15 @@ class PostsLoader extends ChangeNotifier {
     try {
       // A search reads on until a page has a match, up to a limit.
       for (var pages = 0; pages < 25; pages++) {
-        final page = _started && _continuation != null ? await _source.next(_continuation!) : await _source.first(channel);
+        final page = _started && _continuation != null
+            ? await _source.next(_continuation!)
+            : await _source.first(channel);
         if (_disposed) return;
         _started = true;
         final seen = {for (final post in posts) post.id};
-        final fresh = page.posts.where((post) => seen.add(post.id) && (matches?.call(post.text) ?? true)).toList();
+        final fresh = page.posts
+            .where((post) => seen.add(post.id) && (matches?.call(post.text) ?? true))
+            .toList();
         posts = [...posts, ...fresh];
         _continuation = page.continuation;
         hasMore = page.continuation != null && page.posts.isNotEmpty;

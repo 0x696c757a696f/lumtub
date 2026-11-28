@@ -18,7 +18,11 @@ void main() {
   const parenLeft = KeyCombo(LogicalKeyboardKey.digit9, shift: true);
 
   test('a key combination reads back from its saved form', () {
-    for (final combo in [bracketLeft, parenLeft, const KeyCombo(LogicalKeyboardKey.keyC, control: true, alt: true, meta: true)]) {
+    for (final combo in [
+      bracketLeft,
+      parenLeft,
+      const KeyCombo(LogicalKeyboardKey.keyC, control: true, alt: true, meta: true)
+    ]) {
       expect(KeyCombo.parse(combo.id), combo);
       expect(KeyCombo.parse(combo.id)!.activator.trigger, combo.key);
     }
@@ -35,8 +39,10 @@ void main() {
   });
 
   test('a key given to another action leaves the one that had it, as with wiliwili\'s [ ]', () {
-    var saved = withShortcutKeys(const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.arrowLeft), bracketLeft]);
-    saved = withShortcutKeys(saved, PlayerAction.seekForward, [const KeyCombo(LogicalKeyboardKey.arrowRight), bracketRight]);
+    var saved = withShortcutKeys(const {}, PlayerAction.seekBack,
+        [const KeyCombo(LogicalKeyboardKey.arrowLeft), bracketLeft]);
+    saved = withShortcutKeys(saved, PlayerAction.seekForward,
+        [const KeyCombo(LogicalKeyboardKey.arrowRight), bracketRight]);
     final keys = shortcutKeys(saved);
     expect(keys[PlayerAction.seekBack], contains(bracketLeft));
     expect(keys[PlayerAction.previous], [const KeyCombo(LogicalKeyboardKey.keyP, shift: true)]);
@@ -46,7 +52,8 @@ void main() {
     expect(saved.keys.toSet(), {'seekBack', 'seekForward'});
   });
 
-  test('a page action and a player action can share a key, and taking a key stays within its kind', () {
+  test('a page action and a player action can share a key, and taking a key stays within its kind',
+      () {
     final keys = shortcutKeys(const {});
     const space = KeyCombo(LogicalKeyboardKey.space);
     expect(keys[PlayerAction.playPause], contains(space));
@@ -71,7 +78,8 @@ void main() {
   });
 
   test('resetting an action takes its keys back from others', () {
-    var saved = withShortcutKeys(const {}, PlayerAction.mute, [const KeyCombo(LogicalKeyboardKey.keyF)]);
+    var saved =
+        withShortcutKeys(const {}, PlayerAction.mute, [const KeyCombo(LogicalKeyboardKey.keyF)]);
     expect(shortcutKeys(saved)[PlayerAction.fullscreen], isEmpty);
     saved = resetShortcutKeys(saved, PlayerAction.fullscreen);
     final keys = shortcutKeys(saved);
@@ -81,29 +89,38 @@ void main() {
 
   test('saved keys come back through the preferences file', () {
     final saved = withShortcutKeys(const {}, PlayerAction.seekBack, [bracketLeft]);
-    final prefs = AppPreferences.fromJson(const AppPreferences().copyWith(shortcutKeys: saved, rightClick: RightClick.back).toJson());
+    final prefs = AppPreferences.fromJson(
+        const AppPreferences().copyWith(shortcutKeys: saved, rightClick: RightClick.back).toJson());
     expect(shortcutKeys(prefs.shortcutKeys)[PlayerAction.seekBack], [bracketLeft]);
     expect(prefs.rightClick, RightClick.back);
     // Saved before the choice: a right click that went back still does,
     // one that did nothing now fills the window.
     expect(AppPreferences.fromJson(const {'rightClickBack': true}).rightClick, RightClick.back);
-    expect(AppPreferences.fromJson(const {'rightClickBack': false}).rightClick, RightClick.fillWindow);
+    expect(
+        AppPreferences.fromJson(const {'rightClickBack': false}).rightClick, RightClick.fillWindow);
     final help = playerShortcutHelp(prefs).map((e) => e.$1).join(' | ');
     expect(help, contains('[ / →'));
   });
 
   test('a fixed key saved by hand is ignored', () {
-    final keys = shortcutKeys({'seekBack': [const KeyCombo(LogicalKeyboardKey.digit1).id]});
+    final keys = shortcutKeys({
+      'seekBack': [const KeyCombo(LogicalKeyboardKey.digit1).id]
+    });
     expect(keys[PlayerAction.seekBack], isEmpty);
   });
 
-  testWidgets('the settings window takes a pressed key over from the action that had it', (tester) async {
+  testWidgets('the settings window takes a pressed key over from the action that had it',
+      (tester) async {
     tester.view.physicalSize = const Size(900, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final controller = AppController();
     addTearDown(controller.dispose);
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => showShortcutSettings(context, controller), child: const Text('open')))));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                onPressed: () => showShortcutSettings(context, controller),
+                child: const Text('open')))));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     final row = find.ancestor(of: find.text('Back 5 s'), matching: find.byType(Row)).first;

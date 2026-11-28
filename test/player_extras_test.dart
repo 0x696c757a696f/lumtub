@@ -26,7 +26,9 @@ import 'package:material_ui/material_ui.dart';
 import 'player_controls_test.dart' show FakePlayer;
 import 'tooltip_finder.dart';
 
-Map<String, dynamic> _board(String id, int width, {double fps = 0.5, List<num> durations = const [50, 50, 20]}) => {
+Map<String, dynamic> _board(String id, int width,
+        {double fps = 0.5, List<num> durations = const [50, 50, 20]}) =>
+    {
       'format_id': id,
       'format_note': 'storyboard',
       'ext': 'mhtml',
@@ -35,7 +37,10 @@ Map<String, dynamic> _board(String id, int width, {double fps = 0.5, List<num> d
       'rows': 5,
       'columns': 5,
       'fps': fps,
-      'fragments': [for (final (i, d) in durations.indexed) {'url': 'https://i.ytimg.com/sb/$id/M$i.jpg', 'duration': d}],
+      'fragments': [
+        for (final (i, d) in durations.indexed)
+          {'url': 'https://i.ytimg.com/sb/$id/M$i.jpg', 'duration': d}
+      ],
     };
 
 void main() {
@@ -51,18 +56,35 @@ void main() {
         ],
       };
       expect(Storyboard.from(info)!.width, 160);
-      expect(Storyboard.from({'formats': [_board('sb0', 320)]})!.width, 320);
-      expect(Storyboard.from({'formats': [{'format_id': '18'}]}), isNull);
+      expect(
+          Storyboard.from({
+            'formats': [_board('sb0', 320)]
+          })!
+              .width,
+          320);
+      expect(
+          Storyboard.from({
+            'formats': [
+              {'format_id': '18'}
+            ]
+          }),
+          isNull);
       expect(Storyboard.from({}), isNull);
     });
 
     test('ignores storyboards without usable fragments', () {
       final broken = _board('sb1', 160)..['fragments'] = <Object>[];
-      expect(Storyboard.from({'formats': [broken]}), isNull);
+      expect(
+          Storyboard.from({
+            'formats': [broken]
+          }),
+          isNull);
     });
 
     test('finds the tile for a time across sheets, clamping at both ends', () {
-      final board = Storyboard.from({'formats': [_board('sb1', 160)]})!;
+      final board = Storyboard.from({
+        'formats': [_board('sb1', 160)]
+      })!;
       expect(board.interval, const Duration(seconds: 2));
       StoryboardTile at(int seconds) => board.tileAt(Duration(seconds: seconds));
       expect((at(0).sheet, at(0).row, at(0).column), (0, 0, 0));
@@ -78,7 +100,12 @@ void main() {
 
     test('works without fps from the first sheet', () {
       final json = _board('sb1', 160)..remove('fps');
-      expect(Storyboard.from({'formats': [json]})!.interval, const Duration(seconds: 2));
+      expect(
+          Storyboard.from({
+            'formats': [json]
+          })!
+              .interval,
+          const Duration(seconds: 2));
     });
   });
 
@@ -96,8 +123,22 @@ void main() {
     test('is null when missing or too short to draw', () {
       expect(Heatmap.from({}), isNull);
       expect(Heatmap.from({'heatmap': null}), isNull);
-      expect(Heatmap.from({'heatmap': [{'start_time': 0, 'end_time': 5, 'value': 1}]}), isNull);
-      expect(Heatmap.from({'heatmap': [{'start_time': 'a'}, 3, <String, Object?>{}]}), isNull);
+      expect(
+          Heatmap.from({
+            'heatmap': [
+              {'start_time': 0, 'end_time': 5, 'value': 1}
+            ]
+          }),
+          isNull);
+      expect(
+          Heatmap.from({
+            'heatmap': [
+              {'start_time': 'a'},
+              3,
+              <String, Object?>{}
+            ]
+          }),
+          isNull);
     });
 
     test('clamps values', () {
@@ -113,7 +154,8 @@ void main() {
 
   group('small helpers', () {
     test('screenshot names are safe and sorted by time', () {
-      final name = screenshotName('A/B: "C"? <D>', const Duration(hours: 1, minutes: 2, seconds: 3), DateTime(2026, 3, 4, 5, 6, 7));
+      final name = screenshotName('A/B: "C"? <D>', const Duration(hours: 1, minutes: 2, seconds: 3),
+          DateTime(2026, 3, 4, 5, 6, 7));
       expect(name, 'A B C D_01-02-03_20260304-050607.png');
       expect(screenshotName('', Duration.zero, DateTime(2026)), startsWith('Lumtub_00-00-00_'));
       expect(screenshotName('x' * 100, Duration.zero, DateTime(2026)).split('_').first.length, 40);
@@ -170,12 +212,16 @@ void main() {
       const defaults = AppPreferences();
       expect(defaults.showHeatmap, isTrue);
       expect(defaults.progressLine, ProgressLine.always);
-      final saved = AppPreferences.fromJson(const AppPreferences(showHeatmap: false, progressLine: ProgressLine.fullscreen).toJson());
+      final saved = AppPreferences.fromJson(
+          const AppPreferences(showHeatmap: false, progressLine: ProgressLine.fullscreen).toJson());
       expect(saved.showHeatmap, isFalse);
       expect(saved.progressLine, ProgressLine.fullscreen);
       expect(AppPreferences.fromJson({'progressLine': 'bogus'}).progressLine, ProgressLine.always);
       expect(defaults.wheelGesture, WheelGesture.off);
-      expect(AppPreferences.fromJson(const AppPreferences(wheelGesture: WheelGesture.split).toJson()).wheelGesture, WheelGesture.split);
+      expect(
+          AppPreferences.fromJson(const AppPreferences(wheelGesture: WheelGesture.split).toJson())
+              .wheelGesture,
+          WheelGesture.split);
       expect(AppPreferences.fromJson({'wheelGesture': 'bogus'}).wheelGesture, WheelGesture.off);
     });
 
@@ -195,33 +241,65 @@ void main() {
       controller = AppController();
       player = FakePlayer();
       controller.player = player;
-      controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+      controller.playing = const VideoItem(
+          id: 'dQw4w9WgXcQ',
+          title: '测试视频标题',
+          channel: 'Channel',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     });
 
     test('maps the YouTube keys without clashing with the old ones', () {
-      final keys = playerShortcuts(controller, () => null, onScreenshot: () {}).keys.whereType<NotWhileTyping>().map((k) => k.activator).whereType<SingleActivator>().toList();
+      final keys = playerShortcuts(controller, () => null, onScreenshot: () {})
+          .keys
+          .whereType<NotWhileTyping>()
+          .map((k) => k.activator)
+          .whereType<SingleActivator>()
+          .toList();
       final seen = <String>{};
       for (final k in keys) {
-        expect(seen.add('${k.trigger.keyId}/${k.shift}/${k.control}/${k.alt}/${k.meta}'), isTrue, reason: 'duplicate ${k.trigger.keyLabel}');
+        expect(seen.add('${k.trigger.keyId}/${k.shift}/${k.control}/${k.alt}/${k.meta}'), isTrue,
+            reason: 'duplicate ${k.trigger.keyLabel}');
       }
       for (final key in [
-        LogicalKeyboardKey.comma, LogicalKeyboardKey.period, LogicalKeyboardKey.bracketLeft, LogicalKeyboardKey.bracketRight,
-        LogicalKeyboardKey.home, LogicalKeyboardKey.end, LogicalKeyboardKey.keyT, LogicalKeyboardKey.keyS, LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit9, LogicalKeyboardKey.numpad5,
+        LogicalKeyboardKey.comma,
+        LogicalKeyboardKey.period,
+        LogicalKeyboardKey.bracketLeft,
+        LogicalKeyboardKey.bracketRight,
+        LogicalKeyboardKey.home,
+        LogicalKeyboardKey.end,
+        LogicalKeyboardKey.keyT,
+        LogicalKeyboardKey.keyS,
+        LogicalKeyboardKey.digit0,
+        LogicalKeyboardKey.digit9,
+        LogicalKeyboardKey.numpad5,
       ]) {
         expect(keys.any((k) => k.trigger == key && !k.shift), isTrue, reason: key.keyLabel);
       }
       // Shift + , and . still change the speed.
       expect(keys.any((k) => k.trigger == LogicalKeyboardKey.period && k.shift), isTrue);
-      expect(playerShortcuts(controller, () => null).keys.whereType<NotWhileTyping>().map((k) => k.activator).whereType<SingleActivator>().any((k) => k.trigger == LogicalKeyboardKey.keyS), isFalse, reason: 'no screenshot without a handler');
+      expect(
+          playerShortcuts(controller, () => null)
+              .keys
+              .whereType<NotWhileTyping>()
+              .map((k) => k.activator)
+              .whereType<SingleActivator>()
+              .any((k) => k.trigger == LogicalKeyboardKey.keyS),
+          isFalse,
+          reason: 'no screenshot without a handler');
     });
 
     testWidgets('keys type into a text field instead of seeking', (tester) async {
       var fired = 0;
       final field = FocusNode();
       final other = FocusNode();
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: CallbackShortcuts(
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: CallbackShortcuts(
         bindings: {const NotWhileTyping(SingleActivator(LogicalKeyboardKey.digit5)): () => fired++},
-        child: Column(children: [TextField(focusNode: field), Focus(focusNode: other, child: const SizedBox(width: 10, height: 10))]),
+        child: Column(children: [
+          TextField(focusNode: field),
+          Focus(focusNode: other, child: const SizedBox(width: 10, height: 10))
+        ]),
       ))));
       field.requestFocus();
       await tester.pump();
@@ -246,16 +324,21 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(MaterialApp(
         theme: buildAppTheme(Colors.red, Brightness.light),
-        home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+        home: Scaffold(
+            body: ColoredBox(
+                color: Colors.black,
+                child: PlayerControls(player: player, state: null, controller: controller))),
       ));
       await tester.pump();
       await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 400));
     }
 
-    testWidgets('keys chosen in the settings drive the player, and right click goes back', (tester) async {
+    testWidgets('keys chosen in the settings drive the player, and right click goes back',
+        (tester) async {
       await controller.savePreferences(controller.preferences.copyWith(
-        shortcutKeys: withShortcutKeys(const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.bracketLeft)]),
+        shortcutKeys: withShortcutKeys(
+            const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.bracketLeft)]),
         rightClick: RightClick.back,
       ));
       await pump(tester);
@@ -263,7 +346,8 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.bracketLeft);
       await tester.pump();
       expect(player.seeks.length, before + 1);
-      expect(controller.playing?.id, 'dQw4w9WgXcQ', reason: '[ no longer goes to the previous video');
+      expect(controller.playing?.id, 'dQw4w9WgXcQ',
+          reason: '[ no longer goes to the previous video');
       expect(controller.onWatchPage, isTrue);
       await tester.tap(find.byType(PlayerControls), buttons: kSecondaryButton, warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 400));
@@ -301,7 +385,8 @@ void main() {
       expect(theaterMode.value, isFalse);
     });
 
-    testWidgets('in theater mode the folded side panel unfolds from the bottom bar', (tester) async {
+    testWidgets('in theater mode the folded side panel unfolds from the bottom bar',
+        (tester) async {
       addTearDown(() {
         theaterMode.value = false;
         theaterChatOpen.value = true;
@@ -323,17 +408,20 @@ void main() {
     testWidgets('the thin progress line follows the setting', (tester) async {
       await pump(tester);
       expect(find.byType(MiniProgressLine), findsOneWidget, reason: 'always, the default');
-      await controller.savePreferences(controller.preferences.copyWith(progressLine: ProgressLine.never));
+      await controller
+          .savePreferences(controller.preferences.copyWith(progressLine: ProgressLine.never));
       await tester.pump();
       expect(find.byType(MiniProgressLine), findsNothing);
-      await controller.savePreferences(controller.preferences.copyWith(progressLine: ProgressLine.fullscreen));
+      await controller
+          .savePreferences(controller.preferences.copyWith(progressLine: ProgressLine.fullscreen));
       await tester.pump();
       expect(find.byType(MiniProgressLine), findsNothing, reason: 'not fullscreen');
     });
   });
 
   group('progress bar', () {
-    Future<void> pumpBar(WidgetTester tester, {List<double>? heatmap, ProgressPreview? preview}) async {
+    Future<void> pumpBar(WidgetTester tester,
+        {List<double>? heatmap, ProgressPreview? preview}) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -354,12 +442,15 @@ void main() {
       ));
     }
 
-    testWidgets('draws the replay curve and the preview with the time while hovering', (tester) async {
+    testWidgets('draws the replay curve and the preview with the time while hovering',
+        (tester) async {
       Duration? previewed;
-      await pumpBar(tester, heatmap: [for (var i = 0; i < 20; i++) i / 19], preview: ProgressPreview(const Size(160, 90), (time) {
-        previewed = time;
-        return const ColoredBox(color: Colors.blue, key: Key('tile'));
-      }));
+      await pumpBar(tester,
+          heatmap: [for (var i = 0; i < 20; i++) i / 19],
+          preview: ProgressPreview(const Size(160, 90), (time) {
+            previewed = time;
+            return const ColoredBox(color: Colors.blue, key: Key('tile'));
+          }));
       expect(find.byKey(const Key('tile')), findsNothing);
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);

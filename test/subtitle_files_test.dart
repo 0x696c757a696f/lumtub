@@ -30,7 +30,8 @@ class _Emptying implements Translator {
     asked.add(text);
     final lines = text.split('\n');
     if (lines.length < 2) return text.toUpperCase();
-    return [lines.take(2).join(' ').toUpperCase(), '', ...lines.skip(2).map((l) => l.toUpperCase())].join('\n');
+    return [lines.take(2).join(' ').toUpperCase(), '', ...lines.skip(2).map((l) => l.toUpperCase())]
+        .join('\n');
   }
 }
 
@@ -42,7 +43,8 @@ class _Joining implements Translator {
   Future<String> translate(String text, String target) async {
     asked.add(text);
     final lines = text.split('\n');
-    return [for (var i = 0; i < lines.length; i += 2) lines.skip(i).take(2).join(' ').toUpperCase()].join('\n');
+    return [for (var i = 0; i < lines.length; i += 2) lines.skip(i).take(2).join(' ').toUpperCase()]
+        .join('\n');
   }
 }
 
@@ -101,15 +103,19 @@ void main() {
   });
 
   test('skips cues with no text, as automatic captions have between lines', () {
-    const vtt = 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n \n\n00:00:01.000 --> 00:00:02.000\nhello\n\n00:00:02.000 --> 00:00:02.010\n&nbsp;\n';
+    const vtt =
+        'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n \n\n00:00:01.000 --> 00:00:02.000\nhello\n\n00:00:02.000 --> 00:00:02.010\n&nbsp;\n';
     expect(WebVtt.cues(vtt).map((c) => c.text), ['hello']);
   });
 
   test('retries a 429 and saves the track to a file', () async {
     var calls = 0;
-    final client = MockClient((request) async => ++calls < 3 ? http.Response('', 429) : http.Response('WEBVTT\n', 200));
-    final files = SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero, Duration.zero]);
-    final path = await files.pathFor(const SubtitleOption(language: 'en', name: 'English', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en'));
+    final client = MockClient(
+        (request) async => ++calls < 3 ? http.Response('', 429) : http.Response('WEBVTT\n', 200));
+    final files =
+        SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero, Duration.zero]);
+    final path = await files.pathFor(const SubtitleOption(
+        language: 'en', name: 'English', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en'));
     expect(calls, 3);
     expect(await File(path).readAsString(), 'WEBVTT\n');
   });
@@ -118,11 +124,17 @@ void main() {
     final asked = <Uri>[];
     final client = MockClient((request) async {
       asked.add(request.url);
-      return request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response(_auto, 200);
+      return request.url.queryParameters.containsKey('tlang')
+          ? http.Response('', 429)
+          : http.Response(_auto, 200);
     });
     final translator = _Upper();
     final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
-    final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    final path = await files.pathFor(const SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated));
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
     expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
@@ -133,29 +145,46 @@ void main() {
   });
 
   test('hands translations, and only translations, to the last words', () async {
-    final client = MockClient((request) async => http.Response(request.url.queryParameters.containsKey('tlang') ? 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nyoutube\n' : _auto, 200));
+    final client = MockClient((request) async => http.Response(
+        request.url.queryParameters.containsKey('tlang')
+            ? 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nyoutube\n'
+            : _auto,
+        200));
     final seen = <String>[];
-    final files = SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero], wording: (text, target, original) {
+    final files = SubtitleFiles(client, folder, _Upper.new, pauses: const [Duration.zero],
+        wording: (text, target, original) {
       seen.add(target);
       return text.replaceAll('youtube', 'worded');
     });
-    final own = await files.pathFor(const SubtitleOption(language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en'));
+    final own = await files.pathFor(const SubtitleOption(
+        language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en'));
     expect(await File(own).readAsString(), isNot(contains('worded')));
     expect(seen, isEmpty);
-    final translated = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=fr&tlang=zh-Hans', kind: SubtitleKind.translated));
+    final translated = await files.pathFor(const SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=b&lang=fr&tlang=zh-Hans',
+        kind: SubtitleKind.translated));
     expect(await File(translated).readAsString(), contains('worded'));
     expect(seen, ['zh-Hans']);
   });
 
   test('gives each translated cue its own original for the last words', () async {
-    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response(_auto, 200));
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang')
+        ? http.Response('', 429)
+        : http.Response(_auto, 200));
     final seen = <(String, String)>[];
     final translator = _Upper();
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], wording: (text, target, original) {
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero],
+        wording: (text, target, original) {
       seen.add((text, original));
       return text;
     });
-    await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    await files.pathFor(const SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated));
     expect(seen, isNotEmpty);
     for (final (text, original) in seen) {
       expect(text, original.toUpperCase());
@@ -167,31 +196,48 @@ void main() {
     for (var i = 0; i < 5; i++) {
       vtt.write('00:00:0$i.000 --> 00:00:0$i.900\nline $i.\n\n');
     }
-    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang')
+        ? http.Response('', 429)
+        : http.Response('$vtt', 200));
     final translator = _Joining();
     final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
-    final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
-    expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text), ['LINE 0.', 'LINE 1.', 'LINE 2.', 'LINE 3.', 'LINE 4.']);
+    final path = await files.pathFor(const SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated));
+    expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text),
+        ['LINE 0.', 'LINE 1.', 'LINE 2.', 'LINE 3.', 'LINE 4.']);
     expect(translator.asked.first, 'line 0.\nline 1.\nline 2.\nline 3.\nline 4.');
   });
 
   test('translates a long track a few requests at a time, in order', () async {
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 40; i++) {
-      vtt.write('00:00:${i.toString().padLeft(2, '0')}.000 --> 00:00:${i.toString().padLeft(2, '0')}.900\n${'word$i ' * 300}\n\n');
+      vtt.write(
+          '00:00:${i.toString().padLeft(2, '0')}.000 --> 00:00:${i.toString().padLeft(2, '0')}.900\n${'word$i ' * 300}\n\n');
     }
-    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang')
+        ? http.Response('', 429)
+        : http.Response('$vtt', 200));
     var running = 0, most = 0;
     final translator = _Slow(() => running, (n) {
       running = n;
       if (n > most) most = n;
     });
     final updated = <String>[];
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => const Duration(seconds: 20), onUpdated: (path) async {
-      updated.add(path);
-      return true;
-    });
-    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final files = SubtitleFiles(client, folder, () => translator,
+        pauses: const [Duration.zero],
+        position: () => const Duration(seconds: 20),
+        onUpdated: (path) async {
+          updated.add(path);
+          return true;
+        });
+    const option = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated);
     final path = await files.pathFor(option);
     // First the pieces from where playback is.
     final first = WebVtt.cues(await File(path).readAsString());
@@ -201,28 +247,44 @@ void main() {
     expect(await files.wholePathFor(option), path);
     final cues = WebVtt.cues(await File(path).readAsString());
     expect(cues, hasLength(40));
-    expect([for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
+    expect(
+        [for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
     expect(most, 3);
     expect(updated, [path]);
   });
 
   test('translates only near playback, follows it, and all of it when asked whole', () async {
-    String stamp(int minute) => '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
+    String stamp(int minute) =>
+        '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 60; i++) {
-      vtt.write('${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
+      vtt.write(
+          '${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
     }
-    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang')
+        ? http.Response('', 429)
+        : http.Response('$vtt', 200));
     final translator = _Upper();
     var position = Duration.zero;
     final updated = <String>[];
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => position, poll: const Duration(milliseconds: 10), onUpdated: (path) async {
-      updated.add(path);
-      return true;
-    });
-    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final files = SubtitleFiles(client, folder, () => translator,
+        pauses: const [Duration.zero],
+        position: () => position,
+        poll: const Duration(milliseconds: 10),
+        onUpdated: (path) async {
+          updated.add(path);
+          return true;
+        });
+    const option = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated);
     final path = await files.pathFor(option);
-    Future<List<int>> shown() async => [for (final c in WebVtt.cues(await File(path).readAsString())) int.parse(c.text.split(' ').first.substring(4))];
+    Future<List<int>> shown() async => [
+          for (final c in WebVtt.cues(await File(path).readAsString()))
+            int.parse(c.text.split(' ').first.substring(4))
+        ];
     await Future<void>.delayed(const Duration(milliseconds: 100));
     // Five minutes ahead of the start, nothing further.
     expect(await shown(), [0, 1, 2, 3, 4, 5]);
@@ -236,17 +298,30 @@ void main() {
   });
 
   test('stops following a track once another video plays', () async {
-    String stamp(int minute) => '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
+    String stamp(int minute) =>
+        '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}:00.000';
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 60; i++) {
-      vtt.write('${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
+      vtt.write(
+          '${stamp(i)} --> ${stamp(i).replaceFirst(':00.000', ':05.000')}\n${'word$i ' * 300}.\n\n');
     }
-    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang')
+        ? http.Response('', 429)
+        : http.Response('$vtt', 200));
     final translator = _Upper();
     var position = Duration.zero;
     var playing = 'a';
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], position: () => position, playing: () => playing, poll: const Duration(milliseconds: 10), onUpdated: (path) async => true);
-    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final files = SubtitleFiles(client, folder, () => translator,
+        pauses: const [Duration.zero],
+        position: () => position,
+        playing: () => playing,
+        poll: const Duration(milliseconds: 10),
+        onUpdated: (path) async => true);
+    const option = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans',
+        kind: SubtitleKind.translated);
     await files.pathFor(option);
     await Future<void>.delayed(const Duration(milliseconds: 100));
     final asked = translator.asked.length;
@@ -258,7 +333,8 @@ void main() {
   });
 
   test('joins caption fragments into sentences for translation', () {
-    ({String timing, String text}) cue(String from, String to, String text) => (timing: '00:00:$from --> 00:00:$to align:start', text: text);
+    ({String timing, String text}) cue(String from, String to, String text) =>
+        (timing: '00:00:$from --> 00:00:$to align:start', text: text);
     final joined = WebVtt.sentences([
       cue('00.000', '01.500', 'so today we are'),
       cue('01.500', '03.000', 'going to talk about'),
@@ -268,28 +344,47 @@ void main() {
       cue('10.000', '11.000', '我们今天'),
       cue('11.000', '12.000', '来聊字幕。'),
     ]);
-    expect([for (final c in joined) c.text], ['so today we are going to talk about subtitles.', 'Next one', 'after a pause 我们今天来聊字幕。']);
+    expect([for (final c in joined) c.text],
+        ['so today we are going to talk about subtitles.', 'Next one', 'after a pause 我们今天来聊字幕。']);
     expect(joined.first.timing, '00:00:00.000 --> 00:00:04.000');
     expect(joined[1].timing, '00:00:04.100 --> 00:00:05.000 align:start');
   });
 
   test('a sentence stops growing past what can be read at once', () {
-    final cues = [for (var i = 0; i < 10; i++) (timing: '00:00:0$i.000 --> 00:00:0$i.900', text: 'and then some more words')];
+    final cues = [
+      for (var i = 0; i < 10; i++)
+        (timing: '00:00:0$i.000 --> 00:00:0$i.900', text: 'and then some more words')
+    ];
     final joined = WebVtt.sentences(cues);
     expect(joined.length, greaterThan(1));
-    expect(joined.every((c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)), isTrue);
+    expect(
+        joined.every(
+            (c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)),
+        isTrue);
     expect(joined.every((c) => c.text.length <= 90), isTrue);
   });
 
   test('automatic captions show as sentences, a long one in lines broken at commas', () {
     final vtt = StringBuffer('WEBVTT\n\n');
-    const words = ['Io conoscevo tutte le parole,', 'tutte, ma ho pensato così tanto alla', 'risposta', 'che lui ha ripetuto la domanda', 'più lentamente,', 'molto più lentamente,', 'come se stesse parlando con una bambina.', 'Io ho sorriso.'];
+    const words = [
+      'Io conoscevo tutte le parole,',
+      'tutte, ma ho pensato così tanto alla',
+      'risposta',
+      'che lui ha ripetuto la domanda',
+      'più lentamente,',
+      'molto più lentamente,',
+      'come se stesse parlando con una bambina.',
+      'Io ho sorriso.'
+    ];
     for (final (i, w) in words.indexed) {
       // Each fragment runs on over the next, as YouTube's do.
-      vtt.write('00:01:${(17 + i * 2).toString().padLeft(2, '0')}.000 --> 00:01:${(20 + i * 2).toString().padLeft(2, '0')}.000\n$w\n\n');
+      vtt.write(
+          '00:01:${(17 + i * 2).toString().padLeft(2, '0')}.000 --> 00:01:${(20 + i * 2).toString().padLeft(2, '0')}.000\n$w\n\n');
     }
     final lines = WebVtt.cues(WebVtt.asLines('$vtt'));
-    expect([for (final l in lines) l.text], [
+    expect([
+      for (final l in lines) l.text
+    ], [
       'Io conoscevo tutte le parole, tutte, ma ho pensato così tanto alla risposta',
       'che lui ha ripetuto la domanda più lentamente,',
       'molto più lentamente, come se stesse parlando con una bambina.',
@@ -301,7 +396,8 @@ void main() {
     }
   });
 
-  test('translates automatic captions line by line, each translation at the times of its original', () async {
+  test('translates automatic captions line by line, each translation at the times of its original',
+      () async {
     const asr = '''WEBVTT
 
 00:00:00.000 --> 00:00:04.000
@@ -320,20 +416,41 @@ Ok, finita la chicca.
     });
     final translator = _Upper();
     final files = SubtitleFiles(client, folder, () => translator);
-    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=it&kind=asr&tlang=zh-Hans', kind: SubtitleKind.translated);
+    const option = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=c&lang=it&kind=asr&tlang=zh-Hans',
+        kind: SubtitleKind.translated);
     final cues = WebVtt.cues(await File(await files.pathFor(option)).readAsString());
     // YouTube's own translation is not asked for, the sentence goes whole.
     expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
-    expect(translator.asked.single.split('\n'), ['ma Kennedy non ci crede e sospetta', 'che stiano sviluppando armi.', 'Ok, finita la chicca.']);
-    expect([for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)], [(0, 4), (4, 8), (8, 10)]);
-    expect([for (final c in cues) c.text], ['MA KENNEDY NON CI CREDE E SOSPETTA', 'CHE STIANO SVILUPPANDO ARMI.', 'OK, FINITA LA CHICCA.']);
+    expect(translator.asked.single.split('\n'), [
+      'ma Kennedy non ci crede e sospetta',
+      'che stiano sviluppando armi.',
+      'Ok, finita la chicca.'
+    ]);
+    expect([
+      for (final c in cues) (WebVtt.startOf(c.timing).inSeconds, WebVtt.endOf(c.timing).inSeconds)
+    ], [
+      (0, 4),
+      (4, 8),
+      (8, 10)
+    ]);
+    expect([
+      for (final c in cues) c.text
+    ], [
+      'MA KENNEDY NON CI CREDE E SOSPETTA',
+      'CHE STIANO SVILUPPANDO ARMI.',
+      'OK, FINITA LA CHICCA.'
+    ]);
     // Each line of the original has its translation at the same times.
     final original = WebVtt.cues(WebVtt.asLines(asr));
     expect([for (final c in original) c.timing], [for (final c in cues) c.timing]);
   });
 
   test('cuts a translation like the lines of its original', () {
-    expect(WebVtt.splitLike('one two, three four five six', [8, 20]), ['one two,', 'three four five six']);
+    expect(WebVtt.splitLike('one two, three four five six', [8, 20]),
+        ['one two,', 'three four five six']);
     expect(WebVtt.splitLike('我们今天去公园，然后回家吃饭', [10, 10]), ['我们今天去公园，', '然后回家吃饭']);
     expect(WebVtt.splitLike('我们今天去公园然后回家吃饭睡觉', [1, 1, 1]).length, 3);
     expect(WebVtt.splitLike('abcdef', [1, 1]), ['abcdef']);
@@ -346,11 +463,16 @@ Ok, finita la chicca.
   });
 
   test('a line left empty by the translation is asked alone', () async {
-    const asr = 'WEBVTT\n\n00:00:00.000 --> 00:00:04.000\nma Kennedy non ci crede e sospetta\n\n00:00:04.000 --> 00:00:08.000\nche stiano sviluppando armi.\n';
+    const asr =
+        'WEBVTT\n\n00:00:00.000 --> 00:00:04.000\nma Kennedy non ci crede e sospetta\n\n00:00:04.000 --> 00:00:08.000\nche stiano sviluppando armi.\n';
     final client = MockClient((request) async => http.Response(asr, 200));
     final translator = _Emptying();
     final files = SubtitleFiles(client, folder, () => translator);
-    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=e&lang=it&kind=asr&tlang=zh-Hans', kind: SubtitleKind.translated);
+    const option = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=e&lang=it&kind=asr&tlang=zh-Hans',
+        kind: SubtitleKind.translated);
     final cues = WebVtt.cues(await File(await files.pathFor(option)).readAsString());
     expect(cues.length, 2);
     expect(cues.every((c) => c.text.trim().isNotEmpty), isTrue);
@@ -361,48 +483,100 @@ Ok, finita la chicca.
   // rolls them on: the original and every translation of it show in the
   // same lines at the same times, none of them empty.
   const samples = {
-    'it': ['Quella culla vinta con la pipì', 'è progettata per durare meno', 'del tempo che servirà a tuo figlio', 'per imparare a camminare.', 'Poi basta.'],
-    'en': ['so today we are going', 'to talk about subtitles', 'and how they work, which', 'is a long story.', 'Okay.'],
+    'it': [
+      'Quella culla vinta con la pipì',
+      'è progettata per durare meno',
+      'del tempo che servirà a tuo figlio',
+      'per imparare a camminare.',
+      'Poi basta.'
+    ],
+    'en': [
+      'so today we are going',
+      'to talk about subtitles',
+      'and how they work, which',
+      'is a long story.',
+      'Okay.'
+    ],
     'zh': ['今天我们', '来聊一聊字幕', '它是怎么工作的，', '这是个很长的故事。', '好。'],
     'ja': ['今日は', '字幕について話します', 'どう動くのか、', 'それは長い話です。', 'はい。'],
     'ko': ['오늘은 자막에', '대해 이야기하겠습니다', '어떻게 작동하는지,', '긴 이야기입니다.', '네.'],
     'th': ['วันนี้เราจะ', 'พูดถึงคำบรรยาย', 'ว่ามันทำงานอย่างไร', 'เป็นเรื่องยาว', 'โอเค'],
     'ar': ['اليوم سنتحدث', 'عن الترجمة', 'وكيف تعمل،', 'إنها قصة طويلة؟', 'حسنا.'],
     'hi': ['आज हम', 'उपशीर्षक के बारे में', 'बात करेंगे,', 'यह लंबी कहानी है।', 'ठीक है।'],
-    'ru': ['сегодня мы', 'поговорим о субтитрах', 'и как они работают,', 'это долгая история.', 'Ладно.'],
+    'ru': [
+      'сегодня мы',
+      'поговорим о субтитрах',
+      'и как они работают,',
+      'это долгая история.',
+      'Ладно.'
+    ],
   };
   String rolling(List<String> fragments) {
     final vtt = StringBuffer('WEBVTT\n\n');
     for (final (i, f) in fragments.indexed) {
       final previous = i == 0 ? '' : '${fragments[i - 1]}\n';
-      vtt.write('00:00:${(i * 2).toString().padLeft(2, '0')}.000 --> 00:00:${(i * 2 + 2).toString().padLeft(2, '0')}.000\n$previous<00:00:0$i.100><c>$f</c>\n\n');
+      vtt.write(
+          '00:00:${(i * 2).toString().padLeft(2, '0')}.000 --> 00:00:${(i * 2 + 2).toString().padLeft(2, '0')}.000\n$previous<00:00:0$i.100><c>$f</c>\n\n');
     }
     return '$vtt';
   }
 
   for (final MapEntry(key: lang, value: fragments) in samples.entries) {
     for (final second in ['zh-Hans', 'en', 'ar']) {
-      test('automatic $lang captions and their $second translation show in the same lines', () async {
+      test('automatic $lang captions and their $second translation show in the same lines',
+          () async {
         final asr = rolling(fragments);
-        final client = MockClient((request) async => http.Response.bytes(utf8.encode(asr), 200, headers: {'content-type': 'text/vtt; charset=utf-8'}));
+        final client = MockClient((request) async => http.Response.bytes(utf8.encode(asr), 200,
+            headers: {'content-type': 'text/vtt; charset=utf-8'}));
         final files = SubtitleFiles(client, folder, _Upper.new);
-        final original = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: lang, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr'))).readAsString());
-        final translated = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: second, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second', kind: SubtitleKind.translated))).readAsString());
+        final original = WebVtt.cues(await File(await files.pathFor(SubtitleOption(
+                language: lang,
+                name: '',
+                url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr')))
+            .readAsString());
+        final translated = WebVtt.cues(await File(await files.pathFor(SubtitleOption(
+                language: second,
+                name: '',
+                url:
+                    'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second',
+                kind: SubtitleKind.translated)))
+            .readAsString());
         // A first subtitle that is itself a translation goes with the second too.
-        final other = WebVtt.cues(await File(await files.pathFor(SubtitleOption(language: 'fr', name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=fr', kind: SubtitleKind.translated))).readAsString());
+        final other = WebVtt.cues(await File(await files.pathFor(SubtitleOption(
+                language: 'fr',
+                name: '',
+                url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=fr',
+                kind: SubtitleKind.translated)))
+            .readAsString());
         expect([for (final c in translated) c.timing], [for (final c in original) c.timing]);
         expect([for (final c in other) c.timing], [for (final c in original) c.timing]);
-        expect([for (final c in translated) c.text], [for (final c in original) c.text.toUpperCase()]);
+        expect(
+            [for (final c in translated) c.text], [for (final c in original) c.text.toUpperCase()]);
         expect(original.every((c) => c.text.trim().isNotEmpty), isTrue);
         // The subtitle list: one row per line, each with its translation,
         // none repeated, also when the first subtitle is YouTube's own track
         // as mpv reads it.
-        final originalText = await File(await files.pathFor(SubtitleOption(language: lang, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr'))).readAsString();
-        final translatedText = await File(await files.pathFor(SubtitleOption(language: second, name: '', url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second', kind: SubtitleKind.translated))).readAsString();
+        final originalText = await File(await files.pathFor(SubtitleOption(
+                language: lang,
+                name: '',
+                url: 'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr')))
+            .readAsString();
+        final translatedText = await File(await files.pathFor(SubtitleOption(
+                language: second,
+                name: '',
+                url:
+                    'https://www.youtube.com/api/timedtext?v=$lang&lang=$lang&kind=asr&tlang=$second',
+                kind: SubtitleKind.translated)))
+            .readAsString();
         for (final main in [dartSubtitleCues(originalText), dartSubtitleCues(asr)]) {
           final rows = pairSubtitleCues(main, dartSubtitleCues(translatedText));
-          expect(rows.every((r) => r.cue.text.trim().isNotEmpty && (r.second?.trim().isNotEmpty ?? false)), isTrue, reason: '$rows');
-          expect([for (final r in rows) r.second], [for (final c in translated) c.text], reason: '$rows');
+          expect(
+              rows.every(
+                  (r) => r.cue.text.trim().isNotEmpty && (r.second?.trim().isNotEmpty ?? false)),
+              isTrue,
+              reason: '$rows');
+          expect([for (final r in rows) r.second], [for (final c in translated) c.text],
+              reason: '$rows');
         }
         // Every word of the track, in order, each once.
         final joined = original.map((c) => c.text).join(' ').replaceAll(' ', '');
@@ -430,14 +604,30 @@ Ok, finita la chicca.
       for (final fragments in samples.values) rolling(fragments),
       // A long track with every kind of end, pause and width.
       () {
-        const words = ['ciao', 'mondo,', 'questo è', 'un test.', '今天我们', '来聊，', '字幕。', '오늘은', '자막에', 'वाह।', 'حسنا،', 'longer words here and there', 'ok?'];
+        const words = [
+          'ciao',
+          'mondo,',
+          'questo è',
+          'un test.',
+          '今天我们',
+          '来聊，',
+          '字幕。',
+          '오늘은',
+          '자막에',
+          'वाह।',
+          'حسنا،',
+          'longer words here and there',
+          'ok?'
+        ];
         final vtt = StringBuffer('WEBVTT\n\n');
         var at = 0;
         for (var i = 0; i < 600; i++) {
           final length = 300 + (i * 7919) % 2500;
           final gap = i % 17 == 0 ? 1500 : 0;
-          String stamp(int ms) => '${(ms ~/ 3600000).toString().padLeft(2, '0')}:${(ms ~/ 60000 % 60).toString().padLeft(2, '0')}:${(ms ~/ 1000 % 60).toString().padLeft(2, '0')}.${(ms % 1000).toString().padLeft(3, '0')}';
-          vtt.write('${stamp(at + gap)} --> ${stamp(at + gap + length)}\n${words[(i * 31) % words.length]}\n\n');
+          String stamp(int ms) =>
+              '${(ms ~/ 3600000).toString().padLeft(2, '0')}:${(ms ~/ 60000 % 60).toString().padLeft(2, '0')}:${(ms ~/ 1000 % 60).toString().padLeft(2, '0')}.${(ms % 1000).toString().padLeft(3, '0')}';
+          vtt.write(
+              '${stamp(at + gap)} --> ${stamp(at + gap + length)}\n${words[(i * 31) % words.length]}\n\n');
           at += gap + length;
         }
         return '$vtt';
@@ -460,7 +650,8 @@ Ok, finita la chicca.
   });
 
   test('reads when a cue starts', () {
-    expect(WebVtt.startOf('00:01:02.500 --> 00:01:04.000 align:start'), const Duration(minutes: 1, seconds: 2, milliseconds: 500));
+    expect(WebVtt.startOf('00:01:02.500 --> 00:01:04.000 align:start'),
+        const Duration(minutes: 1, seconds: 2, milliseconds: 500));
     expect(WebVtt.startOf('1:00:00.000 --> 1:00:01.000'), const Duration(hours: 1));
     expect(WebVtt.startOf('02.250 --> 03.000'), const Duration(seconds: 2, milliseconds: 250));
   });
@@ -472,7 +663,8 @@ Ok, finita la chicca.
       return http.Response('', 403);
     });
     final files = SubtitleFiles(client, folder, _Upper.new);
-    const option = SubtitleOption(language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en');
+    const option = SubtitleOption(
+        language: 'en', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en');
     await expectLater(files.pathFor(option), throwsA(anything));
     await expectLater(files.pathFor(option), throwsA(anything));
     expect(calls, 2);
@@ -486,7 +678,11 @@ Ok, finita la chicca.
     });
     var translator = _Upper();
     final files = SubtitleFiles(client, folder, () => translator, byTranslator: () => true);
-    const option = SubtitleOption(language: 'ja', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=ja', kind: SubtitleKind.translated);
+    const option = SubtitleOption(
+        language: 'ja',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=ja',
+        kind: SubtitleKind.translated);
     final path = await files.pathFor(option);
     expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false]);
     expect(translator.targets, ['ja']);
@@ -502,8 +698,13 @@ Ok, finita la chicca.
   test('asks a busy translation service again after a pause', () async {
     final client = MockClient((request) async => http.Response(_auto, 200));
     final translator = _Busy(2);
-    final files = SubtitleFiles(client, folder, () => translator, busyPauses: const [Duration.zero, Duration.zero, Duration.zero]);
-    const option = SubtitleOption(language: 'ja', name: '', url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&kind=asr&tlang=ja', kind: SubtitleKind.translated);
+    final files = SubtitleFiles(client, folder, () => translator,
+        busyPauses: const [Duration.zero, Duration.zero, Duration.zero]);
+    const option = SubtitleOption(
+        language: 'ja',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=b&lang=en&kind=asr&tlang=ja',
+        kind: SubtitleKind.translated);
     expect(await File(await files.pathFor(option)).readAsString(), contains('HELLO WORLD'));
     expect(translator.asked, 3);
   });
@@ -512,11 +713,20 @@ Ok, finita la chicca.
     final asked = <Uri>[];
     final client = MockClient((request) async {
       asked.add(request.url);
-      return http.Response(request.url.queryParameters.containsKey('tlang') ? _auto.replaceAll('hello', 'konnichiwa') : _auto, 200);
+      return http.Response(
+          request.url.queryParameters.containsKey('tlang')
+              ? _auto.replaceAll('hello', 'konnichiwa')
+              : _auto,
+          200);
     });
     final translator = _Busy(99);
-    final files = SubtitleFiles(client, folder, () => translator, busyPauses: const [Duration.zero]);
-    const option = SubtitleOption(language: 'ja', name: '', url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&kind=asr&tlang=ja', kind: SubtitleKind.translated);
+    final files =
+        SubtitleFiles(client, folder, () => translator, busyPauses: const [Duration.zero]);
+    const option = SubtitleOption(
+        language: 'ja',
+        name: '',
+        url: 'https://www.youtube.com/api/timedtext?v=c&lang=en&kind=asr&tlang=ja',
+        kind: SubtitleKind.translated);
     expect(await File(await files.pathFor(option)).readAsString(), contains('konnichiwa'));
     expect(asked.map((u) => u.queryParameters.containsKey('tlang')), [false, true]);
     expect(translator.asked, 2);

@@ -20,7 +20,9 @@ const youtubeScope = 'https://www.googleapis.com/auth/youtube.force-ssl';
 
 /// Whether a grant of [scope] allows changing the account.
 bool canWriteWith(String? scope) =>
-    scope != null && (scope.split(' ').contains(youtubeScope) || scope.split(' ').contains('https://www.googleapis.com/auth/youtube'));
+    scope != null &&
+    (scope.split(' ').contains(youtubeScope) ||
+        scope.split(' ').contains('https://www.googleapis.com/auth/youtube'));
 
 /// A Google OAuth client of the "Desktop app" type. Google treats the secret
 /// of a desktop client as public, so it may ship inside the app.
@@ -41,7 +43,8 @@ class OAuthClientConfig {
 
   static OAuthClientConfig? fromJson(Object? raw) {
     if (raw is! Map) return null;
-    final config = OAuthClientConfig(raw['id']?.toString().trim() ?? '', raw['secret']?.toString().trim() ?? '');
+    final config = OAuthClientConfig(
+        raw['id']?.toString().trim() ?? '', raw['secret']?.toString().trim() ?? '');
     return config.isValid ? config : null;
   }
 }
@@ -55,21 +58,25 @@ class Pkce {
   final String verifier;
   final String challenge;
 
-  static String challengeFor(String verifier) => base64Url.encode(sha256.convert(ascii.encode(verifier)).bytes).replaceAll('=', '');
+  static String challengeFor(String verifier) =>
+      base64Url.encode(sha256.convert(ascii.encode(verifier)).bytes).replaceAll('=', '');
 
   static const _unreserved = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
   static String randomToken(int length, [Random? random]) {
     final source = random ?? Random.secure();
-    return String.fromCharCodes(List.generate(length, (_) => _unreserved.codeUnitAt(source.nextInt(_unreserved.length))));
+    return String.fromCharCodes(
+        List.generate(length, (_) => _unreserved.codeUnitAt(source.nextInt(_unreserved.length))));
   }
 }
 
 class OAuthTokens {
-  const OAuthTokens({required this.accessToken, required this.expiresAt, this.refreshToken, this.scope});
+  const OAuthTokens(
+      {required this.accessToken, required this.expiresAt, this.refreshToken, this.scope});
   final String accessToken;
   final DateTime expiresAt;
   final String? refreshToken;
+
   /// The scopes Google granted, separated by spaces.
   final String? scope;
 
@@ -78,12 +85,15 @@ class OAuthTokens {
 
   static OAuthTokens parse(String body, {String? previousRefreshToken}) {
     final data = jsonDecode(body);
-    if (data is! Map || data['access_token'] is! String) throw OAuthException(tr('Google returned a malformed token'));
+    if (data is! Map || data['access_token'] is! String) {
+      throw OAuthException(tr('Google returned a malformed token'));
+    }
     final seconds = data['expires_in'] is num ? (data['expires_in'] as num).toInt() : 3600;
     return OAuthTokens(
       accessToken: data['access_token'] as String,
       expiresAt: DateTime.now().add(Duration(seconds: seconds)),
-      refreshToken: data['refresh_token'] is String ? data['refresh_token'] as String : previousRefreshToken,
+      refreshToken:
+          data['refresh_token'] is String ? data['refresh_token'] as String : previousRefreshToken,
       scope: data['scope'] is String ? data['scope'] as String : null,
     );
   }
@@ -104,7 +114,8 @@ class OAuthException implements Exception {
 /// Google sign-in for a desktop app: the system browser shows Google's page
 /// and returns to a one-shot server on 127.0.0.1 (RFC 8252), with PKCE.
 class GoogleAuth {
-  GoogleAuth(this.config, this._client, {Future<void> Function(Uri)? openBrowser}) : _openBrowser = openBrowser ?? _openInBrowser;
+  GoogleAuth(this.config, this._client, {Future<void> Function(Uri)? openBrowser})
+      : _openBrowser = openBrowser ?? _openInBrowser;
 
   final OAuthClientConfig config;
   final http.Client _client;
@@ -115,7 +126,8 @@ class GoogleAuth {
   static final tokenEndpoint = Uri.https('oauth2.googleapis.com', '/token');
   static final revokeEndpoint = Uri.https('oauth2.googleapis.com', '/revoke');
 
-  Uri authorizationUri({required String redirectUri, required Pkce pkce, required String state}) => authEndpoint.replace(queryParameters: {
+  Uri authorizationUri({required String redirectUri, required Pkce pkce, required String state}) =>
+      authEndpoint.replace(queryParameters: {
         'client_id': config.id,
         'redirect_uri': redirectUri,
         'response_type': 'code',
@@ -150,7 +162,8 @@ class GoogleAuth {
         callback.ignore();
         throw OAuthException(tr("Couldn't open the browser"));
       }
-      final code = await callback.timeout(timeout, onTimeout: () => throw OAuthException(tr('Sign-in timed out. Please try again')));
+      final code = await callback.timeout(timeout,
+          onTimeout: () => throw OAuthException(tr('Sign-in timed out. Please try again')));
       return await _token({
         'grant_type': 'authorization_code',
         'code': code,
@@ -187,22 +200,33 @@ class GoogleAuth {
       }
       final ok = query['code'] != null;
       request.response.headers.contentType = ContentType.html;
-      request.response.write(_page(ok ? tr('Signed in successfully') : tr("Sign-in wasn't completed"), ok ? tr('You can close this page and return to Lumtub.') : tr('Go back to Lumtub and try again.')));
+      request.response.write(_page(
+          ok ? tr('Signed in successfully') : tr("Sign-in wasn't completed"),
+          ok
+              ? tr('You can close this page and return to Lumtub.')
+              : tr('Go back to Lumtub and try again.')));
       await request.response.close();
       final error = query['error'];
-      if (error != null) throw OAuthException(error == 'access_denied' ? tr('Authorization revoked') : tr('Google refused the sign-in: {0}', [error]));
+      if (error != null) {
+        throw OAuthException(error == 'access_denied'
+            ? tr('Authorization revoked')
+            : tr('Google refused the sign-in: {0}', [error]));
+      }
       return query['code']!;
     }
     throw OAuthException(tr('Sign-in canceled'));
   }
 
-  Future<OAuthTokens> refresh(String refreshToken) => _token({'grant_type': 'refresh_token', 'refresh_token': refreshToken}, previousRefreshToken: refreshToken);
+  Future<OAuthTokens> refresh(String refreshToken) =>
+      _token({'grant_type': 'refresh_token', 'refresh_token': refreshToken},
+          previousRefreshToken: refreshToken);
 
   /// Asks Google to invalidate [token]; failures are ignored because the
   /// local copy is deleted either way.
   Future<void> revoke(String token) async {
     try {
-      await _client.post(revokeEndpoint, body: {'token': token}).timeout(const Duration(seconds: 10));
+      await _client
+          .post(revokeEndpoint, body: {'token': token}).timeout(const Duration(seconds: 10));
     } catch (e) {
       logWarn('Could not revoke the sign-in token: $e');
     }
@@ -216,7 +240,8 @@ class GoogleAuth {
     }).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) {
       final error = _errorCode(response.body);
-      throw OAuthException(tr('Google sign-in failed ({0})', [error]), revoked: error == 'invalid_grant');
+      throw OAuthException(tr('Google sign-in failed ({0})', [error]),
+          revoked: error == 'invalid_grant');
     }
     return OAuthTokens.parse(response.body, previousRefreshToken: previousRefreshToken);
   }
@@ -240,11 +265,13 @@ class GoogleAuth {
     if (Platform.isWindows) {
       // rundll32 passes the whole address to the default browser; explorer.exe
       // can drop everything after the first '&'.
-      await Process.start(windowsProgram(r'System32\rundll32.exe'), ['url.dll,FileProtocolHandler', uri.toString()]);
+      await Process.start(windowsProgram(r'System32\rundll32.exe'),
+          ['url.dll,FileProtocolHandler', uri.toString()]);
     } else {
       await openWithDesktop(uri.toString());
     }
   }
 
-  static String _page(String title, String message) => '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0"><div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
+  static String _page(String title, String message) =>
+      '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0"><div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
 }

@@ -28,8 +28,8 @@ const _guide = 'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.
 
 /// Settings › Appearance › Skins: the built-in skins, the user's own, and
 /// the tools for making one.
-Future<void> openSkins(BuildContext context, AppController controller) =>
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _SkinsPage(controller: controller)));
+Future<void> openSkins(BuildContext context, AppController controller) => Navigator.of(context)
+    .push(MaterialPageRoute<void>(builder: (_) => _SkinsPage(controller: controller)));
 
 class _SkinsPage extends StatelessWidget {
   const _SkinsPage({required this.controller});
@@ -50,10 +50,16 @@ class _SkinsPage extends StatelessWidget {
     try {
       final template = await rootBundle.loadString('skins/template/skin.jsonc');
       await dir.create(recursive: true);
-      await File('${dir.path}${Platform.pathSeparator}skin.jsonc').writeAsString(template.replaceFirst('"id": "my-skin"', '"id": "${id()}"'));
+      await File('${dir.path}${Platform.pathSeparator}skin.jsonc')
+          .writeAsString(template.replaceFirst('"id": "my-skin"', '"id": "${id()}"'));
       await library.reload();
       unawaited(openInExplorer(dir.path));
-      if (context.mounted) _say(context, tr('Made {0}. Edit skin.jsonc in it; Lumtub shows each change when you save', [dir.path]));
+      if (context.mounted) {
+        _say(
+            context,
+            tr('Made {0}. Edit skin.jsonc in it; Lumtub shows each change when you save',
+                [dir.path]));
+      }
     } catch (e) {
       if (context.mounted) _say(context, tr('Could not make the skin: {0}', ['$e']));
     }
@@ -69,13 +75,25 @@ class _SkinsPage extends StatelessWidget {
         builder: (context, _) {
           final appearance = controller.appearance;
           final language = currentLanguage.tag;
-          void choose(String id) => controller.saveAppearance(controller.appearance.copyWith(skin: id));
+          void choose(String id) =>
+              controller.saveAppearance(controller.appearance.copyWith(skin: id));
           Widget grid(List<Skin> skins, {bool standard = false}) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Wrap(spacing: 12, runSpacing: 12, children: [
-                  if (standard) SkinCard(skin: null, name: tr('Standard'), note: tr('Lumtub\'s own look'), selected: appearance.skin.isEmpty, onTap: () => choose('')),
+                  if (standard)
+                    SkinCard(
+                        skin: null,
+                        name: tr('Standard'),
+                        note: tr('Lumtub\'s own look'),
+                        selected: appearance.skin.isEmpty,
+                        onTap: () => choose('')),
                   for (final skin in skins)
-                    SkinCard(skin: skin, name: skin.nameIn(language), note: skin.descriptionIn(language), selected: appearance.skin == skin.id, onTap: () => choose(skin.id)),
+                    SkinCard(
+                        skin: skin,
+                        name: skin.nameIn(language),
+                        note: skin.descriptionIn(language),
+                        selected: appearance.skin == skin.id,
+                        onTap: () => choose(skin.id)),
                 ]),
               );
           final problems = [
@@ -95,33 +113,44 @@ class _SkinsPage extends StatelessWidget {
                   value: appearance.glassOpacity.clamp(SkinGlass.min, 1),
                   min: SkinGlass.min,
                   label: tr('{0}% solid', [(appearance.glassOpacity * 100).round()]),
-                  onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
+                  onChanged: (v) =>
+                      controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
             // Only a skin with pictures or a landscape has a background to
             // turn off; a color scheme is colors alone.
-            if (context.skin case final skin? when skin.decorations.isNotEmpty || skin.background.isNotEmpty)
+            if (context.skin case final skin?
+                when skin.decorations.isNotEmpty || skin.background.isNotEmpty)
               // Seeing the desktop, the window is glass in the skin's
               // colours and its pictures are not drawn.
               SwitchItem(
                 title: tr('Skin background'),
                 subtitle: appearance.windowGlass && WindowGlass.possible
                     ? tr('Not shown while the window shows the desktop')
-                    : tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),
+                    : tr(
+                        "The skin's pictures and landscape behind the pages; off leaves a plain color"),
                 leading: Icon(AppIcons.image),
                 value: appearance.skinBackground,
                 enabled: !(appearance.windowGlass && WindowGlass.possible),
-                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
+                onChanged: (v) =>
+                    controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
               ),
             if (WindowGlass.possible) ...windowGlassTiles(context, controller),
             _header(context, tr('Color schemes')),
-            grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
+            grid([
+              for (final s in library.builtIn)
+                if (schemes.contains(s.id)) s
+            ], standard: true),
             // The standard look in one accent color each, beside the schemes.
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
               child: Wrap(spacing: 12, runSpacing: 12, children: [
                 for (final preset in themePresets)
-                  ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => controller.saveAppearance(preset.applyTo(controller.appearance))),
+                  ThemePresetCard(
+                      preset: preset,
+                      selected: preset.isApplied(appearance),
+                      onTap: () =>
+                          controller.saveAppearance(preset.applyTo(controller.appearance))),
               ]),
             ),
             // Any other color, the system's accent, and the accent of skins
@@ -130,16 +159,22 @@ class _SkinsPage extends StatelessWidget {
               title: tr('Custom color'),
               subtitle: switch (paletteForSkin(appearance.skin)) {
                 final palette? => tr('Set by the {0} color scheme', [palette.name]),
-                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+                null => tr('Current: {0} · {1}',
+                    [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
               },
               leading: Icon(AppIcons.eyedropper),
               trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openColorSelect(context, controller),
             ),
-            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colors change, and the title bar and menu bar take the same colors.')),
+            _tip(context,
+                tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colors change, and the title bar and menu bar take the same colors.')),
             _header(context, tr('Built-in skins')),
-            grid([for (final s in library.builtIn) if (!schemes.contains(s.id)) s]),
-            _tip(context, tr('A skin changes the colors, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
+            grid([
+              for (final s in library.builtIn)
+                if (!schemes.contains(s.id)) s
+            ]),
+            _tip(context,
+                tr('A skin changes the colors, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
             if (library.user.isNotEmpty) ...[
               _header(context, tr('Your skins')),
               grid(library.user),
@@ -147,27 +182,33 @@ class _SkinsPage extends StatelessWidget {
             _header(context, tr('Make your own')),
             // Phones, tablets and TVs have no folder to open or editor to
             // write a skin in.
-            if (_desktop) NormalItem(
-              title: tr('New skin'),
-              subtitle: tr('Copies the commented template into your skins folder and opens it'),
-              leading: Icon(AppIcons.plus),
-              onTap: () => unawaited(_newSkin(context)),
-            ),
-            if (_desktop) NormalItem(
-              title: tr('Open skins folder'),
-              subtitle: library.folder?.path ?? '',
-              leading: Icon(AppIcons.folderOpen),
-              onTap: library.folder == null ? null : () => unawaited(openInExplorer(library.folder!.path)),
-            ),
-            if (!_desktop) NormalItem(
-              title: tr('Add a skin from a file'),
-              subtitle: tr('A skin.jsonc, or a zip of a skin\'s folder'),
-              leading: Icon(AppIcons.plus),
-              onTap: () => unawaited(_importSkin(context)),
-            ),
+            if (_desktop)
+              NormalItem(
+                title: tr('New skin'),
+                subtitle: tr('Copies the commented template into your skins folder and opens it'),
+                leading: Icon(AppIcons.plus),
+                onTap: () => unawaited(_newSkin(context)),
+              ),
+            if (_desktop)
+              NormalItem(
+                title: tr('Open skins folder'),
+                subtitle: library.folder?.path ?? '',
+                leading: Icon(AppIcons.folderOpen),
+                onTap: library.folder == null
+                    ? null
+                    : () => unawaited(openInExplorer(library.folder!.path)),
+              ),
+            if (!_desktop)
+              NormalItem(
+                title: tr('Add a skin from a file'),
+                subtitle: tr('A skin.jsonc, or a zip of a skin\'s folder'),
+                leading: Icon(AppIcons.plus),
+                onTap: () => unawaited(_importSkin(context)),
+              ),
             NormalItem(
               title: tr('Reload skins'),
-              subtitle: tr('Saved changes show by themselves; this is for folders that cannot be watched'),
+              subtitle: tr(
+                  'Saved changes show by themselves; this is for folders that cannot be watched'),
               leading: Icon(AppIcons.arrowClockwise),
               onTap: () => unawaited(library.reload()),
             ),
@@ -180,18 +221,22 @@ class _SkinsPage extends StatelessWidget {
             if (WindowFrame.supported)
               SwitchItem(
                 title: tr('Use the system title bar'),
-                subtitle: tr('Keep the usual window frame instead of the title bar and menu bar a skin draws'),
+                subtitle: tr(
+                    'Keep the usual window frame instead of the title bar and menu bar a skin draws'),
                 leading: Icon(AppIcons.browsers),
                 value: appearance.systemTitleBar,
-                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(systemTitleBar: v)),
+                onChanged: (v) =>
+                    controller.saveAppearance(controller.appearance.copyWith(systemTitleBar: v)),
               ),
             if (WindowFrame.supported && !appearance.systemTitleBar)
               SwitchItem(
                 title: tr('Hide the title bar'),
-                subtitle: tr('The window buttons move into the menu bar. Only for skins with a menu bar'),
+                subtitle:
+                    tr('The window buttons move into the menu bar. Only for skins with a menu bar'),
                 leading: Icon(AppIcons.rows),
                 value: appearance.hideTitleBar,
-                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(hideTitleBar: v)),
+                onChanged: (v) =>
+                    controller.saveAppearance(controller.appearance.copyWith(hideTitleBar: v)),
               ),
             if (problems.isNotEmpty) ...[
               _header(context, tr('Problems found')),
@@ -199,7 +244,8 @@ class _SkinsPage extends StatelessWidget {
                 ListTile(
                   leading: Icon(AppIcons.warning, color: context.colors.error),
                   title: Text(name),
-                  subtitle: SelectableText(text, style: TextStyle(fontSize: 12, color: context.colors.outline)),
+                  subtitle: SelectableText(text,
+                      style: TextStyle(fontSize: 12, color: context.colors.outline)),
                 ),
             ],
           ]);
@@ -210,7 +256,9 @@ class _SkinsPage extends StatelessWidget {
 }
 
 Future<void> _importSkin(BuildContext context) async {
-  final file = await openFile(acceptedTypeGroups: const [XTypeGroup(label: 'Skin', extensions: ['zip', 'jsonc', 'json'])]);
+  final file = await openFile(acceptedTypeGroups: const [
+    XTypeGroup(label: 'Skin', extensions: ['zip', 'jsonc', 'json'])
+  ]);
   if (file == null || !context.mounted) return;
   try {
     final id = await SkinLibrary.instance.importFile(file.path);
@@ -218,15 +266,22 @@ Future<void> _importSkin(BuildContext context) async {
     final skin = SkinLibrary.instance.byId(id);
     _say(context, tr('Added {0}', [skin?.nameIn(currentLanguage.tag) ?? id]));
   } catch (e) {
-    if (context.mounted) _say(context, tr('This is not a skin: {0}', [e is FormatException ? e.message : '$e']));
+    if (context.mounted) {
+      _say(context, tr('This is not a skin: {0}', [e is FormatException ? e.message : '$e']));
+    }
   }
 }
 
-void _say(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+void _say(BuildContext context, String text) =>
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
 Widget _header(BuildContext context, String text) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Semantics(header: true, child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: context.colors.primary))),
+      child: Semantics(
+          header: true,
+          child: Text(text,
+              style:
+                  Theme.of(context).textTheme.titleSmall!.copyWith(color: context.colors.primary))),
     );
 
 Widget _tip(BuildContext context, String text) => Padding(
@@ -234,14 +289,22 @@ Widget _tip(BuildContext context, String text) => Padding(
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(AppIcons.info, size: 16, color: context.colors.outline),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: TextStyle(color: context.colors.outline, fontSize: 12, height: 1.5))),
+        Expanded(
+            child: Text(text,
+                style: TextStyle(color: context.colors.outline, fontSize: 12, height: 1.5))),
       ]),
     );
 
 /// A skin drawn as a tiny window: its background, title bar, a card and a
 /// button, with its name under it. [skin] null is Lumtub's own look.
 class SkinCard extends StatelessWidget {
-  const SkinCard({super.key, required this.skin, required this.name, required this.selected, required this.onTap, this.note});
+  const SkinCard(
+      {super.key,
+      required this.skin,
+      required this.name,
+      required this.selected,
+      required this.onTap,
+      this.note});
   final Skin? skin;
   final String name;
   final String? note;
@@ -262,27 +325,44 @@ class SkinCard extends StatelessWidget {
   Widget _drawn(BuildContext context, Skin? skin) {
     if (skin == null) {
       // Lumtub's own neutral look, whatever is chosen now.
-      const colors = ColorScheme.light(onSurface: Color(0xFF18181B), surfaceContainer: Color(0xFFF4F4F5));
+      const colors =
+          ColorScheme.light(onSurface: Color(0xFF18181B), surfaceContainer: Color(0xFFF4F4F5));
       return ColoredBox(
         color: colors.surface,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(height: 6, width: 40, decoration: BoxDecoration(color: colors.onSurface.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(2))),
+            Container(
+                height: 6,
+                width: 40,
+                decoration: BoxDecoration(
+                    color: colors.onSurface.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 8),
-            Expanded(child: Container(decoration: BoxDecoration(color: colors.surfaceContainer, borderRadius: BorderRadius.circular(4)))),
+            Expanded(
+                child: Container(
+                    decoration: BoxDecoration(
+                        color: colors.surfaceContainer, borderRadius: BorderRadius.circular(4)))),
             const SizedBox(height: 8),
-            Container(height: 12, width: 34, decoration: BoxDecoration(color: colors.onSurface, borderRadius: BorderRadius.circular(4))),
+            Container(
+                height: 12,
+                width: 34,
+                decoration:
+                    BoxDecoration(color: colors.onSurface, borderRadius: BorderRadius.circular(4))),
           ]),
         ),
       );
     }
     final bar = skin.titleBar;
     final radius = (skin.shape.controlRadius ?? 6).clamp(0, 6).toDouble();
-    Widget box(SkinSurface? surface, Color fallback, {double r = 0, Widget? child, double? height, double? width}) => Container(
+    Widget box(SkinSurface? surface, Color fallback,
+            {double r = 0, Widget? child, double? height, double? width}) =>
+        Container(
           height: height,
           width: width,
-          decoration: surface == null ? BoxDecoration(color: fallback, borderRadius: BorderRadius.circular(r)) : SurfaceDecoration(surface, radius: r),
+          decoration: surface == null
+              ? BoxDecoration(color: fallback, borderRadius: BorderRadius.circular(r))
+              : SurfaceDecoration(surface, radius: r),
           child: child,
         );
     return Stack(fit: StackFit.expand, children: [
@@ -290,32 +370,62 @@ class SkinCard extends StatelessWidget {
       SkinLayers(skin.background),
       Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (skin.menuBar case final menu? when menu.top)
-          box(menu.surface, skin.colors.page, height: 9, child: Row(children: [
-            for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(left: 5), child: Container(width: 12, height: 2, color: menu.text)),
-          ])),
-        box(bar?.surface ?? skin.topBar, skin.colors.chrome ?? Color.lerp(skin.colors.page, skin.colors.text, 0.08)!, height: 14, child: Row(children: [
-          const SizedBox(width: 5),
-          Container(width: 22, height: 3, color: bar?.text ?? skin.colors.text),
-          const Spacer(),
-          for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(right: 3), child: Container(width: 6, height: 6, decoration: BoxDecoration(border: Border.all(color: bar?.buttonIcon ?? skin.colors.text, width: 1)))),
-        ])),
+          box(menu.surface, skin.colors.page,
+              height: 9,
+              child: Row(children: [
+                for (var i = 0; i < 3; i++)
+                  Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: Container(width: 12, height: 2, color: menu.text)),
+              ])),
+        box(bar?.surface ?? skin.topBar,
+            skin.colors.chrome ?? Color.lerp(skin.colors.page, skin.colors.text, 0.08)!,
+            height: 14,
+            child: Row(children: [
+              const SizedBox(width: 5),
+              Container(width: 22, height: 3, color: bar?.text ?? skin.colors.text),
+              const Spacer(),
+              for (var i = 0; i < 3; i++)
+                Padding(
+                    padding: const EdgeInsets.only(right: 3),
+                    child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                            border:
+                                Border.all(color: bar?.buttonIcon ?? skin.colors.text, width: 1)))),
+            ])),
         if (skin.menuBar case final menu? when !menu.top)
-          box(menu.surface, skin.colors.page, height: 9, child: Row(children: [
-            for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(left: 5), child: Container(width: 12, height: 2, color: menu.text)),
-          ])),
+          box(menu.surface, skin.colors.page,
+              height: 9,
+              child: Row(children: [
+                for (var i = 0; i < 3; i++)
+                  Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: Container(width: 12, height: 2, color: menu.text)),
+              ])),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(
-                child: box(skin.videoCard, skin.colors.card ?? skin.colors.page, r: (skin.shape.cardRadius ?? 8).clamp(0, 8).toDouble(), child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: Container(decoration: BoxDecoration(color: skin.colors.text.withValues(alpha: 0.18), borderRadius: BorderRadius.circular((skin.shape.thumbnailRadius ?? 4).clamp(0, 4).toDouble())))),
-                    const SizedBox(height: 4),
-                    Container(height: 3, width: 40, color: skin.colors.text),
-                  ]),
-                )),
+                child: box(skin.videoCard, skin.colors.card ?? skin.colors.page,
+                    r: (skin.shape.cardRadius ?? 8).clamp(0, 8).toDouble(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: skin.colors.text.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(
+                                        (skin.shape.thumbnailRadius ?? 4)
+                                            .clamp(0, 4)
+                                            .toDouble())))),
+                        const SizedBox(height: 4),
+                        Container(height: 3, width: 40, color: skin.colors.text),
+                      ]),
+                    )),
               ),
               const SizedBox(width: 8),
               Column(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -351,7 +461,11 @@ class SkinCard extends StatelessWidget {
             AnimatedScale(
               // Under the pointer or the remote's focus the preview comes
               // forward a little.
-              scale: focused ? 1.06 : hovered ? 1.03 : 1,
+              scale: focused
+                  ? 1.06
+                  : hovered
+                      ? 1.03
+                      : 1,
               duration: Motion.of(const Duration(milliseconds: 140)),
               curve: Ease.out,
               child: AnimatedContainer(
@@ -361,10 +475,27 @@ class SkinCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: selected || focused ? colors.primary : hovered ? colors.onSurfaceVariant : colors.outlineVariant,
-                    width: focused ? 3.5 : selected ? 2.5 : hovered ? 1.5 : 1,
+                    color: selected || focused
+                        ? colors.primary
+                        : hovered
+                            ? colors.onSurfaceVariant
+                            : colors.outlineVariant,
+                    width: focused
+                        ? 3.5
+                        : selected
+                            ? 2.5
+                            : hovered
+                                ? 1.5
+                                : 1,
                   ),
-                  boxShadow: lit ? [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 12, offset: const Offset(0, 4))] : null,
+                  boxShadow: lit
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4))
+                        ]
+                      : null,
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: _preview(context),
@@ -372,16 +503,37 @@ class SkinCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              if (selected) ...[Icon(AppIcons.checkCircleFill, size: 14, color: colors.primary), const SizedBox(width: 4)],
-              Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null))),
+              if (selected) ...[
+                Icon(AppIcons.checkCircleFill, size: 14, color: colors.primary),
+                const SizedBox(width: 4)
+              ],
+              Flexible(
+                  child: Text(name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: selected ? colors.primary : colors.onSurfaceVariant,
+                          fontWeight: selected ? FontWeight.w600 : null))),
             ]),
             if (skin case final skin?)
               Text(
-                skin.followsThemeMode ? tr('Light and dark') : skin.brightness == Brightness.dark ? tr('Dark only') : tr('Light only'),
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant),
+                skin.followsThemeMode
+                    ? tr('Light and dark')
+                    : skin.brightness == Brightness.dark
+                        ? tr('Dark only')
+                        : tr('Light only'),
+                style: TextStyle(
+                    fontSize: 10.5, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant),
               ),
             if (note case final note? when note.isNotEmpty)
-              Tooltip(message: note, child: Text(note, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: colors.outline))),
+              Tooltip(
+                  message: note,
+                  child: Text(note,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, color: colors.outline))),
           ]),
         ),
       ),
@@ -393,10 +545,13 @@ class SkinCard extends StatelessWidget {
 /// small lift of a card.
 class _Lift extends StatefulWidget {
   const _Lift({required this.builder});
-  final Widget Function(BuildContext context, {required bool hovered, required bool focused}) builder;
+  final Widget Function(BuildContext context, {required bool hovered, required bool focused})
+      builder;
 
-  static ValueChanged<bool> hoverOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._hover;
-  static ValueChanged<bool> focusOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._focus;
+  static ValueChanged<bool> hoverOf(BuildContext context) =>
+      context.findAncestorStateOfType<_LiftState>()!._hover;
+  static ValueChanged<bool> focusOf(BuildContext context) =>
+      context.findAncestorStateOfType<_LiftState>()!._focus;
 
   @override
   State<_Lift> createState() => _LiftState();
@@ -415,7 +570,8 @@ class _LiftState extends State<_Lift> {
   }
 
   @override
-  Widget build(BuildContext context) => Builder(builder: (context) => widget.builder(context, hovered: _hovered, focused: _focused));
+  Widget build(BuildContext context) =>
+      Builder(builder: (context) => widget.builder(context, hovered: _hovered, focused: _focused));
 }
 
 /// 窗口透明: the desktop through the window, under any skin
@@ -431,16 +587,20 @@ List<Widget> windowGlassTiles(BuildContext context, AppController controller) {
       builder: (context, state, _) {
         final on = appearance.windowGlass;
         final note = !on
-            ? tr('The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.')
+            ? tr(
+                'The desktop shows through the frame round the pages, as through Windows 7 glass, in the colors of any skin.')
             : state.restart
                 ? tr('Takes effect the next time Lumtub starts.')
                 : !state.shown
                     ? tr('This desktop cannot show what is behind a window: it needs a compositor.')
                     : appearance.windowGlassBlur && !state.blurred
-                        ? tr('This desktop cannot blur what is behind; the window is only see-through.')
+                        ? tr(
+                            'This desktop cannot blur what is behind; the window is only see-through.')
                         : tr('The desktop shows through the window.');
         return SwitchItem(
-          title: Platform.isAndroid ? tr('See the wallpaper through the app') : tr('See the desktop through the window'),
+          title: Platform.isAndroid
+              ? tr('See the wallpaper through the app')
+              : tr('See the desktop through the window'),
           subtitle: note,
           leading: Icon(AppIcons.browsers),
           value: on,
@@ -470,18 +630,21 @@ List<Widget> windowGlassTiles(BuildContext context, AppController controller) {
               ButtonSegment(value: true, label: Text(tr('Whole window'))),
             ],
             selected: {appearance.windowGlassWhole},
-            onSelectionChanged: (v) => save(controller.appearance.copyWith(windowGlassWhole: v.first)),
+            onSelectionChanged: (v) =>
+                save(controller.appearance.copyWith(windowGlassWhole: v.first)),
           ),
         ),
       ),
       SwitchItem(
         title: tr('Blur what is behind'),
-        subtitle: tr('Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.'),
+        subtitle: tr(
+            'Frosted like Windows 7; where the desktop cannot blur, the window is only see-through.'),
         leading: Icon(AppIcons.sparkle),
         value: appearance.windowGlassBlur,
         onChanged: (v) => save(controller.appearance.copyWith(windowGlassBlur: v)),
       ),
-      _tip(context, tr('Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.')),
+      _tip(context,
+          tr('Words stay readable: they glow on the frame, and the glass gets no clearer than text can be read over anything behind it, so with the whole window see-through some skins stay fairly solid. Video is always solid.')),
     ],
   ];
 }

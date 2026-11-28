@@ -17,7 +17,9 @@ final _links = RegExp(r'(?:https?://|www\.)\S+|\S+@\S+\.\S+|[@#][\w.-]+', unicod
 /// [looksLike], with Simplified and Traditional Chinese taken as one
 /// language when [chineseAsOne]: a reader of either reads both.
 bool readsAs(String text, String target, {required bool chineseAsOne}) {
-  if (chineseAsOne && (target == 'zh-CN' || target == 'zh-TW')) return looksLike(text, 'zh-CN') || looksLike(text, 'zh-TW');
+  if (chineseAsOne && (target == 'zh-CN' || target == 'zh-TW')) {
+    return looksLike(text, 'zh-CN') || looksLike(text, 'zh-TW');
+  }
   return looksLike(text, target);
 }
 
@@ -29,14 +31,17 @@ bool dartLooksLike(String text, String target) {
   final share = letters.length * 0.6;
   final han = count(_han);
   final kana = count((c) => (c >= 0x3040 && c <= 0x30FF) || (c >= 0x31F0 && c <= 0x31FF));
-  final hangul = count((c) => (c >= 0xAC00 && c <= 0xD7AF) || (c >= 0x1100 && c <= 0x11FF) || (c >= 0x3130 && c <= 0x318F));
+  final hangul = count((c) =>
+      (c >= 0xAC00 && c <= 0xD7AF) || (c >= 0x1100 && c <= 0x11FF) || (c >= 0x3130 && c <= 0x318F));
   switch (target) {
     case 'zh-CN':
     case 'zh-TW':
       if (han < share || kana > 0) return false;
       final simplified = text.runes.where(_simplifiedOnly.contains).length;
       final traditional = text.runes.where(_traditionalOnly.contains).length;
-      return target == 'zh-CN' ? simplified >= traditional : traditional >= simplified && (traditional > 0 || simplified == 0);
+      return target == 'zh-CN'
+          ? simplified >= traditional
+          : traditional >= simplified && (traditional > 0 || simplified == 0);
     case 'ja':
       return kana > 0 && han + kana >= share;
     case 'ko':
@@ -69,7 +74,8 @@ bool _isLetter(int c) {
 
 bool _basicLatin(int c) => (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A);
 
-bool _han(int c) => (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DBF) || (c >= 0xF900 && c <= 0xFAFF);
+bool _han(int c) =>
+    (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DBF) || (c >= 0xF900 && c <= 0xFAFF);
 
 /// Common characters written one way in simplified and another in
 /// traditional Chinese.
@@ -77,8 +83,79 @@ final _simplifiedOnly = '这们来时会说为国后还与对过开关体学发�
 final _traditionalOnly = '這們來時會說為國後還與對過開關體學發點從個們麼見長門問間聽車東邊頭實現話讓認沒給經樣張導書買賣錢電視頻網層萬東專業億'.runes.toSet();
 
 const _englishWords = {
-  'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'this', 'that',
-  'it', 'i', 'you', 'he', 'she', 'we', 'they', 'my', 'your', 'not', 'no', 'so', 'just', 'have', 'has', 'do', 'does', 'did', 'what', 'how',
-  'can', 'will', 'would', 'if', 'all', 'from', 'like', 'me', 'his', 'her', 'their', 'there', 'about', 'one', 'more', 'video', 'when', 'love',
-  "it's", "i'm", "don't", 'really', 'great', 'thanks', 'good', 'very', 'who', 'why', 'out', 'up', 'get', 'know', 'see', 'think',
+  'the',
+  'a',
+  'an',
+  'and',
+  'or',
+  'but',
+  'is',
+  'are',
+  'was',
+  'were',
+  'be',
+  'been',
+  'to',
+  'of',
+  'in',
+  'on',
+  'at',
+  'for',
+  'with',
+  'this',
+  'that',
+  'it',
+  'i',
+  'you',
+  'he',
+  'she',
+  'we',
+  'they',
+  'my',
+  'your',
+  'not',
+  'no',
+  'so',
+  'just',
+  'have',
+  'has',
+  'do',
+  'does',
+  'did',
+  'what',
+  'how',
+  'can',
+  'will',
+  'would',
+  'if',
+  'all',
+  'from',
+  'like',
+  'me',
+  'his',
+  'her',
+  'their',
+  'there',
+  'about',
+  'one',
+  'more',
+  'video',
+  'when',
+  'love',
+  "it's",
+  "i'm",
+  "don't",
+  'really',
+  'great',
+  'thanks',
+  'good',
+  'very',
+  'who',
+  'why',
+  'out',
+  'up',
+  'get',
+  'know',
+  'see',
+  'think',
 };

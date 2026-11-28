@@ -11,7 +11,12 @@ extension CjkFontActions on AppController {
     if (!(Platform.isLinux || Platform.isIOS)) return;
     final forms = cjkFormOf(language);
     final packs = this.packs;
-    if (forms == null || packs == null || downloadedCjkFamilies.containsKey(forms) || !_cjkFontsAsked.add(forms)) return;
+    if (forms == null ||
+        packs == null ||
+        downloadedCjkFamilies.containsKey(forms) ||
+        !_cjkFontsAsked.add(forms)) {
+      return;
+    }
     if (!await CjkFontPacks.needed(forms)) return;
     final id = CjkFontPacks.ids[forms]!;
     try {
@@ -39,7 +44,8 @@ extension CjkFontActions on AppController {
     final packs = this.packs;
     if (packs == null) return;
     final wanted = <String>[];
-    for (final MapEntry(key: script, value: sample) in AndroidSubtitleFonts.scriptsIn(text).entries) {
+    for (final MapEntry(key: script, value: sample)
+        in AndroidSubtitleFonts.scriptsIn(text).entries) {
       if (!_scriptFontsAsked.add(script)) continue;
       if (await ScriptFontPack.missing(script, sample)) wanted.add(script);
     }
@@ -53,7 +59,8 @@ extension CjkFontActions on AppController {
             logInfo('No data pack ${ScriptFontPack.id} to download');
             return false;
           }
-          logInfo('Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
+          logInfo(
+              'Downloading ${ScriptFontPack.id}: this system has no font for ${wanted.join(', ')}');
           await packs.install(ScriptFontPack.id);
           return true;
         }();
@@ -121,7 +128,9 @@ extension CjkFontActions on AppController {
       downloaded: packs == null
           ? const {}
           : {
-              for (final MapEntry(key: forms, value: file) in CjkFontPacks.installedFiles(packs).entries) forms: (file, CjkFontPacks.families[forms]!),
+              for (final MapEntry(key: forms, value: file)
+                  in CjkFontPacks.installedFiles(packs).entries)
+                forms: (file, CjkFontPacks.families[forms]!),
             },
     );
     if (fonts == null) {
@@ -136,7 +145,9 @@ extension CjkFontActions on AppController {
       'osd-fonts-dir': fonts,
       'osd-font': PlayerSettings.iosSubtitleFont,
     }.entries) {
-      await platform.setProperty(key, value).catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
+      await platform
+          .setProperty(key, value)
+          .catchError((Object e) => logDebug(() => 'Could not set $key: $e'));
     }
   }
 
@@ -152,6 +163,8 @@ extension CjkFontActions on AppController {
         if (scripts[script] case final file?) file,
     ]);
     if (folder == null) return;
-    await platform.setProperty('sub-fonts-dir', folder).catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
+    await platform
+        .setProperty('sub-fonts-dir', folder)
+        .catchError((Object e) => logDebug(() => 'Could not set the subtitle fonts: $e'));
   }
 }

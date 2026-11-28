@@ -6,7 +6,8 @@ import 'package:http/testing.dart';
 import 'package:lumtub/youtube_player_probe.dart';
 
 const _page = '<script>ytcfg.set({"VISITOR_DATA":"CgtTaGFyZWQxMjM"})</script>';
-const _refusal = '{"responseContext":{"visitorData":"CgtGcmVzaDQ1Ng%3D%3D"},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}';
+const _refusal =
+    '{"responseContext":{"visitorData":"CgtGcmVzaDQ1Ng%3D%3D"},"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in to confirm you’re not a bot"}}';
 const _playable = '{"playabilityStatus":{"status":"OK"},"videoDetails":{"videoId":"aaaaaaaaaaa"}}';
 
 Map<String, String> _headers() => {'Content-Type': 'application/json'};
@@ -23,13 +24,16 @@ void main() {
     YoutubePlayerProbe.resetTraffic();
   });
 
-  test('a start refused as the shared visitor asks again at once as the one the refusal names, and keeps it', () async {
+  test(
+      'a start refused as the shared visitor asks again at once as the one the refusal names, and keeps it',
+      () async {
     final visitors = <String?>[];
     final client = MockClient((request) async {
       if (request.method == 'GET') return http.Response(_page, 200);
       final visitor = request.headers['X-Goog-Visitor-Id'];
       visitors.add(visitor);
-      return http.Response.bytes(utf8.encode(visitor == 'CgtTaGFyZWQxMjM' ? _refusal : _playable), 200);
+      return http.Response.bytes(
+          utf8.encode(visitor == 'CgtTaGFyZWQxMjM' ? _refusal : _playable), 200);
     });
     final first = await YoutubePlayerProbe.post(client, _headers(), _body(), playing: true);
     expect(utf8.decode(first.bodyBytes), _playable);
@@ -52,7 +56,8 @@ void main() {
       if (playing) await Future<void>.delayed(const Duration(milliseconds: 300));
       return http.Response(_playable, 200);
     });
-    final play = YoutubePlayerProbe.post(client, {..._headers(), 'X-Test': 'play'}, _body(), playing: true);
+    final play =
+        YoutubePlayerProbe.post(client, {..._headers(), 'X-Test': 'play'}, _body(), playing: true);
     await Future<void>.delayed(const Duration(milliseconds: 20));
     final watch = Stopwatch()..start();
     await YoutubePlayerProbe.post(client, _headers(), _body());
@@ -84,7 +89,8 @@ void main() {
     expect(posts, YoutubePlayerProbe.refusalsBeforeRest);
     final resting = await YoutubePlayerProbe.post(client, _headers(), _body());
     expect(resting.statusCode, 429);
-    expect(posts, YoutubePlayerProbe.refusalsBeforeRest, reason: 'nothing more is asked while resting');
+    expect(posts, YoutubePlayerProbe.refusalsBeforeRest,
+        reason: 'nothing more is asked while resting');
     await YoutubePlayerProbe.post(client, _headers(), _body(), playing: true);
     expect(posts, greaterThan(YoutubePlayerProbe.refusalsBeforeRest), reason: 'a start still asks');
   });

@@ -12,12 +12,15 @@ import 'app_icons.dart';
 /// it on the clipboard and tells where it went, with a button that shows
 /// the file in Explorer. [onFeedback] is the indicator over the video, the
 /// only message visible in fullscreen.
-Future<void> captureScreenshot(BuildContext context, AppController controller, {void Function(IconData icon, String text)? onFeedback}) async {
+Future<void> captureScreenshot(BuildContext context, AppController controller,
+    {void Function(IconData icon, String text)? onFeedback}) async {
   final player = controller.player;
   if (player == null || controller.playing == null) return;
   final messenger = ScaffoldMessenger.maybeOf(context);
   try {
-    final title = controller.details?.title.isNotEmpty ?? false ? controller.details!.title : controller.playing!.title;
+    final title = controller.details?.title.isNotEmpty ?? false
+        ? controller.details!.title
+        : controller.playing!.title;
     final file = await takeScreenshot(player, title: title);
     if (file == null) throw StateError('no file written');
     unawaited(copyImageToClipboard(file));
@@ -26,7 +29,8 @@ Future<void> captureScreenshot(BuildContext context, AppController controller, {
       content: Text(tr('Screenshot saved: {0}', [file.path])),
       // With an action Flutter keeps a snack bar until it is closed.
       persist: false,
-      action: SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(revealInFolder(file))),
+      action: SnackBarAction(
+          label: tr('Open folder'), onPressed: () => unawaited(revealInFolder(file))),
     ));
   } catch (e) {
     logError('Screenshot failed', e);

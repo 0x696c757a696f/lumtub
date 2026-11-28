@@ -42,11 +42,15 @@ extension ChatActions on AppController {
         onError: (Object error) {
           if (serial != _playSerial) return;
           if (!fallback && !received && error is! NoLiveChat) {
-            logWarn('The chat of ${item.id} could not be read directly ($error); reading it through yt-dlp');
+            logWarn(
+                'The chat of ${item.id} could not be read directly ($error); reading it through yt-dlp');
             final repository = _repository;
             if (repository != null) {
               final old = _currentChat;
-              final messages = live ? repository.liveChat.current(item.id).map((m) => LiveChatBatch(messages: [m])) : Stream.fromFuture(repository.liveChat.replay(item.id)).map((list) => LiveChatBatch(messages: list));
+              final messages = live
+                  ? repository.liveChat.current(item.id).map((m) => LiveChatBatch(messages: [m]))
+                  : Stream.fromFuture(repository.liveChat.replay(item.id))
+                      .map((list) => LiveChatBatch(messages: list));
               follow(messages, fallback: true);
               unawaited(old?.cancel());
               return;
@@ -55,7 +59,9 @@ extension ChatActions on AppController {
           logWarn('The chat of ${item.id} stopped: $error');
           _flushCurrentChat(serial, live: live);
           _update(() {
-            if (error is! NoLiveChat && (replayChat.isEmpty || live)) replayChatError = friendlyError(error);
+            if (error is! NoLiveChat && (replayChat.isEmpty || live)) {
+              replayChatError = friendlyError(error);
+            }
             loadingReplayChat = false;
             loadingMoreChat = false;
           });
@@ -104,7 +110,9 @@ extension ChatActions on AppController {
       if (loadingReplayChat) _update(() => loadingReplayChat = false);
       return;
     }
-    bool kept(LiveChatMessage m) => !_chatRemoved.contains(m.id) && (m.authorChannelId == null || !_chatRemovedAuthors.contains(m.authorChannelId));
+    bool kept(LiveChatMessage m) =>
+        !_chatRemoved.contains(m.id) &&
+        (m.authorChannelId == null || !_chatRemovedAuthors.contains(m.authorChannelId));
     final fresh = removed ? _currentChatPending.where(kept).toList() : [..._currentChatPending];
     _currentChatPending.clear();
     // One pass over the list for everything taken down since the last
@@ -117,13 +125,17 @@ extension ChatActions on AppController {
       final now = DateTime.now();
       final ticker = [
         for (final message in fresh.reversed)
-          if (message.tickerSeconds case final seconds?) (message, now.add(Duration(seconds: seconds))),
+          if (message.tickerSeconds case final seconds?)
+            (message, now.add(Duration(seconds: seconds))),
         for (final entry in chatTicker)
           if (entry.$2.isAfter(now) && kept(entry.$1)) entry,
       ];
-      if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
+      if (ticker.length != chatTicker.length || ticker.isNotEmpty) {
+        chatTicker = List.unmodifiable(ticker.take(50));
+      }
     }
-    replayChat = List.unmodifiable(live && next.length > _liveChatKept ? next.sublist(next.length - _liveChatKept) : next);
+    replayChat = List.unmodifiable(
+        live && next.length > _liveChatKept ? next.sublist(next.length - _liveChatKept) : next);
     // The ids seen are kept for the messages kept, not for every one of a
     // stream that runs for hours: rebuilt once they are twice as many.
     if (live && _currentChatIds.length > _liveChatKept * 2) {
@@ -157,7 +169,10 @@ extension ChatActions on AppController {
       if (paid || others < _danmakuPerFlush) keep[i] = true;
       if (!paid) others++;
     }
-    return [for (var i = 0; i < fresh.length; i++) if (keep[i]) fresh[i]];
+    return [
+      for (var i = 0; i < fresh.length; i++)
+        if (keep[i]) fresh[i]
+    ];
   }
 
   /// Shows Top chat or every message, for this chat and the ones after.
@@ -193,7 +208,13 @@ extension ChatActions on AppController {
     final settings = preferences.danmaku;
     final live = item?.isLive ?? false;
     final chat = hasChat;
-    final key = player == null || item == null || !settings.enabled || !hasDanmaku || (!chat && !settings.comments) ? null : '${identityHashCode(player)}|${item.id}|$live|${preferences.chatView.name}|${settings.hashCode}';
+    final key = player == null ||
+            item == null ||
+            !settings.enabled ||
+            !hasDanmaku ||
+            (!chat && !settings.comments)
+        ? null
+        : '${identityHashCode(player)}|${item.id}|$live|${preferences.chatView.name}|${settings.hashCode}';
     if (key != _danmakuFor) {
       // A new overlay is given the whole chat.
       fresh = null;
@@ -243,7 +264,8 @@ extension ChatActions on AppController {
           if (next == null || i + 1 >= _commentPages) break;
           page = await comments.more(next);
         }
-        logInfo('Bullet chat of ${item.id}: ${_commentDanmaku.length} lines from ${read.length} comments');
+        logInfo(
+            'Bullet chat of ${item.id}: ${_commentDanmaku.length} lines from ${read.length} comments');
       } catch (e) {
         logWarn('Could not read the comments of ${item.id} for bullet chat: $e');
       }

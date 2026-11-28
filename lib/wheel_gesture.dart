@@ -12,5 +12,6 @@ enum WheelGesture {
   final String _label;
   String get label => tr(_label);
 
-  static WheelGesture parse(Object? raw, WheelGesture fallback) => values.where((v) => v.name == raw).firstOrNull ?? fallback;
+  static WheelGesture parse(Object? raw, WheelGesture fallback) =>
+      values.where((v) => v.name == raw).firstOrNull ?? fallback;
 }

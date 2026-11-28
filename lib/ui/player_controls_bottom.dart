@@ -1,17 +1,25 @@
 part of 'player_controls.dart';
 
 extension _BottomBar on _PlayerControlsState {
-  Widget _bottomBar(BuildContext context, bool fullscreen, bool phone, double extra, Color color, Gradient? gradient, Size box) {
+  Widget _bottomBar(BuildContext context, bool fullscreen, bool phone, double extra, Color color,
+      Gradient? gradient, Size box) {
     final c = _c;
     final compact = phone && !fullscreen;
     final narrow = compact || (fullscreen && phone && box.width < 600);
-    final width = phone ? 44.0 : fullscreen ? 42.0 : 35.0;
+    final width = phone
+        ? 44.0
+        : fullscreen
+            ? 42.0
+            : 35.0;
     final progress = _ProgressSection(host: this, color: color, gradient: gradient);
     final fullscreenButton = _IconBtn(
-      icon: compact || !fullscreen || fillingWindow.value ? AppIcons.cornersOut : AppIcons.cornersIn,
+      icon:
+          compact || !fullscreen || fillingWindow.value ? AppIcons.cornersOut : AppIcons.cornersIn,
       size: 24,
       width: width,
-      tooltip: compact || !fullscreen || fillingWindow.value ? tr('Fullscreen (F)') : tr('Exit fullscreen (F)'),
+      tooltip: compact || !fullscreen || fillingWindow.value
+          ? tr('Fullscreen (F)')
+          : tr('Exit fullscreen (F)'),
       onTap: () async {
         _showBars();
         if (compact) {
@@ -27,7 +35,8 @@ extension _BottomBar on _PlayerControlsState {
         padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
         child: Row(children: [
           _PlayButton(host: this),
-          Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
+          Expanded(
+              child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: progress)),
           _TimeText(host: this),
           _subtitleButtons(width),
           _learningButtons(width, few: true),
@@ -38,7 +47,8 @@ extension _BottomBar on _PlayerControlsState {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsetsDirectional.fromSTEB((fullscreen ? 16 : 8) + extra, 16, (fullscreen ? 16 : 8) + extra, fullscreen ? 12 : 8),
+        padding: EdgeInsetsDirectional.fromSTEB(
+            (fullscreen ? 16 : 8) + extra, 16, (fullscreen ? 16 : 8) + extra, fullscreen ? 12 : 8),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: progress),
           const SizedBox(height: 2),
@@ -57,7 +67,9 @@ extension _BottomBar on _PlayerControlsState {
             if (!phone) _VolumeControl(host: this, width: width),
             SizedBox(width: phone ? 8 : 4),
             if (c.playing?.isLive ?? false) _LiveButton(host: this) else _TimeText(host: this),
-            Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: _ChapterMenu(host: this))),
+            Expanded(
+                child: Align(
+                    alignment: AlignmentDirectional.centerStart, child: _ChapterMenu(host: this))),
             if (c.hasDanmaku) _danmakuButtons(width, narrow),
             _subtitleButtons(width),
             _learningButtons(width, few: narrow),
@@ -81,7 +93,8 @@ extension _BottomBar on _PlayerControlsState {
                     icon: AppIcons.frameCorners,
                     width: width,
                     active: theaterMode.value,
-                    tooltip: theaterMode.value ? tr('Exit theater mode (T)') : tr('Theater mode (T)'),
+                    tooltip:
+                        theaterMode.value ? tr('Exit theater mode (T)') : tr('Theater mode (T)'),
                     onTap: () {
                       _showBars();
                       theaterMode.value = !theaterMode.value;
@@ -139,15 +152,24 @@ extension _BottomBar on _PlayerControlsState {
           final maxHeight = c.settings.maxHeight;
           final label = height > 0
               ? heightLabel(height, c.availableFrameRates[height], 'P', aspect)
-              : maxHeight == 0 ? tr('Auto') : heightLabel(maxHeight, c.availableFrameRates[maxHeight], 'P');
+              : maxHeight == 0
+                  ? tr('Auto')
+                  : heightLabel(maxHeight, c.availableFrameRates[maxHeight], 'P');
           final choices = c.qualityChoices;
-          final current = maxHeight == 0 && c.droppedCap > 0 ? -1 : choices.contains(maxHeight) ? maxHeight : height;
+          final current = maxHeight == 0 && c.droppedCap > 0
+              ? -1
+              : choices.contains(maxHeight)
+                  ? maxHeight
+                  : height;
           return _TextMenu<int>(
             host: this,
             tooltip: tr('Quality'),
             label: label,
             current: current,
-            rows: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, c.availableFrameRates[h], 'P', aspect))],
+            rows: [
+              for (final h in choices)
+                (h, h == 0 ? tr('Auto') : heightLabel(h, c.availableFrameRates[h], 'P', aspect))
+            ],
             onSelected: (h) => unawaited(c.setMaxHeight(h)),
           );
         },
@@ -187,7 +209,8 @@ extension _BottomBar on _PlayerControlsState {
         builder: (context, snapshot) {
           final track = snapshot.data ?? _player.state.track;
           final real = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
-          final offered = real || (_c.details?.subtitles.isNotEmpty ?? false) || _c.playing?.isLive != true;
+          final offered =
+              real || (_c.details?.subtitles.isNotEmpty ?? false) || _c.playing?.isLive != true;
           if (!offered) return const SizedBox.shrink();
           final primaryOn = track.subtitle.id != 'no' && track.subtitle.id != 'auto';
           final secondaryOn = _c.secondaryTrackId != 'no';
@@ -219,10 +242,13 @@ extension _BottomBar on _PlayerControlsState {
           final c = _c;
           final settings = c.settings;
           final secondary = c.secondaryTrackId != 'no';
-          final lines = settings.pauseEachLine && (_player.state.track.subtitle.id != 'no' || secondary);
+          final lines =
+              settings.pauseEachLine && (_player.state.track.subtitle.id != 'no' || secondary);
           final blur = settings.blurSecondary && secondary;
           if (!lines && !blur) return const SizedBox.shrink();
-          Widget button(IconData icon, String tooltip, VoidCallback action, {bool active = false}) => _IconBtn(
+          Widget button(IconData icon, String tooltip, VoidCallback action,
+                  {bool active = false}) =>
+              _IconBtn(
                 icon: icon,
                 size: 20,
                 width: width,
@@ -236,13 +262,24 @@ extension _BottomBar on _PlayerControlsState {
           final shown = c.translationShown.value;
           return Row(mainAxisSize: MainAxisSize.min, children: [
             if (lines) ...[
-              if (!few) button(AppIcons.skipBackFill, tr('Previous line'), () => unawaited(c.stepLine(-1))),
-              button(AppIcons.arrowCounterClockwiseFill, tr('Replay this line'), () => unawaited(c.stepLine(0))),
-              if (!few) button(AppIcons.skipForwardFill, tr('Next line'), () => unawaited(c.stepLine(1))),
-              if (!few) button(AppIcons.repeatOnce, tr('Loop this line'), () => unawaited(c.toggleLineLoop()), active: c.loopB != null),
+              if (!few)
+                button(AppIcons.skipBackFill, tr('Previous line'), () => unawaited(c.stepLine(-1))),
+              button(AppIcons.arrowCounterClockwiseFill, tr('Replay this line'),
+                  () => unawaited(c.stepLine(0))),
+              if (!few)
+                button(AppIcons.skipForwardFill, tr('Next line'), () => unawaited(c.stepLine(1))),
+              if (!few)
+                button(
+                    AppIcons.repeatOnce, tr('Loop this line'), () => unawaited(c.toggleLineLoop()),
+                    active: c.loopB != null),
               _shadowButtons(width),
             ],
-            if (blur) button(shown ? AppIcons.eye : AppIcons.eyeSlash, shown ? tr('Hide the translation') : tr('Show the translation'), c.toggleTranslation, active: shown),
+            if (blur)
+              button(
+                  shown ? AppIcons.eye : AppIcons.eyeSlash,
+                  shown ? tr('Hide the translation') : tr('Show the translation'),
+                  c.toggleTranslation,
+                  active: shown),
           ]);
         },
       );
@@ -263,7 +300,8 @@ extension _BottomBar on _PlayerControlsState {
           _showBars();
           unawaited(c.toggleShadowing());
         },
-        child: Icon(recording ? AppIcons.stopFill : AppIcons.microphoneFill, size: 20, color: recording ? const Color(0xFFFF4D4F) : Colors.white),
+        child: Icon(recording ? AppIcons.stopFill : AppIcons.microphoneFill,
+            size: 20, color: recording ? const Color(0xFFFF4D4F) : Colors.white),
       ),
       if (c.hasShadowTake && !recording) ...[
         _IconBtn(
@@ -290,7 +328,8 @@ extension _BottomBar on _PlayerControlsState {
               rows: [
                 (0, tr('Only my recording')),
                 (1, tr('The line, then my recording')),
-                if (c.shadowTakeCount > 1) (2, tr('All {0} lines I recorded, each then mine', [c.shadowTakeCount])),
+                if (c.shadowTakeCount > 1)
+                  (2, tr('All {0} lines I recorded, each then mine', [c.shadowTakeCount])),
               ],
               onSelected: (index) => unawaited(c.saveShadowTake(ShadowExport.values[index])),
             )),
@@ -303,7 +342,13 @@ extension _BottomBar on _PlayerControlsState {
 
 /// A text in the bar that opens a choice of values.
 class _TextMenu<T> extends StatelessWidget {
-  const _TextMenu({required this.host, required this.tooltip, required this.label, required this.current, required this.rows, required this.onSelected});
+  const _TextMenu(
+      {required this.host,
+      required this.tooltip,
+      required this.label,
+      required this.current,
+      required this.rows,
+      required this.onSelected});
   final _PlayerControlsState host;
   final String tooltip;
   final String label;
@@ -319,7 +364,8 @@ class _TextMenu<T> extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           onTap: () {
             host._showBars();
-            unawaited(host._pick<T>(anchor, title: tooltip, rows: rows, current: current, onSelected: onSelected));
+            unawaited(host._pick<T>(anchor,
+                title: tooltip, rows: rows, current: current, onSelected: onSelected));
           },
           child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ),
@@ -335,7 +381,10 @@ class _PlayButton extends StatefulWidget {
 }
 
 class _PlayButtonState extends State<_PlayButton> with SingleTickerProviderStateMixin {
-  late final AnimationController _icon = AnimationController(vsync: this, duration: Motion.of(Ease.fade), value: widget.host._player.state.playing ? 1 : 0);
+  late final AnimationController _icon = AnimationController(
+      vsync: this,
+      duration: Motion.of(Ease.fade),
+      value: widget.host._player.state.playing ? 1 : 0);
   StreamSubscription<bool>? _subscription;
   late bool _playing = widget.host._player.state.playing;
 
@@ -371,7 +420,11 @@ class _PlayButtonState extends State<_PlayButton> with SingleTickerProviderState
         widget.host._showBars();
         unawaited(widget.host._player.playOrPause());
       },
-      child: AnimatedIcon(icon: AnimatedIcons.play_pause, progress: _icon, size: touch ? 26 : 20, color: Colors.white),
+      child: AnimatedIcon(
+          icon: AnimatedIcons.play_pause,
+          progress: _icon,
+          size: touch ? 26 : 20,
+          color: Colors.white),
     );
   }
 }
@@ -414,7 +467,8 @@ class _TimeTextState extends State<_TimeText> {
   Widget build(BuildContext context) => Text(
         '${formatPlaybackTime(Duration(seconds: _seconds))} / ${formatPlaybackTime(_duration)}',
         maxLines: 1,
-        style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
       );
 }
 
@@ -442,10 +496,13 @@ class _LiveButton extends StatelessWidget {
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: behind ? Colors.white54 : const Color(0xFFFF2D2D)),
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle, color: behind ? Colors.white54 : const Color(0xFFFF2D2D)),
             ),
             const SizedBox(width: 6),
-            Text(behind ? tr('Back to live') : tr('Live'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(behind ? tr('Back to live') : tr('Live'),
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
           ]),
         );
       },
@@ -504,7 +561,8 @@ class _VolumeControlState extends State<_VolumeControl> {
       child: Focus(
         canRequestFocus: false,
         skipTraversal: true,
-        onFocusChange: (focused) => _change(() => _focused = focused && FocusManager.instance.highlightMode == FocusHighlightMode.traditional),
+        onFocusChange: (focused) => _change(() => _focused =
+            focused && FocusManager.instance.highlightMode == FocusHighlightMode.traditional),
         child: StreamBuilder<double>(
           stream: player.stream.volume,
           initialData: player.state.volume,
@@ -513,7 +571,11 @@ class _VolumeControlState extends State<_VolumeControl> {
             final max = host._c.settings.volumeMax.toDouble();
             return Row(mainAxisSize: MainAxisSize.min, children: [
               _IconBtn(
-                icon: volume == 0 ? AppIcons.speakerSlash : volume < 50 ? AppIcons.speakerLowFill : AppIcons.speakerHighFill,
+                icon: volume == 0
+                    ? AppIcons.speakerSlash
+                    : volume < 50
+                        ? AppIcons.speakerLowFill
+                        : AppIcons.speakerHighFill,
                 width: widget.width,
                 tooltip: volume == 0 ? tr('Unmute (M)') : tr('Mute (M)'),
                 onTap: () {
@@ -580,7 +642,12 @@ class _ChapterMenuState extends State<_ChapterMenu> {
   int _indexAt(Duration position) {
     final chapters = _chapters;
     final i = _index;
-    if (i >= 0 && i < chapters.length && chapters[i].start <= position && (i + 1 == chapters.length || chapters[i + 1].start > position)) return i;
+    if (i >= 0 &&
+        i < chapters.length &&
+        chapters[i].start <= position &&
+        (i + 1 == chapters.length || chapters[i + 1].start > position)) {
+      return i;
+    }
     var low = 0, high = chapters.length - 1, found = -1;
     while (low <= high) {
       final mid = (low + high) >> 1;
@@ -599,7 +666,8 @@ class _ChapterMenuState extends State<_ChapterMenu> {
     super.initState();
     final player = widget.host._player;
     _index = _indexAt(player.state.position);
-    _subscription = coarse(player.stream.position, step: const Duration(milliseconds: 500)).listen((position) {
+    _subscription =
+        coarse(player.stream.position, step: const Duration(milliseconds: 500)).listen((position) {
       final index = _indexAt(position);
       if (index != _index) setState(() => _index = index);
     });
@@ -629,7 +697,11 @@ class _ChapterMenuState extends State<_ChapterMenu> {
         final index = _index.clamp(0, chapters.length - 1);
         final shown = translation(index).isNotEmpty ? translation(index) : chapters[index].title;
         final bilingual = c.preferences.bilingualTranslation;
-        String menuTitle(int i) => translation(i).isNotEmpty && bilingual ? '${translation(i)} · ${chapters[i].title}' : translation(i).isNotEmpty ? translation(i) : chapters[i].title;
+        String menuTitle(int i) => translation(i).isNotEmpty && bilingual
+            ? '${translation(i)} · ${chapters[i].title}'
+            : translation(i).isNotEmpty
+                ? translation(i)
+                : chapters[i].title;
         return Builder(
           builder: (anchor) => _Pressable(
             tooltip: tr('Chapters'),
@@ -642,8 +714,15 @@ class _ChapterMenuState extends State<_ChapterMenu> {
                 title: tr('Chapters'),
                 current: _index < 0 ? 0 : _index,
                 rows: [
-                  for (var i = 0; i < chapters.length; i++) (i, '${formatPlaybackTime(chapters[i].start)}  ${menuTitle(i)}'),
-                  if (translated == null) (-1, c.translatingChapters ? tr('Translating chapter names…') : tr('Translate chapter names')),
+                  for (var i = 0; i < chapters.length; i++)
+                    (i, '${formatPlaybackTime(chapters[i].start)}  ${menuTitle(i)}'),
+                  if (translated == null)
+                    (
+                      -1,
+                      c.translatingChapters
+                          ? tr('Translating chapter names…')
+                          : tr('Translate chapter names')
+                    ),
                 ],
                 onSelected: (i) {
                   if (i < 0) {
@@ -654,7 +733,10 @@ class _ChapterMenuState extends State<_ChapterMenu> {
                 },
               ));
             },
-            child: Text('·  $shown  ›', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12)),
+            child: Text('·  $shown  ›',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 12)),
           ),
         );
       },
@@ -733,13 +815,19 @@ class _ProgressSectionState extends State<_ProgressSection> {
       color: widget.color,
       playedGradient: widget.gradient,
       segments: [
-        for (final segment in c.segments) ProgressSegment(segment.start, segment.end, _sponsorColors[segment.category] ?? const Color(0xFF00D400)),
-        if (loopA != null) ProgressSegment(loopA, c.loopB ?? loopA + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
+        for (final segment in c.segments)
+          ProgressSegment(segment.start, segment.end,
+              _sponsorColors[segment.category] ?? const Color(0xFF00D400)),
+        if (loopA != null)
+          ProgressSegment(
+              loopA, c.loopB ?? loopA + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
       ],
       chapterStarts: [for (final chapter in chapters) chapter.start],
       preview: host._preview,
       heatmap: c.preferences.showHeatmap && heat != null ? heat.values : null,
-      labelOf: chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(chapters, time)?.title ?? ''}',
+      labelOf: chapters.isEmpty
+          ? null
+          : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(chapters, time)?.title ?? ''}',
       onSeek: (time) => unawaited(c.seek(time)),
     );
   }

@@ -25,7 +25,11 @@ class UpdateDot extends StatelessWidget {
         listenable: controller,
         select: () => shownFor(controller),
         child: child,
-        builder: (context, shown, child) => Badge(smallSize: 8, isLabelVisible: shown, backgroundColor: context.colors.primary, child: child),
+        builder: (context, shown, child) => Badge(
+            smallSize: 8,
+            isLabelVisible: shown,
+            backgroundColor: context.colors.primary,
+            child: child),
       );
 }
 
@@ -41,7 +45,9 @@ class UpdateNotice extends StatelessWidget {
         listenable: controller,
         select: () {
           final updater = controller.appUpdater;
-          return updater != null && updater.showsNotice ? (updater.noticeKey, updater.installError, updater.rejected, updater.error) : null;
+          return updater != null && updater.showsNotice
+              ? (updater.noticeKey, updater.installError, updater.rejected, updater.error)
+              : null;
         },
         child: child,
         builder: (context, shown, child) => Column(children: [
@@ -49,7 +55,9 @@ class UpdateNotice extends StatelessWidget {
             duration: Motion.of(Ease.fade),
             curve: Ease.curve,
             alignment: Alignment.topCenter,
-            child: shown == null ? const SizedBox(width: double.infinity) : _Bar(controller: controller, updater: controller.appUpdater!),
+            child: shown == null
+                ? const SizedBox(width: double.infinity)
+                : _Bar(controller: controller, updater: controller.appUpdater!),
           ),
           Expanded(child: child!),
         ]),
@@ -67,7 +75,8 @@ class _Bar extends StatelessWidget {
     final release = updater.available;
     final ready = updater.ready != null && updater.readyVersion != null;
     final version = ready ? updater.readyVersion! : release?.version ?? '';
-    final downloadsItself = AppUpdater.canInstall && release?.asset != null && updater.rejected != release?.version;
+    final downloadsItself =
+        AppUpdater.canInstall && release?.asset != null && updater.rejected != release?.version;
     final String text;
     final String action;
     final VoidCallback onAction;
@@ -78,7 +87,9 @@ class _Bar extends StatelessWidget {
       action = Platform.isAndroid ? tr('Install') : tr('Restart now');
       onAction = () => unawaited(controller.restartToUpdate());
     } else if (downloadsItself) {
-      text = updater.error != null ? tr('Download failed: {0}. Click to retry', [updater.error!]) : tr('Update available: {0}', [version]);
+      text = updater.error != null
+          ? tr('Download failed: {0}. Click to retry', [updater.error!])
+          : tr('Update available: {0}', [version]);
       action = tr('Start download');
       onAction = () => unawaited(updater.download());
     } else {
@@ -98,7 +109,9 @@ class _Bar extends StatelessWidget {
         child: Row(children: [
           Icon(AppIcons.arrowCircleDown, size: 20, color: colors.primary),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: context.text.bodyMedium?.copyWith(color: colors.onPrimaryContainer))),
+          Expanded(
+              child: Text(text,
+                  style: context.text.bodyMedium?.copyWith(color: colors.onPrimaryContainer))),
           const SizedBox(width: 8),
           TextButton(onPressed: onAction, child: Text(action)),
           IconButton(

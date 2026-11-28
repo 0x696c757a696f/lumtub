@@ -25,8 +25,10 @@ class FillIcon extends StatefulWidget {
 }
 
 class _FillIconState extends State<FillIcon> with TickerProviderStateMixin {
-  late final AnimationController _fill = AnimationController(vsync: this, duration: FillIcon.duration, value: widget.selected ? 1 : 0);
-  late final AnimationController _pop = AnimationController(vsync: this, duration: FillIcon.duration);
+  late final AnimationController _fill =
+      AnimationController(vsync: this, duration: FillIcon.duration, value: widget.selected ? 1 : 0);
+  late final AnimationController _pop =
+      AnimationController(vsync: this, duration: FillIcon.duration);
 
   @override
   void didUpdateWidget(FillIcon old) {

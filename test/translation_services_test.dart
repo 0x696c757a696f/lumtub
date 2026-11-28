@@ -8,7 +8,8 @@ import 'package:lumtub/translation.dart';
 import 'package:lumtub/translation_services.dart';
 
 http.Response _json(Object body, [int status = 200]) =>
-    http.Response.bytes(utf8.encode(jsonEncode(body)), status, headers: {'content-type': 'application/json; charset=utf-8'});
+    http.Response.bytes(utf8.encode(jsonEncode(body)), status,
+        headers: {'content-type': 'application/json; charset=utf-8'});
 
 Future<Object?> _fails(Future<String> future) async {
   try {
@@ -25,7 +26,11 @@ void main() {
       final hosts = <String>[];
       final client = MockClient((request) async {
         hosts.add(request.url.host);
-        return _json({'translations': [{'text': 'x'}]});
+        return _json({
+          'translations': [
+            {'text': 'x'}
+          ]
+        });
       });
       await DeepLTranslator(client, key: 'abc:fx').translate('a', 'ja');
       await DeepLTranslator(client, key: 'abc').translate('a', 'ja');
@@ -37,7 +42,11 @@ void main() {
       final client = MockClient((request) async {
         seen = request;
         final texts = Uri(query: request.body).queryParametersAll['text']!;
-        return _json({'translations': [for (final t in texts) {'text': '译$t'}]});
+        return _json({
+          'translations': [
+            for (final t in texts) {'text': '译$t'}
+          ]
+        });
       });
       final result = await DeepLTranslator(client, key: 'k:fx').translate('a\n\nb\n  \nc', 'zh-TW');
       expect(result, '译a\n\n译b\n  \n译c');
@@ -54,7 +63,11 @@ void main() {
       final client = MockClient((request) async {
         calls++;
         final texts = Uri(query: request.body).queryParametersAll['text']!;
-        return _json({'translations': [for (final t in texts) {'text': t}]});
+        return _json({
+          'translations': [
+            for (final t in texts) {'text': t}
+          ]
+        });
       });
       final text = [for (var i = 0; i < 120; i++) 'l$i'].join('\n');
       expect(await DeepLTranslator(client, key: 'k').translate(text, 'fr'), text);
@@ -71,7 +84,8 @@ void main() {
 
     test('rejects unsupported languages and maps errors', () async {
       final ok = MockClient((_) async => _json({'translations': <Object?>[]}));
-      expect(await _fails(DeepLTranslator(ok, key: 'k').translate('a', 'th')), tr('DeepL does not support this language'));
+      expect(await _fails(DeepLTranslator(ok, key: 'k').translate('a', 'th')),
+          tr('DeepL does not support this language'));
       for (final entry in {
         403: tr('The DeepL key is not valid'),
         456: tr('The DeepL quota for this month is used up'),
@@ -82,14 +96,19 @@ void main() {
         expect(await _fails(DeepLTranslator(client, key: 'k').translate('a', 'de')), entry.value);
       }
       final broken = MockClient((_) async => throw http.ClientException('down'));
-      expect(await _fails(DeepLTranslator(broken, key: 'k').translate('a', 'de')), tr('Translation failed. Check your network or proxy.'));
+      expect(await _fails(DeepLTranslator(broken, key: 'k').translate('a', 'de')),
+          tr('Translation failed. Check your network or proxy.'));
     });
 
     test('returns empty input as is and caches results', () async {
       var calls = 0;
       final client = MockClient((request) async {
         calls++;
-        return _json({'translations': [{'text': 'b'}]});
+        return _json({
+          'translations': [
+            {'text': 'b'}
+          ]
+        });
       });
       final translator = DeepLTranslator(client, key: 'k');
       expect(await translator.translate('  ', 'de'), '  ');
@@ -106,9 +125,17 @@ void main() {
       final client = MockClient((request) async {
         seen = request;
         final items = (jsonDecode(request.body) as List).cast<Map<String, dynamic>>();
-        return _json([for (final item in items) {'translations': [{'text': '译${item['Text']}', 'to': 'zh-Hans'}]}]);
+        return _json([
+          for (final item in items)
+            {
+              'translations': [
+                {'text': '译${item['Text']}', 'to': 'zh-Hans'}
+              ]
+            }
+        ]);
       });
-      final result = await MicrosoftTranslator(client, key: 'k', region: 'eastasia').translate('a\n\nb', 'zh-CN');
+      final result = await MicrosoftTranslator(client, key: 'k', region: 'eastasia')
+          .translate('a\n\nb', 'zh-CN');
       expect(result, '译a\n\n译b');
       expect(seen.method, 'POST');
       expect(seen.url.host, 'api.cognitive.microsofttranslator.com');
@@ -117,14 +144,23 @@ void main() {
       expect(seen.headers['Ocp-Apim-Subscription-Key'], 'k');
       expect(seen.headers['Ocp-Apim-Subscription-Region'], 'eastasia');
       expect(seen.headers['Content-Type'], contains('application/json'));
-      expect(jsonDecode(seen.body), [{'Text': 'a'}, {'Text': 'b'}]);
+      expect(jsonDecode(seen.body), [
+        {'Text': 'a'},
+        {'Text': 'b'}
+      ]);
     });
 
     test('omits the region header when empty and maps codes', () async {
       late http.Request seen;
       final client = MockClient((request) async {
         seen = request;
-        return _json([{'translations': [{'text': 'x'}]}]);
+        return _json([
+          {
+            'translations': [
+              {'text': 'x'}
+            ]
+          }
+        ]);
       });
       await MicrosoftTranslator(client, key: 'k').translate('a', 'zh-TW');
       expect(seen.headers.containsKey('Ocp-Apim-Subscription-Region'), isFalse);
@@ -138,15 +174,24 @@ void main() {
       final client = MockClient((request) async {
         calls++;
         final items = (jsonDecode(request.body) as List).cast<Map<String, dynamic>>();
-        return _json([for (final item in items) {'translations': [{'text': item['Text']}]}]);
+        return _json([
+          for (final item in items)
+            {
+              'translations': [
+                {'text': item['Text']}
+              ]
+            }
+        ]);
       });
       final text = [for (var i = 0; i < 250; i++) 'l$i'].join('\n');
       expect(await MicrosoftTranslator(client, key: 'k').translate(text, 'de'), text);
       expect(calls, 3);
       final unauthorized = MockClient((_) async => http.Response('', 401));
-      expect(await _fails(MicrosoftTranslator(unauthorized, key: 'k').translate('a', 'de')), tr('The Microsoft Translator key is not valid'));
+      expect(await _fails(MicrosoftTranslator(unauthorized, key: 'k').translate('a', 'de')),
+          tr('The Microsoft Translator key is not valid'));
       final busy = MockClient((_) async => http.Response('', 429));
-      expect(await _fails(MicrosoftTranslator(busy, key: 'k').translate('a', 'de')), tr('Too many translation requests. Please try again later.'));
+      expect(await _fails(MicrosoftTranslator(busy, key: 'k').translate('a', 'de')),
+          tr('Too many translation requests. Please try again later.'));
     });
   });
 
@@ -156,9 +201,13 @@ void main() {
       final client = MockClient((request) async {
         seen = request;
         final q = ((jsonDecode(request.body) as Map)['q'] as List).cast<String>();
-        return _json({'translatedText': [for (final s in q) '译$s']});
+        return _json({
+          'translatedText': [for (final s in q) '译$s']
+        });
       });
-      final result = await LibreTranslator(client, server: 'https://libre.example.com/', key: 'secret').translate('a\n\nb', 'zh-CN');
+      final result =
+          await LibreTranslator(client, server: 'https://libre.example.com/', key: 'secret')
+              .translate('a\n\nb', 'zh-CN');
       expect(result, '译a\n\n译b');
       expect(seen.url.toString(), 'https://libre.example.com/translate');
       expect(jsonDecode(seen.body), {
@@ -176,7 +225,9 @@ void main() {
         seen = request;
         return _json({'translatedText': 'bonjour'});
       });
-      expect(await LibreTranslator(client, server: 'http://localhost:5000').translate('hello', 'fr'), 'bonjour');
+      expect(
+          await LibreTranslator(client, server: 'http://localhost:5000').translate('hello', 'fr'),
+          'bonjour');
       expect((jsonDecode(seen.body) as Map).containsKey('api_key'), isFalse);
       expect((jsonDecode(seen.body) as Map)['target'], 'fr');
     });
@@ -184,10 +235,12 @@ void main() {
     test('needs a http or https server', () async {
       final client = MockClient((_) async => _json({'translatedText': 'x'}));
       for (final server in ['', 'libre.example.com', 'ftp://x.com']) {
-        expect(await _fails(LibreTranslator(client, server: server).translate('a', 'fr')), tr('Fill in the LibreTranslate server address'));
+        expect(await _fails(LibreTranslator(client, server: server).translate('a', 'fr')),
+            tr('Fill in the LibreTranslate server address'));
       }
       final failing = MockClient((_) async => http.Response('', 503));
-      expect(await _fails(LibreTranslator(failing, server: 'http://x.com').translate('a', 'fr')), tr('Translation service temporarily unavailable ({0})', [503]));
+      expect(await _fails(LibreTranslator(failing, server: 'http://x.com').translate('a', 'fr')),
+          tr('Translation service temporarily unavailable ({0})', [503]));
     });
   });
 
@@ -197,25 +250,41 @@ void main() {
       final client = MockClient((request) async {
         if (request.url.path.endsWith('/languages')) {
           return _json([
-            {'code': 'en', 'name': 'English', 'targets': ['en', 'zh', 'zt', 'tl']},
-            {'code': 'zh', 'name': 'Chinese', 'targets': ['en', 'zh', 'zt']},
+            {
+              'code': 'en',
+              'name': 'English',
+              'targets': ['en', 'zh', 'zt', 'tl']
+            },
+            {
+              'code': 'zh',
+              'name': 'Chinese',
+              'targets': ['en', 'zh', 'zt']
+            },
           ]);
         }
         targets.add((jsonDecode(request.body) as Map)['target'] as String);
-        return _json({'translatedText': ['x']});
+        return _json({
+          'translatedText': ['x']
+        });
       });
       final libre = LibreTranslator(client, server: 'https://old-libre.example.com');
       await libre.translate('a', 'zh-CN');
       await libre.translate('b', 'zh-TW');
       await libre.translate('c', 'tl');
       expect(targets, ['zh', 'zt', 'tl']);
-      expect(await _fails(libre.translate('d', 'ja')), tr('{0} does not support this language', ['LibreTranslate']));
+      expect(await _fails(libre.translate('d', 'ja')),
+          tr('{0} does not support this language', ['LibreTranslate']));
     });
 
     test('reads codes and targets from /languages', () {
-      expect(LibreTranslator.parseLanguages([
-        {'code': 'zh-Hans', 'targets': ['zh-Hant', 'en']},
-      ]), {'zh-Hans', 'zh-Hant', 'en'});
+      expect(
+          LibreTranslator.parseLanguages([
+            {
+              'code': 'zh-Hans',
+              'targets': ['zh-Hant', 'en']
+            },
+          ]),
+          {'zh-Hans', 'zh-Hant', 'en'});
       expect(LibreTranslator.parseLanguages({'error': 'x'}), isNull);
       expect(LibreTranslator.languageCode('zh-TW'), 'zh-Hant');
       expect(LibreTranslator.languageCode('tl'), 'tl');
@@ -230,7 +299,11 @@ void main() {
       final seen = <Uri>[];
       final client = MockClient((request) async {
         seen.add(request.url);
-        return _json({'responseData': {'translatedText': '译${request.url.queryParameters['q']}'}, 'quotaFinished': false, 'responseStatus': 200});
+        return _json({
+          'responseData': {'translatedText': '译${request.url.queryParameters['q']}'},
+          'quotaFinished': false,
+          'responseStatus': 200
+        });
       });
       final translator = MyMemoryTranslator(client, email: () => 'me@example.com');
       expect(await translator.translate('a\nb', 'iw'), '译a\n译b');
@@ -239,7 +312,10 @@ void main() {
       expect(seen.first.queryParameters['de'], 'me@example.com');
       final plain = MockClient((request) async {
         seen.add(request.url);
-        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+        return _json({
+          'responseData': {'translatedText': 'x'},
+          'responseStatus': 200
+        });
       });
       await MyMemoryTranslator(plain).translate('c', 'fr');
       expect(seen.last.queryParameters.containsKey('de'), isFalse);
@@ -249,12 +325,17 @@ void main() {
       var asked = 0;
       final client = MockClient((_) async {
         asked++;
-        return _json({'responseData': {'translatedText': 'x'}, 'responseStatus': 200});
+        return _json({
+          'responseData': {'translatedText': 'x'},
+          'responseStatus': 200
+        });
       });
       final long = List.filled(400, 'word').join(' ');
-      expect(await _fails(MyMemoryTranslator(client).translate(long, 'fr')), tr('This text is too long for {0}', ['MyMemory']));
+      expect(await _fails(MyMemoryTranslator(client).translate(long, 'fr')),
+          tr('This text is too long for {0}', ['MyMemory']));
       expect(asked, 0);
-      final pieces = MyMemoryTranslator.piecesOf('${List.filled(60, 'Sentence one.').join(' ')}\nshort')!;
+      final pieces =
+          MyMemoryTranslator.piecesOf('${List.filled(60, 'Sentence one.').join(' ')}\nshort')!;
       expect(pieces.every((p) => utf8.encode(p).length <= MyMemoryTranslator.requestBytes), isTrue);
       expect(pieces.last, 'short');
     });
@@ -263,7 +344,13 @@ void main() {
       var asked = 0;
       final client = MockClient((_) async {
         asked++;
-        return _json({'responseData': {'translatedText': 'MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY'}, 'quotaFinished': true, 'responseStatus': 429});
+        return _json({
+          'responseData': {
+            'translatedText': 'MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY'
+          },
+          'quotaFinished': true,
+          'responseStatus': 429
+        });
       });
       final translator = MyMemoryTranslator(client);
       expect(await _fails(translator.translate('a', 'fr')), TranslationException.busy().message);
@@ -275,7 +362,10 @@ void main() {
     test('is chosen for short texts only; subtitles stay with Google', () {
       final fallback = MockClient((_) async => _json({}));
       final google = GoogleTranslator(fallback);
-      expect(translatorFor(const TranslationConfig(service: TranslationService.mymemory), {}, fallback, fallback: google), same(google));
+      expect(
+          translatorFor(const TranslationConfig(service: TranslationService.mymemory), {}, fallback,
+              fallback: google),
+          same(google));
       expect(TranslationService.mymemory.subtitlesOnGoogle, isTrue);
       expect(TranslationService.deepl.subtitlesOnGoogle, isFalse);
       for (final service in TranslationService.values) {
@@ -286,17 +376,29 @@ void main() {
 
   group('AiTranslator', () {
     test('sends the key over https except to this computer or the local network', () {
-      expect(AiTranslator.aiEndpoint('http://api.example.com/v1/', 'models').toString(), 'https://api.example.com/v1/models');
-      expect(AiTranslator.aiEndpoint('http://api.example.com:8080/v1', 'models').toString(), 'https://api.example.com:8080/v1/models');
-      expect(AiTranslator.aiEndpoint('http://localhost:11434/v1', 'models').toString(), 'http://localhost:11434/v1/models');
-      expect(AiTranslator.aiEndpoint('http://192.168.1.5:11434/v1', 'models').toString(), 'http://192.168.1.5:11434/v1/models');
+      expect(AiTranslator.aiEndpoint('http://api.example.com/v1/', 'models').toString(),
+          'https://api.example.com/v1/models');
+      expect(AiTranslator.aiEndpoint('http://api.example.com:8080/v1', 'models').toString(),
+          'https://api.example.com:8080/v1/models');
+      expect(AiTranslator.aiEndpoint('http://localhost:11434/v1', 'models').toString(),
+          'http://localhost:11434/v1/models');
+      expect(AiTranslator.aiEndpoint('http://192.168.1.5:11434/v1', 'models').toString(),
+          'http://192.168.1.5:11434/v1/models');
       expect(AiTranslator.aiEndpoint('ftp://example.com', 'models'), isNull);
     });
 
-    http.Response reply(String content) => _json({'choices': [{'message': {'role': 'assistant', 'content': content}}]});
+    http.Response reply(String content) => _json({
+          'choices': [
+            {
+              'message': {'role': 'assistant', 'content': content}
+            }
+          ]
+        });
 
-    AiTranslator make(MockClient client, {String key = 'sk', String prompt = 'To {target}, {lines} lines.'}) =>
-        AiTranslator(client, baseUrl: 'https://api.example.com/v1/', key: key, model: 'm1', prompt: prompt);
+    AiTranslator make(MockClient client,
+            {String key = 'sk', String prompt = 'To {target}, {lines} lines.'}) =>
+        AiTranslator(client,
+            baseUrl: 'https://api.example.com/v1/', key: key, model: 'm1', prompt: prompt);
 
     test('request shape', () async {
       late http.Request seen;
@@ -311,7 +413,10 @@ void main() {
       expect(body['model'], 'm1');
       expect(body['temperature'], 0.2);
       final messages = body['messages'] as List;
-      expect(messages[0], {'role': 'system', 'content': 'To ${TranslationLanguage.byCode('zh-CN').label}, 2 lines.'});
+      expect(messages[0], {
+        'role': 'system',
+        'content': 'To ${TranslationLanguage.byCode('zh-CN').label}, 2 lines.'
+      });
       expect(messages[1], {'role': 'user', 'content': 'one\ntwo'});
     });
 
@@ -337,9 +442,13 @@ void main() {
       final client = MockClient((request) async {
         bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
         // Out of order, with a code fence: still matched by id.
-        return reply('```json\n{"segments": [{"id": "2", "text": "二"}, {"id": "1", "text": "一"}]}\n```');
+        return reply(
+            '```json\n{"segments": [{"id": "2", "text": "二"}, {"id": "1", "text": "一"}]}\n```');
       });
-      expect(await make(client, prompt: AiTranslator.promptPresets.first.text).translate('one\ntwo', 'zh-CN'), '一\n二');
+      expect(
+          await make(client, prompt: AiTranslator.promptPresets.first.text)
+              .translate('one\ntwo', 'zh-CN'),
+          '一\n二');
       expect(bodies.length, 1);
       final messages = bodies.single['messages'] as List;
       final system = (messages[0] as Map)['content'] as String;
@@ -372,16 +481,24 @@ void main() {
         calls++;
         return reply('一');
       });
-      expect(await _fails(make(client).translate('one\ntwo', 'zh-CN')), tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
+      expect(await _fails(make(client).translate('one\ntwo', 'zh-CN')),
+          tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
       expect(calls, 3);
     });
 
     test('splits long text at line ends', () async {
       final sizes = <int>[];
       final client = MockClient((request) async {
-        final user = ((jsonDecode(request.body) as Map)['messages'] as List<dynamic>).cast<Map<String, dynamic>>()[1]['content'] as String;
+        final user = ((jsonDecode(request.body) as Map)['messages'] as List<dynamic>)
+            .cast<Map<String, dynamic>>()[1]['content'] as String;
         // Segments are measured by their texts, as the limit is.
-        final segments = user.startsWith('{') ? [for (final s in ((jsonDecode(user) as Map)['segments'] as List<dynamic>).cast<Map<String, dynamic>>()) s['text'] as String] : null;
+        final segments = user.startsWith('{')
+            ? [
+                for (final s in ((jsonDecode(user) as Map)['segments'] as List<dynamic>)
+                    .cast<Map<String, dynamic>>())
+                  s['text'] as String
+              ]
+            : null;
         sizes.add(segments == null ? user.length : segments.join('\n').length);
         return reply(user);
       });
@@ -409,7 +526,18 @@ void main() {
         expect(preset.text, contains('{lines}'));
         expect(preset.text, contains('exactly {lines} lines'));
       }
-      expect(AiTranslator.aiPresets.map((p) => p.id), ['openai', 'deepseek', 'anthropic', 'gemini', 'qwen', 'zhipu', 'siliconflow', 'openrouter', 'ollama', 'custom']);
+      expect(AiTranslator.aiPresets.map((p) => p.id), [
+        'openai',
+        'deepseek',
+        'anthropic',
+        'gemini',
+        'qwen',
+        'zhipu',
+        'siliconflow',
+        'openrouter',
+        'ollama',
+        'custom'
+      ]);
     });
   });
 
@@ -446,7 +574,13 @@ void main() {
     test('tolerates missing and bad fields', () {
       expect(TranslationConfig.fromJson(null), const TranslationConfig());
       expect(TranslationConfig.fromJson('x'), const TranslationConfig());
-      final config = TranslationConfig.fromJson({'service': 'nope', 'aiPreset': 3, 'promptPreset': 'zzz', 'libreServer': 7, 'aiModel': 'q'});
+      final config = TranslationConfig.fromJson({
+        'service': 'nope',
+        'aiPreset': 3,
+        'promptPreset': 'zzz',
+        'libreServer': 7,
+        'aiModel': 'q'
+      });
       expect(config.service, TranslationService.google);
       expect(config.aiPreset, 'openai');
       expect(config.promptPreset, 'subtitle');
@@ -455,7 +589,8 @@ void main() {
     });
 
     test('copyWith and preset overrides', () {
-      final config = const TranslationConfig().copyWith(aiPreset: 'ollama', promptPreset: 'faithful');
+      final config =
+          const TranslationConfig().copyWith(aiPreset: 'ollama', promptPreset: 'faithful');
       expect(config.effectiveAiBaseUrl, 'http://localhost:11434/v1');
       expect(config.effectiveAiModel, 'qwen2.5');
       expect(config.effectivePrompt, AiTranslator.promptPresets.last.text);
@@ -468,20 +603,29 @@ void main() {
     final fallback = GoogleTranslator(client);
 
     test('google gives the fallback', () {
-      expect(translatorFor(const TranslationConfig(), {}, client, fallback: fallback), same(fallback));
+      expect(
+          translatorFor(const TranslationConfig(), {}, client, fallback: fallback), same(fallback));
     });
 
     test('a missing key gives a translator that throws', () async {
-      for (final service in [TranslationService.deepl, TranslationService.baidu, TranslationService.ai]) {
-        final translator = translatorFor(TranslationConfig(service: service), {}, client, fallback: fallback);
-        expect(await _fails(translator.translate('a', 'en')), tr('Fill in the key for {0} in Settings first', [service.label]));
+      for (final service in [
+        TranslationService.deepl,
+        TranslationService.baidu,
+        TranslationService.ai
+      ]) {
+        final translator =
+            translatorFor(TranslationConfig(service: service), {}, client, fallback: fallback);
+        expect(await _fails(translator.translate('a', 'en')),
+            tr('Fill in the key for {0} in Settings first', [service.label]));
         expect(await translator.translate(' ', 'en'), ' ');
       }
     });
 
     test('builds the configured translators', () {
-      Translator build(TranslationService service, [Map<String, String> keys = const {}, String preset = 'openai']) =>
-          translatorFor(TranslationConfig(service: service, aiPreset: preset), keys, client, fallback: fallback);
+      Translator build(TranslationService service,
+              [Map<String, String> keys = const {}, String preset = 'openai']) =>
+          translatorFor(TranslationConfig(service: service, aiPreset: preset), keys, client,
+              fallback: fallback);
       expect(build(TranslationService.deepl, {'deepl': 'k'}), isA<DeepLTranslator>());
       expect(build(TranslationService.microsoft, {'microsoft': 'k'}), isA<MicrosoftTranslator>());
       expect(build(TranslationService.libre), isA<LibreTranslator>());
@@ -497,7 +641,8 @@ void main() {
       expect(chunkLengthOf(DeepLTranslator(client, key: 'k')), 5000);
       expect(chunkLengthOf(MicrosoftTranslator(client, key: 'k')), 5000);
       expect(chunkLengthOf(LibreTranslator(client, server: 'http://x')), 5000);
-      expect(chunkLengthOf(AiTranslator(client, baseUrl: 'http://x', model: 'm', prompt: 'p')), 3000);
+      expect(
+          chunkLengthOf(AiTranslator(client, baseUrl: 'http://x', model: 'm', prompt: 'p')), 3000);
     });
   });
 
@@ -508,12 +653,20 @@ void main() {
   });
 
   group('new services', () {
-    test("Microsoft without a key asks Edge's translatetext address with the texts as strings", () async {
+    test("Microsoft without a key asks Edge's translatetext address with the texts as strings",
+        () async {
       final requests = <http.Request>[];
       final client = MockClient((request) async {
         requests.add(request);
         final texts = (jsonDecode(request.body) as List).cast<String>();
-        return _json([for (final t in texts) {'translations': [{'text': '译$t', 'to': 'zh-Hans'}]}]);
+        return _json([
+          for (final t in texts)
+            {
+              'translations': [
+                {'text': '译$t', 'to': 'zh-Hans'}
+              ]
+            }
+        ]);
       });
       final translator = MicrosoftTranslator(client);
       expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
@@ -539,20 +692,28 @@ void main() {
       expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
       expect(bodies.first['target_lang'], 'ZH');
       expect(translator.endpoint.toString(), 'http://localhost:1188/translate');
-      expect(await _fails(DeepLXTranslator(client, server: '').translate('x', 'en')), tr('Fill in the DeepLX server address'));
+      expect(await _fails(DeepLXTranslator(client, server: '').translate('x', 'en')),
+          tr('Fill in the DeepLX server address'));
     });
 
     test('Baidu signs requests and reads trans_result', () async {
       late Map<String, String> form;
       final client = MockClient((request) async {
         form = Uri(query: request.body).queryParameters;
-        return _json({'trans_result': [{'src': 'a', 'dst': '甲'}, {'src': 'b', 'dst': '乙'}]});
+        return _json({
+          'trans_result': [
+            {'src': 'a', 'dst': '甲'},
+            {'src': 'b', 'dst': '乙'}
+          ]
+        });
       });
-      expect(await BaiduTranslator(client, appId: 'id', key: 'secret').translate('a\nb', 'ja'), '甲\n乙');
+      expect(await BaiduTranslator(client, appId: 'id', key: 'secret').translate('a\nb', 'ja'),
+          '甲\n乙');
       expect(form['to'], 'jp');
       expect(form['sign'], hasLength(32));
       final failing = MockClient((_) async => _json({'error_code': '54004'}));
-      expect(await _fails(BaiduTranslator(failing, appId: 'id', key: 'k').translate('a', 'en')), tr('The Baidu Translate account is out of credit'));
+      expect(await _fails(BaiduTranslator(failing, appId: 'id', key: 'k').translate('a', 'en')),
+          tr('The Baidu Translate account is out of credit'));
     });
 
     test('AI style, glossary, temperature and context reach the request', () async {
@@ -561,10 +722,22 @@ void main() {
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         sent.add(body);
         final user = ((body['messages'] as List)[1] as Map)['content'] as String;
-        return _json({'choices': [{'message': {'content': user.split('\n').map((l) => '译$l').join('\n')}}]});
+        return _json({
+          'choices': [
+            {
+              'message': {'content': user.split('\n').map((l) => '译$l').join('\n')}
+            }
+          ]
+        });
       });
       final translator = AiTranslator(client,
-          baseUrl: 'http://x/v1', model: 'm', prompt: 'To {target}.', tone: AiTone.byId('casual').instruction, glossary: 'Lumtub=路姆\nOther=别的\nbad line', temperature: 0.7, contextLines: 2);
+          baseUrl: 'http://x/v1',
+          model: 'm',
+          prompt: 'To {target}.',
+          tone: AiTone.byId('casual').instruction,
+          glossary: 'Lumtub=路姆\nOther=别的\nbad line',
+          temperature: 0.7,
+          contextLines: 2);
       await translator.translate('one\ntwo\nthree', 'zh-CN');
       // Only the terms the text uses go along.
       expect(((sent.last['messages'] as List)[0] as Map)['content'], isNot(contains('Lumtub')));
@@ -581,16 +754,30 @@ void main() {
     test('lists models from /models', () async {
       final client = MockClient((request) async {
         expect(request.url.path, '/v1/models');
-        return _json({'data': [{'id': 'b'}, {'id': 'a'}, {'id': 'a'}]});
+        return _json({
+          'data': [
+            {'id': 'b'},
+            {'id': 'a'},
+            {'id': 'a'}
+          ]
+        });
       });
       expect(await AiTranslator.listModels(client, 'https://x/v1/', ''), ['a', 'b']);
     });
 
     test('the new settings round-trip and stay in range', () {
-      const config = TranslationConfig(service: TranslationService.baidu, baiduAppId: 'id', deeplxServer: 'http://d', aiTone: 'formal', aiGlossary: 'a=b', aiTemperature: 0.9, aiContext: 5);
+      const config = TranslationConfig(
+          service: TranslationService.baidu,
+          baiduAppId: 'id',
+          deeplxServer: 'http://d',
+          aiTone: 'formal',
+          aiGlossary: 'a=b',
+          aiTemperature: 0.9,
+          aiContext: 5);
       final read = TranslationConfig.fromJson(jsonDecode(jsonEncode(config.toJson())));
       expect(read, config);
-      expect(read.cacheScope, isNot(const TranslationConfig(service: TranslationService.baidu).cacheScope));
+      expect(read.cacheScope,
+          isNot(const TranslationConfig(service: TranslationService.baidu).cacheScope));
       final wild = TranslationConfig.fromJson({'aiTone': 'x', 'aiTemperature': 9, 'aiContext': 99});
       expect((wild.aiTone, wild.aiTemperature, wild.aiContext), ('default', 1.5, 10));
     });
@@ -598,20 +785,45 @@ void main() {
 
   test('a fallback translator asks the second service when the first fails', () async {
     final busy = MockClient((_) async => http.Response('', 429));
-    final ok = MockClient((request) async => http.Response(jsonEncode([[['gut', 'good']]]), 200));
-    final translator = FallbackTranslator(MicrosoftTranslator(busy, key: 'k'), GoogleTranslator(ok));
+    final ok = MockClient((request) async => http.Response(
+        jsonEncode([
+          [
+            ['gut', 'good']
+          ]
+        ]),
+        200));
+    final translator =
+        FallbackTranslator(MicrosoftTranslator(busy, key: 'k'), GoogleTranslator(ok));
     expect(await translator.translate('good', 'de'), 'gut');
   });
 
-  test('while Google cools down after a 429 the other service takes over, and Google is asked again afterwards', () async {
+  test(
+      'while Google cools down after a 429 the other service takes over, and Google is asked again afterwards',
+      () async {
     GoogleTranslator.resetPacing();
     var googleAsked = 0;
     var refuse = true;
     final google = GoogleTranslator(MockClient((request) async {
       googleAsked++;
-      return refuse ? http.Response('', 429) : http.Response(jsonEncode([[['von Google', 'x']]]), 200);
+      return refuse
+          ? http.Response('', 429)
+          : http.Response(
+              jsonEncode([
+                [
+                  ['von Google', 'x']
+                ]
+              ]),
+              200);
     }));
-    final other = MockClient((request) async => http.Response(jsonEncode([{'translations': [{'text': 'von Microsoft'}]}]), 200));
+    final other = MockClient((request) async => http.Response(
+        jsonEncode([
+          {
+            'translations': [
+              {'text': 'von Microsoft'}
+            ]
+          }
+        ]),
+        200));
     final translator = FallbackTranslator(google, MicrosoftTranslator(other, key: 'k'));
     expect(await translator.translate('a', 'de'), 'von Microsoft');
     expect(await translator.translate('b', 'de'), 'von Microsoft');

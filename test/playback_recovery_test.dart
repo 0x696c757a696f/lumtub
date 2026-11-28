@@ -14,8 +14,10 @@ void main() {
     expect(recovery.tryAttempt(position: resume), isTrue);
   });
 
-  bool progress(Duration position, {bool playing = true, bool buffering = false, bool decoded = true, double rate = 1}) =>
-      recovery.observeProgress(position, playing: playing, buffering: buffering, decoded: decoded, rate: rate);
+  bool progress(Duration position,
+          {bool playing = true, bool buffering = false, bool decoded = true, double rate = 1}) =>
+      recovery.observeProgress(position,
+          playing: playing, buffering: buffering, decoded: decoded, rate: rate);
 
   test('reopening and returning to the resume position do not reset attempts', () {
     now = now.add(const Duration(seconds: 1));
@@ -111,14 +113,22 @@ void main() {
 
   test('tells a lost graphics device from other mpv errors', () {
     expect(PlaybackRecovery.graphicsLost('Mapping hardware decoded surface failed.'), isTrue);
-    expect(PlaybackRecovery.graphicsLost('AVHWFramesContext: Could not create the texture (887a0005)'), isTrue);
+    expect(
+        PlaybackRecovery.graphicsLost('AVHWFramesContext: Could not create the texture (887a0005)'),
+        isTrue);
     expect(PlaybackRecovery.graphicsLost('Could not create the texture (887A0006)'), isTrue);
     expect(PlaybackRecovery.graphicsLost('Failed to allocate hw frames.'), isFalse);
     expect(PlaybackRecovery.graphicsLost('Failure when receiving data from the peer'), isFalse);
   });
   test('tells an invalidated VideoToolbox session', () {
-    expect(PlaybackRecovery.decoderSessionLost('av1: Failed to decode frame (invalid session, -12903)'), isTrue);
-    expect(PlaybackRecovery.decoderSessionLost('av1: vt decoder cb: output image buffer is null: -12903, reconfig 1'), isTrue);
+    expect(
+        PlaybackRecovery.decoderSessionLost(
+            'av1: Failed to decode frame (invalid session, -12903)'),
+        isTrue);
+    expect(
+        PlaybackRecovery.decoderSessionLost(
+            'av1: vt decoder cb: output image buffer is null: -12903, reconfig 1'),
+        isTrue);
     expect(PlaybackRecovery.decoderSessionLost('av1: HW accel end frame fail.'), isFalse);
   });
   group('settled playback', () {
@@ -126,11 +136,22 @@ void main() {
     var at = Duration.zero;
 
     /// Plays [seconds] more in quarter-second steps; whether it settled.
-    bool play(int seconds, {Duration ahead = const Duration(seconds: 30), bool decoded = true, bool buffering = false, Duration duration = const Duration(minutes: 10)}) {
+    bool play(int seconds,
+        {Duration ahead = const Duration(seconds: 30),
+        bool decoded = true,
+        bool buffering = false,
+        Duration duration = const Duration(minutes: 10)}) {
       var told = false;
       for (var i = 0; i < seconds * 4; i++) {
         at += const Duration(milliseconds: 250);
-        if (settled.observe(at, playing: true, buffering: buffering, decoded: decoded, buffered: at + ahead, duration: duration)) told = true;
+        if (settled.observe(at,
+            playing: true,
+            buffering: buffering,
+            decoded: decoded,
+            buffered: at + ahead,
+            duration: duration)) {
+          told = true;
+        }
       }
       return told;
     }
@@ -167,7 +188,8 @@ void main() {
       expect(play(1), isTrue);
       settled.start();
       at = Duration.zero;
-      expect(play(6, ahead: const Duration(seconds: 3), duration: const Duration(seconds: 7)), isTrue);
+      expect(
+          play(6, ahead: const Duration(seconds: 3), duration: const Duration(seconds: 7)), isTrue);
     });
 
     test('a stopped video never settles', () {

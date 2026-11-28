@@ -5,10 +5,18 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   Future<void> pumpTabs(WidgetTester tester, List<String> labels, double width) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Align(alignment: Alignment.topLeft, child: SizedBox(width: width, child: DefaultTabController(
-      length: labels.length,
-      child: Builder(builder: (context) => FittingTabBar(controller: DefaultTabController.of(context), labels: labels)),
-    ))))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                    width: width,
+                    child: DefaultTabController(
+                      length: labels.length,
+                      child: Builder(
+                          builder: (context) => FittingTabBar(
+                              controller: DefaultTabController.of(context), labels: labels)),
+                    ))))));
   }
 
   testWidgets('tabs share the width when every label fits its share', (tester) async {
@@ -27,10 +35,16 @@ void main() {
 
   testWidgets('the buttons go under the title when they leave it no room', (tester) async {
     Future<Rect> buttons(double width) async {
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: Align(alignment: Alignment.topLeft, child: SizedBox(width: width, child: HeadingLine(children: [
-        const Text('Title'),
-        const SizedBox(width: 400, height: 20, key: Key('buttons')),
-      ]))))));
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: Align(
+                  alignment: Alignment.topLeft,
+                  child: SizedBox(
+                      width: width,
+                      child: HeadingLine(children: [
+                        const Text('Title'),
+                        const SizedBox(width: 400, height: 20, key: Key('buttons')),
+                      ]))))));
       expect(tester.takeException(), isNull);
       return tester.getRect(find.byKey(const Key('buttons')));
     }

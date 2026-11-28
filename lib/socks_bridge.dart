@@ -23,7 +23,8 @@ abstract interface class SocksBridge {
       final handle = core.withText(proxyUrl, core.socksStart);
       if (handle != nullptr) return _NativeBridge(core, handle);
     }
-    final bridge = DartSocksBridge._(await ServerSocket.bind(InternetAddress.loopbackIPv4, 0), Uri.parse(proxyUrl));
+    final bridge = DartSocksBridge._(
+        await ServerSocket.bind(InternetAddress.loopbackIPv4, 0), Uri.parse(proxyUrl));
     bridge._server.listen(bridge._handle);
     return bridge;
   }
@@ -46,7 +47,9 @@ abstract interface class SocksBridge {
 }
 
 class _NativeBridge implements SocksBridge {
-  _NativeBridge(this._core, this._handle) : port = _core.socksPort(_handle), token = _core.take(_core.socksToken(_handle)) ?? '';
+  _NativeBridge(this._core, this._handle)
+      : port = _core.socksPort(_handle),
+        token = _core.take(_core.socksToken(_handle)) ?? '';
 
   final NativeCore _core;
   Pointer<Void> _handle;
@@ -79,7 +82,8 @@ class DartSocksBridge implements SocksBridge {
 
   static String _newToken() {
     final random = Random.secure();
-    return [for (var i = 0; i < 16; i++) random.nextInt(256).toRadixString(16).padLeft(2, '0')].join();
+    return [for (var i = 0; i < 16; i++) random.nextInt(256).toRadixString(16).padLeft(2, '0')]
+        .join();
   }
 
   @override
@@ -153,7 +157,8 @@ class DartSocksBridge implements SocksBridge {
           407 => '407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm="lumtub"',
           _ => '400 Bad Request',
         };
-        client.add(latin1.encode('HTTP/1.1 $status\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'));
+        client.add(
+            latin1.encode('HTTP/1.1 $status\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'));
         await client.flush();
       } catch (e) {
         logDebug(() => 'Could not send the proxy error answer: $e');
@@ -228,7 +233,12 @@ class _Reader {
     var from = 0;
     while (true) {
       for (var i = from; i + 3 < _buffer.length; i++) {
-        if (_buffer[i] == 13 && _buffer[i + 1] == 10 && _buffer[i + 2] == 13 && _buffer[i + 3] == 10) return take(i + 4);
+        if (_buffer[i] == 13 &&
+            _buffer[i + 1] == 10 &&
+            _buffer[i + 2] == 13 &&
+            _buffer[i + 3] == 10) {
+          return take(i + 4);
+        }
       }
       from = max(0, _buffer.length - 3);
       if (_buffer.length > 64 * 1024) throw const _Bad();
@@ -277,14 +287,18 @@ Future<_Reader> _connectViaSocks(Uri proxy, String host, int port) async {
 List<int> _portBytes(int port) => [port >> 8, port & 255];
 
 /// RFC 1928, with the username/password step of RFC 1929.
-Future<void> _socks5(Socket socket, _Reader reader, String host, int port, List<int> user, List<int> pass, {required bool remoteDns}) async {
+Future<void> _socks5(
+    Socket socket, _Reader reader, String host, int port, List<int> user, List<int> pass,
+    {required bool remoteDns}) async {
   final login = user.isNotEmpty;
   socket.add([5, login ? 2 : 1, 0, if (login) 2]);
   final choice = await reader.take(2).timeout(_timeout);
   if (choice[0] != 5) throw const SocketException('not a SOCKS5 server');
   if (choice[1] == 2 && login) {
     socket.add([1, user.length, ...user, pass.length, ...pass]);
-    if ((await reader.take(2).timeout(_timeout))[1] != 0) throw const SocketException('SOCKS5 login refused');
+    if ((await reader.take(2).timeout(_timeout))[1] != 0) {
+      throw const SocketException('SOCKS5 login refused');
+    }
   } else if (choice[1] != 0) {
     throw const SocketException('SOCKS5 method refused');
   }
@@ -292,8 +306,17 @@ Future<void> _socks5(Socket socket, _Reader reader, String host, int port, List<
   if (ip == null && !remoteDns) ip = (await InternetAddress.lookup(host)).first;
   final name = utf8.encode(host);
   socket.add([
-    5, 1, 0,
-    if (ip != null) ...[ip.type == InternetAddressType.IPv4 ? 1 : 4, ...ip.rawAddress] else ...[3, name.length, ...name],
+    5,
+    1,
+    0,
+    if (ip != null) ...[
+      ip.type == InternetAddressType.IPv4 ? 1 : 4,
+      ...ip.rawAddress
+    ] else ...[
+      3,
+      name.length,
+      ...name
+    ],
     ..._portBytes(port),
   ]);
   final reply = await reader.take(4).timeout(_timeout);
@@ -302,14 +325,22 @@ Future<void> _socks5(Socket socket, _Reader reader, String host, int port, List<
   await reader.take(skip + 2).timeout(_timeout);
 }
 
-Future<void> _socks4(Socket socket, _Reader reader, String host, int port, List<int> user, {required bool remoteDns}) async {
+Future<void> _socks4(Socket socket, _Reader reader, String host, int port, List<int> user,
+    {required bool remoteDns}) async {
   var ip = InternetAddress.tryParse(host);
-  if (ip == null && !remoteDns) ip = (await InternetAddress.lookup(host, type: InternetAddressType.IPv4)).first;
-  if (ip != null && ip.type != InternetAddressType.IPv4) throw const SocketException('SOCKS4 has no IPv6');
+  if (ip == null && !remoteDns) {
+    ip = (await InternetAddress.lookup(host, type: InternetAddressType.IPv4)).first;
+  }
+  if (ip != null && ip.type != InternetAddressType.IPv4) {
+    throw const SocketException('SOCKS4 has no IPv6');
+  }
   socket.add([
-    4, 1, ..._portBytes(port),
+    4,
+    1,
+    ..._portBytes(port),
     if (ip != null) ...ip.rawAddress else ...[0, 0, 0, 1],
-    ...user, 0,
+    ...user,
+    0,
     if (ip == null) ...[...utf8.encode(host), 0],
   ]);
   final reply = await reader.take(8).timeout(_timeout);

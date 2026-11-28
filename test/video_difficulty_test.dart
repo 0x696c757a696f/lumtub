@@ -48,7 +48,8 @@ void main() {
   });
 
   test('names inside a sentence are not counted as new words', () {
-    WordToken word(String text, String language) => WordToken(text, null, isWord: true, language: language);
+    WordToken word(String text, String language) =>
+        WordToken(text, null, isWord: true, language: language);
     expect(looksLikeName(word('Lisboa', 'pt')), isTrue);
     expect(looksLikeName(word('Pierre', 'fr')), isTrue);
     expect(looksLikeName(word('casa', 'pt')), isFalse);

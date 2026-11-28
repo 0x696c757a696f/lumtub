@@ -64,55 +64,104 @@ const blockEntryKeys = {
   'FLDS/channel/基本教義派耶穌基督': 'flds/flds',
   'NXIVM/channel/Keith Raniere': 'nxivm/keith-raniere',
   'NXIVM/channel/NXIVM': 'nxivm/nxivm',
-  'additional-spiritual-and-religious-channels/accessconsciousness': 'additional-spiritual-and-religious-channels/access-consciousness',
-  'additional-spiritual-and-religious-channels/adi-da-samraj': 'additional-spiritual-and-religious-channels/adidam',
-  'additional-spiritual-and-religious-channels/alleluia-ministries': 'additional-spiritual-and-religious-channels/alph-lukau',
-  'additional-spiritual-and-religious-channels/basharhighermind99': 'additional-spiritual-and-religious-channels/bashar-higher-mind',
-  'additional-spiritual-and-religious-channels/bodhimeditation': 'additional-spiritual-and-religious-channels/bodhi-meditation',
-  'additional-spiritual-and-religious-channels/bodhimeditationkr': 'additional-spiritual-and-religious-channels/bodhi-meditation',
-  'additional-spiritual-and-religious-channels/eastern-lightning': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
-  'additional-spiritual-and-religious-channels/eckankar-handle': 'additional-spiritual-and-religious-channels/eckankar',
-  'additional-spiritual-and-religious-channels/emmanueltv-live': 'additional-spiritual-and-religious-channels/emmanuel-tv',
-  'additional-spiritual-and-religious-channels/energybagua': 'additional-spiritual-and-religious-channels/energy-bagua',
-  'additional-spiritual-and-religious-channels/energybaguaen': 'additional-spiritual-and-religious-channels/energy-bagua',
-  'additional-spiritual-and-religious-channels/energybaguaid': 'additional-spiritual-and-religious-channels/energy-bagua',
-  'additional-spiritual-and-religious-channels/iglesialaluzdelmundo': 'additional-spiritual-and-religious-channels/la-luz-del-mundo',
-  'additional-spiritual-and-religious-channels/ishafoundation': 'additional-spiritual-and-religious-channels/isha-foundation',
-  'additional-spiritual-and-religious-channels/jinbodhi-en': 'additional-spiritual-and-religious-channels/jinbodhi',
-  'additional-spiritual-and-religious-channels/jinbodhi-kr': 'additional-spiritual-and-religious-channels/jinbodhi',
-  'additional-spiritual-and-religious-channels/jinbodhi-vn': 'additional-spiritual-and-religious-channels/jinbodhi',
-  'additional-spiritual-and-religious-channels/krseradio': 'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
-  'additional-spiritual-and-religious-channels/kryonleecarroll3491': 'additional-spiritual-and-religious-channels/kryon',
-  'additional-spiritual-and-religious-channels/moojiitaliano': 'additional-spiritual-and-religious-channels/mooji',
-  'additional-spiritual-and-religious-channels/moojiji': 'additional-spiritual-and-religious-channels/mooji',
-  'additional-spiritual-and-religious-channels/official-amitv': 'additional-spiritual-and-religious-channels/alph-lukau',
-  'additional-spiritual-and-religious-channels/oshointernational': 'additional-spiritual-and-religious-channels/osho-international',
-  'additional-spiritual-and-religious-channels/pastoralphlukauofficial': 'additional-spiritual-and-religious-channels/alph-lukau',
-  'additional-spiritual-and-religious-channels/radiolldmhoy': 'additional-spiritual-and-religious-channels/la-luz-del-mundo',
-  'additional-spiritual-and-religious-channels/rsewebteam': 'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
-  'additional-spiritual-and-religious-channels/sadhguruchinese': 'additional-spiritual-and-religious-channels/sadhguru-chinese',
-  'additional-spiritual-and-religious-channels/sadhgurutraditionalchinese': 'additional-spiritual-and-religious-channels/sadhguru-chinese',
-  'additional-spiritual-and-religious-channels/the-church-of-almighty-god': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
-  'additional-spiritual-and-religious-channels/thelastreformation': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  'additional-spiritual-and-religious-channels/thelastreformationfrance': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  'additional-spiritual-and-religious-channels/thelastreformationuk': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  'additional-spiritual-and-religious-channels/thetahealingvianna': 'additional-spiritual-and-religious-channels/thetahealing',
-  'additional-spiritual-and-religious-channels/x13fb5a87': 'additional-spiritual-and-religious-channels/rulai-zong',
-  'additional-spiritual-and-religious-channels/x26f4e24e': 'additional-spiritual-and-religious-channels/chuang-zao-feng-sheng',
-  'additional-spiritual-and-religious-channels/x2ea86926': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
-  'additional-spiritual-and-religious-channels/x2f52733c': 'additional-spiritual-and-religious-channels/chuang-zao-feng-sheng',
-  'additional-spiritual-and-religious-channels/x301dbb80': 'additional-spiritual-and-religious-channels/guan-yin-citta',
-  'additional-spiritual-and-religious-channels/x31b4cf14': 'additional-spiritual-and-religious-channels/miao-chan-shifu',
-  'additional-spiritual-and-religious-channels/x47e78881': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
-  'additional-spiritual-and-religious-channels/x4eabf26a': 'additional-spiritual-and-religious-channels/lu-tai-chang',
-  'additional-spiritual-and-religious-channels/x584e711b': 'additional-spiritual-and-religious-channels/guan-yin-citta',
-  'additional-spiritual-and-religious-channels/x6aebd8d1': 'additional-spiritual-and-religious-channels/lu-tai-chang',
-  'additional-spiritual-and-religious-channels/x6df4f717': 'additional-spiritual-and-religious-channels/yin-xin-fo-fa',
-  'additional-spiritual-and-religious-channels/x735a07d5': 'additional-spiritual-and-religious-channels/true-buddha-school',
-  'additional-spiritual-and-religious-channels/xdb7cc0f4': 'additional-spiritual-and-religious-channels/providence',
-  'additional-spiritual-and-religious-channels/xe1c33757': 'additional-spiritual-and-religious-channels/energy-bagua',
-  'additional-spiritual-and-religious-channels/xe2ac3cc9': 'additional-spiritual-and-religious-channels/energy-bagua',
-  'additional-spiritual-and-religious-channels/xfbf4266c': 'additional-spiritual-and-religious-channels/jinbodhi',
+  'additional-spiritual-and-religious-channels/accessconsciousness':
+      'additional-spiritual-and-religious-channels/access-consciousness',
+  'additional-spiritual-and-religious-channels/adi-da-samraj':
+      'additional-spiritual-and-religious-channels/adidam',
+  'additional-spiritual-and-religious-channels/alleluia-ministries':
+      'additional-spiritual-and-religious-channels/alph-lukau',
+  'additional-spiritual-and-religious-channels/basharhighermind99':
+      'additional-spiritual-and-religious-channels/bashar-higher-mind',
+  'additional-spiritual-and-religious-channels/bodhimeditation':
+      'additional-spiritual-and-religious-channels/bodhi-meditation',
+  'additional-spiritual-and-religious-channels/bodhimeditationkr':
+      'additional-spiritual-and-religious-channels/bodhi-meditation',
+  'additional-spiritual-and-religious-channels/eastern-lightning':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  'additional-spiritual-and-religious-channels/eckankar-handle':
+      'additional-spiritual-and-religious-channels/eckankar',
+  'additional-spiritual-and-religious-channels/emmanueltv-live':
+      'additional-spiritual-and-religious-channels/emmanuel-tv',
+  'additional-spiritual-and-religious-channels/energybagua':
+      'additional-spiritual-and-religious-channels/energy-bagua',
+  'additional-spiritual-and-religious-channels/energybaguaen':
+      'additional-spiritual-and-religious-channels/energy-bagua',
+  'additional-spiritual-and-religious-channels/energybaguaid':
+      'additional-spiritual-and-religious-channels/energy-bagua',
+  'additional-spiritual-and-religious-channels/iglesialaluzdelmundo':
+      'additional-spiritual-and-religious-channels/la-luz-del-mundo',
+  'additional-spiritual-and-religious-channels/ishafoundation':
+      'additional-spiritual-and-religious-channels/isha-foundation',
+  'additional-spiritual-and-religious-channels/jinbodhi-en':
+      'additional-spiritual-and-religious-channels/jinbodhi',
+  'additional-spiritual-and-religious-channels/jinbodhi-kr':
+      'additional-spiritual-and-religious-channels/jinbodhi',
+  'additional-spiritual-and-religious-channels/jinbodhi-vn':
+      'additional-spiritual-and-religious-channels/jinbodhi',
+  'additional-spiritual-and-religious-channels/krseradio':
+      'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
+  'additional-spiritual-and-religious-channels/kryonleecarroll3491':
+      'additional-spiritual-and-religious-channels/kryon',
+  'additional-spiritual-and-religious-channels/moojiitaliano':
+      'additional-spiritual-and-religious-channels/mooji',
+  'additional-spiritual-and-religious-channels/moojiji':
+      'additional-spiritual-and-religious-channels/mooji',
+  'additional-spiritual-and-religious-channels/official-amitv':
+      'additional-spiritual-and-religious-channels/alph-lukau',
+  'additional-spiritual-and-religious-channels/oshointernational':
+      'additional-spiritual-and-religious-channels/osho-international',
+  'additional-spiritual-and-religious-channels/pastoralphlukauofficial':
+      'additional-spiritual-and-religious-channels/alph-lukau',
+  'additional-spiritual-and-religious-channels/radiolldmhoy':
+      'additional-spiritual-and-religious-channels/la-luz-del-mundo',
+  'additional-spiritual-and-religious-channels/rsewebteam':
+      'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
+  'additional-spiritual-and-religious-channels/sadhguruchinese':
+      'additional-spiritual-and-religious-channels/sadhguru-chinese',
+  'additional-spiritual-and-religious-channels/sadhgurutraditionalchinese':
+      'additional-spiritual-and-religious-channels/sadhguru-chinese',
+  'additional-spiritual-and-religious-channels/the-church-of-almighty-god':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  'additional-spiritual-and-religious-channels/thelastreformation':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  'additional-spiritual-and-religious-channels/thelastreformationfrance':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  'additional-spiritual-and-religious-channels/thelastreformationuk':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  'additional-spiritual-and-religious-channels/thetahealingvianna':
+      'additional-spiritual-and-religious-channels/thetahealing',
+  'additional-spiritual-and-religious-channels/x13fb5a87':
+      'additional-spiritual-and-religious-channels/rulai-zong',
+  'additional-spiritual-and-religious-channels/x26f4e24e':
+      'additional-spiritual-and-religious-channels/chuang-zao-feng-sheng',
+  'additional-spiritual-and-religious-channels/x2ea86926':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  'additional-spiritual-and-religious-channels/x2f52733c':
+      'additional-spiritual-and-religious-channels/chuang-zao-feng-sheng',
+  'additional-spiritual-and-religious-channels/x301dbb80':
+      'additional-spiritual-and-religious-channels/guan-yin-citta',
+  'additional-spiritual-and-religious-channels/x31b4cf14':
+      'additional-spiritual-and-religious-channels/miao-chan-shifu',
+  'additional-spiritual-and-religious-channels/x47e78881':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  'additional-spiritual-and-religious-channels/x4eabf26a':
+      'additional-spiritual-and-religious-channels/lu-tai-chang',
+  'additional-spiritual-and-religious-channels/x584e711b':
+      'additional-spiritual-and-religious-channels/guan-yin-citta',
+  'additional-spiritual-and-religious-channels/x6aebd8d1':
+      'additional-spiritual-and-religious-channels/lu-tai-chang',
+  'additional-spiritual-and-religious-channels/x6df4f717':
+      'additional-spiritual-and-religious-channels/yin-xin-fo-fa',
+  'additional-spiritual-and-religious-channels/x735a07d5':
+      'additional-spiritual-and-religious-channels/true-buddha-school',
+  'additional-spiritual-and-religious-channels/xdb7cc0f4':
+      'additional-spiritual-and-religious-channels/providence',
+  'additional-spiritual-and-religious-channels/xe1c33757':
+      'additional-spiritual-and-religious-channels/energy-bagua',
+  'additional-spiritual-and-religious-channels/xe2ac3cc9':
+      'additional-spiritual-and-religious-channels/energy-bagua',
+  'additional-spiritual-and-religious-channels/xfbf4266c':
+      'additional-spiritual-and-religious-channels/jinbodhi',
   'aum-shinrikyo/x59b75ad8': 'aum-shinrikyo/shoko-asahara',
   'aum-shinrikyo/xc62da990': 'aum-shinrikyo/aum-shinrikyo',
   'aum-shinrikyo/xda9eebc6': 'aum-shinrikyo/aum-shinrikyo',
@@ -135,8 +184,10 @@ const blockEntryKeys = {
   'branch-davidians/x9b513220': 'branch-davidians/waco-siege',
   'branch-davidians/xc07705d4': 'branch-davidians/branch-davidians',
   'branch-davidians/xd727fed1': 'branch-davidians/waco-siege',
-  'children-of-god-the-family-international/xc2c09911': 'children-of-god-the-family-international/children-of-god',
-  'children-of-god-the-family-international/xc9cad444': 'children-of-god-the-family-international/children-of-god',
+  'children-of-god-the-family-international/xc2c09911':
+      'children-of-god-the-family-international/children-of-god',
+  'children-of-god-the-family-international/xc9cad444':
+      'children-of-god-the-family-international/children-of-god',
   'chinese-state-media/china-global-television': 'chinese-state-media/cgtn',
   'chinese-state-media/china-radio-international': 'chinese-state-media/cri',
   'chinese-state-media/china-xinhua': 'chinese-state-media/xinhua',
@@ -178,12 +229,18 @@ const blockEntryKeys = {
   'chinese-state-media/xef9c1013': 'chinese-state-media/peoples-daily',
   'chinese-state-media/xf1c05f82': 'chinese-state-media/ta-kung-pao',
   'chinese-state-media/xfc63e315': 'chinese-state-media/wen-wei-po',
-  'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai-handle': 'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
-  'ching-hai-and-sai-baba-media/srisathyasaibhajans-handle': 'ching-hai-and-sai-baba-media/srisathyasaibhajans',
-  'ching-hai-and-sai-baba-media/srisathyasaikidsworld-handle': 'ching-hai-and-sai-baba-media/srisathyasaikidsworld',
-  'ching-hai-and-sai-baba-media/srisathyasaimandarin-handle': 'ching-hai-and-sai-baba-media/srisathyasaimandarin',
-  'ching-hai-and-sai-baba-media/srisathyasaiofficial-handle': 'ching-hai-and-sai-baba-media/srisathyasaiofficial',
-  'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial-handle': 'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
+  'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai-handle':
+      'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
+  'ching-hai-and-sai-baba-media/srisathyasaibhajans-handle':
+      'ching-hai-and-sai-baba-media/srisathyasaibhajans',
+  'ching-hai-and-sai-baba-media/srisathyasaikidsworld-handle':
+      'ching-hai-and-sai-baba-media/srisathyasaikidsworld',
+  'ching-hai-and-sai-baba-media/srisathyasaimandarin-handle':
+      'ching-hai-and-sai-baba-media/srisathyasaimandarin',
+  'ching-hai-and-sai-baba-media/srisathyasaiofficial-handle':
+      'ching-hai-and-sai-baba-media/srisathyasaiofficial',
+  'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial-handle':
+      'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
   'church-of-almighty-god/eastern-lightning': 'church-of-almighty-god/church-of-almighty-god',
   'church-of-almighty-god/x43e9ff3a': 'church-of-almighty-god/church-of-almighty-god',
   'church-of-almighty-god/x6f365b91': 'church-of-almighty-god/church-of-almighty-god',
@@ -202,82 +259,142 @@ const blockEntryKeys = {
   'disciples-association/x7363dab0': 'disciples-association/san-shu-jidu',
   'disciples-association/xaa26c538': 'disciples-association/san-shu-jidu',
   'disciples-association/xb1853e63': 'disciples-association/disciples-association',
-  'emirati-state-and-state-linked-media/wam': 'emirati-state-and-state-linked-media/emirates-news-agency',
-  'emirati-state-and-state-linked-media/x7662933d': 'emirati-state-and-state-linked-media/emirates-news-agency',
-  'emirati-state-and-state-linked-media/xcd06dff2': 'emirati-state-and-state-linked-media/sky-news-arabia',
+  'emirati-state-and-state-linked-media/wam':
+      'emirati-state-and-state-linked-media/emirates-news-agency',
+  'emirati-state-and-state-linked-media/x7662933d':
+      'emirati-state-and-state-linked-media/emirates-news-agency',
+  'emirati-state-and-state-linked-media/xcd06dff2':
+      'emirati-state-and-state-linked-media/sky-news-arabia',
   'established-king/x11eb463c': 'established-king/established-king',
-  'falun-gong-linked-hosts-and-shows/beijingteahouse': 'falun-gong-linked-hosts-and-shows/lao-beijing-cha-guan',
-  'falun-gong-linked-hosts-and-shows/chinauncensored': 'falun-gong-linked-hosts-and-shows/china-uncensored',
-  'falun-gong-linked-hosts-and-shows/chinaunscripted': 'falun-gong-linked-hosts-and-shows/china-unscripted',
-  'falun-gong-linked-hosts-and-shows/fangfeitime': 'falun-gong-linked-hosts-and-shows/fang-fei-shi-jian',
-  'falun-gong-linked-hosts-and-shows/jiangfengreading': 'falun-gong-linked-hosts-and-shows/jiang-feng-du-shu-hui',
-  'falun-gong-linked-hosts-and-shows/jingyuantalk': 'falun-gong-linked-hosts-and-shows/jing-yuan-kai-jiang',
-  'falun-gong-linked-hosts-and-shows/joshua-philipp': 'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
+  'falun-gong-linked-hosts-and-shows/beijingteahouse':
+      'falun-gong-linked-hosts-and-shows/lao-beijing-cha-guan',
+  'falun-gong-linked-hosts-and-shows/chinauncensored':
+      'falun-gong-linked-hosts-and-shows/china-uncensored',
+  'falun-gong-linked-hosts-and-shows/chinaunscripted':
+      'falun-gong-linked-hosts-and-shows/china-unscripted',
+  'falun-gong-linked-hosts-and-shows/fangfeitime':
+      'falun-gong-linked-hosts-and-shows/fang-fei-shi-jian',
+  'falun-gong-linked-hosts-and-shows/jiangfengreading':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-du-shu-hui',
+  'falun-gong-linked-hosts-and-shows/jingyuantalk':
+      'falun-gong-linked-hosts-and-shows/jing-yuan-kai-jiang',
+  'falun-gong-linked-hosts-and-shows/joshua-philipp':
+      'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
   'falun-gong-linked-hosts-and-shows/life': 'falun-gong-linked-hosts-and-shows/dayu-life',
-  'falun-gong-linked-hosts-and-shows/roman-balmakov': 'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
-  'falun-gong-linked-hosts-and-shows/tianliang-zhang': 'falun-gong-linked-hosts-and-shows/zhang-tianliang',
-  'falun-gong-linked-hosts-and-shows/tianliangtimes': 'falun-gong-linked-hosts-and-shows/tianliang-times',
-  'falun-gong-linked-hosts-and-shows/tianliangzhang': 'falun-gong-linked-hosts-and-shows/zhang-tianliang',
-  'falun-gong-linked-hosts-and-shows/x030ed599': 'falun-gong-linked-hosts-and-shows/xin-xiang-ya-ju',
-  'falun-gong-linked-hosts-and-shows/x0ceca537': 'falun-gong-linked-hosts-and-shows/tao-ge-kan-dian-ying',
+  'falun-gong-linked-hosts-and-shows/roman-balmakov':
+      'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
+  'falun-gong-linked-hosts-and-shows/tianliang-zhang':
+      'falun-gong-linked-hosts-and-shows/zhang-tianliang',
+  'falun-gong-linked-hosts-and-shows/tianliangtimes':
+      'falun-gong-linked-hosts-and-shows/tianliang-times',
+  'falun-gong-linked-hosts-and-shows/tianliangzhang':
+      'falun-gong-linked-hosts-and-shows/zhang-tianliang',
+  'falun-gong-linked-hosts-and-shows/x030ed599':
+      'falun-gong-linked-hosts-and-shows/xin-xiang-ya-ju',
+  'falun-gong-linked-hosts-and-shows/x0ceca537':
+      'falun-gong-linked-hosts-and-shows/tao-ge-kan-dian-ying',
   'falun-gong-linked-hosts-and-shows/x132fdef5': 'falun-gong-linked-hosts-and-shows/ma-ke-shi-kong',
   'falun-gong-linked-hosts-and-shows/x1729481b': 'falun-gong-linked-hosts-and-shows/li-muyang',
-  'falun-gong-linked-hosts-and-shows/x18a63ac4': 'falun-gong-linked-hosts-and-shows/tian-liang-lun-zheng',
+  'falun-gong-linked-hosts-and-shows/x18a63ac4':
+      'falun-gong-linked-hosts-and-shows/tian-liang-lun-zheng',
   'falun-gong-linked-hosts-and-shows/x1a7ce87c': 'falun-gong-linked-hosts-and-shows/jiang-guangyu',
-  'falun-gong-linked-hosts-and-shows/x200d747d': 'falun-gong-linked-hosts-and-shows/fang-fei-shi-jian',
+  'falun-gong-linked-hosts-and-shows/x200d747d':
+      'falun-gong-linked-hosts-and-shows/fang-fei-shi-jian',
   'falun-gong-linked-hosts-and-shows/x20f9aafa': 'falun-gong-linked-hosts-and-shows/zhong-yuan',
-  'falun-gong-linked-hosts-and-shows/x2ca196a5': 'falun-gong-linked-hosts-and-shows/da-lu-xin-wen-jie-du',
-  'falun-gong-linked-hosts-and-shows/x31ea7717': 'falun-gong-linked-hosts-and-shows/wen-shi-da-guan-yuan',
-  'falun-gong-linked-hosts-and-shows/x37024dc9': 'falun-gong-linked-hosts-and-shows/wen-zhao-si-xu-fei-yang',
-  'falun-gong-linked-hosts-and-shows/x382d044c': 'falun-gong-linked-hosts-and-shows/yuan-jian-kuai-ping',
+  'falun-gong-linked-hosts-and-shows/x2ca196a5':
+      'falun-gong-linked-hosts-and-shows/da-lu-xin-wen-jie-du',
+  'falun-gong-linked-hosts-and-shows/x31ea7717':
+      'falun-gong-linked-hosts-and-shows/wen-shi-da-guan-yuan',
+  'falun-gong-linked-hosts-and-shows/x37024dc9':
+      'falun-gong-linked-hosts-and-shows/wen-zhao-si-xu-fei-yang',
+  'falun-gong-linked-hosts-and-shows/x382d044c':
+      'falun-gong-linked-hosts-and-shows/yuan-jian-kuai-ping',
   'falun-gong-linked-hosts-and-shows/x3bc762c9': 'falun-gong-linked-hosts-and-shows/cheng-xiaorong',
-  'falun-gong-linked-hosts-and-shows/x3ccd37ec': 'falun-gong-linked-hosts-and-shows/shi-shi-jin-sao-miao',
-  'falun-gong-linked-hosts-and-shows/x3d3be781': 'falun-gong-linked-hosts-and-shows/mu-yang-kan-dian',
-  'falun-gong-linked-hosts-and-shows/x4ac16aee': 'falun-gong-linked-hosts-and-shows/wei-jie-zhi-mi-fu-yao',
-  'falun-gong-linked-hosts-and-shows/x52da7023': 'falun-gong-linked-hosts-and-shows/tian-liang-shi-fen',
-  'falun-gong-linked-hosts-and-shows/x56ef0e0b': 'falun-gong-linked-hosts-and-shows/xin-wen-pai-an-jing-qi',
-  'falun-gong-linked-hosts-and-shows/x660314fc': 'falun-gong-linked-hosts-and-shows/tan-suo-shi-fen',
+  'falun-gong-linked-hosts-and-shows/x3ccd37ec':
+      'falun-gong-linked-hosts-and-shows/shi-shi-jin-sao-miao',
+  'falun-gong-linked-hosts-and-shows/x3d3be781':
+      'falun-gong-linked-hosts-and-shows/mu-yang-kan-dian',
+  'falun-gong-linked-hosts-and-shows/x4ac16aee':
+      'falun-gong-linked-hosts-and-shows/wei-jie-zhi-mi-fu-yao',
+  'falun-gong-linked-hosts-and-shows/x52da7023':
+      'falun-gong-linked-hosts-and-shows/tian-liang-shi-fen',
+  'falun-gong-linked-hosts-and-shows/x56ef0e0b':
+      'falun-gong-linked-hosts-and-shows/xin-wen-pai-an-jing-qi',
+  'falun-gong-linked-hosts-and-shows/x660314fc':
+      'falun-gong-linked-hosts-and-shows/tan-suo-shi-fen',
   'falun-gong-linked-hosts-and-shows/x66fdf863': 'falun-gong-linked-hosts-and-shows/she-health',
-  'falun-gong-linked-hosts-and-shows/x69d42790': 'falun-gong-linked-hosts-and-shows/shi-jie-de-shi-zi-lu-kou',
-  'falun-gong-linked-hosts-and-shows/x6d7e2c29': 'falun-gong-linked-hosts-and-shows/xiao-ming-kan-shi-jie',
+  'falun-gong-linked-hosts-and-shows/x69d42790':
+      'falun-gong-linked-hosts-and-shows/shi-jie-de-shi-zi-lu-kou',
+  'falun-gong-linked-hosts-and-shows/x6d7e2c29':
+      'falun-gong-linked-hosts-and-shows/xiao-ming-kan-shi-jie',
   'falun-gong-linked-hosts-and-shows/x6fea6006': 'falun-gong-linked-hosts-and-shows/xie-tian',
-  'falun-gong-linked-hosts-and-shows/x70242dc0': 'falun-gong-linked-hosts-and-shows/xiao-tan-feng-yun',
-  'falun-gong-linked-hosts-and-shows/x756966f8': 'falun-gong-linked-hosts-and-shows/jing-yuan-kai-jiang',
-  'falun-gong-linked-hosts-and-shows/x75fd6d71': 'falun-gong-linked-hosts-and-shows/jiang-feng-ao-miao',
-  'falun-gong-linked-hosts-and-shows/x7d8baab9': 'falun-gong-linked-hosts-and-shows/tian-ting-xiao-zi',
-  'falun-gong-linked-hosts-and-shows/x82cf1062': 'falun-gong-linked-hosts-and-shows/shi-tao-ju-jiao',
-  'falun-gong-linked-hosts-and-shows/x84b8dda9': 'falun-gong-linked-hosts-and-shows/xin-wen-kan-dian',
-  'falun-gong-linked-hosts-and-shows/x87c92f7b': 'falun-gong-linked-hosts-and-shows/gu-yun-liu-fang',
-  'falun-gong-linked-hosts-and-shows/x91502203': 'falun-gong-linked-hosts-and-shows/tan-gu-lun-jin-hua-zhong-yi',
-  'falun-gong-linked-hosts-and-shows/x954d16c6': 'falun-gong-linked-hosts-and-shows/heng-he-guan-dian',
-  'falun-gong-linked-hosts-and-shows/x9ccec4a6': 'falun-gong-linked-hosts-and-shows/jie-sen-shi-jiao',
+  'falun-gong-linked-hosts-and-shows/x70242dc0':
+      'falun-gong-linked-hosts-and-shows/xiao-tan-feng-yun',
+  'falun-gong-linked-hosts-and-shows/x756966f8':
+      'falun-gong-linked-hosts-and-shows/jing-yuan-kai-jiang',
+  'falun-gong-linked-hosts-and-shows/x75fd6d71':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-ao-miao',
+  'falun-gong-linked-hosts-and-shows/x7d8baab9':
+      'falun-gong-linked-hosts-and-shows/tian-ting-xiao-zi',
+  'falun-gong-linked-hosts-and-shows/x82cf1062':
+      'falun-gong-linked-hosts-and-shows/shi-tao-ju-jiao',
+  'falun-gong-linked-hosts-and-shows/x84b8dda9':
+      'falun-gong-linked-hosts-and-shows/xin-wen-kan-dian',
+  'falun-gong-linked-hosts-and-shows/x87c92f7b':
+      'falun-gong-linked-hosts-and-shows/gu-yun-liu-fang',
+  'falun-gong-linked-hosts-and-shows/x91502203':
+      'falun-gong-linked-hosts-and-shows/tan-gu-lun-jin-hua-zhong-yi',
+  'falun-gong-linked-hosts-and-shows/x954d16c6':
+      'falun-gong-linked-hosts-and-shows/heng-he-guan-dian',
+  'falun-gong-linked-hosts-and-shows/x9ccec4a6':
+      'falun-gong-linked-hosts-and-shows/jie-sen-shi-jiao',
   'falun-gong-linked-hosts-and-shows/xa6192423': 'falun-gong-linked-hosts-and-shows/xue-er-zhu-bo',
-  'falun-gong-linked-hosts-and-shows/xaccf884e': 'falun-gong-linked-hosts-and-shows/shi-tao-ping-shu',
+  'falun-gong-linked-hosts-and-shows/xaccf884e':
+      'falun-gong-linked-hosts-and-shows/shi-tao-ping-shu',
   'falun-gong-linked-hosts-and-shows/xad8d469b': 'falun-gong-linked-hosts-and-shows/xiao-qian-kun',
-  'falun-gong-linked-hosts-and-shows/xb473d6ca': 'falun-gong-linked-hosts-and-shows/xin-wen-zui-chao-dian',
+  'falun-gong-linked-hosts-and-shows/xb473d6ca':
+      'falun-gong-linked-hosts-and-shows/xin-wen-zui-chao-dian',
   'falun-gong-linked-hosts-and-shows/xb5d1dcbe': 'falun-gong-linked-hosts-and-shows/chen-pokong',
   'falun-gong-linked-hosts-and-shows/xb9a22900': 'falun-gong-linked-hosts-and-shows/xia-xiaoqiang',
-  'falun-gong-linked-hosts-and-shows/xbd00a965': 'falun-gong-linked-hosts-and-shows/shi-shan-shi-dian',
-  'falun-gong-linked-hosts-and-shows/xbdbd2088': 'falun-gong-linked-hosts-and-shows/lao-beijing-cha-guan',
-  'falun-gong-linked-hosts-and-shows/xc34224b0': 'falun-gong-linked-hosts-and-shows/da-yu-pai-an-jing-qi',
-  'falun-gong-linked-hosts-and-shows/xc828cbed': 'falun-gong-linked-hosts-and-shows/lin-lan-dui-hua',
-  'falun-gong-linked-hosts-and-shows/xcc8dee09': 'falun-gong-linked-hosts-and-shows/jiang-feng-shi-jie',
+  'falun-gong-linked-hosts-and-shows/xbd00a965':
+      'falun-gong-linked-hosts-and-shows/shi-shan-shi-dian',
+  'falun-gong-linked-hosts-and-shows/xbdbd2088':
+      'falun-gong-linked-hosts-and-shows/lao-beijing-cha-guan',
+  'falun-gong-linked-hosts-and-shows/xc34224b0':
+      'falun-gong-linked-hosts-and-shows/da-yu-pai-an-jing-qi',
+  'falun-gong-linked-hosts-and-shows/xc828cbed':
+      'falun-gong-linked-hosts-and-shows/lin-lan-dui-hua',
+  'falun-gong-linked-hosts-and-shows/xcc8dee09':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-shi-jie',
   'falun-gong-linked-hosts-and-shows/xcd25412c': 'falun-gong-linked-hosts-and-shows/li-tianxiao',
-  'falun-gong-linked-hosts-and-shows/xcd27401b': 'falun-gong-linked-hosts-and-shows/hu-naiwen-kai-jiang',
+  'falun-gong-linked-hosts-and-shows/xcd27401b':
+      'falun-gong-linked-hosts-and-shows/hu-naiwen-kai-jiang',
   'falun-gong-linked-hosts-and-shows/xd3178612': 'falun-gong-linked-hosts-and-shows/zhou-ziding',
-  'falun-gong-linked-hosts-and-shows/xd45b8194': 'falun-gong-linked-hosts-and-shows/wen-zhao-tan-gu-lun-jin',
-  'falun-gong-linked-hosts-and-shows/xd61bdbea': 'falun-gong-linked-hosts-and-shows/fang-wei-shi-jian',
-  'falun-gong-linked-hosts-and-shows/xd620ff66': 'falun-gong-linked-hosts-and-shows/jiang-feng-shi-jie',
-  'falun-gong-linked-hosts-and-shows/xd7831fe3': 'falun-gong-linked-hosts-and-shows/zhang-tianliang',
-  'falun-gong-linked-hosts-and-shows/xd9323c96': 'falun-gong-linked-hosts-and-shows/li-jun-gong-zuo-shi',
-  'falun-gong-linked-hosts-and-shows/xd97542d0': 'falun-gong-linked-hosts-and-shows/jiang-feng-du-shu-hui',
-  'falun-gong-linked-hosts-and-shows/xdb3ad2dc': 'falun-gong-linked-hosts-and-shows/jiang-feng-shi-ke',
+  'falun-gong-linked-hosts-and-shows/xd45b8194':
+      'falun-gong-linked-hosts-and-shows/wen-zhao-tan-gu-lun-jin',
+  'falun-gong-linked-hosts-and-shows/xd61bdbea':
+      'falun-gong-linked-hosts-and-shows/fang-wei-shi-jian',
+  'falun-gong-linked-hosts-and-shows/xd620ff66':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-shi-jie',
+  'falun-gong-linked-hosts-and-shows/xd7831fe3':
+      'falun-gong-linked-hosts-and-shows/zhang-tianliang',
+  'falun-gong-linked-hosts-and-shows/xd9323c96':
+      'falun-gong-linked-hosts-and-shows/li-jun-gong-zuo-shi',
+  'falun-gong-linked-hosts-and-shows/xd97542d0':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-du-shu-hui',
+  'falun-gong-linked-hosts-and-shows/xdb3ad2dc':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-shi-ke',
   'falun-gong-linked-hosts-and-shows/xdd7a9426': 'falun-gong-linked-hosts-and-shows/tang-jingyuan',
-  'falun-gong-linked-hosts-and-shows/xe7b6cda6': 'falun-gong-linked-hosts-and-shows/jiang-feng-ao-miao',
-  'falun-gong-linked-hosts-and-shows/xeed56bfb': 'falun-gong-linked-hosts-and-shows/wei-jie-zhi-mi-fu-yao',
-  'falun-gong-linked-hosts-and-shows/xf83dd8a7': 'falun-gong-linked-hosts-and-shows/wei-yu-kan-shi-jian',
-  'falun-gong-linked-hosts-and-shows/xfd9f3f31': 'falun-gong-linked-hosts-and-shows/jing-ying-lun-tan',
-  'falun-gong-linked-hosts-and-shows/xffdbdcca': 'falun-gong-linked-hosts-and-shows/qin-peng-zheng-jing-guan-cha',
+  'falun-gong-linked-hosts-and-shows/xe7b6cda6':
+      'falun-gong-linked-hosts-and-shows/jiang-feng-ao-miao',
+  'falun-gong-linked-hosts-and-shows/xeed56bfb':
+      'falun-gong-linked-hosts-and-shows/wei-jie-zhi-mi-fu-yao',
+  'falun-gong-linked-hosts-and-shows/xf83dd8a7':
+      'falun-gong-linked-hosts-and-shows/wei-yu-kan-shi-jian',
+  'falun-gong-linked-hosts-and-shows/xfd9f3f31':
+      'falun-gong-linked-hosts-and-shows/jing-ying-lun-tan',
+  'falun-gong-linked-hosts-and-shows/xffdbdcca':
+      'falun-gong-linked-hosts-and-shows/qin-peng-zheng-jing-guan-cha',
   'falun-gong-linked-unproven/x09fdd9e5': 'falun-gong-linked-unproven/qingtou-shijie',
   'falun-gong-linked-unproven/x196ccf0a': 'falun-gong-linked-unproven/you-mo-gao-cuo',
   'falun-gong-linked-unproven/x2bfcea4f': 'falun-gong-linked-unproven/caijing-xiang-qian-kan',
@@ -381,9 +498,12 @@ const blockEntryKeys = {
   'jehovahs-witnesses/x2e713d59': 'jehovahs-witnesses/jehovahs-witnesses',
   'jehovahs-witnesses/x75fe3e75': 'jehovahs-witnesses/watchtower',
   'jehovahs-witnesses/x7aec5de7': 'jehovahs-witnesses/watchtower',
-  'kailasa-and-nithyananda/chinese-nithyananda-gurukul': 'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
-  'kailasa-and-nithyananda/egurukulchinesetw': 'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
-  'kailasa-and-nithyananda/enrichingspirituality4444': 'kailasa-and-nithyananda/enriching-spirituality',
+  'kailasa-and-nithyananda/chinese-nithyananda-gurukul':
+      'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
+  'kailasa-and-nithyananda/egurukulchinesetw':
+      'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
+  'kailasa-and-nithyananda/enrichingspirituality4444':
+      'kailasa-and-nithyananda/enriching-spirituality',
   'kailasa-and-nithyananda/hinduismnow': 'kailasa-and-nithyananda/hinduism-now',
   'kailasa-and-nithyananda/kailaasa-chinese': 'kailasa-and-nithyananda/nithyananda-chinese',
   'kailasa-and-nithyananda/kailasacountry': 'kailasa-and-nithyananda/kailasa',
@@ -392,7 +512,8 @@ const blockEntryKeys = {
   'kailasa-and-nithyananda/kailasanews': 'kailasa-and-nithyananda/kailasa-news',
   'kailasa-and-nithyananda/kailasas-nithyananda-yoga': 'kailasa-and-nithyananda/nithyananda-yoga',
   'kailasa-and-nithyananda/kailasas-sph-nithyananda': 'kailasa-and-nithyananda/nithyananda',
-  'kailasa-and-nithyananda/kailasas-sph-nithyananda-chinese': 'kailasa-and-nithyananda/nithyananda-chinese',
+  'kailasa-and-nithyananda/kailasas-sph-nithyananda-chinese':
+      'kailasa-and-nithyananda/nithyananda-chinese',
   'kailasa-and-nithyananda/nithyanandachinese': 'kailasa-and-nithyananda/nithyananda-chinese',
   'kailasa-and-nithyananda/nithyanandayoga': 'kailasa-and-nithyananda/nithyananda-yoga',
   'kailasa-and-nithyananda/nithyanandayogachinese': 'kailasa-and-nithyananda/nithyananda-yoga',
@@ -409,51 +530,96 @@ const blockEntryKeys = {
   'kailasa-and-nithyananda/x890b5e99': 'kailasa-and-nithyananda/kailasa-los-angeles-chinese',
   'kailasa-and-nithyananda/xac198c95': 'kailasa-and-nithyananda/nithyananda-yoga',
   'kailasa-and-nithyananda/xdd0f6e08': 'kailasa-and-nithyananda/kailasa',
-  'leader-worship-and-miracle-promotion-channels/asezwao': 'leader-worship-and-miracle-promotion-channels/asez-wao',
-  'leader-worship-and-miracle-promotion-channels/australianraelianmovement8033': 'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
-  'leader-worship-and-miracle-promotion-channels/benny-hinn-ministries': 'leader-worship-and-miracle-promotion-channels/benny-hinn',
-  'leader-worship-and-miracle-promotion-channels/bhaktimarga1008': 'leader-worship-and-miracle-promotion-channels/bhakti-marga',
-  'leader-worship-and-miracle-promotion-channels/churchofalmightygodmalaysia': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
-  'leader-worship-and-miracle-promotion-channels/copeland-ministries': 'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
-  'leader-worship-and-miracle-promotion-channels/divineprinciple7796': 'leader-worship-and-miracle-promotion-channels/divine-principle',
-  'leader-worship-and-miracle-promotion-channels/familyfederationeume': 'leader-worship-and-miracle-promotion-channels/family-federation-eume',
-  'leader-worship-and-miracle-promotion-channels/familyfedmedia': 'leader-worship-and-miracle-promotion-channels/familyfed-media',
-  'leader-worship-and-miracle-promotion-channels/ffwp-taichung': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
-  'leader-worship-and-miracle-promotion-channels/ffwputaiwan': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
-  'leader-worship-and-miracle-promotion-channels/god-the-mother': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/happy-science-europe': 'leader-worship-and-miracle-promotion-channels/happy-science',
-  'leader-worship-and-miracle-promotion-channels/happy-science-india': 'leader-worship-and-miracle-promotion-channels/happy-science',
-  'leader-worship-and-miracle-promotion-channels/happy-science-official': 'leader-worship-and-miracle-promotion-channels/happy-science',
-  'leader-worship-and-miracle-promotion-channels/jerusalemmother': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/jerusalemmother-en': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/kenneth-copeland-africa': 'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
-  'leader-worship-and-miracle-promotion-channels/newsong-church-of-god': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/newsong-guide': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/prophet-shepherd-bushiri': 'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
-  'leader-worship-and-miracle-promotion-channels/rael-official': 'leader-worship-and-miracle-promotion-channels/rael',
-  'leader-worship-and-miracle-promotion-channels/rael-the-last-prophet': 'leader-worship-and-miracle-promotion-channels/rael',
-  'leader-worship-and-miracle-promotion-channels/raelianmovement-northamerica': 'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
-  'leader-worship-and-miracle-promotion-channels/sahaja-workshop': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
-  'leader-worship-and-miracle-promotion-channels/saint-msg': 'leader-worship-and-miracle-promotion-channels/dera-sacha-sauda',
-  'leader-worship-and-miracle-promotion-channels/shepherd-bushiri-sermon': 'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
-  'leader-worship-and-miracle-promotion-channels/shincheonji-church-of-jesus': 'leader-worship-and-miracle-promotion-channels/shincheonji',
-  'leader-worship-and-miracle-promotion-channels/shincheonjichurch-zh': 'leader-worship-and-miracle-promotion-channels/shincheonji',
-  'leader-worship-and-miracle-promotion-channels/shri-mataji-excerpts': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
-  'leader-worship-and-miracle-promotion-channels/shri-mataji-teachings': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
-  'leader-worship-and-miracle-promotion-channels/the-church-of-almighty-god': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
-  'leader-worship-and-miracle-promotion-channels/thechurchofalmightygod': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
-  'leader-worship-and-miracle-promotion-channels/this-is-your-day': 'leader-worship-and-miracle-promotion-channels/benny-hinn',
-  'leader-worship-and-miracle-promotion-channels/twraelianmovement': 'leader-worship-and-miracle-promotion-channels/raelian-movement-taiwan',
-  'leader-worship-and-miracle-promotion-channels/uctaiwan': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
-  'leader-worship-and-miracle-promotion-channels/uebert-angel-highlight': 'leader-worship-and-miracle-promotion-channels/uebert-angel',
-  'leader-worship-and-miracle-promotion-channels/wmscog-guide': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-hk': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-mo': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-newsong': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-sa': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-uk': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-us': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  'leader-worship-and-miracle-promotion-channels/wmscog-zh': 'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/asezwao':
+      'leader-worship-and-miracle-promotion-channels/asez-wao',
+  'leader-worship-and-miracle-promotion-channels/australianraelianmovement8033':
+      'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
+  'leader-worship-and-miracle-promotion-channels/benny-hinn-ministries':
+      'leader-worship-and-miracle-promotion-channels/benny-hinn',
+  'leader-worship-and-miracle-promotion-channels/bhaktimarga1008':
+      'leader-worship-and-miracle-promotion-channels/bhakti-marga',
+  'leader-worship-and-miracle-promotion-channels/churchofalmightygodmalaysia':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  'leader-worship-and-miracle-promotion-channels/copeland-ministries':
+      'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
+  'leader-worship-and-miracle-promotion-channels/divineprinciple7796':
+      'leader-worship-and-miracle-promotion-channels/divine-principle',
+  'leader-worship-and-miracle-promotion-channels/familyfederationeume':
+      'leader-worship-and-miracle-promotion-channels/family-federation-eume',
+  'leader-worship-and-miracle-promotion-channels/familyfedmedia':
+      'leader-worship-and-miracle-promotion-channels/familyfed-media',
+  'leader-worship-and-miracle-promotion-channels/ffwp-taichung':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  'leader-worship-and-miracle-promotion-channels/ffwputaiwan':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  'leader-worship-and-miracle-promotion-channels/god-the-mother':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/happy-science-europe':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
+  'leader-worship-and-miracle-promotion-channels/happy-science-india':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
+  'leader-worship-and-miracle-promotion-channels/happy-science-official':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
+  'leader-worship-and-miracle-promotion-channels/jerusalemmother':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/jerusalemmother-en':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/kenneth-copeland-africa':
+      'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
+  'leader-worship-and-miracle-promotion-channels/newsong-church-of-god':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/newsong-guide':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/prophet-shepherd-bushiri':
+      'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
+  'leader-worship-and-miracle-promotion-channels/rael-official':
+      'leader-worship-and-miracle-promotion-channels/rael',
+  'leader-worship-and-miracle-promotion-channels/rael-the-last-prophet':
+      'leader-worship-and-miracle-promotion-channels/rael',
+  'leader-worship-and-miracle-promotion-channels/raelianmovement-northamerica':
+      'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
+  'leader-worship-and-miracle-promotion-channels/sahaja-workshop':
+      'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
+  'leader-worship-and-miracle-promotion-channels/saint-msg':
+      'leader-worship-and-miracle-promotion-channels/dera-sacha-sauda',
+  'leader-worship-and-miracle-promotion-channels/shepherd-bushiri-sermon':
+      'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
+  'leader-worship-and-miracle-promotion-channels/shincheonji-church-of-jesus':
+      'leader-worship-and-miracle-promotion-channels/shincheonji',
+  'leader-worship-and-miracle-promotion-channels/shincheonjichurch-zh':
+      'leader-worship-and-miracle-promotion-channels/shincheonji',
+  'leader-worship-and-miracle-promotion-channels/shri-mataji-excerpts':
+      'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
+  'leader-worship-and-miracle-promotion-channels/shri-mataji-teachings':
+      'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
+  'leader-worship-and-miracle-promotion-channels/the-church-of-almighty-god':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  'leader-worship-and-miracle-promotion-channels/thechurchofalmightygod':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  'leader-worship-and-miracle-promotion-channels/this-is-your-day':
+      'leader-worship-and-miracle-promotion-channels/benny-hinn',
+  'leader-worship-and-miracle-promotion-channels/twraelianmovement':
+      'leader-worship-and-miracle-promotion-channels/raelian-movement-taiwan',
+  'leader-worship-and-miracle-promotion-channels/uctaiwan':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  'leader-worship-and-miracle-promotion-channels/uebert-angel-highlight':
+      'leader-worship-and-miracle-promotion-channels/uebert-angel',
+  'leader-worship-and-miracle-promotion-channels/wmscog-guide':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-hk':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-mo':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-newsong':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-sa':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-uk':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-us':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  'leader-worship-and-miracle-promotion-channels/wmscog-zh':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
   'lingling-sect/xbb36619e': 'lingling-sect/lingling-sect',
   'lingling-sect/xe5b8be7c': 'lingling-sect/lingling-sect',
   'lord-god-sect/xa2a8cff8': 'lord-god-sect/lord-god-sect',
@@ -549,7 +715,8 @@ const blockEntryKeys = {
   'russian-state-media/xdf8ceeb4': 'russian-state-media/channel-one-russia',
   'russian-state-media/xea247870': 'russian-state-media/tv-tsentr',
   'russian-state-media/xfa875be6': 'russian-state-media/tass',
-  'saudi-state-and-state-owned-media/sba': 'saudi-state-and-state-owned-media/saudi-broadcasting-authority',
+  'saudi-state-and-state-owned-media/sba':
+      'saudi-state-and-state-owned-media/saudi-broadcasting-authority',
   'saudi-state-and-state-owned-media/spa': 'saudi-state-and-state-owned-media/saudi-press-agency',
   'saudi-state-and-state-owned-media/x1d32e3f7': 'saudi-state-and-state-owned-media/al-arabiya',
   'saudi-state-and-state-owned-media/x9b1b2c5d': 'saudi-state-and-state-owned-media/al-hadath',
@@ -593,39 +760,64 @@ const blockEntryKeys = {
   'unification-church/xb56f227b': 'unification-church/family-federation-for-world-peace',
   'unification-church/xe1f90805': 'unification-church/family-federation-for-world-peace',
   'unification-church/xf7529aa1': 'unification-church/sun-myung-moon',
-  'us-government-international-broadcasting/mart-noticias': 'us-government-international-broadcasting/marti',
-  'us-government-international-broadcasting/mbn': 'us-government-international-broadcasting/middle-east-broadcasting-networks',
-  'us-government-international-broadcasting/ocb': 'us-government-international-broadcasting/office-of-cuba-broadcasting',
-  'us-government-international-broadcasting/radio-free-europe': 'us-government-international-broadcasting/rferl',
-  'us-government-international-broadcasting/radio-liberty': 'us-government-international-broadcasting/rferl',
-  'us-government-international-broadcasting/radio-mart': 'us-government-international-broadcasting/marti',
-  'us-government-international-broadcasting/radio-svoboda': 'us-government-international-broadcasting/rferl',
-  'us-government-international-broadcasting/rfa': 'us-government-international-broadcasting/radio-free-asia',
-  'us-government-international-broadcasting/rfe-rl': 'us-government-international-broadcasting/rferl',
-  'us-government-international-broadcasting/tv-mart': 'us-government-international-broadcasting/marti',
-  'us-government-international-broadcasting/voa': 'us-government-international-broadcasting/voice-of-america',
-  'us-government-international-broadcasting/x3a0fd113': 'us-government-international-broadcasting/voice-of-america',
-  'us-government-international-broadcasting/x69b048e6': 'us-government-international-broadcasting/radio-free-asia',
-  'us-government-international-broadcasting/x6da55d89': 'us-government-international-broadcasting/voice-of-america',
-  'us-government-international-broadcasting/x8cf66e7c': 'us-government-international-broadcasting/current-time',
-  'us-government-international-broadcasting/x9efa0840': 'us-government-international-broadcasting/rferl',
-  'us-government-international-broadcasting/xc36afd1c': 'us-government-international-broadcasting/radio-free-asia',
-  'us-government-international-broadcasting/xec41e322': 'us-government-international-broadcasting/alhurra',
+  'us-government-international-broadcasting/mart-noticias':
+      'us-government-international-broadcasting/marti',
+  'us-government-international-broadcasting/mbn':
+      'us-government-international-broadcasting/middle-east-broadcasting-networks',
+  'us-government-international-broadcasting/ocb':
+      'us-government-international-broadcasting/office-of-cuba-broadcasting',
+  'us-government-international-broadcasting/radio-free-europe':
+      'us-government-international-broadcasting/rferl',
+  'us-government-international-broadcasting/radio-liberty':
+      'us-government-international-broadcasting/rferl',
+  'us-government-international-broadcasting/radio-mart':
+      'us-government-international-broadcasting/marti',
+  'us-government-international-broadcasting/radio-svoboda':
+      'us-government-international-broadcasting/rferl',
+  'us-government-international-broadcasting/rfa':
+      'us-government-international-broadcasting/radio-free-asia',
+  'us-government-international-broadcasting/rfe-rl':
+      'us-government-international-broadcasting/rferl',
+  'us-government-international-broadcasting/tv-mart':
+      'us-government-international-broadcasting/marti',
+  'us-government-international-broadcasting/voa':
+      'us-government-international-broadcasting/voice-of-america',
+  'us-government-international-broadcasting/x3a0fd113':
+      'us-government-international-broadcasting/voice-of-america',
+  'us-government-international-broadcasting/x69b048e6':
+      'us-government-international-broadcasting/radio-free-asia',
+  'us-government-international-broadcasting/x6da55d89':
+      'us-government-international-broadcasting/voice-of-america',
+  'us-government-international-broadcasting/x8cf66e7c':
+      'us-government-international-broadcasting/current-time',
+  'us-government-international-broadcasting/x9efa0840':
+      'us-government-international-broadcasting/rferl',
+  'us-government-international-broadcasting/xc36afd1c':
+      'us-government-international-broadcasting/radio-free-asia',
+  'us-government-international-broadcasting/xec41e322':
+      'us-government-international-broadcasting/alhurra',
   'venezuelan-state-media/agencia-venezolana-de-noticias': 'venezuelan-state-media/avn',
   'venezuelan-state-media/radio-nacional-de-venezuela': 'venezuelan-state-media/rnv',
   'venezuelan-state-media/venezolana-de-televisi-n': 'venezuelan-state-media/vtv',
   'venezuelan-state-media/vila-tv': 'venezuelan-state-media/avila-tv',
   'vietnamese-state-media/vov': 'vietnamese-state-media/voice-of-vietnam',
   'vietnamese-state-media/vtv': 'vietnamese-state-media/vietnam-television',
-  'world-mission-society-church-of-god/ahnsahnghong': 'world-mission-society-church-of-god/ahn-sang-hong',
-  'world-mission-society-church-of-god/god-the-mother': 'world-mission-society-church-of-god/mother-god',
-  'world-mission-society-church-of-god/x02487de9': 'world-mission-society-church-of-god/world-mission-society',
+  'world-mission-society-church-of-god/ahnsahnghong':
+      'world-mission-society-church-of-god/ahn-sang-hong',
+  'world-mission-society-church-of-god/god-the-mother':
+      'world-mission-society-church-of-god/mother-god',
+  'world-mission-society-church-of-god/x02487de9':
+      'world-mission-society-church-of-god/world-mission-society',
   'world-mission-society-church-of-god/x161744fe': 'world-mission-society-church-of-god/mother-god',
-  'world-mission-society-church-of-god/x59727461': 'world-mission-society-church-of-god/world-mission-society',
-  'world-mission-society-church-of-god/x893fd83e': 'world-mission-society-church-of-god/zahng-gil-jah',
+  'world-mission-society-church-of-god/x59727461':
+      'world-mission-society-church-of-god/world-mission-society',
+  'world-mission-society-church-of-god/x893fd83e':
+      'world-mission-society-church-of-god/zahng-gil-jah',
   'world-mission-society-church-of-god/xd0a54996': 'world-mission-society-church-of-god/mother-god',
-  'world-mission-society-church-of-god/xd9e8f4b9': 'world-mission-society-church-of-god/zahng-gil-jah',
-  'world-mission-society-church-of-god/xe819684f': 'world-mission-society-church-of-god/ahn-sang-hong',
+  'world-mission-society-church-of-god/xd9e8f4b9':
+      'world-mission-society-church-of-god/zahng-gil-jah',
+  'world-mission-society-church-of-god/xe819684f':
+      'world-mission-society-church-of-god/ahn-sang-hong',
   'yuandun-famen/xbb667fc6': 'yuandun-famen/yuandun-famen',
   'yuandun-famen/xec7a381f': 'yuandun-famen/yuandun-famen',
   '万民中央教会/channel/Jaerock Lee': 'manmin-central-church/jaerock-lee',
@@ -784,15 +976,21 @@ const blockEntryKeys = {
   '全能神/channel/实际神': 'church-of-almighty-god/church-of-almighty-god',
   '全能神/channel/實際神': 'church-of-almighty-god/church-of-almighty-god',
   '全能神/channel/東方閃電': 'church-of-almighty-god/church-of-almighty-god',
-  '凯拉萨与尼希亚南达/channel/Autobiography of the Avatar from KAILASA': 'kailasa-and-nithyananda/autobiography-of-the-avatar-from-kailasa',
-  '凯拉萨与尼希亚南达/channel/Chinese Nithyananda Gurukul': 'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
+  '凯拉萨与尼希亚南达/channel/Autobiography of the Avatar from KAILASA':
+      'kailasa-and-nithyananda/autobiography-of-the-avatar-from-kailasa',
+  '凯拉萨与尼希亚南达/channel/Chinese Nithyananda Gurukul':
+      'kailasa-and-nithyananda/nithyananda-gurukul-chinese',
   '凯拉萨与尼希亚南达/channel/Enriching Spirituality': 'kailasa-and-nithyananda/enriching-spirituality',
   '凯拉萨与尼希亚南达/channel/Hinduism Now': 'kailasa-and-nithyananda/hinduism-now',
   '凯拉萨与尼希亚南达/channel/KAILASA NEPAL': 'kailasa-and-nithyananda/kailasa-nepal',
-  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Keerthanalaya": 'kailasa-and-nithyananda/kailasas-nithyananda-keerthanalaya',
-  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Real Reels": 'kailasa-and-nithyananda/kailasas-nithyananda-real-reels',
-  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Top Secrets": 'kailasa-and-nithyananda/kailasas-nithyananda-top-secrets',
-  "凯拉萨与尼希亚南达/channel/KAILASA's SPH Nithyananda - Chinese": 'kailasa-and-nithyananda/nithyananda-chinese',
+  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Keerthanalaya":
+      'kailasa-and-nithyananda/kailasas-nithyananda-keerthanalaya',
+  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Real Reels":
+      'kailasa-and-nithyananda/kailasas-nithyananda-real-reels',
+  "凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Top Secrets":
+      'kailasa-and-nithyananda/kailasas-nithyananda-top-secrets',
+  "凯拉萨与尼希亚南达/channel/KAILASA's SPH Nithyananda - Chinese":
+      'kailasa-and-nithyananda/nithyananda-chinese',
   '凯拉萨与尼希亚南达/channel/Kailaasa - Chinese': 'kailasa-and-nithyananda/nithyananda-chinese',
   '凯拉萨与尼希亚南达/channel/Paramashivasena Chinese': 'kailasa-and-nithyananda/paramashivasena-chinese',
   '凯拉萨与尼希亚南达/channel/The Avatar Clicks': 'kailasa-and-nithyananda/the-avatar-clicks',
@@ -915,7 +1113,8 @@ const blockEntryKeys = {
   '天堂之门/channel/天堂之門': 'heavens-gate/heavens-gate',
   '天堂之门/channel/天堂之门': 'heavens-gate/heavens-gate',
   '天父的儿女/channel/David Berg': 'children-of-god-the-family-international/david-berg',
-  '天父的儿女/channel/Family International': 'children-of-god-the-family-international/family-international',
+  '天父的儿女/channel/Family International':
+      'children-of-god-the-family-international/family-international',
   '天父的儿女/channel/天父的儿女': 'children-of-god-the-family-international/children-of-god',
   '天父的儿女/channel/天父的兒女': 'children-of-god-the-family-international/children-of-god',
   '太阳圣殿教/channel/Solar Temple': 'order-of-the-solar-temple/solar-temple',
@@ -968,7 +1167,8 @@ const blockEntryKeys = {
   '朝鲜官方媒体/channel/DPRK Today': 'north-korean-state-media/dprk-today',
   '朝鲜官方媒体/channel/KCNA': 'north-korean-state-media/kcna',
   '朝鲜官方媒体/channel/KCTV': 'north-korean-state-media/kctv',
-  '朝鲜官方媒体/channel/Korean Central Broadcasting': 'north-korean-state-media/korean-central-broadcasting',
+  '朝鲜官方媒体/channel/Korean Central Broadcasting':
+      'north-korean-state-media/korean-central-broadcasting',
   '朝鲜官方媒体/channel/Korean Central News Agency': 'north-korean-state-media/kcna',
   '朝鲜官方媒体/channel/Korean Central Television': 'north-korean-state-media/kctv',
   '朝鲜官方媒体/channel/Naenara': 'north-korean-state-media/naenara',
@@ -1009,7 +1209,8 @@ const blockEntryKeys = {
   '沙特官方及国家控股媒体/channel/Asharq Al-Awsat': 'saudi-state-and-state-owned-media/asharq-al-awsat',
   '沙特官方及国家控股媒体/channel/Asharq News': 'saudi-state-and-state-owned-media/asharq-news',
   '沙特官方及国家控股媒体/channel/MBC Group': 'saudi-state-and-state-owned-media/mbc-group',
-  '沙特官方及国家控股媒体/channel/Saudi Broadcasting Authority': 'saudi-state-and-state-owned-media/saudi-broadcasting-authority',
+  '沙特官方及国家控股媒体/channel/Saudi Broadcasting Authority':
+      'saudi-state-and-state-owned-media/saudi-broadcasting-authority',
   '沙特官方及国家控股媒体/channel/Saudi Press Agency': 'saudi-state-and-state-owned-media/saudi-press-agency',
   '沙特官方及国家控股媒体/exact/SBA': 'saudi-state-and-state-owned-media/saudi-broadcasting-authority',
   '沙特官方及国家控股媒体/exact/SPA': 'saudi-state-and-state-owned-media/saudi-press-agency',
@@ -1094,11 +1295,16 @@ const blockEntryKeys = {
   '法轮功相关自媒体/channel/Chen Pokong': 'falun-gong-linked-hosts-and-shows/chen-pokong',
   '法轮功相关自媒体/channel/China Uncensored': 'falun-gong-linked-hosts-and-shows/china-uncensored',
   '法轮功相关自媒体/channel/China Unscripted': 'falun-gong-linked-hosts-and-shows/china-unscripted',
-  '法轮功相关自媒体/channel/Crossroads with Joshua Philipp': 'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
-  '法轮功相关自媒体/channel/Eye Opener With Michael Lewis': 'falun-gong-linked-hosts-and-shows/eye-opener-with-michael-lewis',
-  '法轮功相关自媒体/channel/Facts Matter With Roman Balmakov': 'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
-  '法轮功相关自媒体/channel/Joshua Philipp': 'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
-  '法轮功相关自媒体/channel/Roman Balmakov': 'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
+  '法轮功相关自媒体/channel/Crossroads with Joshua Philipp':
+      'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
+  '法轮功相关自媒体/channel/Eye Opener With Michael Lewis':
+      'falun-gong-linked-hosts-and-shows/eye-opener-with-michael-lewis',
+  '法轮功相关自媒体/channel/Facts Matter With Roman Balmakov':
+      'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
+  '法轮功相关自媒体/channel/Joshua Philipp':
+      'falun-gong-linked-hosts-and-shows/crossroads-with-joshua-philipp',
+  '法轮功相关自媒体/channel/Roman Balmakov':
+      'falun-gong-linked-hosts-and-shows/facts-matter-with-roman-balmakov',
   '法轮功相关自媒体/channel/She Health': 'falun-gong-linked-hosts-and-shows/she-health',
   '法轮功相关自媒体/channel/Tianliang Times': 'falun-gong-linked-hosts-and-shows/tianliang-times',
   '法轮功相关自媒体/channel/Tianliang Zhang': 'falun-gong-linked-hosts-and-shows/zhang-tianliang',
@@ -1182,7 +1388,8 @@ const blockEntryKeys = {
   '法轮功相关自媒体/handle/@realjiangfeng': 'falun-gong-linked-hosts-and-shows/realjiangfeng',
   '法轮功相关自媒体/handle/@wenzhaoofficial': 'falun-gong-linked-hosts-and-shows/wenzhaoofficial',
   '法轮功相关自媒体/handle/@wenzhaostudio': 'falun-gong-linked-hosts-and-shows/wenzhaostudio',
-  '法轮功相关自媒体/id/UCxPTUWjp9wl_z0XmE5noRLA': 'falun-gong-linked-hosts-and-shows/ucxptuwjp9wl-z0xme5norla',
+  '法轮功相关自媒体/id/UCxPTUWjp9wl_z0XmE5noRLA':
+      'falun-gong-linked-hosts-and-shows/ucxptuwjp9wl-z0xme5norla',
   '法轮功相关（待核实）/channel/信不信由你': 'falun-gong-linked-unproven/xin-bu-xin-you-ni',
   '法轮功相关（待核实）/channel/公民老黑': 'falun-gong-linked-unproven/gongmin-laohei',
   '法轮功相关（待核实）/channel/慧月瞰今昔': 'falun-gong-linked-unproven/huiyue-kan-jinxi',
@@ -1201,15 +1408,18 @@ const blockEntryKeys = {
   '法轮功相关（待核实）/channel/财经向前看': 'falun-gong-linked-unproven/caijing-xiang-qian-kan',
   '法轮功相关（待核实）/channel/金泉看世界': 'falun-gong-linked-unproven/jinquan-kan-shijie',
   '法轮功相关（待核实）/channel/镜像世界': 'falun-gong-linked-unproven/jingxiang-shijie',
-  '清海与赛巴巴媒体/exact/PrasanthiMandirLiveRadioSai': 'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
+  '清海与赛巴巴媒体/exact/PrasanthiMandirLiveRadioSai':
+      'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
   '清海与赛巴巴媒体/exact/SMSpirit': 'ching-hai-and-sai-baba-media/smspirit',
   '清海与赛巴巴媒体/exact/SriSathyaSaiBhajans': 'ching-hai-and-sai-baba-media/srisathyasaibhajans',
   '清海与赛巴巴媒体/exact/SriSathyaSaiKidsWorld': 'ching-hai-and-sai-baba-media/srisathyasaikidsworld',
   '清海与赛巴巴媒体/exact/SriSathyaSaiMandarin': 'ching-hai-and-sai-baba-media/srisathyasaimandarin',
   '清海与赛巴巴媒体/exact/SriSathyaSaiOfficial': 'ching-hai-and-sai-baba-media/srisathyasaiofficial',
-  '清海与赛巴巴媒体/exact/SriSathyaSaiSpeaksOfficial': 'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
+  '清海与赛巴巴媒体/exact/SriSathyaSaiSpeaksOfficial':
+      'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
   '清海与赛巴巴媒体/exact/SupremeMasterTV Web': 'ching-hai-and-sai-baba-media/suprememastertv-web',
-  '清海与赛巴巴媒体/handle/@PrasanthiMandirLiveRadioSai': 'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
+  '清海与赛巴巴媒体/handle/@PrasanthiMandirLiveRadioSai':
+      'ching-hai-and-sai-baba-media/prasanthimandirliveradiosai',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiBhajans': 'ching-hai-and-sai-baba-media/srisathyasaibhajans',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiHindi': 'ching-hai-and-sai-baba-media/srisathyasaihindi',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiKannada': 'ching-hai-and-sai-baba-media/srisathyasaikannada',
@@ -1217,7 +1427,8 @@ const blockEntryKeys = {
   '清海与赛巴巴媒体/handle/@SriSathyaSaiMalayalam': 'ching-hai-and-sai-baba-media/srisathyasaimalayalam',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiMandarin': 'ching-hai-and-sai-baba-media/srisathyasaimandarin',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiOfficial': 'ching-hai-and-sai-baba-media/srisathyasaiofficial',
-  '清海与赛巴巴媒体/handle/@SriSathyaSaiSpeaksOfficial': 'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
+  '清海与赛巴巴媒体/handle/@SriSathyaSaiSpeaksOfficial':
+      'ching-hai-and-sai-baba-media/srisathyasaispeaksofficial',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiTamil': 'ching-hai-and-sai-baba-media/srisathyasaitamil',
   '清海与赛巴巴媒体/handle/@SriSathyaSaiTelugu': 'ching-hai-and-sai-baba-media/srisathyasaitelugu',
   '灵灵教/channel/灵灵教': 'lingling-sect/lingling-sect',
@@ -1254,7 +1465,8 @@ const blockEntryKeys = {
   '科学教/channel/戴尼提': 'scientology/dianetics',
   '科学教/channel/科学神教': 'scientology/scientology',
   '科学教/channel/科學神教': 'scientology/scientology',
-  '统一教/channel/Family Federation for World Peace': 'unification-church/family-federation-for-world-peace',
+  '统一教/channel/Family Federation for World Peace':
+      'unification-church/family-federation-for-world-peace',
   '统一教/channel/Moonies': 'unification-church/unification-church',
   '统一教/channel/Sun Myung Moon': 'unification-church/sun-myung-moon',
   '统一教/channel/Unification Church': 'unification-church/unification-church',
@@ -1269,7 +1481,8 @@ const blockEntryKeys = {
   '美国政府国际广播/channel/Alhurra': 'us-government-international-broadcasting/alhurra',
   '美国政府国际广播/channel/Current Time': 'us-government-international-broadcasting/current-time',
   '美国政府国际广播/channel/Martí Noticias': 'us-government-international-broadcasting/marti',
-  '美国政府国际广播/channel/Middle East Broadcasting Networks': 'us-government-international-broadcasting/middle-east-broadcasting-networks',
+  '美国政府国际广播/channel/Middle East Broadcasting Networks':
+      'us-government-international-broadcasting/middle-east-broadcasting-networks',
   '美国政府国际广播/channel/RFE/RL': 'us-government-international-broadcasting/rferl',
   '美国政府国际广播/channel/Radio Free Asia': 'us-government-international-broadcasting/radio-free-asia',
   '美国政府国际广播/channel/Radio Free Europe': 'us-government-international-broadcasting/rferl',
@@ -1287,7 +1500,8 @@ const blockEntryKeys = {
   '美国政府国际广播/channel/美國之音': 'us-government-international-broadcasting/voice-of-america',
   '美国政府国际广播/channel/自由亚洲电台': 'us-government-international-broadcasting/radio-free-asia',
   '美国政府国际广播/channel/自由亞洲電台': 'us-government-international-broadcasting/radio-free-asia',
-  '美国政府国际广播/exact/MBN': 'us-government-international-broadcasting/middle-east-broadcasting-networks',
+  '美国政府国际广播/exact/MBN':
+      'us-government-international-broadcasting/middle-east-broadcasting-networks',
   '美国政府国际广播/exact/OCB': 'us-government-international-broadcasting/office-of-cuba-broadcasting',
   '美国政府国际广播/exact/RFA': 'us-government-international-broadcasting/radio-free-asia',
   '耶和华见证人/channel/JW Broadcasting': 'jehovahs-witnesses/jw-broadcasting',
@@ -1299,40 +1513,56 @@ const blockEntryKeys = {
   '耶和华见证人/channel/耶和华见证人': 'jehovahs-witnesses/jehovahs-witnesses',
   '耶和华见证人/channel/耶和華見證人': 'jehovahs-witnesses/jehovahs-witnesses',
   '补充的灵性导师与宗教频道/exact/Abraham-Hicks': 'additional-spiritual-and-religious-channels/abraham-hicks',
-  '补充的灵性导师与宗教频道/exact/Access Consciousness': 'additional-spiritual-and-religious-channels/access-consciousness',
+  '补充的灵性导师与宗教频道/exact/Access Consciousness':
+      'additional-spiritual-and-religious-channels/access-consciousness',
   '补充的灵性导师与宗教频道/exact/Adi Da Samraj': 'additional-spiritual-and-religious-channels/adidam',
   '补充的灵性导师与宗教频道/exact/Adidam': 'additional-spiritual-and-religious-channels/adidam',
-  '补充的灵性导师与宗教频道/exact/Alleluia Ministries': 'additional-spiritual-and-religious-channels/alph-lukau',
+  '补充的灵性导师与宗教频道/exact/Alleluia Ministries':
+      'additional-spiritual-and-religious-channels/alph-lukau',
   '补充的灵性导师与宗教频道/exact/Alph Lukau': 'additional-spiritual-and-religious-channels/alph-lukau',
-  '补充的灵性导师与宗教频道/exact/Ascended Master Teachings': 'additional-spiritual-and-religious-channels/ascended-master-teachings',
-  '补充的灵性导师与宗教频道/exact/Bashar Higher Mind': 'additional-spiritual-and-religious-channels/bashar-higher-mind',
-  '补充的灵性导师与宗教频道/exact/Bodhi Meditation': 'additional-spiritual-and-religious-channels/bodhi-meditation',
+  '补充的灵性导师与宗教频道/exact/Ascended Master Teachings':
+      'additional-spiritual-and-religious-channels/ascended-master-teachings',
+  '补充的灵性导师与宗教频道/exact/Bashar Higher Mind':
+      'additional-spiritual-and-religious-channels/bashar-higher-mind',
+  '补充的灵性导师与宗教频道/exact/Bodhi Meditation':
+      'additional-spiritual-and-religious-channels/bodhi-meditation',
   '补充的灵性导师与宗教频道/exact/Bruno Gröning': 'additional-spiritual-and-religious-channels/bruno-gr-ning',
   '补充的灵性导师与宗教频道/exact/CGM基督教福音宣教會': 'additional-spiritual-and-religious-channels/cgm',
   '补充的灵性导师与宗教频道/exact/ECKANKAR': 'additional-spiritual-and-religious-channels/eckankar',
-  '补充的灵性导师与宗教频道/exact/Eastern Lightning': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  '补充的灵性导师与宗教频道/exact/Eastern Lightning':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
   '补充的灵性导师与宗教频道/exact/Emmanuel TV': 'additional-spiritual-and-religious-channels/emmanuel-tv',
   '补充的灵性导师与宗教频道/exact/Energy Bagua': 'additional-spiritual-and-religious-channels/energy-bagua',
   '补充的灵性导师与宗教频道/exact/GCNTV': 'additional-spiritual-and-religious-channels/gcntv',
   '补充的灵性导师与宗教频道/exact/Guan Yin Citta': 'additional-spiritual-and-religious-channels/guan-yin-citta',
-  '补充的灵性导师与宗教频道/exact/Isha Foundation': 'additional-spiritual-and-religious-channels/isha-foundation',
-  '补充的灵性导师与宗教频道/exact/Jeff and Shaleia': 'additional-spiritual-and-religious-channels/jeff-and-shaleia',
+  '补充的灵性导师与宗教频道/exact/Isha Foundation':
+      'additional-spiritual-and-religious-channels/isha-foundation',
+  '补充的灵性导师与宗教频道/exact/Jeff and Shaleia':
+      'additional-spiritual-and-religious-channels/jeff-and-shaleia',
   '补充的灵性导师与宗教频道/exact/JinBodhi': 'additional-spiritual-and-religious-channels/jinbodhi',
   '补充的灵性导师与宗教频道/exact/Kryon': 'additional-spiritual-and-religious-channels/kryon',
-  '补充的灵性导师与宗教频道/exact/La Luz del Mundo': 'additional-spiritual-and-religious-channels/la-luz-del-mundo',
+  '补充的灵性导师与宗教频道/exact/La Luz del Mundo':
+      'additional-spiritual-and-religious-channels/la-luz-del-mundo',
   '补充的灵性导师与宗教频道/exact/Manmin': 'additional-spiritual-and-religious-channels/manmin',
   '补充的灵性导师与宗教频道/exact/Mooji': 'additional-spiritual-and-religious-channels/mooji',
   '补充的灵性导师与宗教频道/exact/Nithyananda': 'additional-spiritual-and-religious-channels/nithyananda',
-  '补充的灵性导师与宗教频道/exact/OSHO International': 'additional-spiritual-and-religious-channels/osho-international',
+  '补充的灵性导师与宗教频道/exact/OSHO International':
+      'additional-spiritual-and-religious-channels/osho-international',
   '补充的灵性导师与宗教频道/exact/Pranic Healing': 'additional-spiritual-and-religious-channels/pranic-healing',
-  '补充的灵性导师与宗教频道/exact/Ramtha’s School of Enlightenment': 'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
+  '补充的灵性导师与宗教频道/exact/Ramtha’s School of Enlightenment':
+      'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
   '补充的灵性导师与宗教频道/exact/SHRIKAILASA': 'additional-spiritual-and-religious-channels/shrikailasa',
-  '补充的灵性导师与宗教频道/exact/Summit Lighthouse': 'additional-spiritual-and-religious-channels/summit-lighthouse',
-  '补充的灵性导师与宗教频道/exact/The Church of Almighty God': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
-  '补充的灵性导师与宗教频道/exact/The Last Reformation': 'additional-spiritual-and-religious-channels/the-last-reformation',
+  '补充的灵性导师与宗教频道/exact/Summit Lighthouse':
+      'additional-spiritual-and-religious-channels/summit-lighthouse',
+  '补充的灵性导师与宗教频道/exact/The Church of Almighty God':
+      'additional-spiritual-and-religious-channels/church-of-almighty-god',
+  '补充的灵性导师与宗教频道/exact/The Last Reformation':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
   '补充的灵性导师与宗教频道/exact/ThetaHealing': 'additional-spiritual-and-religious-channels/thetahealing',
-  '补充的灵性导师与宗教频道/exact/True Buddha School': 'additional-spiritual-and-religious-channels/true-buddha-school',
-  '补充的灵性导师与宗教频道/exact/Twin Flames Universe': 'additional-spiritual-and-religious-channels/twin-flames-universe',
+  '补充的灵性导师与宗教频道/exact/True Buddha School':
+      'additional-spiritual-and-religious-channels/true-buddha-school',
+  '补充的灵性导师与宗教频道/exact/Twin Flames Universe':
+      'additional-spiritual-and-religious-channels/twin-flames-universe',
   '补充的灵性导师与宗教频道/exact/佛教如來宗': 'additional-spiritual-and-religious-channels/rulai-zong',
   '补充的灵性导师与宗教频道/exact/全能神教会': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
   '补充的灵性导师与宗教频道/exact/全能神教會': 'additional-spiritual-and-religious-channels/church-of-almighty-god',
@@ -1349,89 +1579,159 @@ const blockEntryKeys = {
   '补充的灵性导师与宗教频道/exact/盧台長': 'additional-spiritual-and-religious-channels/lu-tai-chang',
   '补充的灵性导师与宗教频道/exact/真佛宗': 'additional-spiritual-and-religious-channels/true-buddha-school',
   '补充的灵性导师与宗教频道/exact/金菩提': 'additional-spiritual-and-religious-channels/jinbodhi',
-  '补充的灵性导师与宗教频道/handle/@BasharHigherMind99': 'additional-spiritual-and-religious-channels/bashar-higher-mind',
-  '补充的灵性导师与宗教频道/handle/@BodhiMeditation': 'additional-spiritual-and-religious-channels/bodhi-meditation',
-  '补充的灵性导师与宗教频道/handle/@BodhiMeditationKR': 'additional-spiritual-and-religious-channels/bodhi-meditation',
+  '补充的灵性导师与宗教频道/handle/@BasharHigherMind99':
+      'additional-spiritual-and-religious-channels/bashar-higher-mind',
+  '补充的灵性导师与宗教频道/handle/@BodhiMeditation':
+      'additional-spiritual-and-religious-channels/bodhi-meditation',
+  '补充的灵性导师与宗教频道/handle/@BodhiMeditationKR':
+      'additional-spiritual-and-religious-channels/bodhi-meditation',
   '补充的灵性导师与宗教频道/handle/@EmmanuelTV-Live': 'additional-spiritual-and-religious-channels/emmanuel-tv',
   '补充的灵性导师与宗教频道/handle/@EnergyBagua': 'additional-spiritual-and-religious-channels/energy-bagua',
   '补充的灵性导师与宗教频道/handle/@EnergyBaguaEn': 'additional-spiritual-and-religious-channels/energy-bagua',
   '补充的灵性导师与宗教频道/handle/@EnergyBaguaID': 'additional-spiritual-and-religious-channels/energy-bagua',
-  '补充的灵性导师与宗教频道/handle/@IglesiaLaLuzdelMundo': 'additional-spiritual-and-religious-channels/la-luz-del-mundo',
-  '补充的灵性导师与宗教频道/handle/@KRSERADIO': 'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
+  '补充的灵性导师与宗教频道/handle/@IglesiaLaLuzdelMundo':
+      'additional-spiritual-and-religious-channels/la-luz-del-mundo',
+  '补充的灵性导师与宗教频道/handle/@KRSERADIO':
+      'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
   '补充的灵性导师与宗教频道/handle/@Moojiitaliano': 'additional-spiritual-and-religious-channels/mooji',
   '补充的灵性导师与宗教频道/handle/@Moojiji': 'additional-spiritual-and-religious-channels/mooji',
-  '补充的灵性导师与宗教频道/handle/@OSHOInternational': 'additional-spiritual-and-religious-channels/osho-international',
+  '补充的灵性导师与宗教频道/handle/@OSHOInternational':
+      'additional-spiritual-and-religious-channels/osho-international',
   '补充的灵性导师与宗教频道/handle/@Official_AMITV': 'additional-spiritual-and-religious-channels/alph-lukau',
-  '补充的灵性导师与宗教频道/handle/@PastorAlphLukauofficial': 'additional-spiritual-and-religious-channels/alph-lukau',
+  '补充的灵性导师与宗教频道/handle/@PastorAlphLukauofficial':
+      'additional-spiritual-and-religious-channels/alph-lukau',
   '补充的灵性导师与宗教频道/handle/@PutiMalaysia': 'additional-spiritual-and-religious-channels/putimalaysia',
-  '补充的灵性导师与宗教频道/handle/@RSEWebTeam': 'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
-  '补充的灵性导师与宗教频道/handle/@Radiolldmhoy': 'additional-spiritual-and-religious-channels/la-luz-del-mundo',
-  '补充的灵性导师与宗教频道/handle/@SadhguruChinese': 'additional-spiritual-and-religious-channels/sadhguru-chinese',
-  '补充的灵性导师与宗教频道/handle/@TheLastReformation': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  '补充的灵性导师与宗教频道/handle/@ThetaHealingVianna': 'additional-spiritual-and-religious-channels/thetahealing',
-  '补充的灵性导师与宗教频道/handle/@accessconsciousness': 'additional-spiritual-and-religious-channels/access-consciousness',
+  '补充的灵性导师与宗教频道/handle/@RSEWebTeam':
+      'additional-spiritual-and-religious-channels/ramthas-school-of-enlightenment',
+  '补充的灵性导师与宗教频道/handle/@Radiolldmhoy':
+      'additional-spiritual-and-religious-channels/la-luz-del-mundo',
+  '补充的灵性导师与宗教频道/handle/@SadhguruChinese':
+      'additional-spiritual-and-religious-channels/sadhguru-chinese',
+  '补充的灵性导师与宗教频道/handle/@TheLastReformation':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  '补充的灵性导师与宗教频道/handle/@ThetaHealingVianna':
+      'additional-spiritual-and-religious-channels/thetahealing',
+  '补充的灵性导师与宗教频道/handle/@accessconsciousness':
+      'additional-spiritual-and-religious-channels/access-consciousness',
   '补充的灵性导师与宗教频道/handle/@eckankar': 'additional-spiritual-and-religious-channels/eckankar',
-  '补充的灵性导师与宗教频道/handle/@ishafoundation': 'additional-spiritual-and-religious-channels/isha-foundation',
+  '补充的灵性导师与宗教频道/handle/@ishafoundation':
+      'additional-spiritual-and-religious-channels/isha-foundation',
   '补充的灵性导师与宗教频道/handle/@jinbodhi-en': 'additional-spiritual-and-religious-channels/jinbodhi',
   '补充的灵性导师与宗教频道/handle/@jinbodhi-kr': 'additional-spiritual-and-religious-channels/jinbodhi',
   '补充的灵性导师与宗教频道/handle/@jinbodhi-vn': 'additional-spiritual-and-religious-channels/jinbodhi',
   '补充的灵性导师与宗教频道/handle/@kryonleecarroll3491': 'additional-spiritual-and-religious-channels/kryon',
-  '补充的灵性导师与宗教频道/handle/@sadhgurutraditionalchinese': 'additional-spiritual-and-religious-channels/sadhguru-chinese',
-  '补充的灵性导师与宗教频道/handle/@thelastreformationfrance': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  '补充的灵性导师与宗教频道/handle/@thelastreformationuk': 'additional-spiritual-and-religious-channels/the-last-reformation',
-  '补充的灵性导师与宗教频道/id/UC-zY8Y8BC3bcOjAtb8tnCqQ': 'additional-spiritual-and-religious-channels/uc-zy8y8bc3bcojatb8tncqq',
-  '补充的灵性导师与宗教频道/id/UC0Zr8DXBfnRGT1kSMR18pRg': 'additional-spiritual-and-religious-channels/uc0zr8dxbfnrgt1ksmr18prg',
-  '补充的灵性导师与宗教频道/id/UC2Pfkwhv43s6oC-NDAl2vXw': 'additional-spiritual-and-religious-channels/uc2pfkwhv43s6oc-ndal2vxw',
-  '补充的灵性导师与宗教频道/id/UC7sjyIF-9MvtqN3Rv6rMNGQ': 'additional-spiritual-and-religious-channels/uc7sjyif-9mvtqn3rv6rmngq',
-  '补充的灵性导师与宗教频道/id/UC8AqZc9Ij7GGptu3U5Mcj7A': 'additional-spiritual-and-religious-channels/uc8aqzc9ij7ggptu3u5mcj7a',
-  '补充的灵性导师与宗教频道/id/UC8aKMQEmMkWiSpYSR6EI1iA': 'additional-spiritual-and-religious-channels/uc8akmqemmkwispysr6ei1ia',
-  '补充的灵性导师与宗教频道/id/UC9Rp6IXUugNEgDs0DJLvf_g': 'additional-spiritual-and-religious-channels/uc9rp6ixuugnegds0djlvf-g',
-  '补充的灵性导师与宗教频道/id/UCA9ff3XVWgKBjklq-4_NWbQ': 'additional-spiritual-and-religious-channels/uca9ff3xvwgkbjklq-4-nwbq',
-  '补充的灵性导师与宗教频道/id/UCBRcyI55pANUU4Ofia75yEg': 'additional-spiritual-and-religious-channels/ucbrcyi55panuu4ofia75yeg',
-  '补充的灵性导师与宗教频道/id/UCBuBSRtY41VzSkP_RR3IVoQ': 'additional-spiritual-and-religious-channels/ucbubsrty41vzskp-rr3ivoq',
-  '补充的灵性导师与宗教频道/id/UCCJPNud3Tri2CL-2MuDrhBg': 'additional-spiritual-and-religious-channels/uccjpnud3tri2cl-2mudrhbg',
-  '补充的灵性导师与宗教频道/id/UCDr4vL3pCQRup0cV3qWZFmg': 'additional-spiritual-and-religious-channels/ucdr4vl3pcqrup0cv3qwzfmg',
-  '补充的灵性导师与宗教频道/id/UCESo2LGqdEynYAWRbr11XGA': 'additional-spiritual-and-religious-channels/uceso2lgqdeynyawrbr11xga',
-  '补充的灵性导师与宗教频道/id/UCFvQ_m5tg0ob1Rn7mciCmnQ': 'additional-spiritual-and-religious-channels/ucfvq-m5tg0ob1rn7mcicmnq',
-  '补充的灵性导师与宗教频道/id/UCHRyrQWgP7JNuEZ6yd2sUXg': 'additional-spiritual-and-religious-channels/uchryrqwgp7jnuez6yd2suxg',
-  '补充的灵性导师与宗教频道/id/UCJAt3XGA5S2qiZSygvd2cIA': 'additional-spiritual-and-religious-channels/ucjat3xga5s2qizsygvd2cia',
-  '补充的灵性导师与宗教频道/id/UCKv-uJdqW5gQx5HkR76yRJg': 'additional-spiritual-and-religious-channels/uckv-ujdqw5gqx5hkr76yrjg',
-  '补充的灵性导师与宗教频道/id/UCLMJY6l7o6YMfK01o69fo9Q': 'additional-spiritual-and-religious-channels/uclmjy6l7o6ymfk01o69fo9q',
-  '补充的灵性导师与宗教频道/id/UCLl20r-KQlapX_5fT-N3cOw': 'additional-spiritual-and-religious-channels/ucll20r-kqlapx-5ft-n3cow',
-  '补充的灵性导师与宗教频道/id/UCMeYcOA9lMRDS1eM9k7Kanw': 'additional-spiritual-and-religious-channels/ucmeycoa9lmrds1em9k7kanw',
-  '补充的灵性导师与宗教频道/id/UCNkWFeAkrMq6LEfwxHGl3nA': 'additional-spiritual-and-religious-channels/ucnkwfeakrmq6lefwxhgl3na',
-  '补充的灵性导师与宗教频道/id/UCOkZrhW3cASIhZN60K2mTkQ': 'additional-spiritual-and-religious-channels/ucokzrhw3casihzn60k2mtkq',
-  '补充的灵性导师与宗教频道/id/UCP-zsdDBSvlh3FlXwP7ajog': 'additional-spiritual-and-religious-channels/ucp-zsddbsvlh3flxwp7ajog',
-  '补充的灵性导师与宗教频道/id/UCPDI_GKjDpKV1mzFnLwyC5w': 'additional-spiritual-and-religious-channels/ucpdi-gkjdpkv1mzfnlwyc5w',
-  '补充的灵性导师与宗教频道/id/UCQnRKVEgfHO3q8cLT6Rwp5A': 'additional-spiritual-and-religious-channels/ucqnrkvegfho3q8clt6rwp5a',
-  '补充的灵性导师与宗教频道/id/UCScyTd8t6wRK71Hd6U2ITAg': 'additional-spiritual-and-religious-channels/ucscytd8t6wrk71hd6u2itag',
-  '补充的灵性导师与宗教频道/id/UCTQqhVgp94Vf7KTrANN8Xpw': 'additional-spiritual-and-religious-channels/uctqqhvgp94vf7ktrann8xpw',
-  '补充的灵性导师与宗教频道/id/UCTgB6FVaVMCjaV1mSkqUzEg': 'additional-spiritual-and-religious-channels/uctgb6fvavmcjav1mskquzeg',
-  '补充的灵性导师与宗教频道/id/UCVERMeALCDV6OFdK5wbC-YQ': 'additional-spiritual-and-religious-channels/ucvermealcdv6ofdk5wbc-yq',
-  '补充的灵性导师与宗教频道/id/UCWcfoRKfi3uYx_YNwLm3hwQ': 'additional-spiritual-and-religious-channels/ucwcforkfi3uyx-ynwlm3hwq',
-  '补充的灵性导师与宗教频道/id/UCX7ei8-AD5lgRO_XWku6RXw': 'additional-spiritual-and-religious-channels/ucx7ei8-ad5lgro-xwku6rxw',
-  '补充的灵性导师与宗教频道/id/UCXdMzx6s5IU9xQA5aXPJ3LA': 'additional-spiritual-and-religious-channels/ucxdmzx6s5iu9xqa5axpj3la',
-  '补充的灵性导师与宗教频道/id/UCYeeF44slL_5o07hoCfIRsw': 'additional-spiritual-and-religious-channels/ucyeef44sll-5o07hocfirsw',
-  '补充的灵性导师与宗教频道/id/UC_z8ERuOLTrlAaopY0gxzsA': 'additional-spiritual-and-religious-channels/uc-z8eruoltrlaaopy0gxzsa',
-  '补充的灵性导师与宗教频道/id/UCaylUlPa1RqjyyYz4oV6cCw': 'additional-spiritual-and-religious-channels/ucaylulpa1rqjyyyz4ov6ccw',
-  '补充的灵性导师与宗教频道/id/UCd0tVUZ53-T5UU2MnD05apQ': 'additional-spiritual-and-religious-channels/ucd0tvuz53-t5uu2mnd05apq',
-  '补充的灵性导师与宗教频道/id/UCdbvc-yJ4JQjNGTgFiJIZNA': 'additional-spiritual-and-religious-channels/ucdbvc-yj4jqjngtgfijizna',
-  '补充的灵性导师与宗教频道/id/UCeBAfedUQFMbDDLGjuXIwvg': 'additional-spiritual-and-religious-channels/ucebafeduqfmbddlgjuxiwvg',
-  '补充的灵性导师与宗教频道/id/UCf0fNlKk7D5JwsXi8ne5cxw': 'additional-spiritual-and-religious-channels/ucf0fnlkk7d5jwsxi8ne5cxw',
-  '补充的灵性导师与宗教频道/id/UCfqkmt_PKfqB7dXyRtS28KA': 'additional-spiritual-and-religious-channels/ucfqkmt-pkfqb7dxyrts28ka',
-  '补充的灵性导师与宗教频道/id/UCi4gMat8ST0GV6H6P4dfkMw': 'additional-spiritual-and-religious-channels/uci4gmat8st0gv6h6p4dfkmw',
-  '补充的灵性导师与宗教频道/id/UCjl5wTW8jGBR1Vfpp2yLoNQ': 'additional-spiritual-and-religious-channels/ucjl5wtw8jgbr1vfpp2ylonq',
-  '补充的灵性导师与宗教频道/id/UCk89pEd76qutMB08hVSY49Q': 'additional-spiritual-and-religious-channels/uck89ped76qutmb08hvsy49q',
-  '补充的灵性导师与宗教频道/id/UCkXYA19-jmzhKZndkZRm6UA': 'additional-spiritual-and-religious-channels/uckxya19-jmzhkzndkzrm6ua',
-  '补充的灵性导师与宗教频道/id/UCm_xFjZ9VxOiIfaQjOiQvMg': 'additional-spiritual-and-religious-channels/ucm-xfjz9vxoiifaqjoiqvmg',
-  '补充的灵性导师与宗教频道/id/UCnAvqWHXFtadVQCyUcBwOGg': 'additional-spiritual-and-religious-channels/ucnavqwhxftadvqcyucbwogg',
-  '补充的灵性导师与宗教频道/id/UCpcJIF6X8RtHvl2vZRKJ33Q': 'additional-spiritual-and-religious-channels/ucpcjif6x8rthvl2vzrkj33q',
-  '补充的灵性导师与宗教频道/id/UCsWyzBTDj2uDPe-YtKLDUFQ': 'additional-spiritual-and-religious-channels/ucswyzbtdj2udpe-ytkldufq',
-  '补充的灵性导师与宗教频道/id/UCuk4yvTFVwkdZCEM9p6KWaA': 'additional-spiritual-and-religious-channels/ucuk4yvtfvwkdzcem9p6kwaa',
-  '补充的灵性导师与宗教频道/id/UCwYNO48BBaZOmfGxtHRDYPw': 'additional-spiritual-and-religious-channels/ucwyno48bbazomfgxthrdypw',
-  '补充的灵性导师与宗教频道/id/UCxONu8QnFlim00YxUYv17RQ': 'additional-spiritual-and-religious-channels/ucxonu8qnflim00yxuyv17rq',
-  '补充的灵性导师与宗教频道/id/UCxxZCeOQLvEWbdDRvt10f4Q': 'additional-spiritual-and-religious-channels/ucxxzceoqlvewbddrvt10f4q',
-  '补充的灵性导师与宗教频道/id/UCyK-3e-PGUmrnH6KBKIacww': 'additional-spiritual-and-religious-channels/ucyk-3e-pgumrnh6kbkiacww',
+  '补充的灵性导师与宗教频道/handle/@sadhgurutraditionalchinese':
+      'additional-spiritual-and-religious-channels/sadhguru-chinese',
+  '补充的灵性导师与宗教频道/handle/@thelastreformationfrance':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  '补充的灵性导师与宗教频道/handle/@thelastreformationuk':
+      'additional-spiritual-and-religious-channels/the-last-reformation',
+  '补充的灵性导师与宗教频道/id/UC-zY8Y8BC3bcOjAtb8tnCqQ':
+      'additional-spiritual-and-religious-channels/uc-zy8y8bc3bcojatb8tncqq',
+  '补充的灵性导师与宗教频道/id/UC0Zr8DXBfnRGT1kSMR18pRg':
+      'additional-spiritual-and-religious-channels/uc0zr8dxbfnrgt1ksmr18prg',
+  '补充的灵性导师与宗教频道/id/UC2Pfkwhv43s6oC-NDAl2vXw':
+      'additional-spiritual-and-religious-channels/uc2pfkwhv43s6oc-ndal2vxw',
+  '补充的灵性导师与宗教频道/id/UC7sjyIF-9MvtqN3Rv6rMNGQ':
+      'additional-spiritual-and-religious-channels/uc7sjyif-9mvtqn3rv6rmngq',
+  '补充的灵性导师与宗教频道/id/UC8AqZc9Ij7GGptu3U5Mcj7A':
+      'additional-spiritual-and-religious-channels/uc8aqzc9ij7ggptu3u5mcj7a',
+  '补充的灵性导师与宗教频道/id/UC8aKMQEmMkWiSpYSR6EI1iA':
+      'additional-spiritual-and-religious-channels/uc8akmqemmkwispysr6ei1ia',
+  '补充的灵性导师与宗教频道/id/UC9Rp6IXUugNEgDs0DJLvf_g':
+      'additional-spiritual-and-religious-channels/uc9rp6ixuugnegds0djlvf-g',
+  '补充的灵性导师与宗教频道/id/UCA9ff3XVWgKBjklq-4_NWbQ':
+      'additional-spiritual-and-religious-channels/uca9ff3xvwgkbjklq-4-nwbq',
+  '补充的灵性导师与宗教频道/id/UCBRcyI55pANUU4Ofia75yEg':
+      'additional-spiritual-and-religious-channels/ucbrcyi55panuu4ofia75yeg',
+  '补充的灵性导师与宗教频道/id/UCBuBSRtY41VzSkP_RR3IVoQ':
+      'additional-spiritual-and-religious-channels/ucbubsrty41vzskp-rr3ivoq',
+  '补充的灵性导师与宗教频道/id/UCCJPNud3Tri2CL-2MuDrhBg':
+      'additional-spiritual-and-religious-channels/uccjpnud3tri2cl-2mudrhbg',
+  '补充的灵性导师与宗教频道/id/UCDr4vL3pCQRup0cV3qWZFmg':
+      'additional-spiritual-and-religious-channels/ucdr4vl3pcqrup0cv3qwzfmg',
+  '补充的灵性导师与宗教频道/id/UCESo2LGqdEynYAWRbr11XGA':
+      'additional-spiritual-and-religious-channels/uceso2lgqdeynyawrbr11xga',
+  '补充的灵性导师与宗教频道/id/UCFvQ_m5tg0ob1Rn7mciCmnQ':
+      'additional-spiritual-and-religious-channels/ucfvq-m5tg0ob1rn7mcicmnq',
+  '补充的灵性导师与宗教频道/id/UCHRyrQWgP7JNuEZ6yd2sUXg':
+      'additional-spiritual-and-religious-channels/uchryrqwgp7jnuez6yd2suxg',
+  '补充的灵性导师与宗教频道/id/UCJAt3XGA5S2qiZSygvd2cIA':
+      'additional-spiritual-and-religious-channels/ucjat3xga5s2qizsygvd2cia',
+  '补充的灵性导师与宗教频道/id/UCKv-uJdqW5gQx5HkR76yRJg':
+      'additional-spiritual-and-religious-channels/uckv-ujdqw5gqx5hkr76yrjg',
+  '补充的灵性导师与宗教频道/id/UCLMJY6l7o6YMfK01o69fo9Q':
+      'additional-spiritual-and-religious-channels/uclmjy6l7o6ymfk01o69fo9q',
+  '补充的灵性导师与宗教频道/id/UCLl20r-KQlapX_5fT-N3cOw':
+      'additional-spiritual-and-religious-channels/ucll20r-kqlapx-5ft-n3cow',
+  '补充的灵性导师与宗教频道/id/UCMeYcOA9lMRDS1eM9k7Kanw':
+      'additional-spiritual-and-religious-channels/ucmeycoa9lmrds1em9k7kanw',
+  '补充的灵性导师与宗教频道/id/UCNkWFeAkrMq6LEfwxHGl3nA':
+      'additional-spiritual-and-religious-channels/ucnkwfeakrmq6lefwxhgl3na',
+  '补充的灵性导师与宗教频道/id/UCOkZrhW3cASIhZN60K2mTkQ':
+      'additional-spiritual-and-religious-channels/ucokzrhw3casihzn60k2mtkq',
+  '补充的灵性导师与宗教频道/id/UCP-zsdDBSvlh3FlXwP7ajog':
+      'additional-spiritual-and-religious-channels/ucp-zsddbsvlh3flxwp7ajog',
+  '补充的灵性导师与宗教频道/id/UCPDI_GKjDpKV1mzFnLwyC5w':
+      'additional-spiritual-and-religious-channels/ucpdi-gkjdpkv1mzfnlwyc5w',
+  '补充的灵性导师与宗教频道/id/UCQnRKVEgfHO3q8cLT6Rwp5A':
+      'additional-spiritual-and-religious-channels/ucqnrkvegfho3q8clt6rwp5a',
+  '补充的灵性导师与宗教频道/id/UCScyTd8t6wRK71Hd6U2ITAg':
+      'additional-spiritual-and-religious-channels/ucscytd8t6wrk71hd6u2itag',
+  '补充的灵性导师与宗教频道/id/UCTQqhVgp94Vf7KTrANN8Xpw':
+      'additional-spiritual-and-religious-channels/uctqqhvgp94vf7ktrann8xpw',
+  '补充的灵性导师与宗教频道/id/UCTgB6FVaVMCjaV1mSkqUzEg':
+      'additional-spiritual-and-religious-channels/uctgb6fvavmcjav1mskquzeg',
+  '补充的灵性导师与宗教频道/id/UCVERMeALCDV6OFdK5wbC-YQ':
+      'additional-spiritual-and-religious-channels/ucvermealcdv6ofdk5wbc-yq',
+  '补充的灵性导师与宗教频道/id/UCWcfoRKfi3uYx_YNwLm3hwQ':
+      'additional-spiritual-and-religious-channels/ucwcforkfi3uyx-ynwlm3hwq',
+  '补充的灵性导师与宗教频道/id/UCX7ei8-AD5lgRO_XWku6RXw':
+      'additional-spiritual-and-religious-channels/ucx7ei8-ad5lgro-xwku6rxw',
+  '补充的灵性导师与宗教频道/id/UCXdMzx6s5IU9xQA5aXPJ3LA':
+      'additional-spiritual-and-religious-channels/ucxdmzx6s5iu9xqa5axpj3la',
+  '补充的灵性导师与宗教频道/id/UCYeeF44slL_5o07hoCfIRsw':
+      'additional-spiritual-and-religious-channels/ucyeef44sll-5o07hocfirsw',
+  '补充的灵性导师与宗教频道/id/UC_z8ERuOLTrlAaopY0gxzsA':
+      'additional-spiritual-and-religious-channels/uc-z8eruoltrlaaopy0gxzsa',
+  '补充的灵性导师与宗教频道/id/UCaylUlPa1RqjyyYz4oV6cCw':
+      'additional-spiritual-and-religious-channels/ucaylulpa1rqjyyyz4ov6ccw',
+  '补充的灵性导师与宗教频道/id/UCd0tVUZ53-T5UU2MnD05apQ':
+      'additional-spiritual-and-religious-channels/ucd0tvuz53-t5uu2mnd05apq',
+  '补充的灵性导师与宗教频道/id/UCdbvc-yJ4JQjNGTgFiJIZNA':
+      'additional-spiritual-and-religious-channels/ucdbvc-yj4jqjngtgfijizna',
+  '补充的灵性导师与宗教频道/id/UCeBAfedUQFMbDDLGjuXIwvg':
+      'additional-spiritual-and-religious-channels/ucebafeduqfmbddlgjuxiwvg',
+  '补充的灵性导师与宗教频道/id/UCf0fNlKk7D5JwsXi8ne5cxw':
+      'additional-spiritual-and-religious-channels/ucf0fnlkk7d5jwsxi8ne5cxw',
+  '补充的灵性导师与宗教频道/id/UCfqkmt_PKfqB7dXyRtS28KA':
+      'additional-spiritual-and-religious-channels/ucfqkmt-pkfqb7dxyrts28ka',
+  '补充的灵性导师与宗教频道/id/UCi4gMat8ST0GV6H6P4dfkMw':
+      'additional-spiritual-and-religious-channels/uci4gmat8st0gv6h6p4dfkmw',
+  '补充的灵性导师与宗教频道/id/UCjl5wTW8jGBR1Vfpp2yLoNQ':
+      'additional-spiritual-and-religious-channels/ucjl5wtw8jgbr1vfpp2ylonq',
+  '补充的灵性导师与宗教频道/id/UCk89pEd76qutMB08hVSY49Q':
+      'additional-spiritual-and-religious-channels/uck89ped76qutmb08hvsy49q',
+  '补充的灵性导师与宗教频道/id/UCkXYA19-jmzhKZndkZRm6UA':
+      'additional-spiritual-and-religious-channels/uckxya19-jmzhkzndkzrm6ua',
+  '补充的灵性导师与宗教频道/id/UCm_xFjZ9VxOiIfaQjOiQvMg':
+      'additional-spiritual-and-religious-channels/ucm-xfjz9vxoiifaqjoiqvmg',
+  '补充的灵性导师与宗教频道/id/UCnAvqWHXFtadVQCyUcBwOGg':
+      'additional-spiritual-and-religious-channels/ucnavqwhxftadvqcyucbwogg',
+  '补充的灵性导师与宗教频道/id/UCpcJIF6X8RtHvl2vZRKJ33Q':
+      'additional-spiritual-and-religious-channels/ucpcjif6x8rthvl2vzrkj33q',
+  '补充的灵性导师与宗教频道/id/UCsWyzBTDj2uDPe-YtKLDUFQ':
+      'additional-spiritual-and-religious-channels/ucswyzbtdj2udpe-ytkldufq',
+  '补充的灵性导师与宗教频道/id/UCuk4yvTFVwkdZCEM9p6KWaA':
+      'additional-spiritual-and-religious-channels/ucuk4yvtfvwkdzcem9p6kwaa',
+  '补充的灵性导师与宗教频道/id/UCwYNO48BBaZOmfGxtHRDYPw':
+      'additional-spiritual-and-religious-channels/ucwyno48bbazomfgxthrdypw',
+  '补充的灵性导师与宗教频道/id/UCxONu8QnFlim00YxUYv17RQ':
+      'additional-spiritual-and-religious-channels/ucxonu8qnflim00yxuyv17rq',
+  '补充的灵性导师与宗教频道/id/UCxxZCeOQLvEWbdDRvt10f4Q':
+      'additional-spiritual-and-religious-channels/ucxxzceoqlvewbddrvt10f4q',
+  '补充的灵性导师与宗教频道/id/UCyK-3e-PGUmrnH6KBKIacww':
+      'additional-spiritual-and-religious-channels/ucyk-3e-pgumrnh6kbkiacww',
   '被立王/channel/被立王': 'established-king/established-king',
   '门徒会/channel/三贖基督': 'disciples-association/san-shu-jidu',
   '门徒会/channel/三赎基督': 'disciples-association/san-shu-jidu',
@@ -1444,7 +1744,8 @@ const blockEntryKeys = {
   '阿联酋官方及国家关联媒体/channel/Al Emarat TV': 'emirati-state-and-state-linked-media/al-emarat-tv',
   '阿联酋官方及国家关联媒体/channel/Dubai Media': 'emirati-state-and-state-linked-media/dubai-media',
   '阿联酋官方及国家关联媒体/channel/Dubai TV': 'emirati-state-and-state-linked-media/dubai-tv',
-  '阿联酋官方及国家关联媒体/channel/Emirates News Agency': 'emirati-state-and-state-linked-media/emirates-news-agency',
+  '阿联酋官方及国家关联媒体/channel/Emirates News Agency':
+      'emirati-state-and-state-linked-media/emirates-news-agency',
   '阿联酋官方及国家关联媒体/channel/Sky News Arabia': 'emirati-state-and-state-linked-media/sky-news-arabia',
   '阿联酋官方及国家关联媒体/channel/سكاي نيوز عربية': 'emirati-state-and-state-linked-media/sky-news-arabia',
   '阿联酋官方及国家关联媒体/channel/阿联酋通讯社': 'emirati-state-and-state-linked-media/emirates-news-agency',
@@ -1455,63 +1756,104 @@ const blockEntryKeys = {
   '雷尔运动/channel/雷尔运动': 'raelian-movement/raelian-movement',
   '雷尔运动/channel/雷爾運動': 'raelian-movement/raelian-movement',
   '领袖神化与神迹宣传频道/channel/ASEZ WAO': 'leader-worship-and-miracle-promotion-channels/asez-wao',
-  '领袖神化与神迹宣传频道/channel/Australian Raelian Movement': 'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
-  '领袖神化与神迹宣传频道/channel/Divine Principle': 'leader-worship-and-miracle-promotion-channels/divine-principle',
-  '领袖神化与神迹宣传频道/channel/Family Federation EUME': 'leader-worship-and-miracle-promotion-channels/family-federation-eume',
-  '领袖神化与神迹宣传频道/channel/FamilyFed Media': 'leader-worship-and-miracle-promotion-channels/familyfed-media',
+  '领袖神化与神迹宣传频道/channel/Australian Raelian Movement':
+      'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
+  '领袖神化与神迹宣传频道/channel/Divine Principle':
+      'leader-worship-and-miracle-promotion-channels/divine-principle',
+  '领袖神化与神迹宣传频道/channel/Family Federation EUME':
+      'leader-worship-and-miracle-promotion-channels/family-federation-eume',
+  '领袖神化与神迹宣传频道/channel/FamilyFed Media':
+      'leader-worship-and-miracle-promotion-channels/familyfed-media',
   '领袖神化与神迹宣传频道/channel/God the Mother': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  '领袖神化与神迹宣传频道/channel/Happy Science Europe': 'leader-worship-and-miracle-promotion-channels/happy-science',
-  '领袖神化与神迹宣传频道/channel/Happy Science India': 'leader-worship-and-miracle-promotion-channels/happy-science',
-  '领袖神化与神迹宣传频道/channel/Happy Science Official': 'leader-worship-and-miracle-promotion-channels/happy-science',
+  '领袖神化与神迹宣传频道/channel/Happy Science Europe':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
+  '领袖神化与神迹宣传频道/channel/Happy Science India':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
+  '领袖神化与神迹宣传频道/channel/Happy Science Official':
+      'leader-worship-and-miracle-promotion-channels/happy-science',
   '领袖神化与神迹宣传频道/channel/Newsong Guide': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  '领袖神化与神迹宣传频道/channel/Newsong, Church of God': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  '领袖神化与神迹宣传频道/channel/Rael: The Last Prophet': 'leader-worship-and-miracle-promotion-channels/rael',
-  '领袖神化与神迹宣传频道/channel/Raelian Movement - North America': 'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
-  '领袖神化与神迹宣传频道/channel/Shincheonji Church of Jesus': 'leader-worship-and-miracle-promotion-channels/shincheonji',
-  '领袖神化与神迹宣传频道/channel/The Church of Almighty God': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
-  '领袖神化与神迹宣传频道/exact/Awakening with Brahma Kumaris': 'leader-worship-and-miracle-promotion-channels/awakening-with-brahma-kumaris',
-  '领袖神化与神迹宣传频道/exact/Benny Hinn Ministries': 'leader-worship-and-miracle-promotion-channels/benny-hinn',
+  '领袖神化与神迹宣传频道/channel/Newsong, Church of God':
+      'leader-worship-and-miracle-promotion-channels/wmscog',
+  '领袖神化与神迹宣传频道/channel/Rael: The Last Prophet':
+      'leader-worship-and-miracle-promotion-channels/rael',
+  '领袖神化与神迹宣传频道/channel/Raelian Movement - North America':
+      'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
+  '领袖神化与神迹宣传频道/channel/Shincheonji Church of Jesus':
+      'leader-worship-and-miracle-promotion-channels/shincheonji',
+  '领袖神化与神迹宣传频道/channel/The Church of Almighty God':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  '领袖神化与神迹宣传频道/exact/Awakening with Brahma Kumaris':
+      'leader-worship-and-miracle-promotion-channels/awakening-with-brahma-kumaris',
+  '领袖神化与神迹宣传频道/exact/Benny Hinn Ministries':
+      'leader-worship-and-miracle-promotion-channels/benny-hinn',
   '领袖神化与神迹宣传频道/exact/Bhakti Marga': 'leader-worship-and-miracle-promotion-channels/bhakti-marga',
-  '领袖神化与神迹宣传频道/exact/Copeland Ministries': 'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
-  '领袖神化与神迹宣传频道/exact/Dera Sacha Sauda': 'leader-worship-and-miracle-promotion-channels/dera-sacha-sauda',
-  '领袖神化与神迹宣传频道/exact/Dr and Master Sha': 'leader-worship-and-miracle-promotion-channels/dr-and-master-sha',
+  '领袖神化与神迹宣传频道/exact/Copeland Ministries':
+      'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
+  '领袖神化与神迹宣传频道/exact/Dera Sacha Sauda':
+      'leader-worship-and-miracle-promotion-channels/dera-sacha-sauda',
+  '领袖神化与神迹宣传频道/exact/Dr and Master Sha':
+      'leader-worship-and-miracle-promotion-channels/dr-and-master-sha',
   '领袖神化与神迹宣传频道/exact/GoodNews City': 'leader-worship-and-miracle-promotion-channels/goodnews-city',
   '领袖神化与神迹宣传频道/exact/KALKI': 'leader-worship-and-miracle-promotion-channels/kalki',
-  '领袖神化与神迹宣传频道/exact/Kenneth Copeland Africa': 'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
-  '领袖神化与神迹宣传频道/exact/Kingdom of Jesus Christ': 'leader-worship-and-miracle-promotion-channels/kingdom-of-jesus-christ',
-  '领袖神化与神迹宣传频道/exact/LoveWorld Philippines': 'leader-worship-and-miracle-promotion-channels/loveworld-philippines',
-  '领袖神化与神迹宣传频道/exact/Prophet Jeremiah DreamFarm': 'leader-worship-and-miracle-promotion-channels/prophet-jeremiah-dreamfarm',
-  '领袖神化与神迹宣传频道/exact/Prophet Shepherd Bushiri': 'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
+  '领袖神化与神迹宣传频道/exact/Kenneth Copeland Africa':
+      'leader-worship-and-miracle-promotion-channels/kenneth-copeland',
+  '领袖神化与神迹宣传频道/exact/Kingdom of Jesus Christ':
+      'leader-worship-and-miracle-promotion-channels/kingdom-of-jesus-christ',
+  '领袖神化与神迹宣传频道/exact/LoveWorld Philippines':
+      'leader-worship-and-miracle-promotion-channels/loveworld-philippines',
+  '领袖神化与神迹宣传频道/exact/Prophet Jeremiah DreamFarm':
+      'leader-worship-and-miracle-promotion-channels/prophet-jeremiah-dreamfarm',
+  '领袖神化与神迹宣传频道/exact/Prophet Shepherd Bushiri':
+      'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
   '领袖神化与神迹宣传频道/exact/Sahaja Workshop': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
   '领袖神化与神迹宣传频道/exact/Saint MSG': 'leader-worship-and-miracle-promotion-channels/dera-sacha-sauda',
-  '领袖神化与神迹宣传频道/exact/Shepherd Bushiri Sermon': 'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
-  '领袖神化与神迹宣传频道/exact/Shri Mataji Excerpts': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
-  '领袖神化与神迹宣传频道/exact/Shri Mataji Teachings': 'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
-  '领袖神化与神迹宣传频道/exact/Sri Amma Bhagavan': 'leader-worship-and-miracle-promotion-channels/sri-amma-bhagavan',
-  '领袖神化与神迹宣传频道/exact/The Jesus Nation RSA': 'leader-worship-and-miracle-promotion-channels/the-jesus-nation-rsa',
+  '领袖神化与神迹宣传频道/exact/Shepherd Bushiri Sermon':
+      'leader-worship-and-miracle-promotion-channels/shepherd-bushiri',
+  '领袖神化与神迹宣传频道/exact/Shri Mataji Excerpts':
+      'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
+  '领袖神化与神迹宣传频道/exact/Shri Mataji Teachings':
+      'leader-worship-and-miracle-promotion-channels/sahaja-yoga',
+  '领袖神化与神迹宣传频道/exact/Sri Amma Bhagavan':
+      'leader-worship-and-miracle-promotion-channels/sri-amma-bhagavan',
+  '领袖神化与神迹宣传频道/exact/The Jesus Nation RSA':
+      'leader-worship-and-miracle-promotion-channels/the-jesus-nation-rsa',
   '领袖神化与神迹宣传频道/exact/This Is Your Day': 'leader-worship-and-miracle-promotion-channels/benny-hinn',
   '领袖神化与神迹宣传频道/exact/Uebert Angel': 'leader-worship-and-miracle-promotion-channels/uebert-angel',
-  '领袖神化与神迹宣传频道/exact/Uebert Angel Highlight': 'leader-worship-and-miracle-promotion-channels/uebert-angel',
+  '领袖神化与神迹宣传频道/exact/Uebert Angel Highlight':
+      'leader-worship-and-miracle-promotion-channels/uebert-angel',
   '领袖神化与神迹宣传频道/handle/@ASEZWAO': 'leader-worship-and-miracle-promotion-channels/asez-wao',
-  '领袖神化与神迹宣传频道/handle/@BhaktiMarga1008': 'leader-worship-and-miracle-promotion-channels/bhakti-marga',
-  '领袖神化与神迹宣传频道/handle/@ChurchofAlmightyGodMalaysia': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
-  '领袖神化与神迹宣传频道/handle/@FamilyFedMedia': 'leader-worship-and-miracle-promotion-channels/familyfed-media',
-  '领袖神化与神迹宣传频道/handle/@FamilyFederationEUME': 'leader-worship-and-miracle-promotion-channels/family-federation-eume',
+  '领袖神化与神迹宣传频道/handle/@BhaktiMarga1008':
+      'leader-worship-and-miracle-promotion-channels/bhakti-marga',
+  '领袖神化与神迹宣传频道/handle/@ChurchofAlmightyGodMalaysia':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  '领袖神化与神迹宣传频道/handle/@FamilyFedMedia':
+      'leader-worship-and-miracle-promotion-channels/familyfed-media',
+  '领袖神化与神迹宣传频道/handle/@FamilyFederationEUME':
+      'leader-worship-and-miracle-promotion-channels/family-federation-eume',
   '领袖神化与神迹宣传频道/handle/@JerusalemMother': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@JerusalemMother_en': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@RaelTV-Korea': 'leader-worship-and-miracle-promotion-channels/raeltv-korea',
   '领袖神化与神迹宣传频道/handle/@Rael_Official': 'leader-worship-and-miracle-promotion-channels/rael',
-  '领袖神化与神迹宣传频道/handle/@ShincheonjiChurch_zh': 'leader-worship-and-miracle-promotion-channels/shincheonji',
-  '领袖神化与神迹宣传频道/handle/@TheChurchofAlmightyGod': 'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
+  '领袖神化与神迹宣传频道/handle/@ShincheonjiChurch_zh':
+      'leader-worship-and-miracle-promotion-channels/shincheonji',
+  '领袖神化与神迹宣传频道/handle/@TheChurchofAlmightyGod':
+      'leader-worship-and-miracle-promotion-channels/church-of-almighty-god',
   '领袖神化与神迹宣传频道/handle/@WMSCOG': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  '领袖神化与神迹宣传频道/handle/@australianraelianmovement8033': 'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
-  '领袖神化与神迹宣传频道/handle/@divineprinciple7796': 'leader-worship-and-miracle-promotion-channels/divine-principle',
-  '领袖神化与神迹宣传频道/handle/@ffwp_taichung': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
-  '领袖神化与神迹宣传频道/handle/@ffwputaiwan': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  '领袖神化与神迹宣传频道/handle/@australianraelianmovement8033':
+      'leader-worship-and-miracle-promotion-channels/australian-raelian-movement',
+  '领袖神化与神迹宣传频道/handle/@divineprinciple7796':
+      'leader-worship-and-miracle-promotion-channels/divine-principle',
+  '领袖神化与神迹宣传频道/handle/@ffwp_taichung':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  '领袖神化与神迹宣传频道/handle/@ffwputaiwan':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
   '领袖神化与神迹宣传频道/handle/@online3765': 'leader-worship-and-miracle-promotion-channels/online3765',
-  '领袖神化与神迹宣传频道/handle/@raelianmovement-northamerica': 'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
-  '领袖神化与神迹宣传频道/handle/@twRaelianMovement': 'leader-worship-and-miracle-promotion-channels/raelian-movement-taiwan',
-  '领袖神化与神迹宣传频道/handle/@uctaiwan': 'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
+  '领袖神化与神迹宣传频道/handle/@raelianmovement-northamerica':
+      'leader-worship-and-miracle-promotion-channels/raelian-movement-north-america',
+  '领袖神化与神迹宣传频道/handle/@twRaelianMovement':
+      'leader-worship-and-miracle-promotion-channels/raelian-movement-taiwan',
+  '领袖神化与神迹宣传频道/handle/@uctaiwan':
+      'leader-worship-and-miracle-promotion-channels/family-federation-taiwan',
   '领袖神化与神迹宣传频道/handle/@wmscog_guide': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@wmscog_hk': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@wmscog_mo': 'leader-worship-and-miracle-promotion-channels/wmscog',
@@ -1520,23 +1862,40 @@ const blockEntryKeys = {
   '领袖神化与神迹宣传频道/handle/@wmscog_uk': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@wmscog_us': 'leader-worship-and-miracle-promotion-channels/wmscog',
   '领袖神化与神迹宣传频道/handle/@wmscog_zh': 'leader-worship-and-miracle-promotion-channels/wmscog',
-  '领袖神化与神迹宣传频道/id/UC6qpjAkeOQqtdZzyjGt2MEg': 'leader-worship-and-miracle-promotion-channels/uc6qpjakeoqqtdzzyjgt2meg',
-  '领袖神化与神迹宣传频道/id/UCB_-yL8GoqssAkENRllT-0Q': 'leader-worship-and-miracle-promotion-channels/ucb-yl8goqssakenrllt-0q',
-  '领袖神化与神迹宣传频道/id/UCE2wpyJPQAiKZLxNim13gUA': 'leader-worship-and-miracle-promotion-channels/uce2wpyjpqaikzlxnim13gua',
-  '领袖神化与神迹宣传频道/id/UCG1wAHkfxi_zBxo3cL6dohg': 'leader-worship-and-miracle-promotion-channels/ucg1wahkfxi-zbxo3cl6dohg',
-  '领袖神化与神迹宣传频道/id/UCGTMbm285tAmJqG-TKY6XDw': 'leader-worship-and-miracle-promotion-channels/ucgtmbm285tamjqg-tky6xdw',
-  '领袖神化与神迹宣传频道/id/UCIvtEYMedJDaBQYH9oipNyA': 'leader-worship-and-miracle-promotion-channels/ucivteymedjdabqyh9oipnya',
-  '领袖神化与神迹宣传频道/id/UCJxHxs-4-O7qmlWgBn8pvsQ': 'leader-worship-and-miracle-promotion-channels/ucjxhxs-4-o7qmlwgbn8pvsq',
-  '领袖神化与神迹宣传频道/id/UCQ36leR6qdmBMdqbURisGcw': 'leader-worship-and-miracle-promotion-channels/ucq36ler6qdmbmdqburisgcw',
-  '领袖神化与神迹宣传频道/id/UCS_f7kBa8szKH_eHEngPUSQ': 'leader-worship-and-miracle-promotion-channels/ucs-f7kba8szkh-ehengpusq',
-  '领袖神化与神迹宣传频道/id/UCW0zF2PSbG_AYzoF4OEVsbA': 'leader-worship-and-miracle-promotion-channels/ucw0zf2psbg-ayzof4oevsba',
-  '领袖神化与神迹宣传频道/id/UCWyRY-jRhq5WEBlk2VszLRw': 'leader-worship-and-miracle-promotion-channels/ucwyry-jrhq5weblk2vszlrw',
-  '领袖神化与神迹宣传频道/id/UChcrEH2VWEukIiG6HO3eJJg': 'leader-worship-and-miracle-promotion-channels/uchcreh2vweukiig6ho3ejjg',
-  '领袖神化与神迹宣传频道/id/UCioiBk9rS5Dv5j66hUipsuQ': 'leader-worship-and-miracle-promotion-channels/ucioibk9rs5dv5j66huipsuq',
-  '领袖神化与神迹宣传频道/id/UCjfyq7YJH8VoH9cqZKndcIQ': 'leader-worship-and-miracle-promotion-channels/ucjfyq7yjh8voh9cqzkndciq',
-  '领袖神化与神迹宣传频道/id/UCqc-JKqWTHMSdfiy_Xst55g': 'leader-worship-and-miracle-promotion-channels/ucqc-jkqwthmsdfiy-xst55g',
-  '领袖神化与神迹宣传频道/id/UCx7GlGIgN1aHKqjBBwctJEQ': 'leader-worship-and-miracle-promotion-channels/ucx7glgign1ahkqjbbwctjeq',
-  '领袖神化与神迹宣传频道/id/UCxA8J3oAkhdKp6MKP5rTRQA': 'leader-worship-and-miracle-promotion-channels/ucxa8j3oakhdkp6mkp5rtrqa',
+  '领袖神化与神迹宣传频道/id/UC6qpjAkeOQqtdZzyjGt2MEg':
+      'leader-worship-and-miracle-promotion-channels/uc6qpjakeoqqtdzzyjgt2meg',
+  '领袖神化与神迹宣传频道/id/UCB_-yL8GoqssAkENRllT-0Q':
+      'leader-worship-and-miracle-promotion-channels/ucb-yl8goqssakenrllt-0q',
+  '领袖神化与神迹宣传频道/id/UCE2wpyJPQAiKZLxNim13gUA':
+      'leader-worship-and-miracle-promotion-channels/uce2wpyjpqaikzlxnim13gua',
+  '领袖神化与神迹宣传频道/id/UCG1wAHkfxi_zBxo3cL6dohg':
+      'leader-worship-and-miracle-promotion-channels/ucg1wahkfxi-zbxo3cl6dohg',
+  '领袖神化与神迹宣传频道/id/UCGTMbm285tAmJqG-TKY6XDw':
+      'leader-worship-and-miracle-promotion-channels/ucgtmbm285tamjqg-tky6xdw',
+  '领袖神化与神迹宣传频道/id/UCIvtEYMedJDaBQYH9oipNyA':
+      'leader-worship-and-miracle-promotion-channels/ucivteymedjdabqyh9oipnya',
+  '领袖神化与神迹宣传频道/id/UCJxHxs-4-O7qmlWgBn8pvsQ':
+      'leader-worship-and-miracle-promotion-channels/ucjxhxs-4-o7qmlwgbn8pvsq',
+  '领袖神化与神迹宣传频道/id/UCQ36leR6qdmBMdqbURisGcw':
+      'leader-worship-and-miracle-promotion-channels/ucq36ler6qdmbmdqburisgcw',
+  '领袖神化与神迹宣传频道/id/UCS_f7kBa8szKH_eHEngPUSQ':
+      'leader-worship-and-miracle-promotion-channels/ucs-f7kba8szkh-ehengpusq',
+  '领袖神化与神迹宣传频道/id/UCW0zF2PSbG_AYzoF4OEVsbA':
+      'leader-worship-and-miracle-promotion-channels/ucw0zf2psbg-ayzof4oevsba',
+  '领袖神化与神迹宣传频道/id/UCWyRY-jRhq5WEBlk2VszLRw':
+      'leader-worship-and-miracle-promotion-channels/ucwyry-jrhq5weblk2vszlrw',
+  '领袖神化与神迹宣传频道/id/UChcrEH2VWEukIiG6HO3eJJg':
+      'leader-worship-and-miracle-promotion-channels/uchcreh2vweukiig6ho3ejjg',
+  '领袖神化与神迹宣传频道/id/UCioiBk9rS5Dv5j66hUipsuQ':
+      'leader-worship-and-miracle-promotion-channels/ucioibk9rs5dv5j66huipsuq',
+  '领袖神化与神迹宣传频道/id/UCjfyq7YJH8VoH9cqZKndcIQ':
+      'leader-worship-and-miracle-promotion-channels/ucjfyq7yjh8voh9cqzkndciq',
+  '领袖神化与神迹宣传频道/id/UCqc-JKqWTHMSdfiy_Xst55g':
+      'leader-worship-and-miracle-promotion-channels/ucqc-jkqwthmsdfiy-xst55g',
+  '领袖神化与神迹宣传频道/id/UCx7GlGIgN1aHKqjBBwctJEQ':
+      'leader-worship-and-miracle-promotion-channels/ucx7glgign1ahkqjbbwctjeq',
+  '领袖神化与神迹宣传频道/id/UCxA8J3oAkhdKp6MKP5rTRQA':
+      'leader-worship-and-miracle-promotion-channels/ucxa8j3oakhdkp6mkp5rtrqa',
   "马可楼/channel/Mark's Attic": 'marks-attic/marks-attic',
   '马可楼/channel/Mark’s Attic': 'marks-attic/marks-attic',
   '马可楼/channel/世界福音化传道协会': 'marks-attic/world-evangelization-mission-society',
@@ -1546,8 +1905,10 @@ const blockEntryKeys = {
 };
 
 /// [names] of lists as saved by an older version, renamed.
-List<String> renamedBlockLists(List<String> names) => {for (final name in names) blockListIds[name] ?? name}.toList();
+List<String> renamedBlockLists(List<String> names) =>
+    {for (final name in names) blockListIds[name] ?? name}.toList();
 
 /// [keys] of entries as saved by an older version, renamed; entries merged
 /// into one appear once.
-List<String> renamedBlockEntries(List<String> keys) => {for (final key in keys) blockEntryKeys[key] ?? key}.toList();
+List<String> renamedBlockEntries(List<String> keys) =>
+    {for (final key in keys) blockEntryKeys[key] ?? key}.toList();

@@ -18,13 +18,23 @@ void main() {
       related: (_) async => const [],
       channelUploads: (_) async => const [],
       search: (_) async => [
-        for (var i = 0; i < 6; i++) VideoItem(id: 'video$i'.padRight(11, '0'), title: '推荐视频 $i', channel: '频道 $i', channelId: 'UC$i', url: 'u'),
+        for (var i = 0; i < 6; i++)
+          VideoItem(
+              id: 'video$i'.padRight(11, '0'),
+              title: '推荐视频 $i',
+              channel: '频道 $i',
+              channelId: 'UC$i',
+              url: 'u'),
       ],
     ));
     final controller = AppController()
       ..ready = true
       ..homeFeed = feed;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () {})))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: VideoActions(
+                controller: controller,
+                child: HomeFeedPage(controller: controller, onFocusSearch: () {})))));
     await tester.pump();
     expect(find.text('For you'), findsOneWidget);
     expect(find.text('Shuffle'), findsOneWidget);
@@ -34,7 +44,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('下拉刷新 puts new videos first and marks where the ones seen before begin', (tester) async {
+  testWidgets('下拉刷新 puts new videos first and marks where the ones seen before begin',
+      (tester) async {
     tester.view.physicalSize = const Size(1280, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -44,7 +55,13 @@ void main() {
           related: (_) async => const [],
           channelUploads: (_) async => const [],
           search: (_) async => [
-            for (var i = 0; i < 3; i++) VideoItem(id: 'r${round}v$i'.padRight(11, '0'), title: '第 $round 轮 $i', channel: '频道 $i', channelId: 'UC$i', url: 'u'),
+            for (var i = 0; i < 3; i++)
+              VideoItem(
+                  id: 'r${round}v$i'.padRight(11, '0'),
+                  title: '第 $round 轮 $i',
+                  channel: '频道 $i',
+                  channelId: 'UC$i',
+                  url: 'u'),
           ],
         );
     final feed = HomeFeed(NotInterested(null));
@@ -60,7 +77,11 @@ void main() {
     final controller = AppController()
       ..ready = true
       ..homeFeed = feed;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () {})))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: VideoActions(
+                controller: controller,
+                child: HomeFeedPage(controller: controller, onFocusSearch: () {})))));
     await tester.pump();
     final marker = find.text('You were here last time · Tap to refresh');
     expect(marker, findsOneWidget);
@@ -78,7 +99,10 @@ void main() {
         history: const [],
         related: (_) async => const [],
         channelUploads: (_) async => const [],
-        search: (_) async => [VideoItem(id: 'video0'.padRight(11, '0'), title: 'v', channel: 'c', channelId: 'UC0', url: 'u')],
+        search: (_) async => [
+          VideoItem(
+              id: 'video0'.padRight(11, '0'), title: 'v', channel: 'c', channelId: 'UC0', url: 'u')
+        ],
       ),
       filter: (_) => throw StateError('filter failed'),
     );

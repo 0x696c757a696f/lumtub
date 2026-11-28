@@ -46,12 +46,15 @@ class _Glide {
   final double target;
   final Duration duration;
   Duration? start;
+
   /// The frame it last moved the list in.
   Duration? lastFrame;
 
   double _u(Duration at) {
     final since = at - (start ?? at);
-    return duration == Duration.zero ? 1 : (since.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0);
+    return duration == Duration.zero
+        ? 1
+        : (since.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0);
   }
 
   /// Where the list is at frame time [at].
@@ -63,7 +66,13 @@ class _Glide {
   /// Pixels a second at frame time [at].
   double velocityAt(Duration at) {
     final rest = 1 - _u(at);
-    return duration == Duration.zero ? 0 : 3 * (target - from) * rest * rest / (duration.inMicroseconds / Duration.microsecondsPerSecond);
+    return duration == Duration.zero
+        ? 0
+        : 3 *
+            (target - from) *
+            rest *
+            rest /
+            (duration.inMicroseconds / Duration.microsecondsPerSecond);
   }
 
   bool doneAt(Duration at) => _u(at) >= 1;
@@ -77,7 +86,9 @@ class _Glide {
 Duration get _frameInterval {
   final views = SchedulerBinding.instance.platformDispatcher.views;
   final rate = views.isEmpty ? 60.0 : views.first.display.refreshRate;
-  return Duration(microseconds: (Duration.microsecondsPerSecond / (rate.isFinite && rate >= 24 ? rate : 60)).round());
+  return Duration(
+      microseconds:
+          (Duration.microsecondsPerSecond / (rate.isFinite && rate >= 24 ? rate : 60)).round());
 }
 
 class _GlideActivity extends ScrollActivity {
@@ -114,8 +125,11 @@ class _GlideActivity extends ScrollActivity {
   double get velocity => _velocity;
 
   @override
-  void dispatchOverscrollNotification(ScrollMetrics metrics, BuildContext context, double overscroll) {
-    OverscrollNotification(metrics: metrics, context: context, overscroll: overscroll, velocity: velocity).dispatch(context);
+  void dispatchOverscrollNotification(
+      ScrollMetrics metrics, BuildContext context, double overscroll) {
+    OverscrollNotification(
+            metrics: metrics, context: context, overscroll: overscroll, velocity: velocity)
+        .dispatch(context);
   }
 
   @override
@@ -144,7 +158,12 @@ class _SmoothWheelState extends State<SmoothWheel> {
   Map<ScrollPosition, double>? _moved;
 
   void _onSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent || event.kind != PointerDeviceKind.mouse || !SmoothWheel.enabled || _moved != null) return;
+    if (event is! PointerScrollEvent ||
+        event.kind != PointerDeviceKind.mouse ||
+        !SmoothWheel.enabled ||
+        _moved != null) {
+      return;
+    }
     _moved = {};
     // The list takes the notch after every listener on the way has seen it;
     // what it did is looked at once the event is done.
@@ -155,7 +174,10 @@ class _SmoothWheelState extends State<SmoothWheel> {
     final moved = _moved;
     if (moved == null || notification.dragDetails != null) return false;
     final position = Scrollable.maybeOf(notification.context!)?.position;
-    if (position != null) moved.putIfAbsent(position, () => notification.metrics.pixels - (notification.scrollDelta ?? 0));
+    if (position != null) {
+      moved.putIfAbsent(
+          position, () => notification.metrics.pixels - (notification.scrollDelta ?? 0));
+    }
     return false;
   }
 
@@ -189,7 +211,10 @@ class _SmoothWheelState extends State<SmoothWheel> {
         // An ease-out cubic starts at three times its average speed: as
         // long as that takes to start at the speed the list already has.
         final seconds = 3 * distance / speed;
-        duration = Duration(microseconds: (seconds * Duration.microsecondsPerSecond).round().clamp(SmoothWheel.shortest.inMicroseconds, SmoothWheel.duration.inMicroseconds));
+        duration = Duration(
+            microseconds: (seconds * Duration.microsecondsPerSecond)
+                .round()
+                .clamp(SmoothWheel.shortest.inMicroseconds, SmoothWheel.duration.inMicroseconds));
       }
       final glide = _gliding[position] = _Glide(from, target, duration, start: last);
       position.jumpTo(from);
@@ -204,6 +229,7 @@ class _SmoothWheelState extends State<SmoothWheel> {
   @override
   Widget build(BuildContext context) => Listener(
         onPointerSignal: _onSignal,
-        child: NotificationListener<ScrollUpdateNotification>(onNotification: _onUpdate, child: widget.child),
+        child: NotificationListener<ScrollUpdateNotification>(
+            onNotification: _onUpdate, child: widget.child),
       );
 }

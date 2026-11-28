@@ -48,7 +48,8 @@ void main() {
     final dir = Directory.systemTemp.createTempSync('review');
     final store = ReviewStore(File('${dir.path}/review.json'));
     await store.load();
-    VocabularyWord word(String w, int day) => VocabularyWord(word: w, language: 'zh', added: DateTime(2026, 11, day));
+    VocabularyWord word(String w, int day) =>
+        VocabularyWord(word: w, language: 'zh', added: DateTime(2026, 11, day));
     final words = [for (var i = 0; i < 30; i++) word('w$i', 1)];
     expect(store.dueCount(words, now), ReviewStore.newPerDay);
     // The book is newest first: the oldest word comes first in review.
@@ -90,7 +91,12 @@ void main() {
   });
 
   test("today's scenes: words by video, most words first, no video last", () {
-    VocabularyWord word(String w, String video) => VocabularyWord(word: w, language: 'ja', videoId: video, videoTitle: video.isEmpty ? '' : 'Title $video', added: DateTime(2026, 11));
+    VocabularyWord word(String w, String video) => VocabularyWord(
+        word: w,
+        language: 'ja',
+        videoId: video,
+        videoTitle: video.isEmpty ? '' : 'Title $video',
+        added: DateTime(2026, 11));
     final scenes = todaysScenes([word('a', ''), word('b', 'v1'), word('c', 'v2'), word('d', 'v2')]);
     expect([for (final s in scenes) s.videoId], ['v2', 'v1', '']);
     expect([for (final w in scenes.first.words) w.word], ['c', 'd']);

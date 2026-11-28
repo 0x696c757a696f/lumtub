@@ -52,7 +52,9 @@ void main() {
   });
 
   test('reads the endpoint reply and joins its segments', () {
-    expect(GoogleTranslator.parseResponse('[[["你好，","Hello, ",null],["世界\\n","world\\n"]],null,"en"]'), '你好，世界\n');
+    expect(
+        GoogleTranslator.parseResponse('[[["你好，","Hello, ",null],["世界\\n","world\\n"]],null,"en"]'),
+        '你好，世界\n');
     expect(() => GoogleTranslator.parseResponse('<html>'), throwsA(isA<TranslationException>()));
   });
 
@@ -72,7 +74,14 @@ void main() {
       sources.add(source);
       final text = request.url.queryParameters['q']!;
       final answer = source == 'en' ? '那么告诉我' : text;
-      return http.Response(jsonEncode([[[answer, text]]]), 200, headers: {'content-type': 'application/json; charset=utf-8'});
+      return http.Response(
+          jsonEncode([
+            [
+              [answer, text]
+            ]
+          ]),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'});
     }));
     expect(await translator.translate('So tell me which phone you bought 😁', 'zh-CN'), '那么告诉我');
     expect(sources, ['auto', 'en']);
@@ -82,13 +91,15 @@ void main() {
     final requests = <Uri>[];
     final translator = GoogleTranslator(MockClient((request) async {
       requests.add(request.url);
-      return http.Response('[[["你好","hello"]]]', 200, headers: {'content-type': 'application/json; charset=utf-8'});
+      return http.Response('[[["你好","hello"]]]', 200,
+          headers: {'content-type': 'application/json; charset=utf-8'});
     }), cacheSize: 2);
     expect(await translator.translate('hello', 'zh-CN'), '你好');
     expect(await translator.translate('hello', 'zh-CN'), '你好');
     expect(requests, hasLength(1));
     expect(requests.single.host, 'translate.googleapis.com');
-    expect(requests.single.queryParameters, {'client': 'gtx', 'sl': 'auto', 'tl': 'zh-CN', 'dt': 't', 'q': 'hello'});
+    expect(requests.single.queryParameters,
+        {'client': 'gtx', 'sl': 'auto', 'tl': 'zh-CN', 'dt': 't', 'q': 'hello'});
     // The oldest of three entries is dropped from a cache of two.
     await translator.translate('a', 'zh-CN');
     await translator.translate('hello', 'zh-CN');
@@ -101,9 +112,14 @@ void main() {
   });
 
   test('turns failures into short messages', () async {
-    await expectLater(GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    await expectLater(
+        GoogleTranslator(MockClient((_) async => http.Response('', 429))).translate('x', 'en'),
+        throwsA(isA<TranslationException>()));
     GoogleTranslator.resetPacing();
-    expect(GoogleTranslator(MockClient((_) async => throw http.ClientException('offline'))).translate('x', 'en'), throwsA(isA<TranslationException>()));
+    expect(
+        GoogleTranslator(MockClient((_) async => throw http.ClientException('offline')))
+            .translate('x', 'en'),
+        throwsA(isA<TranslationException>()));
   });
 
   test('the target language is saved and unknown codes fall back', () {
@@ -112,42 +128,67 @@ void main() {
     expect(AppPreferences.fromJson({'translateLanguage': 'xx'}).translateLanguage, '');
     // Empty follows Windows; the old default, saved before, follows it too.
     expect(const AppPreferences().translateLanguage, '');
-    expect(AppPreferences.fromJson({'translateLanguage': TranslationLanguage.defaultCode}).translateLanguage, '');
+    expect(
+        AppPreferences.fromJson({'translateLanguage': TranslationLanguage.defaultCode})
+            .translateLanguage,
+        '');
     final chosen = const AppPreferences().copyWith(translateLanguage: 'zh-CN');
     expect(AppPreferences.fromJson(chosen.toJson()).translateLanguage, 'zh-CN');
     expect(AppPreferences.fromJson(const AppPreferences().toJson()).bilingualTranslation, isTrue);
   });
 
   test('translated subtitles translate the original, or use a listed track', () {
-    const en = SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en&fmt=vtt', kind: SubtitleKind.automatic);
-    const zh = SubtitleOption(language: 'zh-Hans', name: 'Chinese', url: 'https://yt.example/zh.vtt', kind: SubtitleKind.translated);
+    const en = SubtitleOption(
+        language: 'en',
+        name: 'English',
+        url: 'https://yt.example/api/timedtext?v=1&lang=en&fmt=vtt',
+        kind: SubtitleKind.automatic);
+    const zh = SubtitleOption(
+        language: 'zh-Hans',
+        name: 'Chinese',
+        url: 'https://yt.example/zh.vtt',
+        kind: SubtitleKind.translated);
     final target = TranslationLanguage.byCode('zh-CN');
     expect(Uri.parse(translationOf([en, zh], target)!.url).queryParameters['tlang'], 'zh-Hans');
     expect(translationOf([zh], target), zh);
     final derived = translationOf([en], target)!;
     expect(derived.kind, SubtitleKind.translated);
     expect(derived.language, 'zh-Hans');
-    expect(Uri.parse(derived.url).queryParameters, {'v': '1', 'lang': 'en', 'fmt': 'vtt', 'tlang': 'zh-Hans'});
+    expect(Uri.parse(derived.url).queryParameters,
+        {'v': '1', 'lang': 'en', 'fmt': 'vtt', 'tlang': 'zh-Hans'});
     // Nothing to translate when the only subtitle is already in the target language.
-    expect(translationOf([const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/a.vtt')], target), isNull);
+    expect(
+        translationOf(
+            [const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/a.vtt')],
+            target),
+        isNull);
     expect(translationOf(const [], target), isNull);
   });
 
   test('a second subtitle translates the first one shown, so their lines match', () {
-    const en = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en');
-    const zh = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans');
-    const asr = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans&kind=asr', kind: SubtitleKind.automatic);
+    const en = SubtitleOption(
+        language: 'en', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en');
+    const zh = SubtitleOption(
+        language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans');
+    const asr = SubtitleOption(
+        language: 'zh-Hans',
+        name: '',
+        url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans&kind=asr',
+        kind: SubtitleKind.automatic);
     final latin = TranslationLanguage.byCode('la');
     Map<String, String> query(SubtitleOption? o) => Uri.parse(o!.url).queryParameters;
     // Alone, a translation is of the creator's subtitle in the language
     // spoken, not of the first listed or of YouTube's automatic one.
-    expect(query(subtitleIn([en, zh, asr], latin, language: 'zh-Hans')), {'v': '1', 'lang': 'zh-Hans', 'tlang': 'la'});
+    expect(query(subtitleIn([en, zh, asr], latin, language: 'zh-Hans')),
+        {'v': '1', 'lang': 'zh-Hans', 'tlang': 'la'});
     expect(query(subtitleIn([en, zh, asr], latin)), {'v': '1', 'lang': 'zh-Hans', 'tlang': 'la'});
     // Beside a first subtitle, it is of that one.
-    expect(query(subtitleIn([zh, en, asr], latin, from: en)), {'v': '1', 'lang': 'en', 'tlang': 'la'});
+    expect(
+        query(subtitleIn([zh, en, asr], latin, from: en)), {'v': '1', 'lang': 'en', 'tlang': 'la'});
     // A first subtitle that is itself a translation lends its source.
     final shown = translatedOption(asr, TranslationLanguage.byCode('en'));
-    expect(query(subtitleIn([zh, en, asr], latin, from: shown)), {'v': '1', 'lang': 'zh-Hans', 'kind': 'asr', 'tlang': 'la'});
+    expect(query(subtitleIn([zh, en, asr], latin, from: shown)),
+        {'v': '1', 'lang': 'zh-Hans', 'kind': 'asr', 'tlang': 'la'});
     // Every interface language can be a target, under each tag it goes by.
     expect(speaks('he', TranslationLanguage.byCode('iw')), isTrue);
     expect(speaks('fil', TranslationLanguage.byCode('tl')), isTrue);
@@ -167,17 +208,30 @@ void main() {
     expect(speaks('eng', english), isFalse);
     expect(speaks(null, english), isFalse);
 
-    const ja = SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic);
-    const enAuto = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/en-auto.vtt', kind: SubtitleKind.automatic);
+    const ja = SubtitleOption(
+        language: 'ja',
+        name: '',
+        url: 'https://yt.example/api/timedtext?v=1&lang=ja',
+        kind: SubtitleKind.automatic);
+    const enAuto = SubtitleOption(
+        language: 'en',
+        name: '',
+        url: 'https://yt.example/en-auto.vtt',
+        kind: SubtitleKind.automatic);
     const enOwn = SubtitleOption(language: 'en-US', name: '', url: 'https://yt.example/en.vtt');
     expect(subtitleIn([ja, enAuto, enOwn], english), enOwn);
     expect(subtitleIn([ja, enAuto], english), enAuto);
     final translated = subtitleIn([ja], english)!;
-    expect((translated.kind, Uri.parse(translated.url).queryParameters['tlang']), (SubtitleKind.translated, 'en'));
+    expect((translated.kind, Uri.parse(translated.url).queryParameters['tlang']),
+        (SubtitleKind.translated, 'en'));
   });
 
   test('finds the subtitle in the language the video is spoken in', () {
-    const jaAuto = SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/ja-auto.vtt', kind: SubtitleKind.automatic);
+    const jaAuto = SubtitleOption(
+        language: 'ja',
+        name: '',
+        url: 'https://yt.example/ja-auto.vtt',
+        kind: SubtitleKind.automatic);
     const jaOwn = SubtitleOption(language: 'ja-JP', name: '', url: 'https://yt.example/ja.vtt');
     const enOwn = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/en.vtt');
     expect(originalSubtitle([enOwn, jaAuto, jaOwn]), jaOwn);
@@ -193,29 +247,49 @@ void main() {
     expect(sameLanguage(null, null), isFalse);
     final simplified = TranslationLanguage.byCode('zh-CN');
     expect(hasOwnSubtitle([enOwn, jaAuto], simplified), isFalse);
-    expect(hasOwnSubtitle([const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/zh.vtt', kind: SubtitleKind.automatic)], simplified), isTrue);
+    expect(
+        hasOwnSubtitle([
+          const SubtitleOption(
+              language: 'zh-Hans',
+              name: '',
+              url: 'https://yt.example/zh.vtt',
+              kind: SubtitleKind.automatic)
+        ], simplified),
+        isTrue);
   });
 
   test('the translation service settings are saved', () {
     final prefs = const AppPreferences().copyWith(
-      translation: const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek', promptPreset: 'natural'),
+      translation: const TranslationConfig(
+          service: TranslationService.ai, aiPreset: 'deepseek', promptPreset: 'natural'),
       subtitlesByService: true,
     );
     final read = AppPreferences.fromJson(prefs.toJson());
     expect(read.translation, prefs.translation);
     expect(read.subtitlesByService, isTrue);
-    expect(AppPreferences.fromJson(const AppPreferences(immersiveLanguage: 'fr').toJson()).immersiveLanguage, 'fr');
+    expect(
+        AppPreferences.fromJson(const AppPreferences(immersiveLanguage: 'fr').toJson())
+            .immersiveLanguage,
+        'fr');
     expect(AppPreferences.fromJson({}).immersiveLanguage, '');
     expect(AppPreferences.fromJson({}).translation.service, TranslationService.google);
   });
 
   testWidgets('沉浸式翻译 shows foreign text with its translation unasked', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
+    final controller = AppController()
+      ..translator = fake
       ..textTranslator = fake;
-    controller.preferences = controller.preferences.copyWith(translateLanguage: 'ja', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
-      Translatable(controller: controller, text: 'Hello there', builder: (context, text) => Text(text)),
+    controller.preferences = controller.preferences.copyWith(
+        translateLanguage: 'ja',
+        immersiveLanguage: 'zh-CN',
+        immersiveTranslation: true,
+        bilingualTranslation: false);
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Column(children: [
+      Translatable(
+          controller: controller, text: 'Hello there', builder: (context, text) => Text(text)),
       Translatable(controller: controller, text: '你好，世界', builder: (context, text) => Text(text)),
     ]))));
     await tester.pump();
@@ -233,12 +307,22 @@ void main() {
 
   testWidgets('沉浸式翻译 follows the target language, the layout and later changes', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
+    final controller = AppController()
+      ..translator = fake
       ..textTranslator = fake;
     // No language of its own: the one set for every translation.
-    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: '', immersiveTranslation: true, bilingualTranslation: true);
+    controller.preferences = controller.preferences.copyWith(
+        translateLanguage: 'zh-CN',
+        immersiveLanguage: '',
+        immersiveTranslation: true,
+        bilingualTranslation: true);
     expect(controller.preferences.immersiveTarget, 'zh-CN');
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Это очень интересное видео, спасибо всем', builder: (context, text) => Text(text)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Translatable(
+                controller: controller,
+                text: 'Это очень интересное видео, спасибо всем',
+                builder: (context, text) => Text(text)))));
     await tester.pump();
     await tester.pump();
     expect(find.text('Это очень интересное видео, спасибо всем'), findsOneWidget);
@@ -258,14 +342,23 @@ void main() {
     expect(find.text('Это очень интересное видео, спасибо всем'), findsOneWidget);
   });
 
-  testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one', (tester) async {
+  testWidgets('a tap turns Traditional Chinese into Simplified even when the two count as one',
+      (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
+    final controller = AppController()
+      ..translator = fake
       ..textTranslator = fake;
-    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
+    controller.preferences = controller.preferences.copyWith(
+        translateLanguage: 'zh-CN',
+        immersiveLanguage: 'zh-CN',
+        immersiveTranslation: true,
+        bilingualTranslation: false);
     expect(controller.preferences.chineseAsOne, isTrue);
     const text = '這樣的國家還會說這些話';
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: text, builder: (context, text) => Text(text)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Translatable(
+                controller: controller, text: text, builder: (context, text) => Text(text)))));
     await tester.pump();
     await tester.pump();
     // 沉浸式翻译 leaves it alone; a tap asks for Simplified.
@@ -279,10 +372,14 @@ void main() {
 
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
-    final controller = AppController()..translator = fake
+    final controller = AppController()
+      ..translator = fake
       ..textTranslator = fake;
     controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN');
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Translatable(
+                controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
     expect(find.text('Hello'), findsOneWidget);
     expect(fake.calls, 0);
     // 双语对照 (the default) keeps the original above the translation.
@@ -297,7 +394,13 @@ void main() {
     expect(fake.calls, 1);
     fake.calls = 0;
     controller.preferences = controller.preferences.copyWith(bilingualTranslation: false);
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('replace'), controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Translatable(
+                key: const ValueKey('replace'),
+                controller: controller,
+                text: 'Hello',
+                builder: (context, text) => Text(text)))));
     await tester.tap(find.text('Translation'));
     await tester.pump();
     await tester.pump();
@@ -314,7 +417,13 @@ void main() {
     final failing = _Fake()..fail = true;
     controller.translator = failing;
     controller.textTranslator = failing;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('b'), controller: controller, text: 'Other', builder: (context, text) => Text(text)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Translatable(
+                key: const ValueKey('b'),
+                controller: controller,
+                text: 'Other',
+                builder: (context, text) => Text(text)))));
     await tester.tap(find.text('Translation'));
     await tester.pump();
     await tester.pump();
@@ -323,17 +432,29 @@ void main() {
   });
 
   test('the subtitle panel lists the interface and system languages once, under the original', () {
-    const italian = SubtitleOption(language: 'it', name: 'Italiano', url: 'a', kind: SubtitleKind.automatic);
+    const italian =
+        SubtitleOption(language: 'it', name: 'Italiano', url: 'a', kind: SubtitleKind.automatic);
     const english = SubtitleOption(language: 'en', name: 'English', url: 'b');
     final zh = TranslationLanguage.byCode('zh-CN');
     final en = TranslationLanguage.byCode('en');
     final it = TranslationLanguage.byCode('it');
-    final rows = languageRows([italian, english], italian, [('Interface language', zh), ('System language', en)]);
-    expect([for (final r in rows) (r.name, r.option.kind, r.option.language)], [
+    final rows = languageRows(
+        [italian, english], italian, [('Interface language', zh), ('System language', en)]);
+    expect([
+      for (final r in rows) (r.name, r.option.kind, r.option.language)
+    ], [
       ('Interface language', SubtitleKind.translated, 'zh-Hans'),
       ('System language', SubtitleKind.uploaded, 'en'),
     ]);
-    expect(languageRows([italian], italian, [('Interface language', en), ('System language', en)]).map((r) => r.name), ['Interface language'], reason: 'the same language once');
-    expect(languageRows([italian], italian, [('Interface language', it), ('System language', en)]).map((r) => r.name), ['System language'], reason: 'the original stands for its language');
+    expect(
+        languageRows([italian], italian, [('Interface language', en), ('System language', en)])
+            .map((r) => r.name),
+        ['Interface language'],
+        reason: 'the same language once');
+    expect(
+        languageRows([italian], italian, [('Interface language', it), ('System language', en)])
+            .map((r) => r.name),
+        ['System language'],
+        reason: 'the original stands for its language');
   });
 }

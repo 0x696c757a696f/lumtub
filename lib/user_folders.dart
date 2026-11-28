@@ -27,8 +27,11 @@ String? userFolder(UserFolder kind, {Map<String, String>? environment, bool? win
   final separator = isWindows ? r'\' : '/';
   if (isWindows) return '$home$separator${kind == UserFolder.videos ? 'Videos' : 'Pictures'}';
   if (isMac) return '$home/${kind == UserFolder.videos ? 'Movies' : 'Pictures'}';
-  final config = env['XDG_CONFIG_HOME']?.trim().isNotEmpty ?? false ? env['XDG_CONFIG_HOME']! : '$home/.config';
-  final named = xdgUserDir(_readOrEmpty('$config/user-dirs.dirs'), kind == UserFolder.videos ? 'VIDEOS' : 'PICTURES', home);
+  final config = env['XDG_CONFIG_HOME']?.trim().isNotEmpty ?? false
+      ? env['XDG_CONFIG_HOME']!
+      : '$home/.config';
+  final named = xdgUserDir(_readOrEmpty('$config/user-dirs.dirs'),
+      kind == UserFolder.videos ? 'VIDEOS' : 'PICTURES', home);
   return named ?? '$home/${kind == UserFolder.videos ? 'Videos' : 'Pictures'}';
 }
 

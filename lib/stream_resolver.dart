@@ -45,11 +45,14 @@ class ResolvedVideo {
         _text = text;
 
   final Map<String, dynamic> info;
+
   /// [info] saved for `--load-info-json`.
   final File file;
+
   /// The yt-dlp format expression [info] was resolved with.
   final String format;
   final DateTime fetched;
+
   /// [info] as yt-dlp printed it.
   String? _text;
   final _summaries = <String, Map<String, dynamic>?>{};
@@ -57,7 +60,12 @@ class ResolvedVideo {
   /// The core's reading of [info] for the codecs [settings] disable and
   /// the height [cap]; null without the core.
   Map<String, dynamic>? _summary([PlayerSettings? settings, int cap = 0]) {
-    final disabled = settings == null ? const <String>[] : [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name];
+    final disabled = settings == null
+        ? const <String>[]
+        : [
+            for (final c in VideoCodec.values)
+              if (settings.disabledCodecs.contains(c)) c.name
+          ];
     return _summaries.putIfAbsent('${disabled.join(',')}/$cap', () {
       final core = NativeCore.instance;
       if (core == null) return null;
@@ -68,7 +76,14 @@ class ResolvedVideo {
       // The storyboard and heatmap come with the plain reading, which
       // every video asks for, and not again for each setting.
       final extras = disabled.isEmpty && cap == 0;
-      final answer = core.resolved(text, jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000, 'extras': extras}));
+      final answer = core.resolved(
+          text,
+          jsonEncode({
+            'disabled': disabled,
+            'cap': cap,
+            'fetched': fetched.millisecondsSinceEpoch ~/ 1000,
+            'extras': extras
+          }));
       return answer == null ? null : jsonDecode(answer) as Map<String, dynamic>;
     });
   }
@@ -76,14 +91,17 @@ class ResolvedVideo {
   /// Stream addresses carry their expiry time; they are used well before it.
   DateTime get expires {
     final at = _summary()?['expires'];
-    return at is int ? DateTime.fromMillisecondsSinceEpoch(at * 1000) : fetched.add(const Duration(hours: 1));
+    return at is int
+        ? DateTime.fromMillisecondsSinceEpoch(at * 1000)
+        : fetched.add(const Duration(hours: 1));
   }
 
   /// The languages the sound comes in, the original first; empty when the
   /// video has one.
   List<AudioLanguage> get audioLanguages => [
         for (final t in (_summary()?['audioTracks'] as List?) ?? const [])
-          if (t is Map && t['language'] is String) AudioLanguage(t['language'] as String, '${t['kind']}'),
+          if (t is Map && t['language'] is String)
+            AudioLanguage(t['language'] as String, '${t['kind']}'),
       ];
 
   bool get fresh => DateTime.now().isBefore(expires);
@@ -107,39 +125,51 @@ class ResolvedVideo {
   Storyboard? get storyboard {
     final summary = _summary();
     if (summary == null) return Storyboard.from(info);
-    return switch (summary['storyboard']) { final Map<String, dynamic> board => Storyboard.fromCore(board), _ => null };
+    return switch (summary['storyboard']) {
+      final Map<String, dynamic> board => Storyboard.fromCore(board),
+      _ => null
+    };
   }
 
   /// The "most replayed" curve; null for a video without one.
   Heatmap? get heatmap {
     final summary = _summary();
     if (summary == null) return Heatmap.from(info);
-    return switch (summary['heatmap']) { final List<dynamic> values => Heatmap([for (final v in values) (v as num).toDouble()]), _ => null };
+    return switch (summary['heatmap']) {
+      final List<dynamic> values => Heatmap([for (final v in values) (v as num).toDouble()]),
+      _ => null
+    };
   }
 
   /// Video heights this video offers, highest first; with [settings], only
   /// those that exist in a codec it allows.
   List<int> heightsFor([PlayerSettings? settings]) =>
-      ((_summary(settings)?[settings == null ? 'allHeights' : 'heights'] as List?) ?? const []).cast<int>();
+      ((_summary(settings)?[settings == null ? 'allHeights' : 'heights'] as List?) ?? const [])
+          .cast<int>();
 
   List<int> get heights => heightsFor();
 
   /// The most frames a second of each height [heightsFor] lists, where
   /// above 30, for labels such as 1080p60.
   Map<int, int> frameRatesFor(PlayerSettings settings) => {
-        for (final MapEntry(:key, :value) in ((_summary(settings)?['frameRates'] as Map?) ?? const {}).entries)
+        for (final MapEntry(:key, :value)
+            in ((_summary(settings)?['frameRates'] as Map?) ?? const {}).entries)
           if (int.tryParse('$key') case final height?) height: (value as num).toInt(),
       };
 
   /// When the tallest picture up to [cap] (0 for none) exists only in codecs
   /// [settings] disable: that height, those codecs, and the tallest height
   /// that does play.
-  ({int height, List<VideoCodec> codecs, int playing})? lostToDisabled(PlayerSettings settings, int cap) {
+  ({int height, List<VideoCodec> codecs, int playing})? lostToDisabled(
+      PlayerSettings settings, int cap) {
     final lost = _summary(settings, max(0, cap))?['lost'];
     if (lost is! Map) return null;
     return (
       height: lost['height'] as int,
-      codecs: [for (final name in lost['codecs'] as List) if (VideoCodec.byName(name) case final codec?) codec],
+      codecs: [
+        for (final name in lost['codecs'] as List)
+          if (VideoCodec.byName(name) case final codec?) codec
+      ],
       playing: lost['playing'] as int,
     );
   }
@@ -169,20 +199,28 @@ class ResolvedVideo {
 /// which YouTube shows only to a signed-in member.
 abstract interface class MembersCookies {
   bool get signedIn;
+
   /// Writes the cookies to [path]; false when they cannot be had.
   Future<bool> writeCookies(String path);
+
   /// Wipes and deletes what [writeCookies] wrote.
   void wipeCookies(String path);
 }
 
 class StreamResolver {
-  StreamResolver(this.ytDlpPath, {required this.infoDirectory, this.cacheDirectory, this.deno, this.proxy, Map<String, String>? environment})
+  StreamResolver(this.ytDlpPath,
+      {required this.infoDirectory,
+      this.cacheDirectory,
+      this.deno,
+      this.proxy,
+      Map<String, String>? environment})
       : _environment = environment {
     unawaited(deleteStaleInfo());
   }
 
   final String ytDlpPath;
   final String? cacheDirectory;
+
   /// The Deno yt-dlp solves YouTube's JavaScript challenges with. Without
   /// it the stream addresses are throttled to a crawl or left out.
   final String? deno;
@@ -193,8 +231,10 @@ class StreamResolver {
   /// which a phone's JavaScript runtime may not manage, and the one client
   /// that needs no JavaScript (visionos) lists no live formats at all.
   String? liveClients = Platform.isAndroid || Platform.isIOS ? 'default,android_vr' : null;
+
   /// yt-dlp's `--proxy` value at the time of each call.
   final String? Function()? proxy;
+
   /// Where info files for `--load-info-json` are kept.
   final Directory infoDirectory;
   final Map<String, String>? _environment;
@@ -214,28 +254,36 @@ class StreamResolver {
   bool Function()? signInWhenBlocked;
 
   /// The signed-in way past a bot check, shared with downloads.
-  late final blockedSignIn = BlockedSignIn(cookies: () => members?.call(), enabled: () => signInWhenBlocked?.call() ?? false, directory: () => infoDirectory);
+  late final blockedSignIn = BlockedSignIn(
+      cookies: () => members?.call(),
+      enabled: () => signInWhenBlocked?.call() ?? false,
+      directory: () => infoDirectory);
 
   /// Told when a video plays only because it was asked signed in, once
   /// each time this network is refused.
   void Function(String videoId)? onSignedInPlay;
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
+  static final botCheck =
+      RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Each kept answer takes about 5 MB once decoded (measured with a 1 MB
   /// answer: 55 MB for 12), so only the last few are kept.
   static const _keep = 4;
+
   /// The video last asked for in the foreground, kept whatever background
   /// extractions come after it: it is likely the one playing.
   String? _asked;
   final _results = <String, Future<ResolvedVideo>>{};
+
   /// The format each entry of [_results] is being resolved with.
   final _formats = <String, String>{};
   final _formatSorts = <String, String?>{};
+
   /// The proxy each entry of [_results] was resolved through: addresses
   /// handed out through one may not work through another.
   final _proxies = <String, String?>{};
+
   /// The entries of [_results] resolved with `live`.
   final _lives = <String>{};
 
@@ -273,7 +321,10 @@ class StreamResolver {
   void avoidTv() {
     // visionOS's own addresses stop after 1 MiB here: the TV clients stay.
     if (visionCut) return;
-    if (!avoidingTv) logInfo("YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
+    if (!avoidingTv) {
+      logInfo(
+          "YouTube refused the TV client's stream addresses; asking yt-dlp as visionOS alone again");
+    }
     _tvNeededUntil = null;
   }
 
@@ -308,9 +359,18 @@ class StreamResolver {
   @visibleForTesting
   Future<void> checkVisionCut(Map<String, dynamic> info) async {
     final proxy = this.proxy?.call();
-    if (_visionChecking || (_visionCheckedProxy == proxy && DateTime.now().difference(_visionCheckedAt) < visionCheckFor)) return;
-    final formats = [...?(info['requested_formats'] as List<dynamic>?)?.whereType<Map<dynamic, dynamic>>(), info];
-    final format = formats.firstWhere((f) => f['url'] is String && ((f['filesize'] as num?) ?? 0) > visionCutAt + 4096, orElse: () => const {});
+    if (_visionChecking ||
+        (_visionCheckedProxy == proxy &&
+            DateTime.now().difference(_visionCheckedAt) < visionCheckFor)) {
+      return;
+    }
+    final formats = [
+      ...?(info['requested_formats'] as List<dynamic>?)?.whereType<Map<dynamic, dynamic>>(),
+      info
+    ];
+    final format = formats.firstWhere(
+        (f) => f['url'] is String && ((f['filesize'] as num?) ?? 0) > visionCutAt + 4096,
+        orElse: () => const {});
     final url = format['url'];
     if (url is! String) return;
     final headers = <String, String>{
@@ -331,7 +391,8 @@ class StreamResolver {
           _visionCutUntil = DateTime.now().add(visionCheckFor);
           _visionCutProxy = proxy;
           _tvNeededUntil = _visionCutUntil;
-          logWarn("YouTube refuses visionOS's stream addresses past 1 MiB on this network; quick starts are off and yt-dlp asks its default clients for ${visionCheckFor.inMinutes} minutes");
+          logWarn(
+              "YouTube refuses visionOS's stream addresses past 1 MiB on this network; quick starts are off and yt-dlp asks its default clients for ${visionCheckFor.inMinutes} minutes");
         } else if (_visionCutUntil != null) {
           _visionCutUntil = null;
           logInfo("visionOS's stream addresses play past 1 MiB again");
@@ -348,49 +409,69 @@ class StreamResolver {
   set quickClient(http.Client client) => _quickClient = client;
 
   /// mpv's own default when no format was chosen.
-  static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
+  static String expressionOf(String format) =>
+      format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
   /// [live] also lists a live stream's separate picture and sound above
   /// 1080p, which have no manifest (see `LiveSplit`).
-  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies, bool live = false}) {
+  List<String> arguments(String videoId, String format,
+      {String? formatSort, String? cookies, bool live = false}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
-        if (cookies != null) ...['--cookies', cookies],
-        if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
-        if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
-        '--extractor-retries', '3',
-        if (live)
-          ...['--extractor-args', 'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}']
-        // A signed-in run keeps yt-dlp's own clients for signed-in users,
-        // and asks the Samsung TV client too: on an address YouTube takes
-        // for a bot it was let through signed in every time where the
-        // others mostly were not (SimpMusic issue 2861, 2026-11-11).
-        else if (cookies != null)
-          ...['--extractor-args', signedClients]
-        else if (avoidingTv)
-          ...['--extractor-args', visionOnly],
-        '--no-playlist',
-        '--dump-single-json',
-        '--format', expressionOf(format),
-        if (formatSort != null) ...['--format-sort', formatSort],
-        '--', 'https://www.youtube.com/watch?v=$videoId',
-      ];
+      if (cookies != null) ...['--cookies', cookies],
+      if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+      if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
+      '--extractor-retries',
+      '3',
+      if (live) ...[
+        '--extractor-args',
+        'youtube:formats=incomplete${liveClients == null ? '' : ';player_client=$liveClients'}'
+      ]
+      // A signed-in run keeps yt-dlp's own clients for signed-in users,
+      // and asks the Samsung TV client too: on an address YouTube takes
+      // for a bot it was let through signed in every time where the
+      // others mostly were not (SimpMusic issue 2861, 2026-11-11).
+      else if (cookies != null) ...[
+        '--extractor-args',
+        signedClients
+      ] else if (avoidingTv) ...[
+        '--extractor-args',
+        visionOnly
+      ],
+      '--no-playlist',
+      '--dump-single-json',
+      '--format',
+      expressionOf(format),
+      if (formatSort != null) ...['--format-sort', formatSort],
+      '--',
+      'https://www.youtube.com/watch?v=$videoId',
+    ];
   }
 
   /// The resolved video, from the cache while it is fresh.
   /// [membersOnly] (as a list marked it) asks signed in from the start.
   /// [live]: see [arguments].
-  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false, bool live = false}) {
+  Future<ResolvedVideo> resolve(String videoId, String format,
+      {String? formatSort, bool membersOnly = false, bool live = false}) {
     _asked = videoId;
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
-    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call() && (_lives.contains(videoId) || !live)) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live),
-          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live));
+    if (cached != null &&
+        _formats[videoId] == format &&
+        _formatSorts[videoId] == formatSort &&
+        _proxies[videoId] == proxy?.call() &&
+        (_lives.contains(videoId) || !live)) {
+      return cached.then(
+          (video) => video.fresh
+              ? video
+              : _start(videoId, format,
+                  formatSort: formatSort, membersOnly: membersOnly, live: live),
+          onError: (_) => _start(videoId, format,
+              formatSort: formatSort, membersOnly: membersOnly, live: live));
     }
     return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live);
   }
@@ -436,9 +517,13 @@ class StreamResolver {
     try {
       final parts = jsonDecode(request) as Map<String, dynamic>;
       final client = _quickClient ??= appHttpClient();
-      final headers = {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()};
+      final headers = {
+        'Content-Type': 'application/json',
+        ...(parts['headers'] as Map).cast<String, String>()
+      };
       final body = (parts['body'] as Map).cast<String, Object?>();
-      final response = await YoutubePlayerProbe.post(client, headers, body, timeout: const Duration(seconds: 6), playing: true);
+      final response = await YoutubePlayerProbe.post(client, headers, body,
+          timeout: const Duration(seconds: 6), playing: true);
       if (response.statusCode != 200) {
         logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
         return null;
@@ -455,9 +540,12 @@ class StreamResolver {
         // too, so it asks its default clients for a while.
         if (answer.contains('"LOGIN_REQUIRED"') && avoidingTv) {
           _tvNeededUntil = DateTime.now().add(tvNeededFor);
-          logInfo('visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes');
+          logInfo(
+              'visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes');
         }
-        if (answer.contains('"LOGIN_REQUIRED"') && botCheck.hasMatch(answer)) blockedSignIn.noteBlocked();
+        if (answer.contains('"LOGIN_REQUIRED"') && botCheck.hasMatch(answer)) {
+          blockedSignIn.noteBlocked();
+        }
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
         return null;
       }
@@ -480,14 +568,21 @@ class StreamResolver {
   void prefetch(String videoId, String format, {String? formatSort}) {
     // The pointer is on a card: a click may follow.
     _warm(format, formatSort);
-    if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) return;
+    if (_results.containsKey(videoId) &&
+        _formats[videoId] == format &&
+        _formatSorts[videoId] == formatSort &&
+        _proxies[videoId] == proxy?.call()) {
+      return;
+    }
     if (!prefetchAllowed(videoId)) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format, formatSort);
       return;
     }
     _prefetching = true;
-    unawaited(_start(videoId, format, formatSort: formatSort, background: true).then((_) {}, onError: (_) {}).whenComplete(() {
+    unawaited(_start(videoId, format, formatSort: formatSort, background: true)
+        .then((_) {}, onError: (_) {})
+        .whenComplete(() {
       _prefetching = false;
       final next = _nextPrefetch;
       _nextPrefetch = null;
@@ -526,7 +621,10 @@ class StreamResolver {
     if (kind == FailureKind.botCheck || kind == FailureKind.rateLimited) {
       final paused = _refusedUntil != null && now.isBefore(_refusedUntil!);
       _refusedUntil = now.add(refusalPause);
-      if (!paused) logWarn('YouTube refused this address (${kind.name}); prefetching pauses for ${refusalPause.inMinutes} minutes');
+      if (!paused) {
+        logWarn(
+            'YouTube refused this address (${kind.name}); prefetching pauses for ${refusalPause.inMinutes} minutes');
+      }
     }
   }
 
@@ -540,6 +638,7 @@ class StreamResolver {
   }
 
   bool _prefetching = false;
+
   /// Background extractions still running, by video id: their process ids.
   final _lowered = <String, int>{};
   (String, String, String?)? _nextPrefetch;
@@ -557,7 +656,10 @@ class StreamResolver {
   /// Drops every finished answer but the one asked for last, when the app
   /// goes to the background with nothing playing.
   void trim() {
-    for (final id in [for (final id in _done.keys) if (id != _asked) id]) {
+    for (final id in [
+      for (final id in _done.keys)
+        if (id != _asked) id
+    ]) {
       _drop(id);
     }
   }
@@ -580,7 +682,8 @@ class StreamResolver {
     if (identical(_done[videoId], video)) forget(videoId);
   }
 
-  File _infoFile(String videoId) => File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+  File _infoFile(String videoId) =>
+      File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
 
   /// Deleted at once, so it cannot land after the next resolve rewrote it.
   void _deleteInfo(String videoId) {
@@ -615,8 +718,10 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) {
-    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly, live: live);
+  Future<ResolvedVideo> _start(String videoId, String format,
+      {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) {
+    final future = _run(videoId, format,
+        formatSort: formatSort, background: background, membersOnly: membersOnly, live: live);
     unawaited(_results.remove(videoId));
     _done.remove(videoId);
     _results[videoId] = future;
@@ -629,7 +734,10 @@ class StreamResolver {
       _lives.remove(videoId);
     }
     // Answers whose addresses expired are of no more use.
-    for (final id in [for (final e in _done.entries) if (!e.value.fresh && e.key != _asked && e.key != videoId) e.key]) {
+    for (final id in [
+      for (final e in _done.entries)
+        if (!e.value.fresh && e.key != _asked && e.key != videoId) e.key
+    ]) {
       _drop(id);
     }
     while (_results.length > _keep) {
@@ -647,32 +755,48 @@ class StreamResolver {
   }
 
   /// Errors a second attempt can get past, unlike a private or removed video.
-  static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
+  static final _transient = RegExp(
+      r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead',
+      caseSensitive: false);
 
   /// What yt-dlp says when the clients it asked gave nothing to play,
   /// which the TV client may still give; a private, removed or
   /// members-only video stays refused whichever client asks.
-  static final _tvMayHelp = RegExp(r'not a bot|Requested format is not available|No video formats found|Only images are available|PO Token', caseSensitive: false);
+  static final _tvMayHelp = RegExp(
+      r'not a bot|Requested format is not available|No video formats found|Only images are available|PO Token',
+      caseSensitive: false);
 
   /// Whether [error] is a network failure that resolving already retried.
   static bool isTransient(Object error) => _transient.hasMatch('$error');
 
   /// What yt-dlp says about a video only the channel's members may watch.
-  static final membersOnlyError = RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
+  static final membersOnlyError =
+      RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
 
-  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) async {
+  Future<ResolvedVideo> _run(String videoId, String format,
+      {String? formatSort,
+      bool background = false,
+      bool membersOnly = false,
+      bool live = false}) async {
     final watch = Stopwatch()..start();
     // Background runs never open the cookies: that may bring up Windows Hello.
     final cookies = background ? null : members?.call();
     final signedIn = cookies != null && cookies.signedIn;
-    Future<ProcessResult> run({bool signed = false}) =>
-        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort, live: live) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null, live: live);
+    Future<ProcessResult> run({bool signed = false}) => signed
+        ? _signedIn(cookies!, videoId, format, formatSort: formatSort, live: live)
+        : _ytDlp(videoId, format,
+            formatSort: formatSort, background: background ? videoId : null, live: live);
     var signed = membersOnly && signedIn;
     // Refused for a bot a moment ago: asking without the account again
     // would only be refused too, after seconds.
     var signedFirst = false;
-    if (!signed && !background && blockedSignIn.recentlyBlocked && blockedSignIn.usable != null && blockedSignIn.take()) {
-      logInfo('$videoId is asked signed in from the start: this network was taken for a bot a moment ago');
+    if (!signed &&
+        !background &&
+        blockedSignIn.recentlyBlocked &&
+        blockedSignIn.usable != null &&
+        blockedSignIn.take()) {
+      logInfo(
+          '$videoId is asked signed in from the start: this network was taken for a bot a moment ago');
       signed = signedFirst = true;
     }
     var result = await run(signed: signed);
@@ -688,15 +812,24 @@ class StreamResolver {
       await Future<void>.delayed(const Duration(seconds: 2));
       result = await run(signed: signed);
     }
-    if (_failed(result) && !live && !signed && avoidingTv && _tvMayHelp.hasMatch(result.stderr.toString())) {
+    if (_failed(result) &&
+        !live &&
+        !signed &&
+        avoidingTv &&
+        _tvMayHelp.hasMatch(result.stderr.toString())) {
       // The other clients may give nothing this video can play (when
       // YouTube takes them for a bot, say): the TV client is asked too
       // for a while.
-      logWarn("Resolving $videoId as visionOS alone failed; asking yt-dlp's default clients for ${tvNeededFor.inMinutes} minutes");
+      logWarn(
+          "Resolving $videoId as visionOS alone failed; asking yt-dlp's default clients for ${tvNeededFor.inMinutes} minutes");
       _tvNeededUntil = DateTime.now().add(tvNeededFor);
       result = await run(signed: signed);
     }
-    if (_failed(result) && !signed && botCheck.hasMatch(result.stderr.toString()) && ProcessTree.switchedFamily == null && (bothFamilies?.call() ?? false)) {
+    if (_failed(result) &&
+        !signed &&
+        botCheck.hasMatch(result.stderr.toString()) &&
+        ProcessTree.switchedFamily == null &&
+        (bothFamilies?.call() ?? false)) {
       // YouTube rates IPv4 addresses and IPv6 networks apart: the other
       // family is asked once, and kept for a while when it gets through.
       final other = ProcessTree.familyArguments.contains('--force-ipv4') ? '6' : '4';
@@ -710,15 +843,28 @@ class StreamResolver {
       }
       result = again;
     }
-    if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {
+    if (_failed(result) &&
+        !signed &&
+        signedIn &&
+        membersOnlyError.hasMatch(result.stderr.toString())) {
       logInfo('$videoId is members-only, asking again signed in');
       signed = true;
       result = await run(signed: true);
     }
-    if (_failed(result) && !signed && botCheck.hasMatch(result.stderr.toString())) blockedSignIn.noteBlocked();
+    if (_failed(result) && !signed && botCheck.hasMatch(result.stderr.toString())) {
+      blockedSignIn.noteBlocked();
+    }
     if (!_failed(result) && !signed) blockedSignIn.noteAnswered();
-    if (_failed(result) && !signed && !signedFirst && !background && signedIn && botCheck.hasMatch(result.stderr.toString()) && blockedSignIn.usable != null && blockedSignIn.take()) {
-      logInfo('$videoId was taken for a bot; asking again signed in (${blockedSignIn.usedThisHour} this hour)');
+    if (_failed(result) &&
+        !signed &&
+        !signedFirst &&
+        !background &&
+        signedIn &&
+        botCheck.hasMatch(result.stderr.toString()) &&
+        blockedSignIn.usable != null &&
+        blockedSignIn.take()) {
+      logInfo(
+          '$videoId was taken for a bot; asking again signed in (${blockedSignIn.usedThisHour} this hour)');
       signed = true;
       result = await run(signed: true);
       if (!_failed(result) && blockedSignIn.tell()) onSignedInPlay?.call(videoId);
@@ -732,7 +878,11 @@ class StreamResolver {
     }
     // Warnings such as a failed JavaScript challenge explain slow or
     // missing streams, so they go to the log.
-    final warnings = const LineSplitter().convert(err).where((line) => line.startsWith('WARNING')).take(5).toList();
+    final warnings = const LineSplitter()
+        .convert(err)
+        .where((line) => line.startsWith('WARNING'))
+        .take(5)
+        .toList();
     if (warnings.isNotEmpty) logWarn('yt-dlp warnings for $videoId:\n${warnings.join('\n')}');
     final line = const LineSplitter().convert(output).last;
     final data = await decodeJsonInBackground(line);
@@ -740,7 +890,8 @@ class StreamResolver {
     await infoDirectory.create(recursive: true);
     final file = _infoFile(videoId);
     await file.writeAsString(output);
-    logDebug(() => 'Resolved $videoId${background ? ' (prefetch)' : ''} in ${watch.elapsedMilliseconds} ms');
+    logDebug(() =>
+        'Resolved $videoId${background ? ' (prefetch)' : ''} in ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format, text: line);
   }
 
@@ -748,9 +899,11 @@ class StreamResolver {
 
   /// yt-dlp for [videoId] with the signed-in cookies, in a file of their
   /// own that is wiped as soon as yt-dlp is done.
-  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort, bool live = false}) async {
+  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format,
+      {String? formatSort, bool live = false}) async {
     await infoDirectory.create(recursive: true);
-    final path = '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
+    final path =
+        '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
     try {
       if (!await cookies.writeCookies(path)) {
         logWarn('The cookie sign-in could not be opened for $videoId');
@@ -762,15 +915,19 @@ class StreamResolver {
     }
   }
 
-  static String _lastLine(ProcessResult result) => const LineSplitter().convert(result.stderr.toString().trim()).lastOrNull ?? 'exit ${result.exitCode}';
+  static String _lastLine(ProcessResult result) =>
+      const LineSplitter().convert(result.stderr.toString().trim()).lastOrNull ??
+      'exit ${result.exitCode}';
 
-  bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
+  bool _failed(ProcessResult result) =>
+      result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video. A video played in the
   /// foreground goes to the standby yt-dlp when one with the same
   /// arguments is waiting, and another is started for the next.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies, bool live = false}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format,
+      {String? formatSort, String? background, String? cookies, bool live = false}) async {
     final plain = background == null && cookies == null && !live;
     try {
       if (plain) {
@@ -802,7 +959,8 @@ class StreamResolver {
   /// a 6 s run on a Windows PC, measured 2026-11-17: 6.17 s → 3.74 s).
   /// Desktop only: the phones run yt-dlp inside the app's own Python.
   /// Off under `flutter test`, whose fake yt-dlp scripts count their runs.
-  bool standbyEnabled = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) && Platform.environment['FLUTTER_TEST'] != 'true';
+  bool standbyEnabled = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) &&
+      Platform.environment['FLUTTER_TEST'] != 'true';
 
   /// How long a standby waits for a video before it is ended; the pointer
   /// on a card starts one again.
@@ -812,7 +970,9 @@ class StreamResolver {
 
   /// What a standby was started with, so one started before the IPv4
   /// setting changed is not used after.
-  static String _standbyKey(List<String> args) => '${ProcessTree.familyArguments.join()}\u0000${args.join('\u0000')}';
+  static String _standbyKey(List<String> args) =>
+      '${ProcessTree.familyArguments.join()}\u0000${args.join('\u0000')}';
+
   /// The arguments of the standby being started, so two calls start one.
   String? _starting;
 
@@ -862,7 +1022,11 @@ class StreamResolver {
   /// waiting; null otherwise.
   Future<ProcessResult?> _fromStandby(String videoId, String format, String? formatSort) async {
     final standby = _standby;
-    if (standby == null || standby.collected.exited || standby.key != _standbyKey(standbyArguments(format, formatSort))) return null;
+    if (standby == null ||
+        standby.collected.exited ||
+        standby.key != _standbyKey(standbyArguments(format, formatSort))) {
+      return null;
+    }
     _standby = null;
     standby.taken();
     final process = standby.collected.process;

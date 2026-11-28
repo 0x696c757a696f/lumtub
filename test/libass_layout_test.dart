@@ -4,7 +4,8 @@ import 'package:lumtub/player_settings.dart';
 
 void main() {
   test("the second subtitle's copy: only its own lines count", () {
-    expect(secondCopyOwnText('早上好，亲爱的朋友们。\n\u00a0\nDzień dobry moi drodzy.\n20 dzień listopada'), '早上好，亲爱的朋友们。');
+    expect(secondCopyOwnText('早上好，亲爱的朋友们。\n\u00a0\nDzień dobry moi drodzy.\n20 dzień listopada'),
+        '早上好，亲爱的朋友们。');
     expect(secondCopyOwnText('Good morning\nmy friends'), 'Good morning\nmy friends');
   });
 
@@ -18,7 +19,8 @@ void main() {
     // the main subtitle's bottom at 770 px with sub-margin-y 34. Position
     // 87.8 puts the second subtitle's bottom at 676 px, 8 px above the top
     // of the main one's first line (770 - 2 * 43 = 684).
-    const italian = 'è visibile già alla periferia di Hanoi,\nin particolare a Ninh Hiệp, uno dei più';
+    const italian =
+        'è visibile già alla periferia di Hanoi,\nin particolare a Ninh Hiệp, uno dei più';
     final position = LibassLayout.secondaryPosition(italian, position: 100, scale: 1);
     expect(position, 87.8);
     final bottom = 770 * position / 100;
@@ -31,7 +33,8 @@ void main() {
 
   test('two main lines move the second subtitle up a line', () {
     final one = LibassLayout.secondaryPosition('I think it was', position: 100, scale: 1);
-    final two = LibassLayout.secondaryPosition('I think it was\nthe first time we met', position: 100, scale: 1);
+    final two = LibassLayout.secondaryPosition('I think it was\nthe first time we met',
+        position: 100, scale: 1);
     expect(two, lessThanOrEqualTo(one - 5));
   });
 
@@ -43,16 +46,26 @@ void main() {
   });
 
   test('bigger text moves it further', () {
-    expect(LibassLayout.secondaryPosition('a\nb', position: 100, scale: 1.5), lessThan(LibassLayout.secondaryPosition('a\nb', position: 100, scale: 1)));
+    expect(LibassLayout.secondaryPosition('a\nb', position: 100, scale: 1.5),
+        lessThan(LibassLayout.secondaryPosition('a\nb', position: 100, scale: 1)));
   });
 
   test('stays on screen', () {
-    expect(LibassLayout.secondaryPosition('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np', position: 50, scale: 2), 0);
+    expect(
+        LibassLayout.secondaryPosition('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np',
+            position: 50, scale: 2),
+        0);
   });
 
   test('a line of ordinary Latin text that fits is counted as one', () {
-    expect(LibassLayout.lineCount('Was kam danach?\nJa, die Leute müssen verstehen, was es', scale: 1.5), 2);
-    expect(LibassLayout.lineCount('gute Erkennisse mit Manuel [musik]\nOstermann ungeskriptet.', scale: 1.5), 2);
+    expect(
+        LibassLayout.lineCount('Was kam danach?\nJa, die Leute müssen verstehen, was es',
+            scale: 1.5),
+        2);
+    expect(
+        LibassLayout.lineCount('gute Erkennisse mit Manuel [musik]\nOstermann ungeskriptet.',
+            scale: 1.5),
+        2);
     expect(LibassLayout.lineCount('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm', scale: 1), 2);
   });
 
@@ -80,61 +93,99 @@ void main() {
 
   group('second subtitle holding the main one', () {
     Duration s(double seconds) => Duration(milliseconds: (seconds * 1000).round());
-    List<String> events(String ass) => ass.split('\n').where((l) => l.startsWith('Dialogue:')).toList();
+    List<String> events(String ass) =>
+        ass.split('\n').where((l) => l.startsWith('Dialogue:')).toList();
     const settings = PlayerSettings();
-    final main = (cues: [(start: s(0), end: s(2), text: 'Hello there'), (start: s(2), end: s(5), text: 'General Kenobi')], font: 'Arial', room: 60.0, wrapFont: '');
+    final main = (
+      cues: [
+        (start: s(0), end: s(2), text: 'Hello there'),
+        (start: s(2), end: s(5), text: 'General Kenobi')
+      ],
+      font: 'Arial',
+      room: 60.0,
+      wrapFont: ''
+    );
 
     test('sits where the main subtitle does, at any size', () {
-      expect(LibassLayout.secondaryPosition('Hello\nthere', position: 100, scale: 2, whole: true), 95.2);
+      expect(LibassLayout.secondaryPosition('Hello\nthere', position: 100, scale: 2, whole: true),
+          95.2);
       expect(LibassLayout.secondaryPosition('', position: 100, scale: 1, whole: true), 95.2);
-      expect(LibassLayout.secondaryPosition('', position: 80, scale: 1, whole: true), lessThan(95.2));
+      expect(
+          LibassLayout.secondaryPosition('', position: 80, scale: 1, whole: true), lessThan(95.2));
     });
 
     test('each event holds the main lines shown with it, invisible, at their size', () {
-      final ass = secondAss([(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5), outline: 0.1, main: main);
+      final ass = secondAss(
+          [(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5),
+          outline: 0.1, main: main);
       final lines = events(ass);
       expect(lines, hasLength(2));
       expect(lines[0], startsWith('Dialogue: 0,0:00:01.00,0:00:02.00,'));
-      expect(lines[0], endsWith(r'你好\N{\alpha&HFF&\fs3.75}\h\N{\alpha&HFF&}{\fnArial\fs33.51\b0}Hello there'));
+      expect(lines[0],
+          endsWith(r'你好\N{\alpha&HFF&\fs3.75}\h\N{\alpha&HFF&}{\fnArial\fs33.51\b0}Hello there'));
       expect(lines[1], startsWith('Dialogue: 0,0:00:02.00,0:00:03.00,'));
       expect(lines[1], endsWith('General Kenobi'));
     });
 
     test('lines mixing scripts carry a font for each stretch', () {
       List<({String text, String family})>? runs(String text, {required bool second}) =>
-          text.contains('iPhone') ? [(text: 'यह ', family: 'Noto Sans Devanagari'), (text: 'iPhone', family: 'Noto Sans SC')] : null;
-      final ass = secondAss([(start: s(1), end: s(3), text: 'यह iPhone')], settings, outline: 0.1, runs: runs);
-      expect(events(ass).single, endsWith(r',,{\fnNoto Sans Devanagari}यह {\fnNoto Sans SC}iPhone'));
-      final plain = secondAss([(start: s(1), end: s(3), text: '你好')], settings, outline: 0.1, runs: runs);
-      expect(events(plain).single, endsWith(r',,你好'), reason: 'a line one font draws stays as it is');
+          text.contains('iPhone')
+              ? [
+                  (text: 'यह ', family: 'Noto Sans Devanagari'),
+                  (text: 'iPhone', family: 'Noto Sans SC')
+                ]
+              : null;
+      final ass = secondAss([(start: s(1), end: s(3), text: 'यह iPhone')], settings,
+          outline: 0.1, runs: runs);
+      expect(
+          events(ass).single, endsWith(r',,{\fnNoto Sans Devanagari}यह {\fnNoto Sans SC}iPhone'));
+      final plain =
+          secondAss([(start: s(1), end: s(3), text: '你好')], settings, outline: 0.1, runs: runs);
+      expect(events(plain).single, endsWith(r',,你好'),
+          reason: 'a line one font draws stays as it is');
     });
 
     test('a stretch with no family goes back to the line\'s own font', () {
-      List<({String text, String? family})>? runs(String text, {required bool second}) => [(text: 'yes ', family: null), (text: 'བཀྲ', family: 'Noto Serif Tibetan')];
-      final ass = secondAss([(start: s(1), end: s(3), text: 'yes བཀྲ')], settings, outline: 0.1, runs: runs);
+      List<({String text, String? family})>? runs(String text, {required bool second}) =>
+          [(text: 'yes ', family: null), (text: 'བཀྲ', family: 'Noto Serif Tibetan')];
+      final ass = secondAss([(start: s(1), end: s(3), text: 'yes བཀྲ')], settings,
+          outline: 0.1, runs: runs);
       expect(events(ass).single, endsWith(r',,{\fn}yes {\fnNoto Serif Tibetan}བཀྲ'));
     });
 
     test('carries its own size for a libmpv without secondary-sub-scale', () {
-      final ass = secondAss([(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5), outline: 0.1, main: main, scale: 2);
-      expect(events(ass).first, endsWith(r'你好\N{\alpha&HFF&\fs7.50}\h\N{\alpha&HFF&}{\fnArial\fs67.02\b0}Hello there'));
-      final one = secondAss(const [], settings, outline: 0.1), two = secondAss(const [], settings, outline: 0.1, scale: 2);
-      double field(String ass, int i) => double.parse(ass.split('\n').firstWhere((l) => l.startsWith('Style: ')).split(',')[i]);
+      final ass = secondAss(
+          [(start: s(1), end: s(3), text: '你好')], settings.copyWith(subtitleScale: 1.5),
+          outline: 0.1, main: main, scale: 2);
+      expect(events(ass).first,
+          endsWith(r'你好\N{\alpha&HFF&\fs7.50}\h\N{\alpha&HFF&}{\fnArial\fs67.02\b0}Hello there'));
+      final one = secondAss(const [], settings, outline: 0.1),
+          two = secondAss(const [], settings, outline: 0.1, scale: 2);
+      double field(String ass, int i) =>
+          double.parse(ass.split('\n').firstWhere((l) => l.startsWith('Style: ')).split(',')[i]);
       expect(field(two, 2), closeTo(2 * field(one, 2), 0.02));
       expect(field(two, 16), closeTo(2 * field(one, 16), 0.02));
     });
 
     test('no event overlaps another, and stretches without main lines show the second alone', () {
-      final ass = secondAss([(start: s(4), end: s(7), text: 'a'), (start: s(4.5), end: s(6), text: 'b')], settings, outline: 0, main: main);
+      final ass = secondAss(
+          [(start: s(4), end: s(7), text: 'a'), (start: s(4.5), end: s(6), text: 'b')], settings,
+          outline: 0, main: main);
       final lines = events(ass);
-      expect(lines.map((l) => l.split(',').sublist(1, 3).join('-')), ['0:00:04.00-0:00:04.50', '0:00:04.50-0:00:05.00', '0:00:05.00-0:00:06.00', '0:00:06.00-0:00:07.00']);
+      expect(lines.map((l) => l.split(',').sublist(1, 3).join('-')), [
+        '0:00:04.00-0:00:04.50',
+        '0:00:04.50-0:00:05.00',
+        '0:00:05.00-0:00:06.00',
+        '0:00:06.00-0:00:07.00'
+      ]);
       expect(lines[1], contains(r',b\Na\N'));
       expect(lines[2], endsWith(r',b\Na'));
       expect(lines[3], endsWith(',a'));
     });
 
     test('without main lines it is as before', () {
-      final ass = secondAss([(start: s(1), end: s(3), text: 'x')], settings, outline: 0, main: (cues: const [], font: 'Arial', room: 60.0, wrapFont: ''));
+      final ass = secondAss([(start: s(1), end: s(3), text: 'x')], settings,
+          outline: 0, main: (cues: const [], font: 'Arial', room: 60.0, wrapFont: ''));
       expect(events(ass), ['Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,x']);
     });
 
@@ -144,19 +195,30 @@ void main() {
     });
 
     test('blank lines in the main subtitle are left out, as in its copy', () {
-      final ass = secondAss([(start: s(0), end: s(1), text: 'x')], settings, outline: 0, main: (cues: [(start: s(0), end: s(1), text: 'a\n\nb')], font: 'Arial', room: 60.0, wrapFont: ''));
+      final ass = secondAss([(start: s(0), end: s(1), text: 'x')], settings,
+          outline: 0,
+          main: (
+            cues: [(start: s(0), end: s(1), text: 'a\n\nb')],
+            font: 'Arial',
+            room: 60.0,
+            wrapFont: ''
+          ));
       expect(events(ass).single, endsWith(r'a\Nb'));
     });
 
     test('thousands of overlapping cues take one pass', () {
-      final many = [for (var i = 0; i < 6000; i++) (start: s(i * 1.0), end: s(i + 2.5), text: 'line $i')];
+      final many = [
+        for (var i = 0; i < 6000; i++) (start: s(i * 1.0), end: s(i + 2.5), text: 'line $i')
+      ];
       final watch = Stopwatch()..start();
-      final ass = secondAss(many, settings, outline: 0, main: (cues: many, font: 'Arial', room: 60.0, wrapFont: ''));
+      final ass = secondAss(many, settings,
+          outline: 0, main: (cues: many, font: 'Arial', room: 60.0, wrapFont: ''));
       expect(watch.elapsedMilliseconds, lessThan(3000));
       final lines = events(ass);
       expect(lines.length, greaterThan(6000));
       // From 10.5 s to 11 s lines 9 and 10 show: the later one on top.
-      expect(lines.firstWhere((l) => l.contains('0:00:10.50,0:00:11.00')), contains(r',line 10\Nline 9\N'));
+      expect(lines.firstWhere((l) => l.contains('0:00:10.50,0:00:11.00')),
+          contains(r',line 10\Nline 9\N'));
     });
   });
 }

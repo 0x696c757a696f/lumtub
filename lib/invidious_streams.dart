@@ -25,7 +25,9 @@ List<String> parseInvidiousInstances(String text, {int limit = 30}) {
       if (entry is! List || entry.length < 2 || entry[1] is! Map) continue;
       final info = entry[1] as Map;
       if (info['type'] != 'https' || info['api'] != true) continue;
-      if (normalizePipedServer('${info['uri'] ?? 'https://${entry[0]}'}') case final server?) found.add(server);
+      if (normalizePipedServer('${info['uri'] ?? 'https://${entry[0]}'}') case final server?) {
+        found.add(server);
+      }
     }
   }
   return found.take(limit).toList();
@@ -41,7 +43,8 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
 
   final video = <PipedStream>[];
   final audio = <PipedStream>[];
-  for (final format in json['adaptiveFormats'] is List ? json['adaptiveFormats'] as List : const []) {
+  for (final format
+      in json['adaptiveFormats'] is List ? json['adaptiveFormats'] as List : const []) {
     if (format is! Map) continue;
     final type = '${format['type']}';
     final mime = type.split(';').first.trim();
@@ -49,8 +52,15 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
     if (!isVideo && !mime.startsWith('audio/')) continue;
     final codec = RegExp(r'codecs="?([^",;]+)').firstMatch(type)?[1] ?? '';
     final size = RegExp(r'^(\d+)x(\d+)$').firstMatch('${format['size']}');
-    final height = size != null ? int.parse(size[2]!) : int.tryParse(RegExp(r'^\d+').firstMatch('${format['qualityLabel'] ?? format['resolution']}')?[0] ?? '') ?? 0;
-    final stream = PipedStream.tryParse(trustedHosts: [host], {
+    final height = size != null
+        ? int.parse(size[2]!)
+        : int.tryParse(RegExp(r'^\d+')
+                    .firstMatch('${format['qualityLabel'] ?? format['resolution']}')?[0] ??
+                '') ??
+            0;
+    final stream = PipedStream.tryParse(trustedHosts: [
+      host
+    ], {
       'url': address(format['url']),
       'codec': codec,
       'mimeType': mime,
@@ -71,16 +81,21 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
     if (format is! Map) continue;
     final type = '${format['type']}';
     final size = RegExp(r'^(\d+)x(\d+)$').firstMatch('${format['size']}');
-    final stream = PipedStream.tryParse(trustedHosts: [host], {
+    final stream = PipedStream.tryParse(trustedHosts: [
+      host
+    ], {
       'url': address(format['url']),
       'codec': RegExp(r'codecs="?([^",;]+)').firstMatch(type)?[1] ?? '',
       'mimeType': type,
-      'height': size != null ? int.parse(size[2]!) : int.tryParse(RegExp(r'^\d+').firstMatch('${format['qualityLabel']}')?[0] ?? '') ?? 0,
+      'height': size != null
+          ? int.parse(size[2]!)
+          : int.tryParse(RegExp(r'^\d+').firstMatch('${format['qualityLabel']}')?[0] ?? '') ?? 0,
       'bitrate': format['bitrate'],
     });
     if (stream != null && stream.height > 0 && stream.mime == 'video/mp4') muxed.add(stream);
   }
-  return PipedVideo(server: server, video: video, audio: audio, live: json['liveNow'] == true, muxed: muxed);
+  return PipedVideo(
+      server: server, video: video, audio: audio, live: json['liveNow'] == true, muxed: muxed);
 }
 
 /// [raw], an address an instance gave, as one to open: one without a host
@@ -106,9 +121,18 @@ PipedVideo invidiousVideoFromCore(String server, CoreRelayVideo read) {
 
   return PipedVideo(
     server: server,
-    video: [for (final r in read.video) if (stream(r) case final s?) s],
-    audio: [for (final r in read.audio) if (stream(r) case final s?) s],
-    muxed: [for (final r in read.muxed) if (stream(r) case final s?) s],
+    video: [
+      for (final r in read.video)
+        if (stream(r) case final s?) s
+    ],
+    audio: [
+      for (final r in read.audio)
+        if (stream(r) case final s?) s
+    ],
+    muxed: [
+      for (final r in read.muxed)
+        if (stream(r) case final s?) s
+    ],
     live: read.live,
   );
 }
@@ -128,6 +152,7 @@ class InvidiousStreams extends RelayServers {
     'https://inv.nadeko.net',
     'https://invidious.nerdvpn.de',
   ];
+
   /// Invidious's own list of public instances.
   static const instanceList = 'https://api.invidious.io/instances.json?sort_by=type,users';
 
@@ -141,21 +166,27 @@ class InvidiousStreams extends RelayServers {
   @override
   Future<({List<({String url})> video, List<({String url})> audio})> probe(String server) async {
     final video = await _from(server, probeVideo);
-    return (video: [for (final s in video.video) (url: s.url)], audio: [for (final s in video.audio) (url: s.url)]);
+    return (
+      video: [for (final s in video.video) (url: s.url)],
+      audio: [for (final s in video.audio) (url: s.url)]
+    );
   }
+
   @override
   String get pausedMessage => tr('Invidious has failed recently, temporarily disabled');
 
   @override
   Future<Set<String>> downloadCatalog() async {
-    final (status, body) = await getBounded(client, Uri.parse(instanceList), limit: 2 << 20).timeout(const Duration(seconds: 8));
+    final (status, body) = await getBounded(client, Uri.parse(instanceList), limit: 2 << 20)
+        .timeout(const Duration(seconds: 8));
     if (status != 200) throw StateError('HTTP $status');
     return parseInvidiousInstances(utf8.decode(body)).toSet();
   }
 
   /// The streams of [videoId] from [server], or from the fastest instances
   /// in turn when [server] is null.
-  Future<PipedVideo> fetch(String videoId, {String? server}) => guarded(() => _fetch(videoId, server));
+  Future<PipedVideo> fetch(String videoId, {String? server}) =>
+      guarded(() => _fetch(videoId, server));
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
@@ -176,7 +207,10 @@ class InvidiousStreams extends RelayServers {
   /// The streams of [videoId] from [server], fetched through it
   /// (`local=true`); throws when it has none.
   Future<PipedVideo> _from(String server, String videoId) async {
-    final (status, body) = await getBounded(client, Uri.parse('$server/api/v1/videos/$videoId?local=true'), limit: 8 << 20).timeout(const Duration(seconds: 10));
+    final (status, body) = await getBounded(
+            client, Uri.parse('$server/api/v1/videos/$videoId?local=true'),
+            limit: 8 << 20)
+        .timeout(const Duration(seconds: 10));
     if (readRelayVideo(true, body) case final read?) {
       final video = read.video;
       if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');

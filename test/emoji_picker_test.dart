@@ -14,7 +14,8 @@ void main() {
   });
 
   test('a picked emoji goes where the cursor is', () {
-    final field = TextEditingController(text: 'ab')..selection = const TextSelection.collapsed(offset: 1);
+    final field = TextEditingController(text: 'ab')
+      ..selection = const TextSelection.collapsed(offset: 1);
     insertAtCursor(field, '😀');
     expect(field.text, 'a😀b');
     expect(field.selection.baseOffset, 3);
@@ -25,9 +26,13 @@ void main() {
 
   testWidgets('the picker inserts emoji and channel emoji, not locked ones', (tester) async {
     final field = TextEditingController();
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: EmojiButton(field: field, channel: const [
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Center(
+                child: EmojiButton(field: field, channel: const [
       ChannelEmoji(id: 'UCx/wave', shortcut: ':_wave:', url: 'https://example.com/w.png'),
-      ChannelEmoji(id: 'UCx/vip', shortcut: ':_vip:', url: 'https://example.com/v.png', locked: true),
+      ChannelEmoji(
+          id: 'UCx/vip', shortcut: ':_vip:', url: 'https://example.com/v.png', locked: true),
     ])))));
     await tester.tap(find.byType(IconButton));
     await tester.pumpAndSettle();

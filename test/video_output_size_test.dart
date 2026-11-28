@@ -15,29 +15,39 @@ void main() {
   });
 
   test('covers the box when the picture is zoomed or stretched', () {
-    final (w, h) = VideoOutputSize.target(const Size(1920, 800), const [Size(1280, 720)], cover: true)!;
+    final (w, h) =
+        VideoOutputSize.target(const Size(1920, 800), const [Size(1280, 720)], cover: true)!;
     expect(h, greaterThanOrEqualTo(720));
     expect(w / h, closeTo(1920 / 800, 0.01));
-    expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true), isNull);
+    expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true),
+        isNull);
   });
 
   test('draws the player\'s shape for subtitles beside a picture of another shape', () {
     // A portrait video in a wide player: the whole player, the picture in
     // its middle at the fitted size.
-    expect(VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)], canvas: true), (1280, 720));
+    expect(VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)], canvas: true),
+        (1280, 720));
     // A player larger than the picture: the picture at its own size, the
     // drawing still the player's shape.
-    expect(VideoOutputSize.target(const Size(720, 1280), const [Size(2560, 1440)], canvas: true), (2276, 1280));
+    expect(VideoOutputSize.target(const Size(720, 1280), const [Size(2560, 1440)], canvas: true),
+        (2276, 1280));
     // The same shape: as without.
-    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(3840, 2160)], canvas: true), isNull);
-    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(1280, 720)], canvas: true), (1280, 720));
+    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(3840, 2160)], canvas: true),
+        isNull);
+    expect(VideoOutputSize.target(const Size(1920, 1080), const [Size(1280, 720)], canvas: true),
+        (1280, 720));
     // Covering the player wins.
-    expect(VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)], canvas: true, cover: true), isNull);
+    expect(
+        VideoOutputSize.target(const Size(1080, 1920), const [Size(1280, 720)],
+            canvas: true, cover: true),
+        isNull);
   });
 
   test('takes the player\'s shape at once when subtitles are drawn by libmpv', () async {
     final applied = <(int?, int?)>[];
-    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 1));
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)),
+        delay: const Duration(milliseconds: 1));
     size.video = const Size(1080, 1920);
     size.show(Object(), const Size(1280, 720));
     await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -53,7 +63,8 @@ void main() {
 
   test('applies the size once things settle, and keeps it while a page covers the video', () async {
     final applied = <(int?, int?)>[];
-    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)),
+        delay: const Duration(milliseconds: 10));
     Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
     final page = Object();
     size.video = const Size(3840, 2160);
@@ -72,7 +83,8 @@ void main() {
 
   test('registers the texture again at the same size', () async {
     final applied = <(int?, int?)>[];
-    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)),
+        delay: const Duration(milliseconds: 10));
     size.video = const Size(1920, 1080);
     size.show(Object(), const Size(1280, 720));
     await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -82,7 +94,8 @@ void main() {
 
   test('draws small while the window is hidden and full size at once on return', () async {
     final applied = <(int?, int?)>[];
-    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)),
+        delay: const Duration(milliseconds: 10));
     Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
     final page = Object();
     size.video = const Size(1920, 1080);

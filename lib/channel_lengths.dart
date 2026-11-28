@@ -16,7 +16,14 @@ import 'video_repository.dart';
 /// in the last [fresh] is read only as far as the first videos it already
 /// knows, so the second time costs one page instead of the whole tab.
 class ChannelLengths {
-  ChannelLengths({required this.newest, required this.channel, required this.tab, required this.sort, this.folder, Future<Object?> Function(Map<String, Object?> ask)? core, DateTime Function()? clock})
+  ChannelLengths(
+      {required this.newest,
+      required this.channel,
+      required this.tab,
+      required this.sort,
+      this.folder,
+      Future<Object?> Function(Map<String, Object?> ask)? core,
+      DateTime Function()? clock})
       : assert(sort.rank != null),
         _core = core ?? _native,
         _clock = clock ?? DateTime.now;
@@ -25,6 +32,7 @@ class ChannelLengths {
   final ChannelRef channel;
   final ChannelTab tab;
   final ChannelSort sort;
+
   /// Where the tabs read are kept; null keeps nothing.
   final String? folder;
   final Future<Object?> Function(Map<String, Object?> ask) _core;
@@ -36,6 +44,7 @@ class ChannelLengths {
   /// How old a saved tab may be before it is read again whole; until then
   /// only new uploads are read.
   static const fresh = Duration(days: 7);
+
   /// After this many known videos in a row the rest is known too. More
   /// than one, as a premiere or a video made public late can sit among
   /// older ones.
@@ -59,11 +68,19 @@ class ChannelLengths {
     final dir = folder;
     var known = const <String>{};
     if (dir != null) {
-      final answer = await _ask({'op': 'known', 'dir': dir, 'channel': channel.id, 'tab': _tabName});
+      final answer =
+          await _ask({'op': 'known', 'dir': dir, 'channel': channel.id, 'tab': _tabName});
       final saved = answer is Map ? answer['saved'] : null;
       final ids = answer is Map ? answer['ids'] : null;
-      final age = saved is int ? _clock().difference(DateTime.fromMillisecondsSinceEpoch(saved * 1000)) : null;
-      if (age != null && age < fresh && !age.isNegative && ids is List) known = {for (final id in ids) if (id is String) id};
+      final age = saved is int
+          ? _clock().difference(DateTime.fromMillisecondsSinceEpoch(saved * 1000))
+          : null;
+      if (age != null && age < fresh && !age.isNegative && ids is List) {
+        known = {
+          for (final id in ids)
+            if (id is String) id
+        };
+      }
     }
     final found = <Map<String, dynamic>>[];
     final source = newest();
@@ -102,10 +119,21 @@ class ChannelLengths {
       source.close();
     }
     // Nothing read and nothing kept: the failure is what the page shows.
-    if (failure != null && found.isEmpty && known.isEmpty) Error.throwWithStackTrace(failure, failureStack!);
+    if (failure != null && found.isEmpty && known.isEmpty) {
+      Error.throwWithStackTrace(failure, failureStack!);
+    }
     final ordered = await _ask(dir == null
         ? {'op': 'order', 'fresh': found, 'order': _order}
-        : {'op': 'update', 'dir': dir, 'channel': channel.id, 'tab': _tabName, 'now': _clock().millisecondsSinceEpoch ~/ 1000, 'whole': whole && known.isEmpty, 'fresh': found, 'order': _order});
+        : {
+            'op': 'update',
+            'dir': dir,
+            'channel': channel.id,
+            'tab': _tabName,
+            'now': _clock().millisecondsSinceEpoch ~/ 1000,
+            'whole': whole && known.isEmpty,
+            'fresh': found,
+            'order': _order
+          });
     // The core gives each entry back as the line it was saved as.
     if (ordered is List) {
       for (final line in ordered) {
@@ -116,7 +144,8 @@ class ChannelLengths {
     // Without the core: ordered here, nothing kept.
     final items = [for (final map in found) VideoItem.fromJson(map)];
     final rank = sort.rank!;
-    final keyed = [for (var i = 0; i < items.length; i++) (rank(items[i]), i)]..sort((a, b) => a.$1 != b.$1 ? b.$1.compareTo(a.$1) : a.$2.compareTo(b.$2));
+    final keyed = [for (var i = 0; i < items.length; i++) (rank(items[i]), i)]
+      ..sort((a, b) => a.$1 != b.$1 ? b.$1.compareTo(a.$1) : a.$2.compareTo(b.$2));
     for (final (_, i) in keyed) {
       yield jsonEncode(found[i]);
     }

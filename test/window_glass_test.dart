@@ -17,14 +17,21 @@ import 'package:material_ui/material_ui.dart';
 /// 窗口透明 (docs/specs/window-glass.md): every word on the glass reads
 /// over anything behind the window, under every skin, light and dark.
 void main() {
-  final dirs = Directory('skins').listSync().whereType<Directory>().where((d) => File('${d.path}/skin.jsonc').existsSync() && !d.path.endsWith('template')).toList()
+  final dirs = Directory('skins')
+      .listSync()
+      .whereType<Directory>()
+      .where((d) => File('${d.path}/skin.jsonc').existsSync() && !d.path.endsWith('template'))
+      .toList()
     ..sort((a, b) => a.path.compareTo(b.path));
   final themes = <String, ThemeData>{
-    for (final b in Brightness.values) 'standard ${b.name}': buildAppTheme(const Color(0xFF3366FF), b),
+    for (final b in Brightness.values)
+      'standard ${b.name}': buildAppTheme(const Color(0xFF3366FF), b),
     for (final dir in dirs)
       for (final b in Brightness.values)
         '${dir.path} ${b.name}': () {
-          final skin = Skin.parse(decodeJsonc(File('${dir.path}/skin.jsonc').readAsStringSync()), folder: dir.path, builtIn: true).forBrightness(b);
+          final skin = Skin.parse(decodeJsonc(File('${dir.path}/skin.jsonc').readAsStringSync()),
+                  folder: dir.path, builtIn: true)
+              .forBrightness(b);
           return buildAppTheme(const Color(0xFF3366FF), skin.brightness, skin: skin);
         }(),
   };
@@ -40,8 +47,10 @@ void main() {
           for (final w in glassWritings(theme, whole: whole)) {
             for (final desk in desktopColors) {
               for (final bg in glassBehind(w, look.tint, desk, look.alpha)) {
-                expect(contrastRatio(Color.alphaBlend(w.text, bg), bg), greaterThanOrEqualTo(w.min - 0.005),
-                    reason: '${w.what}, ${whole ? 'whole window' : 'frame'}, transparency $transparency, over ${desk.toARGB32().toRadixString(16)}');
+                expect(contrastRatio(Color.alphaBlend(w.text, bg), bg),
+                    greaterThanOrEqualTo(w.min - 0.005),
+                    reason:
+                        '${w.what}, ${whole ? 'whole window' : 'frame'}, transparency $transparency, over ${desk.toARGB32().toRadixString(16)}');
               }
             }
           }
@@ -51,10 +60,12 @@ void main() {
 
     test('$name: the frame really lets the desktop through', () {
       // Words glow on the frame, so it may go clear whatever the colours.
-      expect(glassFloor(theme, whole: false), lessThanOrEqualTo(0.55), reason: 'frame glass as clear as it goes');
+      expect(glassFloor(theme, whole: false), lessThanOrEqualTo(0.55),
+          reason: 'frame glass as clear as it goes');
       final glazed = withGlass(theme, transparency: 0.7, whole: false);
       expect(glazed.scaffoldBackgroundColor.a, 1, reason: 'pages solid in the frame-only look');
-      expect(withGlass(theme, transparency: 0.7, whole: true).scaffoldBackgroundColor.a, 0, reason: 'pages clear in the whole-window look');
+      expect(withGlass(theme, transparency: 0.7, whole: true).scaffoldBackgroundColor.a, 0,
+          reason: 'pages clear in the whole-window look');
     });
   }
 
@@ -62,14 +73,20 @@ void main() {
     const tint = Color(0xFF204020);
     const size = Size(120, 40);
     Widget words(bool glass) => MaterialApp(
-          theme: ThemeData(extensions: [if (glass) const GlassLook(alpha: 0.4, whole: false, tint: tint)]),
+          theme: ThemeData(
+              extensions: [if (glass) const GlassLook(alpha: 0.4, whole: false, tint: tint)]),
           home: Align(
             alignment: Alignment.topLeft,
             child: RepaintBoundary(
               key: glass ? const ValueKey('glass') : const ValueKey('bare'),
               child: SizedBox.fromSize(
                 size: size,
-                child: const Material(type: MaterialType.transparency, child: Center(child: GlassPlate(child: Text('文件 Hg', style: TextStyle(fontSize: 16, color: Colors.white))))),
+                child: const Material(
+                    type: MaterialType.transparency,
+                    child: Center(
+                        child: GlassPlate(
+                            child: Text('文件 Hg',
+                                style: TextStyle(fontSize: 16, color: Colors.white))))),
               ),
             ),
           ),
@@ -85,10 +102,12 @@ void main() {
         return (await picture.toByteData(format: ui.ImageByteFormat.rawStraightRgba))!;
       }))!;
     }
+
     final bare = await render(false);
     final glass = await render(true);
     final w = size.width.toInt(), h = size.height.toInt();
-    bool ink(int x, int y) => x >= 0 && y >= 0 && x < w && y < h && bare.getUint8((y * w + x) * 4 + 3) > 128;
+    bool ink(int x, int y) =>
+        x >= 0 && y >= 0 && x < w && y < h && bare.getUint8((y * w + x) * 4 + 3) > 128;
     double alpha(int x, int y) => glass.getUint8((y * w + x) * 4 + 3) / 255;
     var near = 0, far = 0;
     for (var y = 0; y < h; y++) {
@@ -102,7 +121,9 @@ void main() {
         }
         if (distance <= 2) {
           near++;
-          expect(alpha(x, y), greaterThanOrEqualTo(distance == 1 ? GlassPlate.coverage - 0.01 : 0.93), reason: 'halo at $x,$y');
+          expect(
+              alpha(x, y), greaterThanOrEqualTo(distance == 1 ? GlassPlate.coverage - 0.01 : 0.93),
+              reason: 'halo at $x,$y');
         } else if (distance > 9) {
           far++;
           expect(alpha(x, y), lessThan(0.05), reason: 'glass at $x,$y');
@@ -114,12 +135,14 @@ void main() {
   });
 
   testWidgets('no glass, no plate', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: GlassPlate(child: SizedBox(width: 10, height: 10))));
+    await tester
+        .pumpWidget(const MaterialApp(home: GlassPlate(child: SizedBox(width: 10, height: 10))));
     expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == '_Halo'), findsNothing);
   });
 
   test('the frame turns to glass, the cards do not', () {
-    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()), folder: 'skins/aero', builtIn: true);
+    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()),
+        folder: 'skins/aero', builtIn: true);
     expect(skin.frameSurfaces, isNotEmpty);
     expect(skin.frameSurfaces.every((s) => s.frame), isTrue);
     expect(skin.videoCard?.frame ?? false, isFalse);
@@ -127,13 +150,17 @@ void main() {
   });
 
   testWidgets('the title glows behind its words only, not across the bar', (tester) async {
-    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()), folder: 'skins/aero', builtIn: true);
+    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()),
+        folder: 'skins/aero', builtIn: true);
     final key = GlobalKey();
     await tester.pumpWidget(MaterialApp(
       theme: ThemeData(extensions: const [GlassLook(alpha: 0.4, whole: false, tint: Colors.white)]),
       home: Align(
         alignment: Alignment.topLeft,
-        child: RepaintBoundary(key: key, child: SizedBox(width: 800, child: SkinTitleBarView(bar: skin.titleBar!, title: 'Lumtub'))),
+        child: RepaintBoundary(
+            key: key,
+            child: SizedBox(
+                width: 800, child: SkinTitleBarView(bar: skin.titleBar!, title: 'Lumtub'))),
       ),
     ));
     final height = skin.titleBar!.height.round();
@@ -148,10 +175,12 @@ void main() {
   });
 
   testWidgets('bars are drawn at the glass alpha, not the skin glass slider', (tester) async {
-    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()), folder: 'skins/aero', builtIn: true);
+    final skin = Skin.parse(decodeJsonc(File('skins/aero/skin.jsonc').readAsStringSync()),
+        folder: 'skins/aero', builtIn: true);
     late SurfaceDecoration bar, card;
     await tester.pumpWidget(MaterialApp(
-      theme: ThemeData(extensions: const [GlassLook(alpha: 0.42, whole: false, tint: Colors.white)]),
+      theme:
+          ThemeData(extensions: const [GlassLook(alpha: 0.42, whole: false, tint: Colors.white)]),
       home: Builder(builder: (context) {
         bar = SurfaceDecoration.of(context, skin.topBar!);
         card = SurfaceDecoration.of(context, skin.videoCard!);
@@ -165,7 +194,12 @@ void main() {
   test('settings keep the window glass apart from a skin glass', () {
     const off = AppearanceSettings();
     expect(off.windowGlass, isFalse);
-    final on = off.copyWith(windowGlass: true, windowGlassClarity: 0.4, windowGlassWhole: true, windowGlassBlur: false, glassOpacity: 0.5);
+    final on = off.copyWith(
+        windowGlass: true,
+        windowGlassClarity: 0.4,
+        windowGlassWhole: true,
+        windowGlassBlur: false,
+        glassOpacity: 0.5);
     final back = AppearanceSettings.fromJson(on.toJson());
     expect(back.windowGlass, isTrue);
     expect(back.windowGlassClarity, 0.4);

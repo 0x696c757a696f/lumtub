@@ -84,7 +84,9 @@ enum GroupOrder {
 
 /// [groups] in [order]; [rank] places each channel by its newest video in
 /// the subscriptions feed, 0 for the newest, by channel id.
-List<ChannelGroup> orderGroups(List<ChannelGroup> groups, GroupOrder order, {Map<String, int> rank = const {}}) => switch (order) {
+List<ChannelGroup> orderGroups(List<ChannelGroup> groups, GroupOrder order,
+        {Map<String, int> rank = const {}}) =>
+    switch (order) {
       GroupOrder.manual => groups,
       GroupOrder.name => _sortedBy(groups, (g) => NameKey(g.name)),
       GroupOrder.size => _sortedBy(groups, (g) => -g.channels.length),
@@ -110,7 +112,8 @@ enum ChannelOrder {
   final String _label;
   String get label => tr(_label);
 
-  static ChannelOrder parse(Object? raw) => values.where((v) => v.name == raw).firstOrNull ?? recent;
+  static ChannelOrder parse(Object? raw) =>
+      values.where((v) => v.name == raw).firstOrNull ?? recent;
 }
 
 /// [channels], kept in the order they were followed, in [order]. [rank]
@@ -169,11 +172,13 @@ enum PlaylistOrder {
   final String _label;
   String get label => tr(_label);
 
-  static PlaylistOrder parse(Object? raw) => values.where((v) => v.name == raw).firstOrNull ?? manual;
+  static PlaylistOrder parse(Object? raw) =>
+      values.where((v) => v.name == raw).firstOrNull ?? manual;
 }
 
 /// [playlists], kept in the order they were made or arranged, in [order].
-List<LocalPlaylist> orderPlaylists(List<LocalPlaylist> playlists, PlaylistOrder order) => switch (order) {
+List<LocalPlaylist> orderPlaylists(List<LocalPlaylist> playlists, PlaylistOrder order) =>
+    switch (order) {
       PlaylistOrder.manual => playlists,
       PlaylistOrder.name => _sortedBy(playlists, (p) => NameKey(p.name)),
       // A playlist's id is the time it was made; copies of YouTube's lists

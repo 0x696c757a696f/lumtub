@@ -24,7 +24,8 @@ final chatTranslation = ValueNotifier(false);
 void syncChatTranslation(AppController controller) {
   final on = controller.preferences.immersiveTranslation;
   if (chatTranslation.value == on) return;
-  WidgetsBinding.instance.addPostFrameCallback((_) => chatTranslation.value = controller.preferences.immersiveTranslation);
+  WidgetsBinding.instance.addPostFrameCallback(
+      (_) => chatTranslation.value = controller.preferences.immersiveTranslation);
 }
 
 /// The 沉浸式翻译 switch: comments, posts and the live chat in another
@@ -43,15 +44,19 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
   Widget _chip(BuildContext context, String? standIn) {
     final on = controller.preferences.immersiveTranslation;
     return FilterChip(
-      avatar: Icon(standIn != null && on ? AppIcons.warningCircle : AppIcons.translate, size: 16, color: chipForeground(context, on)),
+      avatar: Icon(standIn != null && on ? AppIcons.warningCircle : AppIcons.translate,
+          size: 16, color: chipForeground(context, on)),
       label: Text(tr('Immersive translation')),
-      tooltip: standIn != null && on ? standIn : tr('Show translations in other languages automatically, as Translation layout says'),
+      tooltip: standIn != null && on
+          ? standIn
+          : tr('Show translations in other languages automatically, as Translation layout says'),
       selected: on,
       showCheckmark: false,
       visualDensity: VisualDensity.compact,
       onSelected: (value) {
         chatTranslation.value = value;
-        unawaited(controller.savePreferences(controller.preferences.copyWith(immersiveTranslation: value)));
+        unawaited(controller
+            .savePreferences(controller.preferences.copyWith(immersiveTranslation: value)));
       },
     );
   }
@@ -62,17 +67,20 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
 final _translations = Expando<(String, Future<String?>)>();
 final _askedTranslations = Expando<(String, Future<String?>)>();
 
-Future<String?> _madeUnder(Expando<(String, Future<String?>)> made, LiveChatMessage message, String setup, Future<String?> Function() make) {
+Future<String?> _madeUnder(Expando<(String, Future<String?>)> made, LiveChatMessage message,
+    String setup, Future<String?> Function() make) {
   final kept = made[message];
   if (kept != null && kept.$1 == setup) return kept.$2;
   final future = make();
   made[message] = (setup, future);
   return future;
 }
+
 final _asked = Expando<ValueNotifier<bool>>();
 
 /// Whether [message] was asked to be translated by hand.
-ValueNotifier<bool> chatMessageAsked(LiveChatMessage message) => _asked[message] ??= ValueNotifier(false);
+ValueNotifier<bool> chatMessageAsked(LiveChatMessage message) =>
+    _asked[message] ??= ValueNotifier(false);
 
 /// A small 翻译 button that shows while the pointer is over [child]; a
 /// long press does the same on touch.
@@ -126,9 +134,11 @@ class _ChatMessageTranslateButtonState extends State<ChatMessageTranslateButton>
 /// when it is off or the message is already in the chosen language. Each
 /// message is translated once, when it is first shown.
 class ChatMessageTranslation extends StatelessWidget {
-  const ChatMessageTranslation({super.key, required this.controller, required this.message, required this.original});
+  const ChatMessageTranslation(
+      {super.key, required this.controller, required this.message, required this.original});
   final AppController controller;
   final LiveChatMessage message;
+
   /// The message as written, shown with its translation as 翻译布局 says.
   final Widget original;
 
@@ -136,15 +146,23 @@ class ChatMessageTranslation extends StatelessWidget {
   /// translated; 沉浸式翻译 also leaves alone the languages listed as
   /// never translated.
   Future<String?> _translate({required bool asked}) async {
-    final language = asked ? controller.preferences.translateTarget : controller.preferences.immersiveTarget;
+    final language =
+        asked ? controller.preferences.translateTarget : controller.preferences.immersiveTarget;
     final known = asked ? {language} : readLanguages(controller);
-    bool done(String line) => known.any((k) => readsAs(line, k, chineseAsOne: !asked && controller.preferences.chineseAsOne)) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
+    bool done(String line) =>
+        known.any(
+            (k) => readsAs(line, k, chineseAsOne: !asked && controller.preferences.chineseAsOne)) ||
+        !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
     // Channel emoji are written as :name: and are not words to translate.
-    final text = message.emojis.keys.fold(message.text, (text, shortcut) => text.replaceAll(shortcut, ' ')).trim();
+    final text = message.emojis.keys
+        .fold(message.text, (text, shortcut) => text.replaceAll(shortcut, ' '))
+        .trim();
     if (text.split('\n').every(done)) return null;
     try {
       final result = await translateForeignLines(controller.textTranslator, text, language, done);
-      return result.trim() == text ? null : ChurchWording.apply(result, language, rite: controller.playingRite, original: text);
+      return result.trim() == text
+          ? null
+          : ChurchWording.apply(result, language, rite: controller.playingRite, original: text);
     } catch (_) {
       return null;
     }
@@ -152,22 +170,31 @@ class ChatMessageTranslation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: Listenable.merge([chatTranslation, chatMessageAsked(message), controller.translationSetup]),
+        listenable: Listenable.merge(
+            [chatTranslation, chatMessageAsked(message), controller.translationSetup]),
         builder: (context, _) {
           if (!chatTranslation.value && !chatMessageAsked(message).value) return original;
           return FutureBuilder(
             future: chatMessageAsked(message).value
-                ? _madeUnder(_askedTranslations, message, controller.translationSetup.value, () => _translate(asked: true))
-                : _madeUnder(_translations, message, controller.translationSetup.value, () => _translate(asked: false)),
+                ? _madeUnder(_askedTranslations, message, controller.translationSetup.value,
+                    () => _translate(asked: true))
+                : _madeUnder(_translations, message, controller.translationSetup.value,
+                    () => _translate(asked: false)),
             builder: (context, snapshot) {
               final text = snapshot.data;
               if (text == null) return original;
               final prefs = controller.preferences;
               final translated = SelectionArea(child: Text(text));
               // 翻译布局, as for comments and posts.
-              if (!prefs.bilingualTranslation) return Padding(padding: const EdgeInsets.only(top: Space.xs), child: translated);
-              final under = Padding(padding: const EdgeInsets.only(top: Space.xs), child: TranslationView(style: prefs.translationStyle, child: translated));
-              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: prefs.translationFirst ? [under, original] : [original, under]);
+              if (!prefs.bilingualTranslation) {
+                return Padding(padding: const EdgeInsets.only(top: Space.xs), child: translated);
+              }
+              final under = Padding(
+                  padding: const EdgeInsets.only(top: Space.xs),
+                  child: TranslationView(style: prefs.translationStyle, child: translated));
+              return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: prefs.translationFirst ? [under, original] : [original, under]);
             },
           );
         },
@@ -251,49 +278,74 @@ class _LiveChatInputState extends State<LiveChatInput> {
   @override
   Widget build(BuildContext context) {
     final box = _box;
-    if (box == null) return const SizedBox(height: Space.huge, child: Center(child: SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))));
+    if (box == null) {
+      return const SizedBox(
+          height: Space.huge,
+          child: Center(
+              child: SizedBox.square(
+                  dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))));
+    }
     if (box is ChatBoxClosed) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s),
         child: Row(children: [
           Icon(AppIcons.lockSimple, size: 16, color: context.colors.outline),
           const SizedBox(width: Space.s),
-          Expanded(child: Text(box.reason, style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant))),
-          IconButton(tooltip: tr('Retry'), icon: Icon(AppIcons.arrowClockwise, size: 18), onPressed: _open),
+          Expanded(
+              child: Text(box.reason,
+                  style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant))),
+          IconButton(
+              tooltip: tr('Retry'),
+              icon: Icon(AppIcons.arrowClockwise, size: 18),
+              onPressed: _open),
         ]),
       );
     }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Space.s),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-        Row(children: [
-          Expanded(
-            child: TextField(
-              controller: _text,
-              focusNode: _focus,
-              enabled: !_sending,
-              maxLength: 200,
-              buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => unawaited(_send()),
-              decoration: InputDecoration(hintText: tr('Say something in the chat')),
-            ),
-          ),
-          EmojiButton(field: _text, focus: _focus, channel: box is ChatBoxOpen ? box.emojis : const []),
-          IconButton(
-            tooltip: tr('Super Chat: pay and send on YouTube in your browser'),
-            icon: Icon(AppIcons.handHeart, size: 18),
-            // The pop-out chat, where YouTube keeps the Super Chat button.
-            onPressed: () => unawaited(openExternal('https://www.youtube.com/live_chat?is_popout=1&v=${widget.videoId}')),
-          ),
-          IconButton.filledTonal(
-            tooltip: tr('Send'),
-            onPressed: _sending ? null : () => unawaited(_send()),
-            icon: _sending ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.paperPlaneRight, size: 18),
-          ),
-        ]),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: Space.xs), child: Text(_error!, style: context.text.bodySmall?.copyWith(color: context.colors.error))),
-      ]),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(children: [
+              Expanded(
+                child: TextField(
+                  controller: _text,
+                  focusNode: _focus,
+                  enabled: !_sending,
+                  maxLength: 200,
+                  buildCounter: (context,
+                          {required currentLength, required isFocused, required maxLength}) =>
+                      null,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => unawaited(_send()),
+                  decoration: InputDecoration(hintText: tr('Say something in the chat')),
+                ),
+              ),
+              EmojiButton(
+                  field: _text, focus: _focus, channel: box is ChatBoxOpen ? box.emojis : const []),
+              IconButton(
+                tooltip: tr('Super Chat: pay and send on YouTube in your browser'),
+                icon: Icon(AppIcons.handHeart, size: 18),
+                // The pop-out chat, where YouTube keeps the Super Chat button.
+                onPressed: () => unawaited(openExternal(
+                    'https://www.youtube.com/live_chat?is_popout=1&v=${widget.videoId}')),
+              ),
+              IconButton.filledTonal(
+                tooltip: tr('Send'),
+                onPressed: _sending ? null : () => unawaited(_send()),
+                icon: _sending
+                    ? const SizedBox.square(
+                        dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Icon(AppIcons.paperPlaneRight, size: 18),
+              ),
+            ]),
+            if (_error != null)
+              Padding(
+                  padding: const EdgeInsets.only(top: Space.xs),
+                  child: Text(_error!,
+                      style: context.text.bodySmall?.copyWith(color: context.colors.error))),
+          ]),
     );
   }
 }

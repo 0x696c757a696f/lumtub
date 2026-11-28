@@ -4265,5 +4265,21 @@
   "Length {0}": "Durata {0}",
   "{0}% watched": "{0}% visto",
   "Scroll left": "Scorri a sinistra",
-  "Scroll right": "Scorri a destra"
+  "Scroll right": "Scorri a destra",
+  "Connect": "Collega",
+  "Connect ListenBrainz": "Collega ListenBrainz",
+  "Connected as {0}": "Collegato come {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Collegato come {0} · {1} ascolti in attesa di invio",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Collegato come {0}. Un brano viene conteggiato dopo averne ascoltato metà o quattro minuti, quel che avviene prima. In incognito non viene inviato nulla.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Copia il tuo token utente dalla pagina delle impostazioni di ListenBrainz e incollalo qui. Viene salvato cifrato su questo dispositivo.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Impossibile raggiungere ListenBrainz. Controlla la rete e riprova",
+  "Couldn't save the token": "Impossibile salvare il token",
+  "Disconnect": "Scollega",
+  "ListenBrainz did not accept this token": "ListenBrainz non ha accettato questo token",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz non accetta più il token. Tocca per inserirne uno nuovo",
+  "Listening history, scrobbling, music": "Cronologia ascolti, scrobbling, musica",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Disattivato. I brani che ascolti possono essere aggiunti alla tua cronologia ascolti di ListenBrainz; gli altri video non vengono mai inviati",
+  "Open ListenBrainz settings": "Apri impostazioni di ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobbla i brani su ListenBrainz",
+  "User token": "Token utente"
 }

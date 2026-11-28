@@ -4262,5 +4262,21 @@
   "Length {0}": "Trukmė {0}",
   "{0}% watched": "Peržiūrėta {0} %",
   "Scroll left": "Slinkti kairėn",
-  "Scroll right": "Slinkti dešinėn"
+  "Scroll right": "Slinkti dešinėn",
+  "Connect": "Prijungti",
+  "Connect ListenBrainz": "Prijungti ListenBrainz",
+  "Connected as {0}": "Prisijungta kaip {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Prisijungta kaip {0} · {1} klausymų laukia išsiuntimo",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Prisijungta kaip {0}. Daina įskaitoma, kai išklausoma pusė jos arba keturios minutės, kas įvyksta pirmiau. Inkognito režimu niekas nesiunčiama.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Nukopijuokite savo vartotojo prieigos raktą iš ListenBrainz nustatymų puslapio ir įklijuokite čia. Jis saugomas šiame įrenginyje užšifruotas.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Nepavyko pasiekti ListenBrainz. Patikrinkite tinklą ir bandykite dar kartą",
+  "Couldn't save the token": "Nepavyko išsaugoti prieigos rakto",
+  "Disconnect": "Atjungti",
+  "ListenBrainz did not accept this token": "ListenBrainz nepriėmė šio prieigos rakto",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz daugiau nepriima prieigos rakto. Palieskite, kad įvestumėte naują",
+  "Listening history, scrobbling, music": "Klausymosi istorija, scrobblinimas, muzika",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Išjungta. Jūsų klausomos dainos gali būti pridedamos prie klausymosi istorijos ListenBrainz; kiti vaizdo įrašai niekada nesiunčiami",
+  "Open ListenBrainz settings": "Atidaryti ListenBrainz nustatymus",
+  "Scrobble songs to ListenBrainz": "Scrobblinti dainas į ListenBrainz",
+  "User token": "Vartotojo prieigos raktas"
 }

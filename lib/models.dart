@@ -468,6 +468,7 @@ class VideoDetails {
     this.subtitles = const [],
     this.scheduledStart,
     this.language,
+    this.music = const MusicTags(),
   });
 
   factory VideoDetails.fromJson(Map<String, dynamic> map) {
@@ -489,6 +490,7 @@ class VideoDetails {
           ? DateTime.fromMillisecondsSinceEpoch((map['release_timestamp'] as num).toInt() * 1000)
           : null,
       language: map['language'] is String && (map['language'] as String).isNotEmpty ? map['language'] as String : null,
+      music: MusicTags.fromJson(map),
     );
   }
 
@@ -508,6 +510,8 @@ class VideoDetails {
   final DateTime? scheduledStart;
   /// The language the video is in, as yt-dlp tags it, when known.
   final String? language;
+  /// What yt-dlp knows of it as music: its category and song tags.
+  final MusicTags music;
 
   /// These details with YouTube's [title] and [description] in the
   /// interface language. Chapters come from the description's timestamps,
@@ -536,6 +540,7 @@ class VideoDetails {
       subtitles: subtitles,
       scheduledStart: scheduledStart,
       language: language,
+      music: music,
     );
   }
 
@@ -553,6 +558,7 @@ class VideoDetails {
         subtitles: [...subtitles.where((s) => s.kind != SubtitleKind.speech), speech],
         scheduledStart: scheduledStart,
         language: language,
+        music: music,
       );
 
   /// These details with [chapters] in place of theirs, such as AI 概览's
@@ -570,6 +576,7 @@ class VideoDetails {
         subtitles: subtitles,
         scheduledStart: scheduledStart,
         language: language,
+        music: music,
       );
 
   /// These details with the subtitles and spoken language of [online]: a
@@ -592,9 +599,41 @@ class VideoDetails {
         subtitles: [...options, ...subtitles.where((s) => s.kind == SubtitleKind.speech)],
         scheduledStart: scheduledStart,
         language: this.language ?? language,
+        music: music,
       );
 
   static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
+}
+
+/// What yt-dlp read of a video as music: YouTube's category, and the song
+/// tags YouTube Music gives its tracks.
+class MusicTags {
+  const MusicTags({this.categories = const [], this.track, this.artists = const [], this.album});
+
+  factory MusicTags.fromJson(Map<String, dynamic> map) {
+    String? text(Object? value) => value is String && value.trim().isNotEmpty ? value.trim() : null;
+    final artists = <String>[];
+    if (map['artists'] is List) {
+      for (final a in map['artists'] as List) {
+        if (text(a) case final name?) artists.add(name);
+      }
+    } else if (text(map['artist']) case final artist?) {
+      artists.addAll(artist.split(RegExp(r',\s*')).where((name) => name.isNotEmpty));
+    }
+    return MusicTags(
+      categories: [if (map['categories'] is List) for (final c in map['categories'] as List) if (c is String) c],
+      track: text(map['track']),
+      artists: artists,
+      album: text(map['album']),
+    );
+  }
+
+  final List<String> categories;
+  final String? track;
+  final List<String> artists;
+  final String? album;
+
+  bool get inMusicCategory => categories.contains('Music');
 }
 
 /// A subtitle track of a video that can be added to the player by URL.

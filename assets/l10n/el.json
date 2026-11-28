@@ -4262,5 +4262,21 @@
   "Length {0}": "Διάρκεια {0}",
   "{0}% watched": "Προβλήθηκε το {0}%",
   "Scroll left": "Κύλιση αριστερά",
-  "Scroll right": "Κύλιση δεξιά"
+  "Scroll right": "Κύλιση δεξιά",
+  "Connect": "Σύνδεση",
+  "Connect ListenBrainz": "Σύνδεση του ListenBrainz",
+  "Connected as {0}": "Συνδεδεμένος ως {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Συνδεδεμένος ως {0} · {1} ακροάσεις αναμένουν αποστολή",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Συνδεδεμένος ως {0}. Ένα τραγούδι μετράει όταν ακούσετε το μισό ή τέσσερα λεπτά, ό,τι προηγηθεί. Στη λειτουργία ανώνυμης περιήγησης δεν στέλνεται τίποτα.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Αντιγράψτε το διακριτικό χρήστη από τη σελίδα ρυθμίσεων του ListenBrainz και επικολλήστε το εδώ. Αποθηκεύεται κρυπτογραφημένο σε αυτήν τη συσκευή.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Δεν ήταν δυνατή η επικοινωνία με το ListenBrainz. Ελέγξτε το δίκτυο και δοκιμάστε ξανά",
+  "Couldn't save the token": "Δεν ήταν δυνατή η αποθήκευση του διακριτικού",
+  "Disconnect": "Αποσύνδεση",
+  "ListenBrainz did not accept this token": "Το ListenBrainz δεν αποδέχτηκε αυτό το διακριτικό",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "Το ListenBrainz δεν αποδέχεται πλέον το διακριτικό. Πατήστε για να εισαγάγετε νέο",
+  "Listening history, scrobbling, music": "Ιστορικό ακροάσεων, scrobbling, μουσική",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Ανενεργό. Τα τραγούδια που ακούτε μπορούν να προστεθούν στο ιστορικό ακροάσεων του ListenBrainz· άλλα βίντεο δεν στέλνονται ποτέ",
+  "Open ListenBrainz settings": "Άνοιγμα ρυθμίσεων ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble τραγουδιών στο ListenBrainz",
+  "User token": "Διακριτικό χρήστη"
 }

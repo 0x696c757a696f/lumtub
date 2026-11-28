@@ -4262,5 +4262,21 @@
   "Length {0}": "Muda {0}",
   "{0}% watched": "Umetazamwa {0}%",
   "Scroll left": "Sogeza kushoto",
-  "Scroll right": "Sogeza kulia"
+  "Scroll right": "Sogeza kulia",
+  "Connect": "Unganisha",
+  "Connect ListenBrainz": "Unganisha ListenBrainz",
+  "Connected as {0}": "Umeunganishwa kama {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Umeunganishwa kama {0} · usikilizaji {1} unasubiri kutumwa",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Umeunganishwa kama {0}. Wimbo huhesabiwa mara tu unaposikiliza nusu yake au dakika nne, kipi kitangulie. Hakuna kinachotumwa katika hali fiche.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Nakili tokeni ya mtumiaji wako kutoka ukurasa wa mipangilio wa ListenBrainz kisha ubandike hapa. Huhifadhiwa ikiwa imesimbwa kwa njia fiche kwenye kifaa hiki.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Imeshindwa kufikia ListenBrainz. Angalia mtandao wako kisha ujaribu tena",
+  "Couldn't save the token": "Imeshindwa kuhifadhi tokeni",
+  "Disconnect": "Tenganisha",
+  "ListenBrainz did not accept this token": "ListenBrainz haikukubali tokeni hii",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz haikubali tena tokeni hii. Gusa ili uweke mpya",
+  "Listening history, scrobbling, music": "Historia ya kusikiliza, scrobbling, muziki",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Imezimwa. Nyimbo unazosikiliza zinaweza kuongezwa kwenye historia yako ya kusikiliza ya ListenBrainz; video nyingine hazitumwi kamwe",
+  "Open ListenBrainz settings": "Fungua mipangilio ya ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble nyimbo kwenda ListenBrainz",
+  "User token": "Tokeni ya mtumiaji"
 }

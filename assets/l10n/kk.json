@@ -4262,5 +4262,21 @@
   "Length {0}": "Ұзақтығы {0}",
   "{0}% watched": "{0}% көрілді",
   "Scroll left": "Солға айналдыру",
-  "Scroll right": "Оңға айналдыру"
+  "Scroll right": "Оңға айналдыру",
+  "Connect": "Қосу",
+  "Connect ListenBrainz": "ListenBrainz қосу",
+  "Connected as {0}": "{0} ретінде қосылған",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ретінде қосылған · жіберуді {1} тыңдау күтіп тұр",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ретінде қосылған. Ән жартысын немесе төрт минутын тыңдағанда, қайсысы бұрын болса, есептеледі. Инкогнито режимінде ештеңе жіберілмейді.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Пайдаланушы токенін ListenBrainz параметрлері бетінен көшіріп, осында қойыңыз. Ол осы құрылғыда шифрланған күйде сақталады.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-ке қосылу мүмкін болмады. Желіні тексеріп, қайталап көріңіз",
+  "Couldn't save the token": "Токенді сақтау мүмкін болмады",
+  "Disconnect": "Ажырату",
+  "ListenBrainz did not accept this token": "ListenBrainz бұл токенді қабылдамады",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz енді токенді қабылдамайды. Жаңасын енгізу үшін түртіңіз",
+  "Listening history, scrobbling, music": "Тыңдау тарихы, скробблинг, музыка",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Өшірулі. Тыңдаған әндеріңіз ListenBrainz тыңдау тарихына қосылуы мүмкін; басқа бейнелер ешқашан жіберілмейді",
+  "Open ListenBrainz settings": "ListenBrainz параметрлерін ашу",
+  "Scrobble songs to ListenBrainz": "Әндерді ListenBrainz-ке scrobble жасау",
+  "User token": "Пайдаланушы токені"
 }

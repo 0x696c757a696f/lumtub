@@ -197,7 +197,7 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched, this.layout, this.numberOf});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
@@ -209,29 +209,36 @@ class SliverVideoGrid extends StatelessWidget {
   final Map<String, String>? reasons;
   /// When each video was watched, by id, as a line under its card.
   final Map<String, String>? watched;
+  /// Shown in place of the chosen [videoLayout], such as a playlist's rows
+  /// on a phone.
+  final VideoLayout? layout;
+  /// The number shown before each row, such as its place in a playlist.
+  final int Function(int index)? numberOf;
 
   @override
   Widget build(BuildContext context) {
+    final shown = layout ?? videoLayout;
     // Room for the watched line only when some card has one.
     final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
     // Room for the reason line only when some card has a reason.
     final reasoned = reasons != null && items.any((item) => (reasons![item.id] ?? '').isNotEmpty);
     return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: videoLayout != VideoLayout.grid
+        sliver: shown != VideoLayout.grid
             ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(videoLayout) + (watched == null ? 0 : _reasonHeight),
+                itemExtent: VideoRow.heightFor(shown, MediaQuery.textScalerOf(context)) + (watched == null ? 0 : _reasonHeight),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => VideoRow(
                     key: ValueKey(items[i].id),
                     item: items[i],
-                    layout: videoLayout,
+                    layout: shown,
                     thumbnails: thumbnails,
                     onOpen: () => onOpen(items[i]),
                     onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                     removeLabel: removeLabel,
                     reason: reasons == null ? null : reasons![items[i].id] ?? '',
                     watched: watched?[items[i].id],
+                    number: numberOf?.call(i),
                   ),
                   childCount: items.length,
                 ),
@@ -321,13 +328,16 @@ String aboutOf(VideoItem item) => '${item.channel}\n${item.description ?? ''}';
 /// as set, once it has been on screen a moment; the tooltip then holds the
 /// original. Only this widget rebuilds when its translation comes.
 class TitleText extends StatefulWidget {
-  const TitleText(this.text, {super.key, required this.maxLines, required this.style, this.about = ''});
+  const TitleText(this.text, {super.key, required this.maxLines, required this.style, this.about = '', this.video});
 
   final String text;
   /// What else is known of what the title names (its channel, its
   /// description), so a Catholic one is translated into Chinese in the
   /// Church's wording ([ChurchWording]).
   final String about;
+  /// The video the title is of, when it is one: a video of a channel known
+  /// to be Catholic is Catholic whatever its title says.
+  final VideoItem? video;
   final int maxLines;
   final TextStyle style;
 
@@ -380,10 +390,15 @@ class _TitleTextState extends State<TitleText> {
     if (cut != _cut) setState(() => _cut = cut);
   }
 
+  ChurchRite? _rite() {
+    final video = widget.video;
+    return ChurchWording.riteOf('${widget.text}\n${widget.about}') ?? (video == null ? null : ChurchWording.riteOfVideo(video));
+  }
+
   @override
   Widget build(BuildContext context) {
     final found = titleTranslations.lookup(widget.text);
-    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, rite: ChurchWording.riteOf('${widget.text}\n${widget.about}'), original: widget.text);
+    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, rite: _rite(), original: widget.text);
     final mode = titleTranslations.mode;
     final Widget child;
     final String message;
@@ -418,7 +433,7 @@ class _TitleTextState extends State<TitleText> {
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
 class VideoRow extends StatelessWidget {
-  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
+  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched, this.number});
   final VideoItem item;
   final VideoLayout layout;
   final VoidCallback onOpen;
@@ -427,10 +442,16 @@ class VideoRow extends StatelessWidget {
   final String? removeLabel;
   final String? reason;
   final String? watched;
+  /// Its place in the list, shown before it.
+  final int? number;
 
   static const _thumbWidth = 168.0;
 
-  static double heightFor(VideoLayout layout) => layout == VideoLayout.text ? 60.0 : _thumbWidth * 9 / 16 + Space.s * 2;
+  /// The row's height: the picture's, or with larger text that of the
+  /// title's two lines, the channel and the views.
+  static double heightFor(VideoLayout layout, [TextScaler scaler = TextScaler.noScaling]) => layout == VideoLayout.text
+      ? 60.0
+      : max(_thumbWidth * 9 / 16, scaler.scale(14 * 1.38) * 2 + Space.xs + scaler.scale(12 * 1.4) * 2) + Space.s * 2;
 
   void _menu(BuildContext context, Offset position) => unawaited(showVideoMenu(context, item, position, onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
 
@@ -456,6 +477,12 @@ class VideoRow extends StatelessWidget {
         child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (number case final number?)
+            SizedBox(
+              width: 28,
+              height: text ? 20 : _thumbWidth * 9 / 16,
+              child: Center(child: Text('$number', maxLines: 1, style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]))),
+            ),
           if (!text) ...[
             SizedBox(
               width: _thumbWidth,
@@ -487,8 +514,12 @@ class VideoRow extends StatelessWidget {
             const SizedBox(width: Space.m),
           ],
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), about: aboutOf(item), maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: Space.xs),
+            // Beside a picture the channel has a line of its own and the
+            // views and age the next, so neither is cut to a few letters
+            // in a phone-wide row.
+            if (!text && meta.lead.isNotEmpty) Text(meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style),
             Row(children: [
               if (text && status != null) ...[
                 Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: item.isLive ? const Color(0xFFCC0000) : colors.primary)),
@@ -502,7 +533,7 @@ class VideoRow extends StatelessWidget {
                 ReasonTag(reason),
                 const SizedBox(width: 6),
               ],
-              Expanded(child: meta),
+              Expanded(child: text ? meta : Text(meta.tail, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style)),
             ]),
             if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
           ])),
@@ -936,7 +967,7 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
             // The channel line keeps to the card's foot, however long the
             // title, so a row of cards lines up.
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), about: aboutOf(item), maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
+              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
               // Why it is here, on a line of its own so it reads whole.
               if (widget.reason case final reason? when reason.isNotEmpty)
                 SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
@@ -1303,7 +1334,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> with SpokenTitle {
           ),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), about: aboutOf(item), maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),

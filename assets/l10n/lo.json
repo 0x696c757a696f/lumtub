@@ -4262,5 +4262,21 @@
   "Length {0}": "ຄວາມຍາວ {0}",
   "{0}% watched": "ເບິ່ງແລ້ວ {0}%",
   "Scroll left": "ເລື່ອນໄປຊ້າຍ",
-  "Scroll right": "ເລື່ອນໄປຂວາ"
+  "Scroll right": "ເລື່ອນໄປຂວາ",
+  "Connect": "ເຊື່ອມຕໍ່",
+  "Connect ListenBrainz": "ເຊື່ອມຕໍ່ ListenBrainz",
+  "Connected as {0}": "ເຊື່ອມຕໍ່ແລ້ວເປັນ {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "ເຊື່ອມຕໍ່ແລ້ວເປັນ {0} · ການຟັງ {1} ລາຍການລໍຖ້າສົ່ງ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "ເຊື່ອມຕໍ່ແລ້ວເປັນ {0}. ເພງຈະຖືກນັບເມື່ອທ່ານຟັງເຄິ່ງໜຶ່ງ ຫຼື ສີ່ນາທີ, ແລ້ວແຕ່ອັນໃດມາກ່ອນ. ໃນໂໝດບໍ່ເປີດເຜີຍຕົວຕົນ ຈະບໍ່ມີຫຍັງຖືກສົ່ງ.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ຄັດລອກໂທເຄັນຜູ້ໃຊ້ຂອງທ່ານຈາກໜ້າການຕັ້ງຄ່າ ListenBrainz ແລ້ວວາງທີ່ນີ້. ມັນຖືກເກັບໄວ້ແບບເຂົ້າລະຫັດໃນອຸປະກອນນີ້.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ບໍ່ສາມາດເຂົ້າເຖິງ ListenBrainz ໄດ້. ກວດເບິ່ງເຄືອຂ່າຍຂອງທ່ານແລ້ວລອງໃໝ່",
+  "Couldn't save the token": "ບໍ່ສາມາດບັນທຶກໂທເຄັນໄດ້",
+  "Disconnect": "ຕັດການເຊື່ອມຕໍ່",
+  "ListenBrainz did not accept this token": "ListenBrainz ບໍ່ຍອມຮັບໂທເຄັນນີ້",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ບໍ່ຍອມຮັບໂທເຄັນນີ້ອີກແລ້ວ. ແຕະເພື່ອໃສ່ອັນໃໝ່",
+  "Listening history, scrobbling, music": "ປະຫວັດການຟັງ, scrobbling, ດົນຕີ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ປິດ. ເພງທີ່ທ່ານຟັງສາມາດຖືກເພີ່ມໃສ່ປະຫວັດການຟັງ ListenBrainz ຂອງທ່ານ; ວິດີໂອອື່ນຈະບໍ່ຖືກສົ່ງເລີຍ",
+  "Open ListenBrainz settings": "ເປີດການຕັ້ງຄ່າ ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble ເພງໄປຫາ ListenBrainz",
+  "User token": "ໂທເຄັນຜູ້ໃຊ້"
 }

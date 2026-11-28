@@ -4262,5 +4262,21 @@
   "Length {0}": "Lengte {0}",
   "{0}% watched": "{0}% gekyk",
   "Scroll left": "Rol links",
-  "Scroll right": "Rol regs"
+  "Scroll right": "Rol regs",
+  "Connect": "Koppel",
+  "Connect ListenBrainz": "Koppel ListenBrainz",
+  "Connected as {0}": "Gekoppel as {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Gekoppel as {0} · {1} luisterbeurte wag om gestuur te word",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Gekoppel as {0}. 'n Liedjie tel sodra jy die helfte daarvan of vier minute geluister het, wat ook al eerste gebeur. Niks word in incognito-modus gestuur nie.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Kopieer jou gebruikertoken vanaf jou ListenBrainz-instellingsblad en plak dit hier. Dit word geënkripteer op hierdie toestel gestoor.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Kon nie ListenBrainz bereik nie. Gaan jou netwerk na en probeer weer",
+  "Couldn't save the token": "Kon nie die token stoor nie",
+  "Disconnect": "Ontkoppel",
+  "ListenBrainz did not accept this token": "ListenBrainz het hierdie token nie aanvaar nie",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz aanvaar nie meer die token nie. Tik om 'n nuwe een in te voer",
+  "Listening history, scrobbling, music": "Luistergeskiedenis, scrobbling, musiek",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Af. Liedjies waarna jy luister, kan by jou ListenBrainz-luistergeskiedenis gevoeg word; ander video's word nooit gestuur nie",
+  "Open ListenBrainz settings": "Maak ListenBrainz-instellings oop",
+  "Scrobble songs to ListenBrainz": "Scrobble liedjies na ListenBrainz",
+  "User token": "Gebruikertoken"
 }

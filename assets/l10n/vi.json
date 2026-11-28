@@ -4262,5 +4262,21 @@
   "Length {0}": "Thời lượng {0}",
   "{0}% watched": "Đã xem {0}%",
   "Scroll left": "Cuộn sang trái",
-  "Scroll right": "Cuộn sang phải"
+  "Scroll right": "Cuộn sang phải",
+  "Connect": "Kết nối",
+  "Connect ListenBrainz": "Kết nối ListenBrainz",
+  "Connected as {0}": "Đã kết nối với tên {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Đã kết nối với tên {0} · {1} lượt nghe đang chờ gửi",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Đã kết nối với tên {0}. Một bài hát được tính khi bạn nghe được một nửa hoặc bốn phút, tùy mốc nào đến trước. Không có gì được gửi ở chế độ ẩn danh.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Sao chép mã thông báo người dùng từ trang cài đặt ListenBrainz và dán vào đây. Mã được lưu mã hóa trên thiết bị này.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Không thể kết nối tới ListenBrainz. Hãy kiểm tra mạng và thử lại",
+  "Couldn't save the token": "Không thể lưu mã thông báo",
+  "Disconnect": "Ngắt kết nối",
+  "ListenBrainz did not accept this token": "ListenBrainz không chấp nhận mã thông báo này",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz không còn chấp nhận mã thông báo này. Nhấn để nhập mã mới",
+  "Listening history, scrobbling, music": "Lịch sử nghe, scrobble, nhạc",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Tắt. Các bài hát bạn nghe có thể được thêm vào lịch sử nghe ListenBrainz; các video khác không bao giờ được gửi",
+  "Open ListenBrainz settings": "Mở cài đặt ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Scrobble bài hát lên ListenBrainz",
+  "User token": "Mã thông báo người dùng"
 }

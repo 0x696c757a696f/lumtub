@@ -4262,5 +4262,21 @@
   "Length {0}": "ଅବଧି {0}",
   "{0}% watched": "{0}% ଦେଖାଯାଇଛି",
   "Scroll left": "ବାମକୁ ସ୍କ୍ରୋଲ କରନ୍ତୁ",
-  "Scroll right": "ଡାହାଣକୁ ସ୍କ୍ରୋଲ କରନ୍ତୁ"
+  "Scroll right": "ଡାହାଣକୁ ସ୍କ୍ରୋଲ କରନ୍ତୁ",
+  "Connect": "ସଂଯୋଗ କରନ୍ତୁ",
+  "Connect ListenBrainz": "ListenBrainz ସଂଯୋଗ କରନ୍ତୁ",
+  "Connected as {0}": "{0} ଭାବରେ ସଂଯୁକ୍ତ",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} ଭାବରେ ସଂଯୁକ୍ତ · {1}ଟି ଶୁଣା ପଠାଇବାକୁ ଅପେକ୍ଷାରେ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} ଭାବରେ ସଂଯୁକ୍ତ। ଏକ ଗୀତର ଅଧା କିମ୍ବା ଚାରି ମିନିଟ୍, ଯାହା ଆଗରୁ ହୁଏ, ଶୁଣିଲେ ତାହା ଗଣାଯାଏ। ଇନକଗ୍ନିଟୋ ମୋଡରେ କିଛି ପଠାଯାଏ ନାହିଁ।",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ଆପଣଙ୍କ ListenBrainz ସେଟିଂସ ପୃଷ୍ଠାରୁ ୟୁଜର ଟୋକେନ୍ କପି କରି ଏଠାରେ ଲଗାନ୍ତୁ। ଏହା ଏହି ଡିଭାଇସରେ ଏନକ୍ରିପ୍ଟ କରି ସଂରକ୍ଷିତ ହୁଏ।",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ସହ ସଂଯୋଗ ହୋଇପାରିଲା ନାହିଁ। ଆପଣଙ୍କ ନେଟୱାର୍କ ଯାଞ୍ଚ କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ",
+  "Couldn't save the token": "ଟୋକେନ୍ ସଂରକ୍ଷଣ କରିହେଲା ନାହିଁ",
+  "Disconnect": "ସଂଯୋଗ ବିଚ୍ଛିନ୍ନ କରନ୍ତୁ",
+  "ListenBrainz did not accept this token": "ListenBrainz ଏହି ଟୋକେନ୍ ଗ୍ରହଣ କରିନାହିଁ",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ଆଉ ଏହି ଟୋକେନ୍ ଗ୍ରହଣ କରେ ନାହିଁ। ନୂଆ ଦେବାକୁ ଟାପ୍ କରନ୍ତୁ",
+  "Listening history, scrobbling, music": "ଶୁଣିବା ଇତିହାସ, scrobbling, ସଙ୍ଗୀତ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ବନ୍ଦ। ଆପଣ ଶୁଣୁଥିବା ଗୀତଗୁଡ଼ିକ ଆପଣଙ୍କ ListenBrainz ଶୁଣିବା ଇତିହାସରେ ଯୋଡ଼ାଯାଇପାରେ; ଅନ୍ୟ ଭିଡିଓ କେବେ ପଠାଯାଏ ନାହିଁ",
+  "Open ListenBrainz settings": "ListenBrainz ସେଟିଂସ ଖୋଲନ୍ତୁ",
+  "Scrobble songs to ListenBrainz": "ଗୀତଗୁଡ଼ିକୁ ListenBrainz କୁ scrobble କରନ୍ତୁ",
+  "User token": "ୟୁଜର ଟୋକେନ୍"
 }

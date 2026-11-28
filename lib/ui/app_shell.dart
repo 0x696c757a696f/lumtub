@@ -971,7 +971,10 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           SizedBox(width: wide ? 16 : 8),
-          Expanded(child: Center(child: ConstrainedBox(
+          // Keyed: the arrow taking the logo's place and the buttons going
+          // would otherwise build a new field as it takes the focus, whose
+          // list of recent searches stays empty until something is typed.
+          Expanded(key: const ValueKey('search field'), child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),

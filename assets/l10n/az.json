@@ -4262,5 +4262,21 @@
   "Length {0}": "Müddət {0}",
   "{0}% watched": "{0}% izlənilib",
   "Scroll left": "Sola sürüşdür",
-  "Scroll right": "Sağa sürüşdür"
+  "Scroll right": "Sağa sürüşdür",
+  "Connect": "Qoşul",
+  "Connect ListenBrainz": "ListenBrainz-i qoş",
+  "Connected as {0}": "{0} kimi qoşulub",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} kimi qoşulub · göndərilməyi gözləyən {1} dinləmə",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} kimi qoşulub. Mahnının yarısını və ya dörd dəqiqəsini, hansı əvvəl çatarsa, dinlədikdə sayılır. Gizli rejimdə heç nə göndərilmir.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "İstifadəçi tokeninizi ListenBrainz ayarlar səhifəsindən kopyalayıb bura yapışdırın. Bu cihazda şifrələnmiş şəkildə saxlanılır.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-ə çatmaq mümkün olmadı. Şəbəkənizi yoxlayıb yenidən cəhd edin",
+  "Couldn't save the token": "Token saxlanıla bilmədi",
+  "Disconnect": "Bağlantını kəs",
+  "ListenBrainz did not accept this token": "ListenBrainz bu tokeni qəbul etmədi",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz artıq bu tokeni qəbul etmir. Yenisini daxil etmək üçün toxunun",
+  "Listening history, scrobbling, music": "Dinləmə tarixçəsi, scrobbling, musiqi",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Söndürülüb. Dinlədiyiniz mahnılar ListenBrainz dinləmə tarixçənizə əlavə oluna bilər; digər videolar heç vaxt göndərilmir",
+  "Open ListenBrainz settings": "ListenBrainz ayarlarını aç",
+  "Scrobble songs to ListenBrainz": "Mahnıları ListenBrainz-ə scrobble et",
+  "User token": "İstifadəçi tokeni"
 }

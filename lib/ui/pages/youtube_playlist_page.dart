@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 import '../common.dart';
@@ -61,7 +62,15 @@ class YoutubePlaylistPage extends StatelessWidget {
             ],
           ),
         )),
-        if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),
+        if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(
+          items: items,
+          thumbnails: controller.thumbnailDirectory,
+          // A phone shows a playlist as numbered rows, as YouTube's app does:
+          // more of it fits on the screen than one big card at a time. With
+          // large text a row leaves the title too narrow, so cards stay.
+          layout: isPhone(context) && videoLayout == VideoLayout.grid && MediaQuery.textScalerOf(context).scale(10) <= 13 ? VideoLayout.list : null,
+          numberOf: (i) => reversed ? items.length - i : i + 1,
+          onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),
         if (reversed && loader.hasMore && loader.error == null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),

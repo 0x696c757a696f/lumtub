@@ -4262,5 +4262,21 @@
   "Length {0}": "Uzynlygy {0}",
   "{0}% watched": "{0}% seredildi",
   "Scroll left": "Çepe aýla",
-  "Scroll right": "Saga aýla"
+  "Scroll right": "Saga aýla",
+  "Connect": "Birikdir",
+  "Connect ListenBrainz": "ListenBrainz birikdir",
+  "Connected as {0}": "{0} hökmünde birikdirilen",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} hökmünde birikdirilen · ugradylmagyna garaşýan {1} diňleme",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} hökmünde birikdirilen. Aýdymyň ýarysyny ýa-da dört minudyny, haýsy ozal bolsa, diňleseňiz sanalýar. Inkognito rejiminde hiç zat ugradylmaýar.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Ulanyjy tokeniňizi ListenBrainz sazlamalar sahypasyndan göçürip, şu ýere ýelmäň. Ol şu enjamda şifrlenen görnüşde saklanýar.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz-e ýetip bolmady. Torunyzy barlaň we täzeden synanyşyň",
+  "Couldn't save the token": "Token ýatda saklanyp bilinmedi",
+  "Disconnect": "Aýyr",
+  "ListenBrainz did not accept this token": "ListenBrainz bu tokeni kabul etmedi",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz indi tokeni kabul etmeýär. Täzesini girizmek üçin basyň",
+  "Listening history, scrobbling, music": "Diňleme taryhy, scrobbling, saz",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Öçürilen. Diňleýän aýdymlaryňyz ListenBrainz diňleme taryhyňyza goşulyp bilner; beýleki wideolar hiç haçan ugradylmaýar",
+  "Open ListenBrainz settings": "ListenBrainz sazlamalaryny aç",
+  "Scrobble songs to ListenBrainz": "Aýdymlary ListenBrainz-e scrobble et",
+  "User token": "Ulanyjy tokeni"
 }

@@ -4265,5 +4265,21 @@
   "Length {0}": "Длительность {0}",
   "{0}% watched": "Просмотрено {0}%",
   "Scroll left": "Прокрутить влево",
-  "Scroll right": "Прокрутить вправо"
+  "Scroll right": "Прокрутить вправо",
+  "Connect": "Подключить",
+  "Connect ListenBrainz": "Подключить ListenBrainz",
+  "Connected as {0}": "Подключено: {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Подключено: {0} · {1} прослушиваний ожидают отправки",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Подключено: {0}. Песня засчитывается, когда вы прослушали половину или четыре минуты, смотря что наступит раньше. В режиме инкогнито ничего не отправляется.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Скопируйте свой пользовательский токен на странице настроек ListenBrainz и вставьте его сюда. Он хранится на этом устройстве в зашифрованном виде.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "Не удалось связаться с ListenBrainz. Проверьте сеть и повторите попытку",
+  "Couldn't save the token": "Не удалось сохранить токен",
+  "Disconnect": "Отключить",
+  "ListenBrainz did not accept this token": "ListenBrainz не принял этот токен",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz больше не принимает токен. Нажмите, чтобы ввести новый",
+  "Listening history, scrobbling, music": "История прослушивания, скробблинг, музыка",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Выключено. Песни, которые вы слушаете, можно добавлять в историю прослушивания ListenBrainz; другие видео никогда не отправляются",
+  "Open ListenBrainz settings": "Открыть настройки ListenBrainz",
+  "Scrobble songs to ListenBrainz": "Скробблить песни в ListenBrainz",
+  "User token": "Пользовательский токен"
 }

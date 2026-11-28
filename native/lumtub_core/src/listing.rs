@@ -820,6 +820,35 @@ fn contents(list: &[Value], page: &mut Page) {
     }
 }
 
+/// Every item under [node] that [basic] reads, or a playlist's
+/// `playlistVideoRenderer`, and the last continuation token, at any depth.
+fn anywhere(node: &Value, page: &mut Page, depth: usize) {
+    if depth > 64 {
+        return;
+    }
+    match node {
+        Value::Object(map) => {
+            if let Some(token) = continuation(node) {
+                page.continuation = Some(token);
+            } else if let Some(renderer) = map.get("playlistVideoRenderer") {
+                page.entries.extend(video(renderer));
+            } else if let Some(entry) = basic(node) {
+                page.entries.push(entry);
+            } else {
+                for value in map.values() {
+                    anywhere(value, page, depth + 1);
+                }
+            }
+        }
+        Value::Array(list) => {
+            for value in list {
+                anywhere(value, page, depth + 1);
+            }
+        }
+        _ => {}
+    }
+}
+
 /// The entries and next token of a `/search` or `/browse` response, first
 /// page or continuation.
 pub fn page(response: &Value) -> Page {
@@ -874,6 +903,18 @@ pub fn page(response: &Value) -> Page {
     }
     for list in lists.iter().filter_map(|l| l.as_array()) {
         contents(list, &mut page);
+    }
+    // A page laid out in a way [contents] does not know yet: its items are
+    // still the same kinds, wherever they sit.
+    if page.entries.is_empty() {
+        let roots = [
+            "contents",
+            "onResponseReceivedCommands",
+            "onResponseReceivedActions",
+        ];
+        for root in roots.iter().filter_map(|key| response.get(*key)) {
+            anywhere(root, &mut page, 0);
+        }
     }
     let mut seen = std::collections::HashSet::new();
     page.entries.retain(|e| {
@@ -1216,6 +1257,26 @@ mod tests {
         assert_eq!(read.entries[0]["id"], "vu0AE3yf96I");
         assert_eq!(read.entries[0]["channel"], "Discerning Hearts®");
         assert_eq!(read.continuation.as_deref(), Some("NEXTPAGE"));
+    }
+
+    #[test]
+    fn reads_items_of_a_layout_it_does_not_know() {
+        let response = json!({"contents": {"singleColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"content": {"sectionListRenderer": {"contents": [
+            {"somethingNewRenderer": {"contents": [
+                {"lockupViewModel": {"contentId": "newlayout01", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                    "metadata": {"lockupMetadataViewModel": {"title": {"content": "One"}}}}},
+                {"playlistVideoRenderer": {"videoId": "newlayout02", "title": {"runs": [{"text": "Two"}]}}},
+                {"continuationItemViewModel": {"continuationCommand": {"innertubeCommand": {"continuationCommand": {"token": "AFTER"}}}}}
+            ]}}
+        ]}}}}]}}});
+        let read = page(&response);
+        let ids: Vec<&str> = read
+            .entries
+            .iter()
+            .filter_map(|e| e["id"].as_str())
+            .collect();
+        assert_eq!(ids, ["newlayout01", "newlayout02"]);
+        assert_eq!(read.continuation.as_deref(), Some("AFTER"));
     }
 
     #[test]

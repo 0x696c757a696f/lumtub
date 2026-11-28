@@ -2,6 +2,11 @@ name: Create Lumtub release
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, such as 0.3.0. Leave empty for the next patch version.'
+        required: false
+        default: ''
   schedule:
     - cron: '17 9 * * *'
 
@@ -27,6 +32,7 @@ jobs:
         id: prepare
         env:
           SCHEDULED: ${{ github.event_name == 'schedule' }}
+          WANTED: ${{ inputs.version }}
         run: |
           set -euo pipefail
           git fetch --tags --force origin
@@ -56,15 +62,29 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # A version already released moves on by itself: the next patch
-          # version, with the next build number, committed to main first.
-          if [[ -n "$(git tag --list "v$pubspec_version-*")" ]]; then
+          # version, or the version asked for, with the next build number,
+          # committed to main first.
+          next=''
+          if [[ -n "${WANTED:-}" ]]; then
+            [[ "$WANTED" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "The version asked for must look like 1.2.3, found: $WANTED" >&2
+              exit 1
+            }
+            [[ -z "$(git tag --list "v$WANTED-*")" ]] || {
+              echo "$WANTED was released already" >&2
+              exit 1
+            }
+            if [[ "$WANTED" != "$pubspec_version" ]]; then next="$WANTED"; fi
+          elif [[ -n "$(git tag --list "v$pubspec_version-*")" ]]; then
             IFS=. read -r major minor patch <<< "$pubspec_version"
-            build=$(sed -n 's/^version: *[^+[:space:]]*+\([0-9][0-9]*\).*/\1/p' pubspec.yaml)
             next="$major.$minor.$((patch + 1))"
+          fi
+          if [[ -n "$next" ]]; then
+            build=$(sed -n 's/^version: *[^+[:space:]]*+\([0-9][0-9]*\).*/\1/p' pubspec.yaml)
             sed -i "s/^version: .*/version: $next+$(( ${build:-0} + 1 ))/" pubspec.yaml
             git commit -qm "Lumtub $next" pubspec.yaml
             git push origin HEAD:main
-            echo "$pubspec_version was released already; main now says $next."
+            echo "main now says $next instead of $pubspec_version."
             pubspec_version=$next
           fi
           # Named by the commit's files, not the commit: a pull request's

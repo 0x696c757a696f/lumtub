@@ -441,7 +441,7 @@ extension SettingsActions on AppController {
   Future<void> _clearLookupFiles() async {
     final folder = directories?.cache.path;
     if (folder == null) return;
-    for (final name in const ['heard_languages_2.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json']) {
+    for (final name in const ['heard_languages_2.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json', 'catholic_channels.json']) {
       try {
         final file = File('$folder${Platform.pathSeparator}$name');
         if (await file.exists()) await file.delete();
@@ -481,6 +481,7 @@ extension SettingsActions on AppController {
             if (account?.signedIn ?? false) await account?.signOut();
             if (directories case final folders?) _forgetTvSignIn(folders.data.path);
             await airPlayPairings.clear();
+            await scrobbler.disconnect();
           case LocalData.keys:
             translationKeys = const {};
             _useTranslator();

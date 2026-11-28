@@ -4262,5 +4262,21 @@
   "Length {0}": "लांबी {0}",
   "{0}% watched": "{0}% पाहिले",
   "Scroll left": "डावीकडे स्क्रोल करा",
-  "Scroll right": "उजवीकडे स्क्रोल करा"
+  "Scroll right": "उजवीकडे स्क्रोल करा",
+  "Connect": "कनेक्ट करा",
+  "Connect ListenBrainz": "ListenBrainz कनेक्ट करा",
+  "Connected as {0}": "{0} म्हणून कनेक्ट केले",
+  "Connected as {0} · {1} listens waiting to be sent": "{0} म्हणून कनेक्ट केले · {1} श्रवणे पाठवण्याच्या प्रतीक्षेत",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "{0} म्हणून कनेक्ट केले. गाण्याचा अर्धा भाग किंवा चार मिनिटे, जे आधी होईल ते ऐकल्यावर ते मोजले जाते. गुप्त मोडमध्ये काहीही पाठवले जात नाही.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "तुमच्या ListenBrainz सेटिंग्ज पेजवरून तुमचा युझर टोकन कॉपी करा आणि येथे पेस्ट करा. तो या डिव्हाइसवर एनक्रिप्ट करून साठवला जातो.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz शी संपर्क होऊ शकला नाही. तुमचे नेटवर्क तपासा आणि पुन्हा प्रयत्न करा",
+  "Couldn't save the token": "टोकन सेव्ह करता आला नाही",
+  "Disconnect": "डिस्कनेक्ट करा",
+  "ListenBrainz did not accept this token": "ListenBrainz ने हा टोकन स्वीकारला नाही",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz आता हा टोकन स्वीकारत नाही. नवीन टाकण्यासाठी टॅप करा",
+  "Listening history, scrobbling, music": "श्रवण इतिहास, scrobbling, संगीत",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "बंद. तुम्ही ऐकलेली गाणी तुमच्या ListenBrainz श्रवण इतिहासात जोडली जाऊ शकतात; इतर व्हिडिओ कधीही पाठवले जात नाहीत",
+  "Open ListenBrainz settings": "ListenBrainz सेटिंग्ज उघडा",
+  "Scrobble songs to ListenBrainz": "गाणी ListenBrainz वर scrobble करा",
+  "User token": "युझर टोकन"
 }

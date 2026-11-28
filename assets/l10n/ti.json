@@ -4262,5 +4262,21 @@
   "Length {0}": "ንውሓት {0}",
   "{0}% watched": "{0}% ዝተራእየ",
   "Scroll left": "ናብ ጸጋም ሸብልል",
-  "Scroll right": "ናብ የማን ሸብልል"
+  "Scroll right": "ናብ የማን ሸብልል",
+  "Connect": "ኣስተሓሕዝ",
+  "Connect ListenBrainz": "ListenBrainz ኣስተሓሕዝ",
+  "Connected as {0}": "ከም {0} ተሓሒዙ",
+  "Connected as {0} · {1} listens waiting to be sent": "ከም {0} ተሓሒዙ · {1} ምስማዕ ንምስዳድ ይጽበ ኣሎ",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "ከም {0} ተሓሒዙ። ሓደ ደርፊ ፍርቁ ወይ ኣርባዕተ ደቒቕ፡ እቲ ዝቐደመ፡ ምስ ሰማዕካ ይቝጸር። ብስዉር ኣገባብ ዋላ ሓንቲ ኣይትለኣኽን።",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "ናይ ተጠቃሚ ቶከንካ ካብ ናይ ListenBrainz ቅጥዕታት ገጽ ቅዳሕ እሞ ኣብዚ ለጥፎ። ኣብዚ ምህዳር ተሓቢኡ ይቕመጥ።",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz ክበጽሕ ኣይተኻእለን። መርበብካ ኣረጋግጽ እሞ ደጊምካ ፈትን",
+  "Couldn't save the token": "ቶከን ክዕቀብ ኣይተኻእለን",
+  "Disconnect": "ኣቋርጽ",
+  "ListenBrainz did not accept this token": "ListenBrainz እዚ ቶከን ኣይተቐበሎን",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz ድሕሪ ሕጂ ነዚ ቶከን ኣይቅበሎን። ሓድሽ ንምእታው ጠውቕ",
+  "Listening history, scrobbling, music": "ታሪኽ ምስማዕ፣ scrobbling፣ ሙዚቃ",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "ጠፊኡ። ዝሰማዕካዮም ደርፍታት ናብ ታሪኽ ምስማዕ ListenBrainz ክውሰኹ ይኽእሉ፤ ካልኦት ቪድዮታት ፈጺሙ ኣይለኣኹን",
+  "Open ListenBrainz settings": "ቅጥዕታት ListenBrainz ክፈት",
+  "Scrobble songs to ListenBrainz": "ደርፍታት ናብ ListenBrainz scrobble ግበር",
+  "User token": "ናይ ተጠቃሚ ቶከን"
 }

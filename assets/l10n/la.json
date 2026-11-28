@@ -4262,5 +4262,21 @@
   "Length {0}": "Duratio {0}",
   "{0}% watched": "{0}% visa",
   "Scroll left": "Ad sinistram volvere",
-  "Scroll right": "Ad dextram volvere"
+  "Scroll right": "Ad dextram volvere",
+  "Connect": "Coniungere",
+  "Connect ListenBrainz": "ListenBrainz coniungere",
+  "Connected as {0}": "Coniunctus ut {0}",
+  "Connected as {0} · {1} listens waiting to be sent": "Coniunctus ut {0} · {1} auditiones mitti exspectant",
+  "Connected as {0}. A song counts once you have listened to half of it or four minutes, whichever comes first. Nothing is sent in incognito mode.": "Coniunctus ut {0}. Carmen numeratur ubi dimidium eius aut quattuor minuta audivisti, quod prius fit. In modo incognito nihil mittitur.",
+  "Copy your user token from your ListenBrainz settings page and paste it here. It is stored encrypted on this device.": "Signum usoris tuum e pagina ordinum ListenBrainz exscribe et hic insere. In hoc instrumento cryptatum servatur.",
+  "Couldn't reach ListenBrainz. Check your network and try again": "ListenBrainz attingi non potuit. Rete tuum inspice et iterum conare",
+  "Couldn't save the token": "Signum servari non potuit",
+  "Disconnect": "Disiungere",
+  "ListenBrainz did not accept this token": "ListenBrainz hoc signum non accepit",
+  "ListenBrainz no longer accepts the token. Tap to enter a new one": "ListenBrainz signum iam non accipit. Tange ut novum inseras",
+  "Listening history, scrobbling, music": "Historia auditionum, scrobbling, musica",
+  "Off. Songs you listen to can be added to your ListenBrainz listening history; other videos are never sent": "Inactivum. Carmina quae audis ad historiam auditionum tuam in ListenBrainz addi possunt; alia video numquam mittuntur",
+  "Open ListenBrainz settings": "Ordines ListenBrainz aperire",
+  "Scrobble songs to ListenBrainz": "Carmina ad ListenBrainz scrobblare",
+  "User token": "Signum usoris"
 }

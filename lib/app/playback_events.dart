@@ -26,6 +26,7 @@ extension PlaybackEvents on AppController {
       _remember();
       _finishWatching();
       _watching = item;
+      scrobbler.begin(item.id);
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
@@ -261,6 +262,7 @@ extension PlaybackEvents on AppController {
         if (_segments.isNotEmpty && settings.sponsorBlock) _skipSegments(position);
         _pauseAtLineEnd(player, position);
         _countWatchTime();
+        _observeScrobble(player, position);
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
           _lastProgressSave = now;
@@ -556,6 +558,19 @@ extension PlaybackEvents on AppController {
     }
   }
 
+  /// Tells 听歌记录 how far the song playing has got. Nothing in 无痕模式.
+  void _observeScrobble(Player player, Duration position) {
+    final item = _tracking;
+    if (item == null || incognito || !scrobbler.connected) return;
+    final known = playing?.id == item.id ? details : null;
+    final length = player.state.duration;
+    var cached = _scrobbleFor;
+    if (cached == null || cached.$1 != item.id || !identical(cached.$2, known) || cached.$3 != length) {
+      cached = _scrobbleFor = (item.id, known, length, scrobbleTrackOf(item, known, length: length > Duration.zero ? length : null));
+    }
+    scrobbler.observe(cached.$4, position: position, playing: player.state.playing && !player.state.buffering);
+  }
+
   /// Counts the time played up to now into 观看统计, before it is shown.
   void flushWatchTime() => _countWatchTime(flush: true);
 
@@ -623,6 +638,11 @@ extension PlaybackEvents on AppController {
   /// idle memory is given back and, on a phone or tablet, the player's
   /// cache shrinks to the background's until the app is next shown.
   void onMemoryPressure() {
+    // Android sends one per trim level, several in the same moment.
+    final now = DateTime.now();
+    final last = _lastMemoryPressure;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) return;
+    _lastMemoryPressure = now;
     logInfo('The system is short of memory (${ProcessInfo.currentRss >> 20} MB in use)');
     releaseMemory();
     final platform = player?.platform;

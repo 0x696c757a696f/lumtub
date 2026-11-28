@@ -62,6 +62,13 @@ abstract final class WindowFrame {
 
   static Future<void> toggleMaximize() => _invoke('toggleMaximize');
 
+  /// Filling the window (铺满窗口): gives the window the shape of a video
+  /// [aspect] (width over height) and keeps it while it is resized, so no
+  /// bars are left round the picture; 0 lets the shape go and puts back the
+  /// size the window had. A maximized window keeps its size.
+  static Future<void> keepVideoShape(double aspect) =>
+      _invoke('keepVideoShape', aspect.isFinite && aspect > 0 ? aspect : 0.0);
+
   /// Goes through the normal close path, so the exit request and
   /// close-to-tray still apply.
   static Future<void> close() => _invoke('close');

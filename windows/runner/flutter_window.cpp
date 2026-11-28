@@ -127,8 +127,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       if (bottom) return HTBOTTOM;
       return HTCLIENT;
     }
+    // Picture in picture, and the filled window (铺满窗口) too, keep the
+    // video's ratio.
     case WM_SIZING: {
-      const double aspect = PictureInPictureAspect(hwnd);
+      double aspect = PictureInPictureAspect(hwnd);
+      if (aspect <= 0 && frame_) aspect = frame_->VideoAspect();
       if (aspect <= 0) break;
       RECT window{}, client{};
       ::GetWindowRect(hwnd, &window);

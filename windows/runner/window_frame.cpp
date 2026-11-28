@@ -199,6 +199,8 @@ void WindowFrame::HandleCall(
     // Hit-testing moves and sizes the window.
   } else if (method == "hidePointer") {
     HidePointer(args);
+  } else if (method == "keepVideoShape") {
+    KeepVideoShape(args ? Number(*args) : 0);
   } else if (method == "setCaption") {
     const EncodableValue* height = Find(args, "height");
     caption_height_ = height ? Number(*height) : 0;
@@ -245,6 +247,71 @@ void WindowFrame::SetCustom(bool on) {
                      SWP_FRAMECHANGED);
   FitView();
   if (!on) SetButton(0);
+  // The caption just went or came back, so the client area changed shape.
+  if (video_aspect_ > 0) FitToVideo();
+}
+
+void WindowFrame::KeepVideoShape(double aspect) {
+  if (!(aspect > 0)) {
+    video_aspect_ = 0;
+    if (!size_before_) return;
+    const SIZE before = *size_before_;
+    size_before_.reset();
+    if (InPictureInPicture(window_) || ::IsZoomed(window_)) return;
+    RECT window{};
+    if (!::GetWindowRect(window_, &window)) return;
+    PlaceInWorkArea(window.left, window.top, before.cx, before.cy);
+    return;
+  }
+  // A maximized window keeps its size; picture in picture keeps its own
+  // shape and puts the window back itself.
+  if (InPictureInPicture(window_) || ::IsZoomed(window_)) return;
+  video_aspect_ = std::clamp(aspect, 0.25, 4.0);
+  if (!size_before_) {
+    RECT window{};
+    if (!::GetWindowRect(window_, &window)) return;
+    size_before_ = SIZE{window.right - window.left, window.bottom - window.top};
+  }
+  FitToVideo();
+}
+
+void WindowFrame::FitToVideo() {
+  if (InPictureInPicture(window_) || ::IsZoomed(window_)) return;
+  RECT window{}, client{};
+  if (!::GetWindowRect(window_, &window) || !::GetClientRect(window_, &client))
+    return;
+  const LONG extra_width = (window.right - window.left) - client.right;
+  const LONG extra_height = (window.bottom - window.top) - client.bottom;
+  MONITORINFO monitor{sizeof(monitor)};
+  if (!::GetMonitorInfo(::MonitorFromWindow(window_, MONITOR_DEFAULTTONEAREST),
+                        &monitor))
+    return;
+  const RECT& area = monitor.rcWork;
+  // The width stays; the height follows the video, and when that is taller
+  // than the screen, both shrink.
+  LONG width = client.right;
+  LONG height = std::lround(width / video_aspect_);
+  const LONG room = (area.bottom - area.top) - extra_height;
+  if (height > room && room > 0) {
+    height = room;
+    width = std::lround(height * video_aspect_);
+  }
+  if (width <= 0 || height <= 0) return;
+  PlaceInWorkArea(window.left, window.top, width + extra_width,
+                  height + extra_height);
+}
+
+void WindowFrame::PlaceInWorkArea(LONG left, LONG top, LONG width,
+                                  LONG height) {
+  MONITORINFO monitor{sizeof(monitor)};
+  if (::GetMonitorInfo(::MonitorFromWindow(window_, MONITOR_DEFAULTTONEAREST),
+                       &monitor)) {
+    const RECT& area = monitor.rcWork;
+    left = std::clamp(left, area.left, std::max(area.left, area.right - width));
+    top = std::clamp(top, area.top, std::max(area.top, area.bottom - height));
+  }
+  ::SetWindowPos(window_, nullptr, left, top, width, height,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 void WindowFrame::FitView() {

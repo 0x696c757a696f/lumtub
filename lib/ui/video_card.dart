@@ -175,8 +175,21 @@ const _reasonHeight = 20.0;
   final narrowest = !compactCards ? base : width < _phoneGridWidth ? min(base * _compactWidth, _phoneCompactWidth) : base * _compactWidth;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, compact ?? compactCards) + 2 * padding);
+  final isCompact = compact ?? compactCards;
+  final ownLine = channelOwnLine(itemWidth - 2 * padding - _infoInset(isCompact)) ? _channelLineHeight * textScale : 0.0;
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, isCompact) + ownLine + 2 * padding);
 }
+
+/// The line a channel has to itself on a narrow card.
+const _channelLineHeight = 18.0;
+
+/// How far in from a card's sides its text starts and ends, both together.
+double _infoInset(bool compact) => compact ? 16 : 4;
+
+/// Whether a card's text [width] wide puts the channel on a line of its
+/// own: two cards a row on a phone leave too little room for a channel's
+/// name and the date together.
+bool channelOwnLine(double width) => width < 220;
 
 /// The space the current skin leaves round each video card.
 double skinCardPadding(BuildContext context) => context.skin?.videoCard == null ? 0 : context.skin!.videoCardPadding;
@@ -966,16 +979,30 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
             padding: compact ? const EdgeInsets.fromLTRB(8, 6, 8, 4) : const EdgeInsets.fromLTRB(2, 10, 2, 4),
             // The channel line keeps to the card's foot, however long the
             // title, so a row of cards lines up.
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: LayoutBuilder(builder: (context, box) {
+              final ownLine = channelOwnLine(box.maxWidth);
+              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
               // Why it is here, on a line of its own so it reads whole.
               if (widget.reason case final reason? when reason.isNotEmpty)
                 SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
-              // Whose it is, and its menu.
+              // Whose it is, and its menu. On a card too narrow for both,
+              // the channel has a line of its own above the date, so its
+              // name reads whole.
+              if (ownLine)
+                SizedBox(
+                  height: _channelLineHeight * cardTextScale(context),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle),
+                  ),
+                ),
               SizedBox(
                 height: 24,
                 child: Row(children: [
-                  Expanded(child: MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle)),
+                  Expanded(child: ownLine
+                      ? Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle)
+                      : MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle)),
                   Builder(builder: (context) => touchFirst || Device.tv
                       ? IconButton(
                           tooltip: tr('More (Menu key)'),
@@ -990,7 +1017,8 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
                 ]),
               ),
               if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
-            ]),
+            ]);
+            }),
           )),
         ])),
       ),
@@ -1563,13 +1591,16 @@ class MetaLine extends StatelessWidget {
   const MetaLine({super.key, required this.lead, required this.tail, required this.style});
 
   factory MetaLine.of(VideoItem item, {required TextStyle style, String? extra}) {
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    final upcomingStart = startOf(item);
     return MetaLine(
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
       tail: [viewsOf(item), ageOf(item), extra].nonNulls.join(' · '),
       style: style,
     );
   }
+
+  /// When an upcoming live starts.
+  static String? startOf(VideoItem item) => item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
 
   /// "1.2K views", or watching for a live.
   static String? viewsOf(VideoItem item) => switch (item.audience) {

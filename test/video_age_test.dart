@@ -14,12 +14,13 @@ void main() {
     expect(MetaLine.of(live, style: const TextStyle()).tail, isNot(contains('ago')));
   });
 
-  testWidgets('a narrow card shows the views on the picture and the age with the channel', (tester) async {
+  testWidgets('a narrow card shows the views on the picture, and the channel on a line of its own above the age', (tester) async {
     final item = videoFromCore({'id': 'aaaaaaaaaaa', 'title': 'T', 'channel': 'A channel with a long name', 'live': false, 'viewCount': 1234567, 'age': '11 months ago'});
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: SizedBox(width: 180, height: 260, child: VideoCard(item: item, onOpen: () {}))))));
     expect(find.textContaining('views'), findsOneWidget);
     expect(find.textContaining('ago'), findsOneWidget, reason: 'the picture line holds the views alone');
-    expect(find.textContaining(' · 11 months ago'), findsOneWidget);
+    expect(find.text('A channel with a long name'), findsOneWidget);
+    expect(find.text('11 months ago'), findsOneWidget);
   });
 
   test('a long channel name is cut letter by letter, its ellipsis right after the last letter', () {

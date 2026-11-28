@@ -1588,43 +1588,77 @@ class MetaLine extends StatelessWidget {
   final String tail;
   final TextStyle style;
 
-  /// How wide each channel name is drawn, by name and look: the same few
-  /// channels fill a feed, and measuring a name again for every card that
-  /// scrolls in doubled the cost of the line.
+  /// How wide each piece of the line is drawn, by text and look: the same
+  /// few channels fill a feed, and measuring a name again for every card
+  /// that scrolls in doubled the cost of the line.
   static final _widths = <(String, TextStyle, TextScaler, TextDirection), double>{};
 
-  /// What the channel keeps of a line [width] wide: all it needs, up to a
-  /// third, however long the rest.
-  double _leadRoom(BuildContext context, double width) {
-    if (lead.isEmpty) return 0;
-    final full = DefaultTextStyle.of(context).style.merge(style);
-    final direction = Directionality.of(context);
-    final scaler = MediaQuery.textScalerOf(context);
-    final key = (lead, full, scaler, direction);
-    var needed = _widths.remove(key);
-    if (needed == null) {
-      final painter = TextPainter(text: TextSpan(text: lead, style: full), maxLines: 1, textDirection: direction, textScaler: scaler)..layout();
-      needed = painter.width.ceilToDouble();
+  /// The channel as it fits [room], by width and look.
+  static final _fitted = <(String, int, TextStyle, TextScaler, TextDirection), String>{};
+
+  static const _ellipsis = '\u2026';
+
+  /// What a shortened name may not end on: a space, a dot or bar between
+  /// names, or a bracket opened for words cut away.
+  static final _loose = RegExp(r'[\s\u00B7\u2022\u30FB|｜/\\,，、:：;；\-–—_(（\[【《〈「『<]+$');
+
+  static double _width(String text, TextStyle style, TextScaler scaler, TextDirection direction) {
+    final key = (text, style, scaler, direction);
+    var width = _widths.remove(key);
+    if (width == null) {
+      final painter = TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: direction, textScaler: scaler)..layout();
+      width = painter.width;
       painter.dispose();
-      if (_widths.length >= 512) _widths.remove(_widths.keys.first);
+      if (_widths.length >= 1024) _widths.remove(_widths.keys.first);
     }
-    _widths[key] = needed;
-    return needed < width / 3 ? needed : width / 3;
+    return _widths[key] = width;
+  }
+
+  /// [lead] whole when it fits [room], else cut letter by letter, not at
+  /// a word, with the ellipsis right after the last letter kept: cut at a
+  /// word, a name like "Yinuo Li 李一諾" lost its last word and left a gap
+  /// as wide as it before the date.
+  static String fit(String lead, double room, TextStyle style, TextScaler scaler, TextDirection direction) {
+    if (_width(lead, style, scaler, direction) <= room) return lead;
+    final key = (lead, room.floor(), style, scaler, direction);
+    if (_fitted[key] case final known?) return known;
+    final letters = lead.characters.toList();
+    String cut(int n) {
+      final kept = letters.take(n).join().replaceFirst(_loose, '');
+      return kept.isEmpty ? '' : '$kept$_ellipsis';
+    }
+
+    var low = 0;
+    var high = letters.length - 1;
+    while (low < high) {
+      final mid = (low + high + 1) ~/ 2;
+      if (_width(cut(mid), style, scaler, direction) <= room) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    final fitted = low == 0 ? _ellipsis : cut(low);
+    if (_fitted.length >= 512) _fitted.remove(_fitted.keys.first);
+    return _fitted[key] = fitted;
   }
 
   @override
   Widget build(BuildContext context) {
     if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
-    return LayoutBuilder(
-      builder: (context, box) => Row(children: [
-        if (lead.isNotEmpty) Flexible(child: Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),
-        if (tail.isNotEmpty)
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: box.maxWidth - _leadRoom(context, box.maxWidth)),
-            child: Text(lead.isEmpty ? tail : ' · $tail', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style),
-          ),
-      ]),
-    );
+    if (lead.isEmpty || tail.isEmpty) return Text(lead.isEmpty ? tail : lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    final full = DefaultTextStyle.of(context).style.merge(style);
+    final direction = Directionality.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(builder: (context, box) {
+      // The views and date keep their whole width, unless that leaves the
+      // channel less than a third of the line; the channel has the rest,
+      // shortened right up to the dot before the date.
+      final after = ' · $tail';
+      final tailWidth = min(_width(after, full, scaler, direction), box.maxWidth * 2 / 3);
+      final name = fit(lead, max(0, box.maxWidth - tailWidth - 0.5), full, scaler, direction);
+      return Text('$name$after', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    });
   }
 }
 

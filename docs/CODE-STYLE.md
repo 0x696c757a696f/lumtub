@@ -4,7 +4,9 @@ Each language follows Google's published guide for it, or the guide Google
 points to for that language. This page says which guide applies, what is
 checked by machine, and where Lumtub reads a guide in its own way. Rust has
 its own page, [RUST-STYLE.md](RUST-STYLE.md). The rules in
-[SECURE-CODING.md](SECURE-CODING.md) come first wherever they meet.
+[SECURE-CODING.md](SECURE-CODING.md) come first wherever they meet. What a change must
+meet beyond style (performance, network, design, usability and more) is in
+[REQUIREMENTS.md](REQUIREMENTS.md).
 
 | Code | Guide | Checked by |
 | --- | --- | --- |

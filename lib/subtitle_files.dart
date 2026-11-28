@@ -29,11 +29,20 @@ import 'youtube_web.dart';
 /// The whole track is translated when it is asked for whole.
 class SubtitleFiles {
   SubtitleFiles(this._client, this._folder, this._translator,
-      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, Object? Function()? playing, this.wording, this.onUpdated, this.poll = const Duration(seconds: 5)})
+      {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)],
+      this.busyPauses = const [Duration(seconds: 2), Duration(seconds: 5)],
+      this.byTranslator = _never,
+      this.concurrency = 3,
+      Duration Function()? position,
+      Object? Function()? playing,
+      this.wording,
+      this.onUpdated,
+      this.poll = const Duration(seconds: 5)})
       : _position = position ?? _start,
         _playing = playing ?? _nothing;
   final http.Client _client;
   final Directory _folder;
+
   /// The translator chosen now; a new one translates again.
   final Translator Function() _translator;
 
@@ -48,22 +57,28 @@ class SubtitleFiles {
   /// had too many requests.
   final List<Duration> busyPauses;
   final bool Function() byTranslator;
+
   /// Translation requests in flight at once for one track.
   final int concurrency;
+
   /// Where playback is, so a track Lumtub translates starts there.
   final Duration Function() _position;
+
   /// What is playing now, such as the video's id: a track that followed
   /// another video stops once this changes, as [_position] is no longer its.
   final Object? Function() _playing;
+
   /// Called with a file's path each time more of a translation, begun at
   /// [_position], has been written to it; false once the track is no
   /// longer shown, which stops translating it.
   final Future<bool> Function(String path)? onUpdated;
+
   /// How often a translation following playback looks where it is.
   final Duration poll;
 
   static const ahead = Duration(minutes: 5);
   static const behind = Duration(seconds: 30);
+
   /// After a file is first handed out, how long its track may take to be
   /// loaded before [onUpdated]'s false is believed.
   static const _grace = Duration(seconds: 30);
@@ -75,8 +90,10 @@ class SubtitleFiles {
   static Object? _nothing() => null;
 
   final _paths = <String, Future<String>>{};
+
   /// Translations still being finished in the background, by key.
   final _finishing = <String, Future<void>>{};
+
   /// Keys of translations asked for whole, and how to wake one waiting for
   /// playback to move.
   final _whole = <String>{};
@@ -98,8 +115,14 @@ class SubtitleFiles {
     final source = _sourceOf(option);
     // YouTube translates automatic captions fragment by fragment, words of
     // one sentence apart; here they are translated whole sentences at a time.
-    final translator = source != null && (byTranslator() || Uri.parse(source.url).queryParameters['kind'] == 'asr') ? _translator() : null;
-    return (translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}', translator);
+    final translator =
+        source != null && (byTranslator() || Uri.parse(source.url).queryParameters['kind'] == 'asr')
+            ? _translator()
+            : null;
+    return (
+      translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}',
+      translator
+    );
   }
 
   /// The file of [option] with every line in it, waiting for a translation
@@ -126,7 +149,8 @@ class SubtitleFiles {
     // got them cue by cue.
     final target = source?.target;
     var fromYoutube = false;
-    String worded(String text) => !fromYoutube || target == null || wording == null ? text : wording!(text, target, '');
+    String worded(String text) =>
+        !fromYoutube || target == null || wording == null ? text : wording!(text, target, '');
     Future<bool> save(String text) async {
       final since = await handedOut.future;
       await file.writeAsString(text);
@@ -137,7 +161,8 @@ class SubtitleFiles {
     if (translator != null && source != null) {
       final original = await _get(source.url);
       try {
-        result = await _translate(original, source.target, translator, key, save, asr: _isAsr(source.url));
+        result = await _translate(original, source.target, translator, key, save,
+            asr: _isAsr(source.url));
       } on TranslationException catch (e) {
         // The service still refuses after its pauses: YouTube's own
         // translation, fragment by fragment, rather than none.
@@ -162,7 +187,8 @@ class SubtitleFiles {
         fromYoutube = true;
       } on _Refused {
         if (source == null) rethrow;
-        result = await _translate(await _get(source.url), source.target, _translator(), key, save, asr: _isAsr(source.url));
+        result = await _translate(await _get(source.url), source.target, _translator(), key, save,
+            asr: _isAsr(source.url));
       }
     }
     final text = worded(result.text);
@@ -208,9 +234,14 @@ class SubtitleFiles {
       return File(Uri.parse(url.split('?').first).toFilePath()).readAsString();
     }
     for (var attempt = 0;; attempt++) {
-      final response = await _client.get(Uri.parse(url), headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));
-      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) return utf8.decode(response.bodyBytes, allowMalformed: true);
-      if (response.statusCode != 429 || attempt >= pauses.length) throw _Refused(response.statusCode);
+      final response = await _client.get(Uri.parse(url),
+          headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        return utf8.decode(response.bodyBytes, allowMalformed: true);
+      }
+      if (response.statusCode != 429 || attempt >= pauses.length) {
+        throw _Refused(response.statusCode);
+      }
       await Future<void>.delayed(pauses[attempt]);
     }
   }
@@ -220,7 +251,10 @@ class SubtitleFiles {
     final uri = Uri.parse(option.url);
     final target = uri.queryParameters['tlang'];
     if (target == null || target.isEmpty) return null;
-    return (url: uri.replace(queryParameters: {...uri.queryParameters}..remove('tlang')).toString(), target: target);
+    return (
+      url: uri.replace(queryParameters: {...uri.queryParameters}..remove('tlang')).toString(),
+      target: target
+    );
   }
 
   /// [vtt] translated into [tlang]. The pieces around [_position] come
@@ -230,7 +264,9 @@ class SubtitleFiles {
   /// shown. [rest] is null when the text is all there.
   static bool _isAsr(String url) => Uri.parse(url).queryParameters['kind'] == 'asr';
 
-  Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang, Translator translator, String key, Future<bool> Function(String text) save, {bool asr = false}) async {
+  Future<({String text, Future<String?>? rest})> _translate(String vtt, String tlang,
+      Translator translator, String key, Future<bool> Function(String text) save,
+      {bool asr = false}) async {
     // Whole sentences, not the fragments captions show, so each is
     // translated with all its words and never split between two requests.
     // A sentence of a track's own cues shown as several of them has its
@@ -246,8 +282,13 @@ class SubtitleFiles {
     if (asr) {
       final lines = WebVtt.captionLines(vtt);
       if (lines.isEmpty) return (text: vtt, rest: null);
-      cues = [for (final l in lines) (timing: '${WebVtt._stamp(l.start)} --> ${WebVtt._stamp(l.end)}', text: l.text)];
-      pieces = [for (final c in cues) [(timing: c.timing, weight: 1)]];
+      cues = [
+        for (final l in lines)
+          (timing: '${WebVtt._stamp(l.start)} --> ${WebVtt._stamp(l.end)}', text: l.text)
+      ];
+      pieces = [
+        for (final c in cues) [(timing: c.timing, weight: 1)]
+      ];
       sentenceOf = [for (final l in lines) l.sentence];
     } else {
       final plan = WebVtt.plan(vtt);
@@ -257,7 +298,8 @@ class SubtitleFiles {
     }
     // How many cues before a request AI reads: more of the short lines.
     final context = asr ? 2 * contextSentences : contextSentences;
-    final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
+    final target =
+        TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
     // at a request's end cannot shift every line after it.
@@ -267,8 +309,12 @@ class SubtitleFiles {
       var length = 0;
       // The lines of one sentence go in one request, so the translator
       // reads the sentence whole, up to twice the usual length.
-      bool sameSentence(int k) => sentenceOf.isNotEmpty && sentenceOf[k] == sentenceOf[k - 1] && length + cues[k].text.length < 2 * chunkLength;
-      while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength || sameSentence(end))) {
+      bool sameSentence(int k) =>
+          sentenceOf.isNotEmpty &&
+          sentenceOf[k] == sentenceOf[k - 1] &&
+          length + cues[k].text.length < 2 * chunkLength;
+      while (end < cues.length &&
+          (end == start || length + cues[end].text.length < chunkLength || sameSentence(end))) {
         length += cues[end++].text.length + 1;
       }
       groups.add((start, end));
@@ -300,11 +346,19 @@ class SubtitleFiles {
           final i = pieces[next++];
           final (start, end) = groups[i];
           // The sentences just before the piece go along for AI to read.
-          final before = [for (final cue in cues.sublist(start > context ? start - context : 0, start)) cue.text];
+          final before = [
+            for (final cue in cues.sublist(start > context ? start - context : 0, start)) cue.text
+          ];
           final originals = [for (final cue in cues.sublist(start, end)) cue.text];
-          final lines = await _patiently(() => _translateLines(originals, target, translator, before));
+          final lines =
+              await _patiently(() => _translateLines(originals, target, translator, before));
           final last = wording;
-          translated[i] = last == null ? lines : [for (final (k, line) in lines.indexed) last(line, target, k < originals.length ? originals[k] : '')];
+          translated[i] = last == null
+              ? lines
+              : [
+                  for (final (k, line) in lines.indexed)
+                    last(line, target, k < originals.length ? originals[k] : '')
+                ];
         }
       }
 
@@ -315,7 +369,10 @@ class SubtitleFiles {
     List<int> wanted() {
       final now = _position();
       final whole = _whole.contains(key);
-      return [for (final i in order(now)) if (translated[i] == null && (whole || near(i, now))) i];
+      return [
+        for (final i in order(now))
+          if (translated[i] == null && (whole || near(i, now))) i
+      ];
     }
 
     // The translation [text] of sentence [c] as the lines it shows in.
@@ -330,7 +387,8 @@ class SubtitleFiles {
       // cues, all of the piece in one go.
       final asks = [
         for (var c = start; c < end; c++)
-          if (texts[c - start].isNotEmpty && pieces[c].length > 1) (texts[c - start], [for (final l in pieces[c]) l.weight]),
+          if (texts[c - start].isNotEmpty && pieces[c].length > 1)
+            (texts[c - start], [for (final l in pieces[c]) l.weight]),
       ];
       final parts = asks.isEmpty ? const <List<String>>[] : WebVtt.splitMany(asks);
       var k = 0;
@@ -389,16 +447,21 @@ class SubtitleFiles {
         return await ask();
       } on TranslationException catch (e) {
         if (!e.busy || attempt >= busyPauses.length) rethrow;
-        logDebug(() => 'Translation service busy; asking again in ${busyPauses[attempt].inSeconds} s');
+        logDebug(
+            () => 'Translation service busy; asking again in ${busyPauses[attempt].inSeconds} s');
         await Future<void>.delayed(busyPauses[attempt]);
       }
     }
   }
 
-  static Future<List<String>> _translateLines(List<String> texts, String target, Translator translator, List<String> before) async {
+  static Future<List<String>> _translateLines(
+      List<String> texts, String target, Translator translator, List<String> before) async {
     final ai = _aiOf(translator);
     final text = texts.join('\n');
-    final reply = (await (ai != null && before.isNotEmpty ? ai.translateInContext(text, target, before) : translator.translate(text, target))).trim();
+    final reply = (await (ai != null && before.isNotEmpty
+            ? ai.translateInContext(text, target, before)
+            : translator.translate(text, target)))
+        .trim();
     if (texts.length == 1) return [reply.replaceAll('\n', ' ')];
     final lines = reply.split('\n');
     if (lines.length == texts.length) {
@@ -406,7 +469,9 @@ class SubtitleFiles {
       // so no line goes without its translation.
       for (var i = 0; i < lines.length; i++) {
         if (lines[i].trim().isEmpty && texts[i].trim().isNotEmpty) {
-          lines[i] = (await _translateLines([texts[i]], target, translator, [...before, ...texts.sublist(0, i)])).single;
+          lines[i] = (await _translateLines(
+                  [texts[i]], target, translator, [...before, ...texts.sublist(0, i)]))
+              .single;
         }
       }
       return lines;
@@ -414,7 +479,8 @@ class SubtitleFiles {
     final half = texts.length ~/ 2;
     return [
       ...await _translateLines(texts.sublist(0, half), target, translator, before),
-      ...await _translateLines(texts.sublist(half), target, translator, [...before, ...texts.sublist(0, half)]),
+      ...await _translateLines(
+          texts.sublist(half), target, translator, [...before, ...texts.sublist(0, half)]),
     ];
   }
 
@@ -465,7 +531,8 @@ class WebVtt {
   }
 
   static List<({String timing, String text})> _cuesOf(String json) => [
-        for (final c in (jsonDecode(json) as List<Object?>).cast<List<Object?>>()) (timing: c[0]! as String, text: c[1]! as String),
+        for (final c in (jsonDecode(json) as List<Object?>).cast<List<Object?>>())
+          (timing: c[0]! as String, text: c[1]! as String),
       ];
 
   /// [cues] without the native core.
@@ -479,7 +546,8 @@ class WebVtt {
       if (at < 0) continue;
       var text = [
         for (final line in lines.skip(at + 1))
-          if (_unescape(line.replaceAll(_tag, '')).trim() case final clean when clean.isNotEmpty) clean,
+          if (_unescape(line.replaceAll(_tag, '')).trim() case final clean when clean.isNotEmpty)
+            clean,
       ];
       if (text.isNotEmpty && text.first == previous) text = text.sublist(1);
       if (text.isEmpty) continue;
@@ -496,12 +564,16 @@ class WebVtt {
   /// short enough to read ([maxWidth], characters of Chinese, Japanese, Thai and other scripts without spaces counting double) and
   /// within [maxLength] on screen. Each spans from its first cue's start to
   /// its last cue's end.
-  static List<({String timing, String text})> sentencesOf(String vtt, {
+  static List<({String timing, String text})> sentencesOf(
+    String vtt, {
     Duration maxLength = const Duration(seconds: 7),
     int maxWidth = 90,
   }) {
-    final json = NativeCore.instance?.vttCues(jsonEncode({'vtt': vtt, 'sentences': true, 'time': maxLength.inMilliseconds, 'width': maxWidth}));
-    return json == null ? sentences(dartCues(vtt), maxLength: maxLength, maxWidth: maxWidth) : _cuesOf(json);
+    final json = NativeCore.instance?.vttCues(jsonEncode(
+        {'vtt': vtt, 'sentences': true, 'time': maxLength.inMilliseconds, 'width': maxWidth}));
+    return json == null
+        ? sentences(dartCues(vtt), maxLength: maxLength, maxWidth: maxWidth)
+        : _cuesOf(json);
   }
 
   /// [sentencesOf] the cues [cues], without the native core.
@@ -512,11 +584,13 @@ class WebVtt {
     int maxWidth = 90,
   }) =>
       [
-        for (final (i, j) in sentenceSpans(cues, gap: gap, maxLength: maxLength, maxWidth: maxWidth))
+        for (final (i, j)
+            in sentenceSpans(cues, gap: gap, maxLength: maxLength, maxWidth: maxWidth))
           j == i + 1
               ? cues[i]
               : (
-                  timing: '${_stamp(startOf(cues[i].timing))} --> ${_stamp(endOf(cues[j - 1].timing))}',
+                  timing:
+                      '${_stamp(startOf(cues[i].timing))} --> ${_stamp(endOf(cues[j - 1].timing))}',
                   text: [for (final c in cues.sublist(i, j)) c.text].reduce(_join),
                 ),
       ];
@@ -542,7 +616,9 @@ class WebVtt {
         final next = cues[j];
         final joined = wide + width(next.text) + (_spaced(last, next.text) ? 1 : 0);
         final nextEnd = endOf(next.timing);
-        if (startOf(next.timing) - end > gap || nextEnd - start > maxLength || joined > maxWidth) break;
+        if (startOf(next.timing) - end > gap || nextEnd - start > maxLength || joined > maxWidth) {
+          break;
+        }
         wide = joined;
         end = nextEnd;
         if (next.text.isNotEmpty) last = next.text;
@@ -582,7 +658,11 @@ class WebVtt {
     int quality(int k) {
       final prev = chars[k - 1], next = chars[k];
       if (_cjkStop.hasMatch(prev) && next.trim().isNotEmpty) return 3;
-      if (next.trim().isEmpty) return prev.trim().isEmpty ? 0 : (_clauseTail.hasMatch(prev) || _sentenceEnd.hasMatch(prev) ? 3 : 2);
+      if (next.trim().isEmpty) {
+        return prev.trim().isEmpty
+            ? 0
+            : (_clauseTail.hasMatch(prev) || _sentenceEnd.hasMatch(prev) ? 3 : 2);
+      }
       if (_unspaced(prev, next)) return 1;
       return 0;
     }
@@ -619,7 +699,9 @@ class WebVtt {
 
   /// [splitLike] for each of [asks] at once.
   static List<List<String>> splitMany(List<(String, List<int>)> asks) {
-    final json = NativeCore.instance?.vttSplit(jsonEncode([for (final (text, weights) in asks) [text, weights]]));
+    final json = NativeCore.instance?.vttSplit(jsonEncode([
+      for (final (text, weights) in asks) [text, weights]
+    ]));
     if (json != null) {
       final out = [for (final parts in jsonDecode(json) as List) (parts as List).cast<String>()];
       if (out.length == asks.length) return out;
@@ -631,26 +713,47 @@ class WebVtt {
   /// [captionLines]): its sentences, each from its first cue's start to
   /// its last cue's end, and for each the cues it shows in with how wide
   /// the original is there.
-  static ({List<({String timing, String text})> cues, List<List<({String timing, int weight})>> pieces}) plan(String vtt) {
+  static ({
+    List<({String timing, String text})> cues,
+    List<List<({String timing, int weight})>> pieces
+  }) plan(String vtt) {
     final json = NativeCore.instance?.vttPlan(vtt);
     if (json == null) return dartPlan(vtt);
     final map = jsonDecode(json) as Map<String, dynamic>;
     return (
       cues: _cuesOf(jsonEncode(map['cues'])),
       pieces: [
-        for (final p in (map['pieces'] as List<Object?>).cast<List<Object?>>()) [for (final l in p.cast<List<Object?>>()) (timing: l[0]! as String, weight: l[1]! as int)],
+        for (final p in (map['pieces'] as List<Object?>).cast<List<Object?>>())
+          [
+            for (final l in p.cast<List<Object?>>()) (timing: l[0]! as String, weight: l[1]! as int)
+          ],
       ],
     );
   }
 
   /// [plan] without the native core.
-  static ({List<({String timing, String text})> cues, List<List<({String timing, int weight})>> pieces}) dartPlan(String vtt) {
+  static ({
+    List<({String timing, String text})> cues,
+    List<List<({String timing, int weight})>> pieces
+  }) dartPlan(String vtt) {
     final fragments = dartCues(vtt);
-    final spans = sentenceSpans(fragments, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth);
+    final spans = sentenceSpans(fragments,
+        maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth);
     return (
-      cues: [for (final (from, to) in spans) (timing: '${_stamp(startOf(fragments[from].timing))} --> ${_stamp(endOf(fragments[to - 1].timing))}', text: textOf(fragments, from, to))],
+      cues: [
+        for (final (from, to) in spans)
+          (
+            timing:
+                '${_stamp(startOf(fragments[from].timing))} --> ${_stamp(endOf(fragments[to - 1].timing))}',
+            text: textOf(fragments, from, to)
+          )
+      ],
       pieces: [
-        for (final (from, to) in spans) [for (var k = from; k < to; k++) (timing: fragments[k].timing, weight: width(fragments[k].text))],
+        for (final (from, to) in spans)
+          [
+            for (var k = from; k < to; k++)
+              (timing: fragments[k].timing, weight: width(fragments[k].text))
+          ],
       ],
     );
   }
@@ -658,7 +761,8 @@ class WebVtt {
   static final _cjkStop = RegExp(r'[，。、！？；：…）」』]');
 
   /// The text of [cues] from [from] up to [to] as one line.
-  static String textOf(List<({String timing, String text})> cues, int from, int to) => [for (final c in cues.sublist(from, to)) c.text].reduce(_join);
+  static String textOf(List<({String timing, String text})> cues, int from, int to) =>
+      [for (final c in cues.sublist(from, to)) c.text].reduce(_join);
 
   /// Sentence [span] of [cues] as the lines to show it in: all of it when
   /// it fits [lineWidth] and [lineTime], else lines that do, each ending
@@ -696,7 +800,9 @@ class WebVtt {
   /// The times of [lines] of [cues]: from the first cue's start to the last
   /// one's end, or to the next line's start where automatic captions run
   /// on over it, so two lines never show at once.
-  static List<String> lineTimings(List<({String timing, String text})> cues, List<(int, int)> lines) => [
+  static List<String> lineTimings(
+          List<({String timing, String text})> cues, List<(int, int)> lines) =>
+      [
         for (final (k, (a, b)) in lines.indexed)
           () {
             final start = startOf(cues[a].timing);
@@ -723,22 +829,39 @@ class WebVtt {
     final cues = dartCues(vtt);
     final lines = <(int, int)>[];
     final sentence = <int>[];
-    for (final (s, span) in sentenceSpans(cues, maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth).indexed) {
+    for (final (s, span) in sentenceSpans(cues,
+            maxLength: SubtitleFiles.sentenceTime, maxWidth: SubtitleFiles.sentenceWidth)
+        .indexed) {
       for (final line in lineSpans(cues, span)) {
         lines.add(line);
         sentence.add(s);
       }
     }
     final timings = lineTimings(cues, lines);
-    return [for (final (k, (a, b)) in lines.indexed) (start: startOf(timings[k]), end: endOf(timings[k]), sentence: sentence[k], text: textOf(cues, a, b))];
+    return [
+      for (final (k, (a, b)) in lines.indexed)
+        (
+          start: startOf(timings[k]),
+          end: endOf(timings[k]),
+          sentence: sentence[k],
+          text: textOf(cues, a, b)
+        )
+    ];
   }
 
   static List<CaptionLine> _linesOf(String json) => [
         for (final line in jsonDecode(json) as List)
-          if (line case [final int start, final int end, final int sentence, final String text]) (start: Duration(milliseconds: start), end: Duration(milliseconds: end), sentence: sentence, text: text),
+          if (line case [final int start, final int end, final int sentence, final String text])
+            (
+              start: Duration(milliseconds: start),
+              end: Duration(milliseconds: end),
+              sentence: sentence,
+              text: text
+            ),
       ];
 
-  static String _writeLines(List<CaptionLine> lines) => write([for (final l in lines) (timing: '${_stamp(l.start)} --> ${_stamp(l.end)}', text: l.text)]);
+  static String _writeLines(List<CaptionLine> lines) => write(
+      [for (final l in lines) (timing: '${_stamp(l.start)} --> ${_stamp(l.end)}', text: l.text)]);
 
   /// Automatic captions [vtt] in the lines of [captionLines]: the way their
   /// translations are shown, so each original line has its translation
@@ -776,7 +899,10 @@ class WebVtt {
       }
       texts[k] = texts[k].isEmpty ? piece.text : _join(texts[k], piece.text);
     }
-    return _writeLines([for (final (k, l) in lines.indexed) if (texts[k].isNotEmpty) (start: l.start, end: l.end, sentence: l.sentence, text: texts[k])]);
+    return _writeLines([
+      for (final (k, l) in lines.indexed)
+        if (texts[k].isNotEmpty) (start: l.start, end: l.end, sentence: l.sentence, text: texts[k])
+    ]);
   }
 
   /// [a] and [b] as one line: with a space, except between letters of
@@ -784,14 +910,18 @@ class WebVtt {
   static String _join(String a, String b) => _spaced(a, b) ? '$a $b' : a + b;
 
   /// Whether [a] and [b] join with a space.
-  static bool _spaced(String a, String b) => a.isNotEmpty && b.isNotEmpty && !_unspaced(a[a.length - 1], b[0]);
+  static bool _spaced(String a, String b) =>
+      a.isNotEmpty && b.isNotEmpty && !_unspaced(a[a.length - 1], b[0]);
 
   static final _hangul = RegExp(r'[ᄀ-ᇿ㄰-㆏가-힯]');
 
   /// Whether letters [a] and [b] go together without a space: both of a
   /// script written without spaces. Korean is spaced between words, and
   /// automatic captions break between words.
-  static bool _unspaced(String a, String b) => unspacedScript.hasMatch(a) && unspacedScript.hasMatch(b) && !(_hangul.hasMatch(a) && _hangul.hasMatch(b));
+  static bool _unspaced(String a, String b) =>
+      unspacedScript.hasMatch(a) &&
+      unspacedScript.hasMatch(b) &&
+      !(_hangul.hasMatch(a) && _hangul.hasMatch(b));
 
   static String _stamp(Duration d) {
     String two(int n, [int width = 2]) => n.toString().padLeft(width, '0');
@@ -824,5 +954,9 @@ class WebVtt {
     return out.toString();
   }
 
-  static String _unescape(String text) => text.replaceAll('&nbsp;', ' ').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+  static String _unescape(String text) => text
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&');
 }

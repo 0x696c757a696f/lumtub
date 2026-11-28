@@ -12,8 +12,10 @@ import 'package:lumtub/native_core.dart';
 Future<String?> _pack(Directory dir, String name, List<String> sql) async {
   final path = '${dir.path}${Platform.pathSeparator}$name';
   try {
-    const script = 'import sqlite3, sys\ndb = sqlite3.connect(sys.argv[1])\ndb.executescript(sys.stdin.buffer.read().decode(\'utf-8\'))\ndb.commit()\n';
-    final process = await Process.start(Platform.isWindows ? 'python' : 'python3', ['-c', script, path]);
+    const script =
+        'import sqlite3, sys\ndb = sqlite3.connect(sys.argv[1])\ndb.executescript(sys.stdin.buffer.read().decode(\'utf-8\'))\ndb.commit()\n';
+    final process =
+        await Process.start(Platform.isWindows ? 'python' : 'python3', ['-c', script, path]);
     process.stdin.encoding = utf8;
     process.stdin.write(sql.map((s) => '$s;').join('\n'));
     await process.stdin.close();
@@ -83,7 +85,8 @@ void main() {
     }
     const line = 'J’ai vu l’homme 😀, a-t-il dit.';
     final words = CoreWords.cut('fr', line)!;
-    expect([for (final w in words) line.substring(w.start, w.end)], ['J’', 'ai', 'vu', 'l’', 'homme', 'a', 'il', 'dit']);
+    expect([for (final w in words) line.substring(w.start, w.end)],
+        ['J’', 'ai', 'vu', 'l’', 'homme', 'a', 'il', 'dit']);
     expect(words.first.keys.first, "J'");
     final spanish = WiktionaryDictionary('es', CoreLexicon.open('es', es));
     final found = spanish.lookup('Hacerlo');

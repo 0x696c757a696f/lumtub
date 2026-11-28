@@ -38,7 +38,7 @@ def search(name):
         try:
             with urllib.request.urlopen(request, timeout=30) as reply:
                 return json.load(reply)
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001, any failure is retried, then reported.
             if attempt == 2:
                 print(f'  search failed for {name!r}: {error}', file=sys.stderr)
                 return None

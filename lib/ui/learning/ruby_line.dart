@@ -48,35 +48,62 @@ class ChineseRubyLine extends StatelessWidget {
     // each word as a box of its own.
     final back = this.style.backgroundColor ?? this.style.background?.color;
     final clear = Paint()..color = const Color(0x00000000);
-    final style = back == null ? this.style : (this.style.background != null ? this.style.copyWith(background: clear) : this.style.copyWith(backgroundColor: const Color(0x00000000)));
+    final style = back == null
+        ? this.style
+        : (this.style.background != null
+            ? this.style.copyWith(background: clear)
+            : this.style.copyWith(backgroundColor: const Color(0x00000000)));
     final size = style.fontSize ?? 14;
     // Half the line's size, but never too small to read in a list.
-    final rubyStyle = style.copyWith(fontSize: size * 0.5 < 9 ? (size < 9 ? size : 9.0) : size * 0.5, height: 1.1, fontWeight: FontWeight.normal);
+    final rubyStyle = style.copyWith(
+        fontSize: size * 0.5 < 9 ? (size < 9 ? size : 9.0) : size * 0.5,
+        height: 1.1,
+        fontWeight: FontWeight.normal);
     final children = <Widget>[];
-    bool ruby(int i) => i >= 0 && i < tokens.length && tokens[i].isWord && pinyin && tokens[i].reading != null && !(known?.call(tokens[i]) ?? false);
+    bool ruby(int i) =>
+        i >= 0 &&
+        i < tokens.length &&
+        tokens[i].isWord &&
+        pinyin &&
+        tokens[i].reading != null &&
+        !(known?.call(tokens[i]) ?? false);
     for (final (i, token) in tokens.indexed) {
       if (!token.isWord) {
         // Text between words wraps at its spaces.
         // A caption's line break is a space here: the words stand in one row.
-        for (final piece in RegExp(r'\S+\s*|\s+').allMatches(token.text.replaceAll(RegExp(r'\s*\n\s*'), ' '))) {
+        for (final piece
+            in RegExp(r'\S+\s*|\s+').allMatches(token.text.replaceAll(RegExp(r'\s*\n\s*'), ' '))) {
           children.add(_text(piece[0]!, style));
         }
         continue;
       }
       final marked = highlight?.call(token) ?? false;
-      var wordStyle = (hard?.call(token) ?? false) ? style.copyWith(color: hardColor.withValues(alpha: style.color?.a ?? 1)) : style;
-      if (marked) wordStyle = wordStyle.copyWith(decoration: TextDecoration.underline, decorationColor: wordStyle.color, decorationThickness: 2);
+      var wordStyle = (hard?.call(token) ?? false)
+          ? style.copyWith(color: hardColor.withValues(alpha: style.color?.a ?? 1))
+          : style;
+      if (marked) {
+        wordStyle = wordStyle.copyWith(
+            decoration: TextDecoration.underline,
+            decorationColor: wordStyle.color,
+            decorationThickness: 2);
+      }
       // Japanese is written without spaces: its words stand close, and a
       // reading longer than its word (しょうぎょう over 商業) reaches over a
       // neighbour that has none, else is set smaller, as furigana is.
       final japanese = token.language == 'ja';
       Widget block = Column(mainAxisSize: MainAxisSize.min, children: [
         if (ruby(i))
-          japanese ? _furigana(token.text, wordStyle, token.reading!, rubyStyle, left: !ruby(i - 1), right: !ruby(i + 1)) : _text(token.reading!, rubyStyle, outlineScale: 0.6),
+          japanese
+              ? _furigana(token.text, wordStyle, token.reading!, rubyStyle,
+                  left: !ruby(i - 1), right: !ruby(i + 1))
+              : _text(token.reading!, rubyStyle, outlineScale: 0.6),
         _text(token.text, wordStyle),
       ]);
       if (hits?.chosen(i) ?? false) {
-        block = DecoratedBox(decoration: BoxDecoration(color: const Color(0x993B82F6), borderRadius: BorderRadius.circular(size * 0.12)), child: block);
+        block = DecoratedBox(
+            decoration: BoxDecoration(
+                color: const Color(0x993B82F6), borderRadius: BorderRadius.circular(size * 0.12)),
+            child: block);
       }
       if (hits != null) {
         final key = GlobalKey();
@@ -86,30 +113,50 @@ class ChineseRubyLine extends StatelessWidget {
       if (onWord != null) {
         block = MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, excludeFromSemantics: true, onTap: () => onWord!(token), child: Semantics(button: true, onTap: () => onWord!(token), child: block)),
+          child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              excludeFromSemantics: true,
+              onTap: () => onWord!(token),
+              child: Semantics(button: true, onTap: () => onWord!(token), child: block)),
         );
       }
       // The outline reaches past the letters; the room keeps the space between words.
       // Room for the outline, but not beside a space, which already
       // keeps words apart (with it, words on the video stood far apart).
       final room = (japanese ? 0 : 1) + outline / 2;
-      bool spaced(int j) => j >= 0 && j < tokens.length && !tokens[j].isWord && RegExp(j < i ? r'\s$' : r'^\s').hasMatch(tokens[j].text);
-      children.add(Padding(padding: EdgeInsetsDirectional.only(start: spaced(i - 1) ? 0 : room, end: spaced(i + 1) ? 0 : room), child: block));
+      bool spaced(int j) =>
+          j >= 0 &&
+          j < tokens.length &&
+          !tokens[j].isWord &&
+          RegExp(j < i ? r'\s$' : r'^\s').hasMatch(tokens[j].text);
+      children.add(Padding(
+          padding: EdgeInsetsDirectional.only(
+              start: spaced(i - 1) ? 0 : room, end: spaced(i + 1) ? 0 : room),
+          child: block));
     }
-    final line = Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
+    final line =
+        Wrap(alignment: alignment, crossAxisAlignment: WrapCrossAlignment.end, children: children);
     if (back == null || back.a == 0) return line;
     return DecoratedBox(
       decoration: BoxDecoration(color: back, borderRadius: BorderRadius.circular(size * 0.12)),
-      child: Padding(padding: EdgeInsets.symmetric(horizontal: size * 0.25, vertical: size * 0.05), child: line),
+      child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: size * 0.25, vertical: size * 0.05),
+          child: line),
     );
   }
 
   /// [reading] over [word], as wide as the word and, on a side with no
   /// reading next to it, up to half a letter more; shrunk when longer.
-  Widget _furigana(String word, TextStyle wordStyle, String reading, TextStyle style, {required bool left, required bool right}) {
+  Widget _furigana(String word, TextStyle wordStyle, String reading, TextStyle style,
+      {required bool left, required bool right}) {
     final scaler = textScaler ?? TextScaler.noScaling;
     (double, double) measure(String text, TextStyle s) {
-      final painter = TextPainter(text: TextSpan(text: text, style: s), textDirection: TextDirection.ltr, textScaler: scaler, maxLines: 1)..layout();
+      final painter = TextPainter(
+          text: TextSpan(text: text, style: s),
+          textDirection: TextDirection.ltr,
+          textScaler: scaler,
+          maxLines: 1)
+        ..layout();
       final size = (painter.width, painter.height);
       painter.dispose();
       return size;
@@ -146,7 +193,11 @@ class ChineseRubyLine extends StatelessWidget {
       ..strokeCap = StrokeCap.round
       ..color = const Color(0xFF000000).withValues(alpha: style.color?.a ?? 1);
     return Stack(children: [
-      Text(text, style: style.copyWith(foreground: stroke, shadows: const [], decoration: TextDecoration.none), textScaler: textScaler, softWrap: false),
+      Text(text,
+          style: style.copyWith(
+              foreground: stroke, shadows: const [], decoration: TextDecoration.none),
+          textScaler: textScaler,
+          softWrap: false),
       letters,
     ]);
   }
@@ -205,7 +256,9 @@ class RubyHits {
       _anchor ??= _indexAt(from);
       final end = _indexAt(to);
       final anchor = _anchor;
-      if (anchor != null && end != null) selection.value = anchor <= end ? (anchor, end) : (end, anchor);
+      if (anchor != null && end != null) {
+        selection.value = anchor <= end ? (anchor, end) : (end, anchor);
+      }
       return null;
     }
     final range = selection.value;
@@ -222,6 +275,7 @@ class RubyHits {
     final parts = _tokens.sublist(first, last + 1);
     final text = parts.map((t) => t.text).join().replaceAll(RegExp(r'\s+'), ' ').trim();
     final lower = parts.any((t) => t.lookup != null);
-    return WordToken(text, null, isWord: true, lookup: lower ? text.toLowerCase() : null, language: parts.first.language);
+    return WordToken(text, null,
+        isWord: true, lookup: lower ? text.toLowerCase() : null, language: parts.first.language);
   }
 }

@@ -15,19 +15,61 @@ import 'package:lumtub/ui/download_dialog.dart';
 import 'package:lumtub/video_codec.dart';
 import 'package:material_ui/material_ui.dart';
 
-Map<String, dynamic> v(String id, String vcodec, int height, String ext, {double fps = 30, double tbr = 1000, int? size, String? range}) => {
-      'format_id': id, 'vcodec': vcodec, 'acodec': 'none', 'height': height, 'fps': fps, 'ext': ext, 'tbr': tbr, 'url': 'http://x/$id', 'protocol': 'https',
+Map<String, dynamic> v(String id, String vcodec, int height, String ext,
+        {double fps = 30, double tbr = 1000, int? size, String? range}) =>
+    {
+      'format_id': id,
+      'vcodec': vcodec,
+      'acodec': 'none',
+      'height': height,
+      'fps': fps,
+      'ext': ext,
+      'tbr': tbr,
+      'url': 'http://x/$id',
+      'protocol': 'https',
       if (size != null) 'filesize': size,
       if (range != null) 'dynamic_range': range,
     };
-Map<String, dynamic> a(String id, String acodec, String ext, double abr, {int? size, Map<String, dynamic>? extra}) =>
-    {'format_id': id, 'vcodec': 'none', 'acodec': acodec, 'ext': ext, 'abr': abr, 'url': 'http://x/$id', 'protocol': 'https', if (size != null) 'filesize_approx': size, ...?extra};
+Map<String, dynamic> a(String id, String acodec, String ext, double abr,
+        {int? size, Map<String, dynamic>? extra}) =>
+    {
+      'format_id': id,
+      'vcodec': 'none',
+      'acodec': acodec,
+      'ext': ext,
+      'abr': abr,
+      'url': 'http://x/$id',
+      'protocol': 'https',
+      if (size != null) 'filesize_approx': size,
+      ...?extra
+    };
 
 Map<String, dynamic> info() => {
       'formats': [
-        {'format_id': 'sb0', 'ext': 'mhtml', 'vcodec': 'none', 'acodec': 'none', 'url': 'http://x/sb', 'protocol': 'mhtml'},
-        {'format_id': 'nourl', 'vcodec': 'avc1.4d401f', 'acodec': 'none', 'height': 720, 'ext': 'mp4'},
-        {'format_id': '18', 'vcodec': 'avc1.42001E', 'acodec': 'mp4a.40.2', 'height': 360, 'ext': 'mp4', 'url': 'http://x/18', 'protocol': 'https'},
+        {
+          'format_id': 'sb0',
+          'ext': 'mhtml',
+          'vcodec': 'none',
+          'acodec': 'none',
+          'url': 'http://x/sb',
+          'protocol': 'mhtml'
+        },
+        {
+          'format_id': 'nourl',
+          'vcodec': 'avc1.4d401f',
+          'acodec': 'none',
+          'height': 720,
+          'ext': 'mp4'
+        },
+        {
+          'format_id': '18',
+          'vcodec': 'avc1.42001E',
+          'acodec': 'mp4a.40.2',
+          'height': 360,
+          'ext': 'mp4',
+          'url': 'http://x/18',
+          'protocol': 'https'
+        },
         v('401', 'av01.0.12M.08', 2160, 'mp4', tbr: 9000, size: 900000000),
         v('400', 'av01.0.08M.08', 1440, 'mp4', tbr: 5000),
         v('313', 'vp09.00.51.08', 2160, 'webm', tbr: 8000, size: 800000000),
@@ -45,7 +87,10 @@ Map<String, dynamic> info() => {
 
 DownloadFormats parsed({bool av1 = true}) {
   final data = info();
-  if (!av1) (data['formats'] as List).removeWhere((f) => (f as Map)['vcodec'].toString().startsWith('av01'));
+  if (!av1) {
+    (data['formats'] as List)
+        .removeWhere((f) => (f as Map)['vcodec'].toString().startsWith('av01'));
+  }
   return DownloadFormats.parse(data);
 }
 
@@ -82,7 +127,9 @@ void main() {
     });
 
     test('a codec that tops out lower does not offer 4K', () {
-      final f = DownloadFormats.parse({'formats': [v('401', 'av01.0.08M.08', 1080, 'mp4'), v('313', 'vp09.00.51.08', 2160, 'webm')]});
+      final f = DownloadFormats.parse({
+        'formats': [v('401', 'av01.0.08M.08', 1080, 'mp4'), v('313', 'vp09.00.51.08', 2160, 'webm')]
+      });
       expect(f.heightsFor(VideoCodec.av1), [1080]);
       expect(f.pickVideo(VideoCodec.av1)!.id, '401');
     });
@@ -100,17 +147,24 @@ void main() {
       final f = parsed();
       expect(f.pickVideo(VideoCodec.vp9, height: 1080)!.id, '303');
       expect(f.pickVideo(null)!.id, '401'); // AV1 over VP9 at 4K
-      final hdr = DownloadFormats.parse({'formats': [v('a', 'vp09.02.51.10', 1080, 'webm', tbr: 9000, range: 'HDR10'), v('b', 'vp09.00.40.08', 1080, 'webm', range: 'SDR')]});
+      final hdr = DownloadFormats.parse({
+        'formats': [
+          v('a', 'vp09.02.51.10', 1080, 'webm', tbr: 9000, range: 'HDR10'),
+          v('b', 'vp09.00.40.08', 1080, 'webm', range: 'SDR')
+        ]
+      });
       expect(hdr.pickVideo(null)!.id, 'b');
     });
 
     test('automatic picks follow the playback codec order', () {
       // No hardware AV1 or VP9: H.264, which YouTube has up to 1080p.
-      final software = DownloadFormats.parse(info(), preference: const [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
+      final software = DownloadFormats.parse(info(),
+          preference: const [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
       expect(software.heightsFor(null).first, 1080);
       expect(software.pickVideo(null)!.id, '137');
       // Hardware VP9: VP9 at 4K rather than AV1.
-      final vp9 = DownloadFormats.parse(info(), preference: const [VideoCodec.vp9, VideoCodec.h264, VideoCodec.av1]);
+      final vp9 = DownloadFormats.parse(info(),
+          preference: const [VideoCodec.vp9, VideoCodec.h264, VideoCodec.av1]);
       expect(vp9.pickVideo(null)!.id, '313');
       // A codec chosen by hand is not affected.
       expect(software.pickVideo(VideoCodec.av1)!.id, '401');
@@ -138,8 +192,16 @@ void main() {
       expect((plan.container, plan.audio!.id), (DownloadContainer.webm, '251'));
       plan = planContainer(DownloadContainer.auto, VideoCodec.av1, audio);
       expect(plan.container, DownloadContainer.webm);
-      expect(planContainer(DownloadContainer.auto, VideoCodec.h264, [audio.firstWhere((a) => a.id == '251')]).container, DownloadContainer.mkv);
-      expect(planContainer(DownloadContainer.auto, VideoCodec.vp8, audio.where((a) => a.isAac).toList()).container, DownloadContainer.mkv);
+      expect(
+          planContainer(
+                  DownloadContainer.auto, VideoCodec.h264, [audio.firstWhere((a) => a.id == '251')])
+              .container,
+          DownloadContainer.mkv);
+      expect(
+          planContainer(
+                  DownloadContainer.auto, VideoCodec.vp8, audio.where((a) => a.isAac).toList())
+              .container,
+          DownloadContainer.mkv);
     });
 
     test('mp4 holds AV1, VP9 and H.264 with AAC (or Opus) but not VP8', () {
@@ -148,14 +210,25 @@ void main() {
         expect(plan.problem, isNull);
         expect(plan.audio!.id, '140');
       }
-      expect(planContainer(DownloadContainer.mp4, VideoCodec.vp9, audio.where((a) => a.isOpus).toList()).audio!.id, '251');
-      expect(planContainer(DownloadContainer.mp4, VideoCodec.vp8, audio).problem, 'MP4 cannot hold VP8');
+      expect(
+          planContainer(
+                  DownloadContainer.mp4, VideoCodec.vp9, audio.where((a) => a.isOpus).toList())
+              .audio!
+              .id,
+          '251');
+      expect(planContainer(DownloadContainer.mp4, VideoCodec.vp8, audio).problem,
+          'MP4 cannot hold VP8');
     });
 
     test('webm takes Opus and not H.264', () {
       expect(planContainer(DownloadContainer.webm, VideoCodec.vp9, audio).audio!.id, '251');
-      expect(planContainer(DownloadContainer.webm, VideoCodec.h264, audio).problem, 'WebM cannot hold H.264');
-      expect(planContainer(DownloadContainer.webm, VideoCodec.vp9, audio.where((a) => a.isAac).toList()).problem, 'No audio track fits WebM');
+      expect(planContainer(DownloadContainer.webm, VideoCodec.h264, audio).problem,
+          'WebM cannot hold H.264');
+      expect(
+          planContainer(
+                  DownloadContainer.webm, VideoCodec.vp9, audio.where((a) => a.isAac).toList())
+              .problem,
+          'No audio track fits WebM');
     });
 
     test('mkv takes anything', () {
@@ -169,12 +242,14 @@ void main() {
     test('locks the picked ids and sums the sizes', () {
       final plan = planDownload(parsed(), codec: VideoCodec.vp9, height: 1080);
       final s = plan.selection!;
-      expect((s.videoId, s.audioId, s.container, s.size), ('303', '251', DownloadContainer.webm, 711000000));
+      expect((s.videoId, s.audioId, s.container, s.size),
+          ('303', '251', DownloadContainer.webm, 711000000));
       expect(s.label, 'VP9 · 1080p · WebM');
     });
 
     test('is missing for a container that does not fit, with the reason', () {
-      final plan = planDownload(parsed(), codec: VideoCodec.h264, container: DownloadContainer.webm);
+      final plan =
+          planDownload(parsed(), codec: VideoCodec.h264, container: DownloadContainer.webm);
       expect(plan.selection, isNull);
       expect(plan.problem, 'WebM cannot hold H.264');
     });
@@ -186,7 +261,8 @@ void main() {
     });
 
     test('yt-dlp format and container arguments', () {
-      final s = planDownload(parsed(), codec: VideoCodec.av1, container: DownloadContainer.mp4).selection!;
+      final s = planDownload(parsed(), codec: VideoCodec.av1, container: DownloadContainer.mp4)
+          .selection!;
       expect(s.joinFormat(), '401,140');
       expect(s.format(), 'b[height<=2160][ext=mp4]/b[height<=2160]/b[ext=mp4]/b');
     });
@@ -194,7 +270,8 @@ void main() {
     test('round-trips through json and ignores a broken one', () {
       final s = planDownload(parsed(), codec: VideoCodec.h264).selection!;
       final back = DownloadSelection.fromJson(jsonDecode(jsonEncode(s.toJson())))!;
-      expect((back.videoId, back.audioId, back.codec, back.height, back.container, back.size), ('137', '140', VideoCodec.h264, 1080, DownloadContainer.mp4, 660000000));
+      expect((back.videoId, back.audioId, back.codec, back.height, back.container, back.size),
+          ('137', '140', VideoCodec.h264, 1080, DownloadContainer.mp4, 660000000));
       expect(DownloadSelection.fromJson({'container': 'mkv'}), isNull);
       expect(DownloadSelection.fromJson('x'), isNull);
     });
@@ -211,7 +288,7 @@ void main() {
     late Directory dir;
     setUp(() async => dir = await Directory.systemTemp.createTemp('lumtub_dl_formats'));
     tearDown(() async {
-      for (var i = 0; ; i++) {
+      for (var i = 0;; i++) {
         try {
           return await dir.delete(recursive: true);
         } on FileSystemException {
@@ -221,20 +298,28 @@ void main() {
       }
     });
 
-    final item = const VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-    Future<Joined> joiner(JoinRequest request) async => (path: null, error: null, cut: const <(Duration, Duration)>[]);
+    final item = const VideoItem(
+        id: 'aaaaaaaaaaa',
+        title: 'T',
+        channel: 'C',
+        url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
+    Future<Joined> joiner(JoinRequest request) async =>
+        (path: null, error: null, cut: const <(Duration, Duration)>[]);
     DownloadManager manager({bool join = false}) => DownloadManager(
-        file: File('${dir.path}/downloads.json'),
-        ytDlpPath: 'yt-dlp',
-        defaultDirectory: dir.path,
-        join: join ? joiner : null,
-        // yt-dlp never starts.
-        start: (exe, args, {environment}) => Completer<Process>().future,
-      );
+          file: File('${dir.path}/downloads.json'),
+          ytDlpPath: 'yt-dlp',
+          defaultDirectory: dir.path,
+          join: join ? joiner : null,
+          // yt-dlp never starts.
+          start: (exe, args, {environment}) => Completer<Process>().future,
+        );
 
     test('locks the format ids and the container', () {
-      final s = planDownload(parsed(), codec: VideoCodec.vp9, height: 1440, container: DownloadContainer.mkv).selection!;
-      final args = manager(join: true).arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
+      final s = planDownload(parsed(),
+              codec: VideoCodec.vp9, height: 1440, container: DownloadContainer.mkv)
+          .selection!;
+      final args = manager(join: true).arguments(
+          DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
       expect(args[args.indexOf('--format') + 1], '271,251');
       expect(args, isNot(contains('--merge-output-format')));
       expect(args, isNot(contains('--remux-video')));
@@ -243,7 +328,8 @@ void main() {
 
     test('downloads the audio id alone without a merge', () {
       final s = planDownload(parsed(), audioOnly: true).selection!;
-      final args = manager(join: true).arguments(DownloadTask(item: item, quality: DownloadQuality.audio, directory: 'D', selection: s));
+      final args = manager(join: true).arguments(
+          DownloadTask(item: item, quality: DownloadQuality.audio, directory: 'D', selection: s));
       expect(args[args.indexOf('--format') + 1], '140');
       expect(args, isNot(contains('--merge-output-format')));
     });
@@ -253,18 +339,26 @@ void main() {
       expect(manager().arguments(task), contains('--write-info-json'));
       final args = manager().arguments(task, cookies: 'c.txt');
       expect(args, isNot(contains('--write-info-json')));
-      expect(args.where((a) => a.startsWith('video:lumtub-info|')).single, isNot(contains('cookies')));
+      expect(
+          args.where((a) => a.startsWith('video:lumtub-info|')).single, isNot(contains('cookies')));
     });
 
     test('without the core to join takes a single-file format at most that tall', () {
       final s = planDownload(parsed(), codec: VideoCodec.h264).selection!;
-      final args = manager().arguments(DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
+      final args = manager().arguments(
+          DownloadTask(item: item, quality: DownloadQuality.best, directory: 'D', selection: s));
       expect(args[args.indexOf('--format') + 1], startsWith('b[height<=1080]'));
       expect(args, isNot(contains('--merge-output-format')));
     });
 
     test('a task saved by an earlier version still loads and downloads', () {
-      final old = {'item': item.toJson(), 'quality': 'p720', 'directory': 'D', 'status': 'done', 'added': DateTime(2026).toIso8601String()};
+      final old = {
+        'item': item.toJson(),
+        'quality': 'p720',
+        'directory': 'D',
+        'status': 'done',
+        'added': DateTime(2026).toIso8601String()
+      };
       final task = DownloadTask.fromJson(old)!;
       expect(task.selection, isNull);
       expect(task.quality, DownloadQuality.p720);
@@ -278,7 +372,8 @@ void main() {
       final m = manager();
       final s = planDownload(parsed(), codec: VideoCodec.h264).selection!;
       m.add(item, DownloadQuality.best, selection: s);
-      await m.setDefaults(const DownloadDefaults(codec: 'h264', height: 720, container: DownloadContainer.mp4));
+      await m.setDefaults(
+          const DownloadDefaults(codec: 'h264', height: 720, container: DownloadContainer.mp4));
       await m.flush();
       final again = manager();
       await again.load();
@@ -292,20 +387,26 @@ void main() {
   });
 
   group('dialog', () {
-    Future<void> open(WidgetTester tester, Future<DownloadFormats> Function() load, {DownloadDefaults defaults = const DownloadDefaults(), void Function(DownloadChoice?)? onClosed, Future<SubtitleChoices> Function()? subtitles}) async {
+    Future<void> open(WidgetTester tester, Future<DownloadFormats> Function() load,
+        {DownloadDefaults defaults = const DownloadDefaults(),
+        void Function(DownloadChoice?)? onClosed,
+        Future<SubtitleChoices> Function()? subtitles}) async {
       await tester.binding.setSurfaceSize(const Size(900, 1000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(MaterialApp(
         home: Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              final choice = await showDialog<DownloadChoice>(context: context, builder: (_) => DownloadDialog(
-                    title: 'Title',
-                    loadFormats: load,
-                    defaults: defaults,
-                    loadSubtitles: subtitles,
-                    subtitleLanguages: TranslationLanguage.all.where((l) => l.code == 'zh-CN').toList(),
-                  ));
+              final choice = await showDialog<DownloadChoice>(
+                  context: context,
+                  builder: (_) => DownloadDialog(
+                        title: 'Title',
+                        loadFormats: load,
+                        defaults: defaults,
+                        loadSubtitles: subtitles,
+                        subtitleLanguages:
+                            TranslationLanguage.all.where((l) => l.code == 'zh-CN').toList(),
+                      ));
               onClosed?.call(choice);
             },
             child: const Text('open'),
@@ -325,7 +426,8 @@ void main() {
       expect(find.text('Audio only'), findsOneWidget);
       expect(find.text('Auto (best available format)'), findsOneWidget);
       expect(find.text('2160p'), findsOneWidget);
-      expect(find.textContaining('Current selection: VP9 · 2160p · Automatic container (WebM)'), findsOneWidget);
+      expect(find.textContaining('Current selection: VP9 · 2160p · Automatic container (WebM)'),
+          findsOneWidget);
       await tester.tap(find.text('H.264'));
       await tester.pump();
       expect(find.text('2160p'), findsNothing);
@@ -340,8 +442,19 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('AV1 topping out at 1440p does not offer 4K, and WebM is disabled for H.264', (tester) async {
-      await open(tester, () async => DownloadFormats.parse({'formats': [v('400', 'av01.0.08M.08', 1440, 'mp4'), v('313', 'vp09.00.51.08', 2160, 'webm'), v('137', 'avc1.640028', 1080, 'mp4'), a('140', 'mp4a.40.2', 'm4a', 129), a('251', 'opus', 'webm', 130)]}));
+    testWidgets('AV1 topping out at 1440p does not offer 4K, and WebM is disabled for H.264',
+        (tester) async {
+      await open(
+          tester,
+          () async => DownloadFormats.parse({
+                'formats': [
+                  v('400', 'av01.0.08M.08', 1440, 'mp4'),
+                  v('313', 'vp09.00.51.08', 2160, 'webm'),
+                  v('137', 'avc1.640028', 1080, 'mp4'),
+                  a('140', 'mp4a.40.2', 'm4a', 129),
+                  a('251', 'opus', 'webm', 130)
+                ]
+              }));
       await tester.pumpAndSettle();
       await tester.tap(find.text('AV1'));
       await tester.pump();
@@ -354,8 +467,10 @@ void main() {
       expect(webm.onSelected, isNull);
     });
 
-    testWidgets('a remembered codec the video lacks is reported and nothing is chosen for the user', (tester) async {
-      await open(tester, () async => parsed(av1: false), defaults: const DownloadDefaults(codec: 'av1', height: 1080));
+    testWidgets('a remembered codec the video lacks is reported and nothing is chosen for the user',
+        (tester) async {
+      await open(tester, () async => parsed(av1: false),
+          defaults: const DownloadDefaults(codec: 'av1', height: 1080));
       await tester.pumpAndSettle();
       expect(find.text('This video has no AV1 format; choose another codec'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull);
@@ -365,9 +480,13 @@ void main() {
       expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNotNull);
     });
 
-    testWidgets('preselects the remembered options and returns the choice to remember', (tester) async {
+    testWidgets('preselects the remembered options and returns the choice to remember',
+        (tester) async {
       DownloadChoice? choice;
-      await open(tester, () async => parsed(), defaults: const DownloadDefaults(codec: 'vp9', height: 1440, container: DownloadContainer.mp4), onClosed: (c) => choice = c);
+      await open(tester, () async => parsed(),
+          defaults:
+              const DownloadDefaults(codec: 'vp9', height: 1440, container: DownloadContainer.mp4),
+          onClosed: (c) => choice = c);
       await tester.pumpAndSettle();
       expect(find.textContaining('VP9 · 1440p · MP4'), findsOneWidget);
       await tester.tap(find.text('Start download'));
@@ -375,10 +494,13 @@ void main() {
       expect(choice!.selection!.videoId, '271');
       expect(choice!.selection!.audioId, '140');
       expect(choice!.quality, DownloadQuality.best);
-      expect((choice!.defaults!.codec, choice!.defaults!.height, choice!.defaults!.container), ('vp9', 1440, DownloadContainer.mp4));
+      expect((choice!.defaults!.codec, choice!.defaults!.height, choice!.defaults!.container),
+          ('vp9', 1440, DownloadContainer.mp4));
     });
 
-    testWidgets('subtitles: the first subtitle language is picked, and a bilingual track can be added', (tester) async {
+    testWidgets(
+        'subtitles: the first subtitle language is picked, and a bilingual track can be added',
+        (tester) async {
       DownloadChoice? choice;
       await open(
         tester,
@@ -386,14 +508,22 @@ void main() {
         defaults: const DownloadDefaults(codec: 'vp9', container: DownloadContainer.webm),
         onClosed: (c) => choice = c,
         subtitles: () async => SubtitleChoices(const [
-          SubtitleOption(language: 'en', name: 'English', url: 'https://www.youtube.com/api/timedtext?v=x&lang=en&kind=asr', kind: SubtitleKind.automatic),
+          SubtitleOption(
+              language: 'en',
+              name: 'English',
+              url: 'https://www.youtube.com/api/timedtext?v=x&lang=en&kind=asr',
+              kind: SubtitleKind.automatic),
         ], language: 'en'),
       );
       await tester.pumpAndSettle();
       expect(find.text('Subtitles inside the video'), findsOneWidget);
       final chinese = find.widgetWithText(FilterChip, 'Chinese (Simplified) (auto-translated)');
       expect(tester.widget<FilterChip>(chinese).selected, isTrue);
-      expect(tester.widget<FilterChip>(find.widgetWithText(FilterChip, 'English (auto-generated)')).selected, isFalse);
+      expect(
+          tester
+              .widget<FilterChip>(find.widgetWithText(FilterChip, 'English (auto-generated)'))
+              .selected,
+          isFalse);
       await tester.tap(find.text('Bilingual subtitles'));
       await tester.pumpAndSettle();
       expect(find.text('Top line'), findsOneWidget);
@@ -403,18 +533,27 @@ void main() {
       final picked = choice!.selection!.subtitles!;
       expect(choice!.selection!.container, DownloadContainer.mkv);
       expect(picked.tracks, [const SubtitlePick('zh-Hans', SubtitleKind.translated)]);
-      expect((picked.top, picked.bottom), (const SubtitlePick('zh-Hans', SubtitleKind.translated), const SubtitlePick('en', SubtitleKind.automatic)));
+      expect((
+        picked.top,
+        picked.bottom
+      ), (
+        const SubtitlePick('zh-Hans', SubtitleKind.translated),
+        const SubtitlePick('en', SubtitleKind.automatic)
+      ));
       expect(choice!.defaults!.subtitles!.bilingual, isTrue);
     });
 
-    testWidgets('a remembered container that does not fit goes back to auto, with a note', (tester) async {
-      await open(tester, () async => parsed(), defaults: const DownloadDefaults(codec: 'h264', container: DownloadContainer.webm));
+    testWidgets('a remembered container that does not fit goes back to auto, with a note',
+        (tester) async {
+      await open(tester, () async => parsed(),
+          defaults: const DownloadDefaults(codec: 'h264', container: DownloadContainer.webm));
       await tester.pumpAndSettle();
       expect(find.textContaining('switched to automatic container'), findsOneWidget);
       expect(find.textContaining('H.264 · 1080p · Automatic container (MP4)'), findsOneWidget);
     });
 
-    testWidgets('when the formats cannot be read it shows the error and the simple choices', (tester) async {
+    testWidgets('when the formats cannot be read it shows the error and the simple choices',
+        (tester) async {
       DownloadChoice? choice;
       await open(tester, () => Future.error(StateError('boom')), onClosed: (c) => choice = c);
       await tester.pumpAndSettle();

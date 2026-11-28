@@ -42,7 +42,7 @@ def ask(lines, target):
             if len(out) != len(lines):
                 raise ValueError(f'{len(out)} lines for {len(lines)}')
             return out
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001, any failure is retried, then reported.
             wait = 5 * 2**attempt
             print(f'{target}: {error}; again in {wait} s', file=sys.stderr)
             time.sleep(wait)

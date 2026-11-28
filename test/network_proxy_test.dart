@@ -11,7 +11,9 @@ import 'package:lumtub/stream_resolver.dart';
 void main() {
   test('reads the Windows proxy as proxy tools write it', () {
     expect(NetworkProxy.parseWindows('127.0.0.1:7890'), 'http://127.0.0.1:7890');
-    expect(NetworkProxy.parseWindows('http=127.0.0.1:7890;https=127.0.0.1:7890;socks=127.0.0.1:7891'), 'http://127.0.0.1:7890');
+    expect(
+        NetworkProxy.parseWindows('http=127.0.0.1:7890;https=127.0.0.1:7890;socks=127.0.0.1:7891'),
+        'http://127.0.0.1:7890');
     expect(NetworkProxy.parseWindows('socks=127.0.0.1:7891'), 'socks5://127.0.0.1:7891');
     expect(NetworkProxy.parseWindows(''), isNull);
   });
@@ -30,17 +32,20 @@ void main() {
     expect(NetworkProxy.remoteDns('socks4://127.0.0.1:1080'), 'socks4a://127.0.0.1:1080');
     expect(NetworkProxy.remoteDns('socks5h://h:1'), 'socks5h://h:1');
     expect(NetworkProxy.remoteDns('http://h:1'), 'http://h:1');
-    expect((await NetworkProxy.resolve(ProxyMode.custom, 'socks5://127.0.0.1:7891')).url, 'socks5h://127.0.0.1:7891');
+    expect((await NetworkProxy.resolve(ProxyMode.custom, 'socks5://127.0.0.1:7891')).url,
+        'socks5h://127.0.0.1:7891');
   });
 
   test('the proxy a PAC script names is read by lumtub_core', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) {
-      request.response.write('function FindProxyForURL(url, host) { if (shExpMatch(host, "*.lan")) return "DIRECT"; return "PROXY 127.0.0.1:7890; DIRECT"; }');
+      request.response.write(
+          'function FindProxyForURL(url, host) { if (shExpMatch(host, "*.lan")) return "DIRECT"; return "PROXY 127.0.0.1:7890; DIRECT"; }');
       unawaited(request.response.close());
     });
     final port = server.port;
-    expect((await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, 'http://127.0.0.1:7890');
+    expect(
+        (await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, 'http://127.0.0.1:7890');
     await server.close(force: true);
     expect((await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, isNull);
   }, skip: NativeCore.instance == null ? 'needs lumtub_core' : null);
@@ -49,13 +54,18 @@ void main() {
     expect(NetworkProxy.direct.ytDlpValue(ProxyMode.off), '');
     expect(NetworkProxy.direct.ytDlpValue(ProxyMode.system), isNull);
     expect(const NetworkProxy('http://h:1').ytDlpValue(ProxyMode.custom), 'http://h:1');
-    final resolver = StreamResolver('yt-dlp', proxy: () => 'socks5://h:2', infoDirectory: Directory('x'));
-    expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--proxy', 'socks5://h:2']));
-    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), proxy: 'http://h:1'), 'ignore-config=,no-plugin-dirs=,proxy=http://h:1');
+    final resolver =
+        StreamResolver('yt-dlp', proxy: () => 'socks5://h:2', infoDirectory: Directory('x'));
+    expect(
+        resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--proxy', 'socks5://h:2']));
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), proxy: 'http://h:1'),
+        'ignore-config=,no-plugin-dirs=,proxy=http://h:1');
   });
 
   test('the proxy setting is saved and moves old buffer defaults', () {
-    final saved = PlayerSettings.fromJson(const PlayerSettings(proxyMode: ProxyMode.custom, proxyAddress: 'http://127.0.0.1:7890').toJson());
+    final saved = PlayerSettings.fromJson(
+        const PlayerSettings(proxyMode: ProxyMode.custom, proxyAddress: 'http://127.0.0.1:7890')
+            .toJson());
     expect(saved.proxyMode, ProxyMode.custom);
     expect(saved.proxyAddress, 'http://127.0.0.1:7890');
     expect(PlayerSettings.fromJson({}).proxyMode, ProxyMode.system);
@@ -67,10 +77,13 @@ void main() {
     addTearDown(() => PlayerSettings.smallMemory = false);
     expect(PlayerSettings.fromJson({'cacheMemoryMb': 150, 'bufferDefaults': 2}).cacheMemoryMb, 64);
     expect(PlayerSettings.fromJson({'cacheMemoryMb': 200, 'bufferDefaults': 2}).cacheMemoryMb, 200);
-    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 3}).cacheMemoryMb, 64, reason: "an iPhone's untouched computer default");
-    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 4}).cacheMemoryMb, 100, reason: 'chosen');
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 3}).cacheMemoryMb, 64,
+        reason: "an iPhone's untouched computer default");
+    expect(PlayerSettings.fromJson({'cacheMemoryMb': 100, 'bufferDefaults': 4}).cacheMemoryMb, 100,
+        reason: 'chosen');
     expect(PlayerSettings.fromJson(PlayerSettings.fromJson({}).toJson()).cacheMemoryMb, 64);
-    final chosen = PlayerSettings.fromJson({'cacheSeconds': 30, 'cacheMemoryMb': 64, 'bufferDefaults': 2});
+    final chosen =
+        PlayerSettings.fromJson({'cacheSeconds': 30, 'cacheMemoryMb': 64, 'bufferDefaults': 2});
     expect((chosen.cacheSeconds, chosen.cacheMemoryMb), (30, 64));
   });
 }

@@ -7,14 +7,17 @@ import 'package:material_ui/material_ui.dart';
 import 'tooltip_finder.dart';
 
 void main() {
-  Future<AppController> pump(WidgetTester tester, Size size, void Function(BuildContext context, AppController controller) open) async {
+  Future<AppController> pump(WidgetTester tester, Size size,
+      void Function(BuildContext context, AppController controller) open) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final controller = AppController()..ready = true;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: Builder(builder: (context) => TextButton(onPressed: () => open(context, controller), child: const Text('open'))),
+        body: Builder(
+            builder: (context) =>
+                TextButton(onPressed: () => open(context, controller), child: const Text('open'))),
       ),
     ));
     await tester.tap(find.text('open'));
@@ -23,7 +26,8 @@ void main() {
   }
 
   for (final size in const [Size(1400, 900), Size(400, 800)]) {
-    testWidgets('AI summary shows the notes on the video under it at ${size.width.toInt()} px', (tester) async {
+    testWidgets('AI summary shows the notes on the video under it at ${size.width.toInt()} px',
+        (tester) async {
       await pump(tester, size, showVideoSummary);
       expect(find.text('My notes'), findsOneWidget);
       expect(byTooltip('Add a note here'), findsOneWidget);
@@ -32,7 +36,11 @@ void main() {
   }
 
   testWidgets('a note starts from the subtitle words', (tester) async {
-    await pump(tester, const Size(1000, 800), (context, controller) => showNoteEditor(context, controller, at: const Duration(seconds: 65), quote: 'Batteries hate the cold.'));
+    await pump(
+        tester,
+        const Size(1000, 800),
+        (context, controller) => showNoteEditor(context, controller,
+            at: const Duration(seconds: 65), quote: 'Batteries hate the cold.'));
     expect(find.text('Note at 01:05'), findsOneWidget);
     expect(find.text('Batteries hate the cold.'), findsOneWidget);
     expect(find.text('Your note'), findsOneWidget);

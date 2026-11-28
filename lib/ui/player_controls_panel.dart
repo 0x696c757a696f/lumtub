@@ -21,9 +21,11 @@ extension _MorePanel on _PlayerControlsState {
     unawaited(c.markLoop().then((_) {
       final a = c.loopA, b = c.loopB;
       if (a != null && b != null) {
-        _showFeedback(AppIcons.repeatOnce, tr('Looping {0} – {1}', [formatPlaybackTime(a), formatPlaybackTime(b)]));
+        _showFeedback(AppIcons.repeatOnce,
+            tr('Looping {0} – {1}', [formatPlaybackTime(a), formatPlaybackTime(b)]));
       } else if (a != null) {
-        _showFeedback(AppIcons.repeatOnce, tr('Point A {0}; press again to set point B', [formatPlaybackTime(a)]));
+        _showFeedback(AppIcons.repeatOnce,
+            tr('Point A {0}; press again to set point B', [formatPlaybackTime(a)]));
       } else {
         _showFeedback(AppIcons.repeatOnce, tr('A-B loop off'));
       }
@@ -65,7 +67,8 @@ extension _MorePanel on _PlayerControlsState {
       stream: _player.stream.track,
       initialData: _player.state.track,
       builder: (context, snapshot) {
-        final tracks = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
+        final tracks =
+            _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
         if (tracks.length < 2) return const SizedBox.shrink();
         return PanelChoices<String>(
           label: tr('Audio track'),
@@ -73,7 +76,8 @@ extension _MorePanel on _PlayerControlsState {
           collapsed: true,
           value: (snapshot.data ?? _player.state.track).audio.id,
           values: [for (final t in tracks) (t.id, trackLabel(t.id, t.title, t.language))],
-          onSelected: (id) => unawaited(_player.setAudioTrack(tracks.firstWhere((t) => t.id == id))),
+          onSelected: (id) =>
+              unawaited(_player.setAudioTrack(tracks.firstWhere((t) => t.id == id))),
         );
       },
     );
@@ -84,9 +88,14 @@ extension _MorePanel on _PlayerControlsState {
     final sleepAt = c.sleepAt;
     const off = -1, after = 0, none = -2;
     final remaining = sleepAt == null ? 0 : sleepAt.difference(DateTime.now()).inMinutes + 1;
-    final value = sleepAt == null && !c.sleepAfterCurrent ? off : c.sleepAfterCurrent ? after : none;
+    final value = sleepAt == null && !c.sleepAfterCurrent
+        ? off
+        : c.sleepAfterCurrent
+            ? after
+            : none;
     return PanelChoices<int>(
-      label: sleepAt == null ? tr('Sleep timer') : tr('Sleep timer (pauses in {0} min)', [remaining]),
+      label:
+          sleepAt == null ? tr('Sleep timer') : tr('Sleep timer (pauses in {0} min)', [remaining]),
       icon: AppIcons.moonStars,
       value: value,
       values: [
@@ -118,13 +127,37 @@ extension _MorePanel on _PlayerControlsState {
       Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
         child: Wrap(spacing: 8, runSpacing: 8, children: [
-          PanelToggle(label: tr('Keep window on top'), icon: AppIcons.pushPin, value: c.pinned, onChanged: (_) => c.togglePinned()),
-          PanelToggle(label: tr('Listen only'), icon: AppIcons.headphonesFill, value: c.audioOnly, onChanged: (_) => unawaited(c.toggleAudioOnly())),
-          PanelToggle(label: tr('SponsorBlock'), icon: AppIcons.shield, value: settings.sponsorBlock, onChanged: (_) => unawaited(c.toggleSponsorBlock())),
-          PanelToggle(label: tr('Playback info'), icon: AppIcons.info, value: c.showStats, onChanged: (_) => c.toggleStats()),
-          PanelToggle(label: tr('Mirror'), icon: AppIcons.flipHorizontal, value: _picture.mirrored, onChanged: (v) => unawaited(_picture.setMirrored(v))),
           PanelToggle(
-            label: loopA != null && loopB != null ? tr('A-B looping') : loopA != null ? tr('Set point B') : tr('A-B loop'),
+              label: tr('Keep window on top'),
+              icon: AppIcons.pushPin,
+              value: c.pinned,
+              onChanged: (_) => c.togglePinned()),
+          PanelToggle(
+              label: tr('Listen only'),
+              icon: AppIcons.headphonesFill,
+              value: c.audioOnly,
+              onChanged: (_) => unawaited(c.toggleAudioOnly())),
+          PanelToggle(
+              label: tr('SponsorBlock'),
+              icon: AppIcons.shield,
+              value: settings.sponsorBlock,
+              onChanged: (_) => unawaited(c.toggleSponsorBlock())),
+          PanelToggle(
+              label: tr('Playback info'),
+              icon: AppIcons.info,
+              value: c.showStats,
+              onChanged: (_) => c.toggleStats()),
+          PanelToggle(
+              label: tr('Mirror'),
+              icon: AppIcons.flipHorizontal,
+              value: _picture.mirrored,
+              onChanged: (v) => unawaited(_picture.setMirrored(v))),
+          PanelToggle(
+            label: loopA != null && loopB != null
+                ? tr('A-B looping')
+                : loopA != null
+                    ? tr('Set point B')
+                    : tr('A-B loop'),
             icon: AppIcons.repeatOnce,
             value: loopA != null,
             onChanged: (_) => _markLoop(),
@@ -175,7 +208,10 @@ extension _MorePanel on _PlayerControlsState {
         label: tr('Zoom'),
         icon: AppIcons.magnifyingGlassPlus,
         value: _picture.zoom,
-        values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('Original size') : '${trimSpeed(z)}x')],
+        values: [
+          for (final z in PictureTransform.zoomLevels)
+            (z, z == 1 ? tr('Original size') : '${trimSpeed(z)}x')
+        ],
         onSelected: (z) => unawaited(_picture.setZoom(z)),
       ),
       PanelLink(
@@ -213,7 +249,10 @@ extension _MorePanel on _PlayerControlsState {
       ),
       // Built again every half minute while the timer runs, so the minutes
       // left count down with the panel open.
-      _Every(period: const Duration(seconds: 30), active: c.sleepAt != null, builder: (_) => _sleepChoice()),
+      _Every(
+          period: const Duration(seconds: 30),
+          active: c.sleepAt != null,
+          builder: (_) => _sleepChoice()),
       PanelChoices<PlaybackStrategy>(
         label: tr('Playback strategy'),
         icon: AppIcons.filmStrip,
@@ -225,7 +264,8 @@ extension _MorePanel on _PlayerControlsState {
         label: tr('Disabled video codecs'),
         icon: AppIcons.prohibit,
         detail: detail.isEmpty ? tr('None') : detail,
-        onTap: () => unawaited(pickDisabledCodecs(context, settings, (v) => unawaited(c.reloadVideo(v)))),
+        onTap: () =>
+            unawaited(pickDisabledCodecs(context, settings, (v) => unawaited(c.reloadVideo(v)))),
       ),
       PanelLink(
         label: tr('Subtitles'),

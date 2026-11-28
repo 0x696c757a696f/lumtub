@@ -25,20 +25,31 @@ import 'download_subtitles.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
-  const DownloadOptions({this.proxy, this.deno, this.cacheDirectory, this.subtitleLanguages, this.autoSubtitles = false, this.cutSponsors = false});
+  const DownloadOptions(
+      {this.proxy,
+      this.deno,
+      this.cacheDirectory,
+      this.subtitleLanguages,
+      this.autoSubtitles = false,
+      this.cutSponsors = false});
+
   /// yt-dlp's `--proxy` value, see `NetworkProxy.ytDlpValue`.
   final String? proxy;
   final String? deno;
   final String? cacheDirectory;
+
   /// yt-dlp's `--sub-langs`; null saves no subtitles.
   final String? subtitleLanguages;
+
   /// Also save automatic captions.
   final bool autoSubtitles;
+
   /// Leave the SponsorBlock segments out of joined files.
   final bool cutSponsors;
 }
 
-typedef ProcessStarter = Future<Process> Function(String executable, List<String> arguments, {Map<String, String>? environment});
+typedef ProcessStarter = Future<Process> Function(String executable, List<String> arguments,
+    {Map<String, String>? environment});
 
 /// Records live streams for the manager: lumtub_core fetching YouTube's
 /// numbered fragments, with the addresses the app resolves.
@@ -70,10 +81,15 @@ class LocalVideo {
   /// that has one, else the first file.
   File preferredSubtitle(List<String> languages) {
     // A styled ASS kept beside the file is for other players.
-    final plain = [for (final f in subtitles) if (!f.path.toLowerCase().endsWith('.ass')) f];
+    final plain = [
+      for (final f in subtitles)
+        if (!f.path.toLowerCase().endsWith('.ass')) f
+    ];
     final files = plain.isEmpty ? subtitles : plain;
     for (final language in languages) {
-      final match = files.where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.')).firstOrNull;
+      final match = files
+          .where((f) => f.path.toLowerCase().contains('.${language.trim().toLowerCase()}.'))
+          .firstOrNull;
       if (match != null) return match;
     }
     return files.first;
@@ -89,7 +105,8 @@ class LocalVideo {
     final stem = dot > 0 ? name.substring(0, dot) : name;
     return [
       for (final f in subtitles)
-        if (_languageOf(f.uri.pathSegments.last, stem) case final language? when !f.path.toLowerCase().endsWith('.ass'))
+        if (_languageOf(f.uri.pathSegments.last, stem) case final language?
+            when !f.path.toLowerCase().endsWith('.ass'))
           SubtitleOption(language: language, name: '', url: f.uri.toString()),
     ];
   }
@@ -129,7 +146,11 @@ class LocalVideo {
     try {
       for (final entity in media.parent.listSync(followLinks: false)) {
         final file = entity.uri.pathSegments.last;
-        if (entity is File && file.startsWith('$name.') && RegExp(r'\.(vtt|srt|ass)$').hasMatch(file)) subtitles.add(entity);
+        if (entity is File &&
+            file.startsWith('$name.') &&
+            RegExp(r'\.(vtt|srt|ass)$').hasMatch(file)) {
+          subtitles.add(entity);
+        }
       }
     } on FileSystemException {
       // Played without subtitles.
@@ -140,7 +161,9 @@ class LocalVideo {
     final segments = <SkipSegment>[
       if (raw is List)
         for (final s in raw.whereType<Map<dynamic, dynamic>>())
-          if (s['start'] is int && s['end'] is int) SkipSegment(Duration(milliseconds: s['start'] as int), Duration(milliseconds: s['end'] as int), '${s['category']}'),
+          if (s['start'] is int && s['end'] is int)
+            SkipSegment(Duration(milliseconds: s['start'] as int),
+                Duration(milliseconds: s['end'] as int), '${s['category']}'),
     ];
     return LocalVideo(media, info, subtitles, segments);
   }
@@ -177,7 +200,8 @@ class DownloadManager extends ChangeNotifier {
         _maxConcurrent = maxConcurrent.clamp(1, maxConcurrentLimit),
         _start = start ?? _backgroundStart;
 
-  static Future<Process> _backgroundStart(String executable, List<String> arguments, {Map<String, String>? environment}) =>
+  static Future<Process> _backgroundStart(String executable, List<String> arguments,
+          {Map<String, String>? environment}) =>
       ProcessTree.start(executable, arguments, environment: environment, background: true);
 
   /// Where the list and the folder setting are saved.
@@ -186,32 +210,42 @@ class DownloadManager extends ChangeNotifier {
   final ProcessStarter _start;
   final Map<String, String> Function()? environment;
   final DownloadOptions Function()? options;
+
   /// SponsorBlock segments to keep with a finished download.
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
+
   /// Called once a download's file is complete.
   final void Function(DownloadTask task)? onFinished;
+
   /// Joins a picture and a sound file into one without ffmpeg; the path
   /// written, or why not.
   final Future<Joined> Function(JoinRequest request)? join;
+
   /// The cover picture (JPEG) of a video, to put inside a joined file.
   final Future<List<int>?> Function(String videoId)? cover;
+
   /// Records live streams; without it (or [join]) they cannot be saved.
   final LiveRecorder? recorder;
+
   /// The opt-in signed-in way past YouTube's bot check, shared with
   /// playback: a download refused for a bot is tried once more with the
   /// account, and right after a refusal it starts with it.
   final BlockedSignIn? Function()? blockedSignIn;
+
   /// Writes the subtitles picked for [task] beside `stem` (the video's path
   /// without its extension) and returns them; for downloads whose
   /// selection names its subtitles.
   /// [styled] asks for ASS copies too, for a file joined into MKV or MP4.
-  final Future<List<SavedSubtitle>> Function(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled})? saveSubtitles;
+  final Future<List<SavedSubtitle>> Function(
+      DownloadTask task, String stem, DownloadSubtitles picked,
+      {bool styled})? saveSubtitles;
 
   /// Whether a live stream can be recorded.
   bool get canRecord => recorder != null && join != null;
 
   /// The picture and sound files a recording of [stem] writes.
-  static List<String> recordFiles(String stem) => ['$stem.live-video.part', '$stem.live-audio.part'];
+  static List<String> recordFiles(String stem) =>
+      ['$stem.live-video.part', '$stem.live-audio.part'];
 
   /// Lives recorded at once; each holds a connection and writes all the
   /// time, so more wait their turn.
@@ -219,8 +253,10 @@ class DownloadManager extends ChangeNotifier {
 
   /// Recordings under way: the task's id and the recording's.
   final _recordings = <String, int>{};
+
   /// The running [_record] calls, so [shutdown] can wait for them.
   final _recordTasks = <String, Future<void>>{};
+
   /// Set once [shutdown] or [dispose] began: recordings are stopped and
   /// their files kept as they are for the next start to join.
   bool _closing = false;
@@ -229,6 +265,7 @@ class DownloadManager extends ChangeNotifier {
   int _maxConcurrent;
   DownloadDefaults _defaults = const DownloadDefaults();
   final List<DownloadTask> tasks = [];
+
   /// The first task of [tasks] for each video, kept with it.
   final _byId = <String, DownloadTask>{};
 
@@ -238,9 +275,11 @@ class DownloadManager extends ChangeNotifier {
     _byId.remove(task.id);
     if (tasks.where((t) => t.id == task.id).firstOrNull case final other?) _byId[task.id] = other;
   }
+
   final _active = <String>{};
   final _processes = <String, Process>{};
   final _stopping = <String>{};
+
   /// Stopped downloads whose files are deleted once the process has exited,
   /// since Windows will not delete a file yt-dlp still has open.
   final _wipe = <String>{};
@@ -269,7 +308,9 @@ class DownloadManager extends ChangeNotifier {
 
   /// Whether [task]'s picture and sound come as two files for [join].
   bool _joins(DownloadTask task) =>
-      join != null && !(task.selection?.audioOnly ?? task.quality.audioOnly) && (task.selection?.needsMerge ?? true);
+      join != null &&
+      !(task.selection?.audioOnly ?? task.quality.audioOnly) &&
+      (task.selection?.needsMerge ?? true);
 
   /// The name yt-dlp gives each stream of a joined download, and what
   /// the joined file is called.
@@ -353,7 +394,12 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _write() async {
     try {
-      final list = {'directory': _directory, 'concurrent': _maxConcurrent, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()};
+      final list = {
+        'directory': _directory,
+        'concurrent': _maxConcurrent,
+        'defaults': _defaults.toJson(),
+        'tasks': tasks.map((t) => t.toJson()).toList()
+      };
       await writeFileAtomic(file, await _encode(list));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
@@ -388,11 +434,16 @@ class DownloadManager extends ChangeNotifier {
   DownloadTask? add(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final existing = taskFor(item.id);
     if (existing != null) {
-      if (existing.status == DownloadStatus.done && existing.filePath != null && File(existing.filePath!).existsSync()) return null;
+      if (existing.status == DownloadStatus.done &&
+          existing.filePath != null &&
+          File(existing.filePath!).existsSync()) {
+        return null;
+      }
       if (existing.active || existing.status == DownloadStatus.paused) return null;
       _drop(existing);
     }
-    final task = DownloadTask(item: item, quality: quality, directory: _directory, selection: selection);
+    final task =
+        DownloadTask(item: item, quality: quality, directory: _directory, selection: selection);
     tasks.insert(0, task);
     _byId[task.id] = task;
     _changed();
@@ -427,7 +478,10 @@ class DownloadManager extends ChangeNotifier {
 
   void retry(String id) {
     final task = taskFor(id);
-    if (task == null || (task.status != DownloadStatus.failed && task.status != DownloadStatus.cancelled)) return;
+    if (task == null ||
+        (task.status != DownloadStatus.failed && task.status != DownloadStatus.cancelled)) {
+      return;
+    }
     // A failed download resumes its .part file, so the bar keeps its place until new progress arrives; a cancelled one was wiped.
     if (task.status == DownloadStatus.cancelled) {
       task.downloaded = 0;
@@ -538,13 +592,23 @@ class DownloadManager extends ChangeNotifier {
       '--paths', task.directory,
       '-o', joins ? _joinedPart : '%(title).80B [%(id)s].%(ext)s',
       // One sidecar and one set of subtitles for the joined file.
-      if (joins) ...['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s'],
+      if (joins) ...[
+        '-o',
+        'infojson:%(title).80B [%(id)s].%(ext)s',
+        '-o',
+        'subtitle:%(title).80B [%(id)s].%(ext)s'
+      ],
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
       // yt-dlp keeps the cookies it used in the info file, so a signed-in
       // download prints only the keys the sidecar keeps and writes no file.
-      if (cookies == null) '--write-info-json' else ...['--print', 'video:$_infoPrefix%(.{${_sidecarKeys.join(',')}})j'],
-      '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format() ?? task.quality.format(),
+      if (cookies == null)
+        '--write-info-json'
+      else ...['--print', 'video:$_infoPrefix%(.{${_sidecarKeys.join(',')}})j'],
+      '--format',
+      joins
+          ? selection?.joinFormat() ?? task.quality.joinFormat()
+          : selection?.format() ?? task.quality.format(),
       // Files are kept as YouTube sends them, which the core reads; yt-dlp
       // never runs an ffmpeg it may find on PATH.
       '--fixup', 'never',
@@ -581,9 +645,13 @@ class DownloadManager extends ChangeNotifier {
     if (!earlier) {
       final now = DateTime.now();
       String two(int n) => '$n'.padLeft(2, '0');
-      final title = task.item.title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+      final title = task.item.title
+          .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
       final short = title.length > 80 ? title.substring(0, 80).trim() : title;
-      stem = '${task.directory}${Platform.pathSeparator}$short [$id] ${now.year}-${two(now.month)}-${two(now.day)} ${two(now.hour)}-${two(now.minute)}';
+      stem =
+          '${task.directory}${Platform.pathSeparator}$short [$id] ${now.year}-${two(now.month)}-${two(now.day)} ${two(now.hour)}-${two(now.minute)}';
       task.filePath = stem;
       _saveSoon();
       try {
@@ -612,7 +680,10 @@ class DownloadManager extends ChangeNotifier {
           }
           if (state.renew && !renewing) {
             renewing = true;
-            unawaited(recorder.renew(recording, id).catchError((Object e) => logWarn('Recording $id: no new address: $e')).whenComplete(() => renewing = false));
+            unawaited(recorder
+                .renew(recording, id)
+                .catchError((Object e) => logWarn('Recording $id: no new address: $e'))
+                .whenComplete(() => renewing = false));
           }
         }
         if (_recordings.remove(id) != null) error = await recorder.stop(recording) ?? error;
@@ -653,7 +724,12 @@ class DownloadManager extends ChangeNotifier {
     } catch (e) {
       logWarn('No cover for ${task.id} inside the file: $e');
     }
-    final joined = await join!(JoinRequest(video: files[0], audio: files[1], stem: stem, title: task.item.title, cover: coverFile?.path));
+    final joined = await join!(JoinRequest(
+        video: files[0],
+        audio: files[1],
+        stem: stem,
+        title: task.item.title,
+        cover: coverFile?.path));
     task.finishing = false;
     try {
       await coverFile?.delete();
@@ -676,13 +752,15 @@ class DownloadManager extends ChangeNotifier {
     // Played from the file now, not as the live it was.
     task.item = task.item.withLiveStatus('was_live');
     try {
-      await LocalVideo.sidecarOf(out).writeAsString(jsonEncode({
-        'id': task.id,
-        'title': task.item.title,
-        'channel': task.item.channel,
-        'webpage_url': task.item.url,
-        'was_live': true,
-      }), flush: true);
+      await LocalVideo.sidecarOf(out).writeAsString(
+          jsonEncode({
+            'id': task.id,
+            'title': task.item.title,
+            'channel': task.item.channel,
+            'webpage_url': task.item.url,
+            'was_live': true,
+          }),
+          flush: true);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
@@ -693,7 +771,8 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final _botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
+  static final _botCheck =
+      RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Prefix of the line a signed-in download prints its info on.
   static const _infoPrefix = 'lumtub-info|';
@@ -717,7 +796,8 @@ class DownloadManager extends ChangeNotifier {
           'PYTHONUTF8': '1',
           'PYTHONIOENCODING': 'utf-8',
         };
-        final process = await _start(ytDlpPath, arguments(task, cookies: cookies), environment: env);
+        final process =
+            await _start(ytDlpPath, arguments(task, cookies: cookies), environment: env);
         _processes[id] = process;
         lowerPriority(process.pid);
         // A pause that came while the process was starting.
@@ -790,7 +870,8 @@ class DownloadManager extends ChangeNotifier {
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
-      final raw = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
+      final raw = errors.lastWhere((e) => e.startsWith('ERROR'),
+          orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
       task.error = shown ?? friendlyDownloadError(raw);
     }
     if (_wipe.remove(id)) await _deleteFiles(task);
@@ -845,7 +926,9 @@ class DownloadManager extends ChangeNotifier {
       // video, its times moved past stretches cut out as the file's are.
       // The core moved the subtitles it was given; the ones saved beside
       // the file in one language each are moved here.
-      if (out != null && joined.cut.isNotEmpty) await _shiftSideSubtitles(stem, {for (final s in subtitles) s.path}, joined.cut);
+      if (out != null && joined.cut.isNotEmpty) {
+        await _shiftSideSubtitles(stem, {for (final s in subtitles) s.path}, joined.cut);
+      }
       final keepAss = out != null && !out.toLowerCase().endsWith('.mkv');
       for (final s in subtitles) {
         final ass = s.ass;
@@ -853,7 +936,8 @@ class DownloadManager extends ChangeNotifier {
         try {
           if (joined.cut.isNotEmpty) {
             final file = File(ass);
-            await file.writeAsString(shiftAss(await file.readAsString(), (at) => shiftPastCuts(at, joined.cut)));
+            await file.writeAsString(
+                shiftAss(await file.readAsString(), (at) => shiftPastCuts(at, joined.cut)));
           }
           await File(ass).rename(sideAssFor(s.path));
         } on FileSystemException catch (e) {
@@ -891,7 +975,9 @@ class DownloadManager extends ChangeNotifier {
       return;
     }
     // A single file keeps the subtitles picked beside it.
-    if (!_joins(task) && task.selection?.subtitles != null) await _subtitlesFor(task, path.replaceFirst(RegExp(r'\.[^.\\/]+$'), ''));
+    if (!_joins(task) && task.selection?.subtitles != null) {
+      await _subtitlesFor(task, path.replaceFirst(RegExp(r'\.[^.\\/]+$'), ''));
+    }
     // The offline info is saved before the task says done, so whoever
     // opens the finished file reads the whole sidecar, not one half written.
     try {
@@ -909,9 +995,15 @@ class DownloadManager extends ChangeNotifier {
 
   /// The subtitles of [task] beside [stem]: those picked in the dialog,
   /// written now, else those yt-dlp saved.
-  Future<List<SavedSubtitle>> _subtitlesFor(DownloadTask task, String stem, {bool styled = false}) async {
+  Future<List<SavedSubtitle>> _subtitlesFor(DownloadTask task, String stem,
+      {bool styled = false}) async {
     final picked = task.selection?.subtitles;
-    if (picked == null) return [for (final s in await subtitleFilesOf(stem)) (path: s.path, language: s.language, name: '', lines: false, ass: null)];
+    if (picked == null) {
+      return [
+        for (final s in await subtitleFilesOf(stem))
+          (path: s.path, language: s.language, name: '', lines: false, ass: null)
+      ];
+    }
     if (picked.isEmpty || saveSubtitles == null) return const [];
     try {
       return await saveSubtitles!(task, stem, picked, styled: styled);
@@ -931,8 +1023,11 @@ class DownloadManager extends ChangeNotifier {
       await for (final entity in file.parent.list()) {
         final other = entity.uri.pathSegments.last;
         if (entity is! File || !other.startsWith('$name.')) continue;
-        final match = RegExp(r'^\.([A-Za-z0-9_-]+)\.(vtt|srt)$').firstMatch(other.substring(name.length));
-        if (match != null) found.add((path: entity.path, language: match[1]!.replaceFirst(RegExp(r'-orig$'), '')));
+        final match =
+            RegExp(r'^\.([A-Za-z0-9_-]+)\.(vtt|srt)$').firstMatch(other.substring(name.length));
+        if (match != null) {
+          found.add((path: entity.path, language: match[1]!.replaceFirst(RegExp(r'-orig$'), '')));
+        }
       }
     } on FileSystemException {
       // None then.
@@ -942,7 +1037,21 @@ class DownloadManager extends ChangeNotifier {
   }
 
   static const _sidecarKeys = [
-    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec', 'language',
+    'id',
+    'title',
+    'channel',
+    'uploader',
+    'channel_url',
+    'channel_id',
+    'upload_date',
+    'view_count',
+    'like_count',
+    'description',
+    'duration',
+    'chapters',
+    'webpage_url',
+    'vcodec',
+    'language',
   ];
 
   Future<List<SkipSegment>> _segments(DownloadTask task) async {
@@ -959,7 +1068,9 @@ class DownloadManager extends ChangeNotifier {
   /// SponsorBlock segments, so playback can restore both offline. Times
   /// are moved past the stretches [cut] out of the file, and segments
   /// wholly cut are left out.
-  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut, [String? info]) async {
+  Future<void> _writeSidecar(
+      DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut,
+      [String? info]) async {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
     final text = info ?? (await sidecar.exists() ? await sidecar.readAsString() : null);
@@ -970,26 +1081,43 @@ class DownloadManager extends ChangeNotifier {
     final kept = <Map<String, Object>>[];
     for (final s in segments) {
       final start = shiftPastCuts(s.start, cut), end = shiftPastCuts(s.end, cut);
-      if (end > start) kept.add({'start': start.inMilliseconds, 'end': end.inMilliseconds, 'category': s.category});
+      if (end > start) {
+        kept.add(
+            {'start': start.inMilliseconds, 'end': end.inMilliseconds, 'category': s.category});
+      }
     }
-    await sidecar.writeAsString(jsonEncode({
-      for (final key in _sidecarKeys)
-        if (full[key] != null) key: key == 'chapters' && cut.isNotEmpty ? shiftChapters(full[key], cut) : key == 'duration' && cut.isNotEmpty && full[key] is num ? _shiftSeconds(full[key] as num, cut) : full[key],
-      'lumtub': {'sponsorblock': kept},
-    }), flush: true);
+    await sidecar.writeAsString(
+        jsonEncode({
+          for (final key in _sidecarKeys)
+            if (full[key] != null)
+              key: key == 'chapters' && cut.isNotEmpty
+                  ? shiftChapters(full[key], cut)
+                  : key == 'duration' && cut.isNotEmpty && full[key] is num
+                      ? _shiftSeconds(full[key] as num, cut)
+                      : full[key],
+          'lumtub': {'sponsorblock': kept},
+        }),
+        flush: true);
   }
 
   /// Moves the times of the SRT and WebVTT files beside [stem] that are
   /// not in [moved] past the stretches [cut] out of the video.
-  Future<void> _shiftSideSubtitles(String stem, Set<String> moved, List<(Duration, Duration)> cut) async {
+  Future<void> _shiftSideSubtitles(
+      String stem, Set<String> moved, List<(Duration, Duration)> cut) async {
     final name = stem.substring(stem.lastIndexOf(RegExp(r'[\\/]')) + 1);
     try {
       await for (final entity in File(stem).parent.list(followLinks: false)) {
         final file = entity.uri.pathSegments.last;
-        if (entity is! File || moved.contains(entity.path) || !file.startsWith('$name.') || !RegExp(r'\.(srt|vtt)$').hasMatch(file)) continue;
+        if (entity is! File ||
+            moved.contains(entity.path) ||
+            !file.startsWith('$name.') ||
+            !RegExp(r'\.(srt|vtt)$').hasMatch(file)) {
+          continue;
+        }
         final cues = [
           for (final c in parseSubtitleCues(await entity.readAsString()))
-            if (shiftPastCuts(c.end, cut) case final end when end > shiftPastCuts(c.start, cut)) (start: shiftPastCuts(c.start, cut), end: end, text: c.text),
+            if (shiftPastCuts(c.end, cut) case final end when end > shiftPastCuts(c.start, cut))
+              (start: shiftPastCuts(c.start, cut), end: end, text: c.text),
         ];
         await entity.writeAsString(file.endsWith('.srt') ? toSrt(cues) : toVtt(cues));
       }
@@ -1025,7 +1153,9 @@ class DownloadManager extends ChangeNotifier {
     return [
       for (final c in chapters.whereType<Map<dynamic, dynamic>>())
         if (c['start_time'] is num && c['end_time'] is num)
-          if ((_shiftSeconds(c['start_time'] as num, cut), _shiftSeconds(c['end_time'] as num, cut)) case (final start, final end) when end > start) {...c, 'start_time': start, 'end_time': end},
+          if ((_shiftSeconds(c['start_time'] as num, cut), _shiftSeconds(c['end_time'] as num, cut))
+              case (final start, final end) when end > start)
+            {...c, 'start_time': start, 'end_time': end},
     ];
   }
 
@@ -1034,7 +1164,11 @@ class DownloadManager extends ChangeNotifier {
     try {
       await for (final entity in Directory(task.directory).list(followLinks: false)) {
         final name = entity.uri.pathSegments.last;
-        if (entity is File && name.contains('[${task.id}]') && RegExp(r'\.(mp4|m4a|webm|mkv|mp3|opus)$').hasMatch(name)) return entity.path;
+        if (entity is File &&
+            name.contains('[${task.id}]') &&
+            RegExp(r'\.(mp4|m4a|webm|mkv|mp3|opus)$').hasMatch(name)) {
+          return entity.path;
+        }
       }
     } on FileSystemException {
       // Not found.
@@ -1073,7 +1207,11 @@ class DownloadManager extends ChangeNotifier {
     if (!await media.exists()) return null;
     // One play asks several times; the files do not change in between.
     final recent = _recentLocal;
-    if (recent != null && recent.path == path && DateTime.now().difference(recent.at) < const Duration(seconds: 10)) return recent.video;
+    if (recent != null &&
+        recent.path == path &&
+        DateTime.now().difference(recent.at) < const Duration(seconds: 10)) {
+      return recent.video;
+    }
     // The sidecar and the folder listing are read away from the UI isolate.
     final video = Isolate.run(() => LocalVideo.read(media));
     _recentLocal = (path: path, at: DateTime.now(), video: video);
@@ -1087,7 +1225,11 @@ class DownloadManager extends ChangeNotifier {
     _closing = true;
     final recorder = this.recorder;
     for (final recording in _recordings.values) {
-      if (recorder != null) unawaited(recorder.stop(recording).then<void>((_) {}, onError: (Object e) => logWarn('A recording did not stop: $e')));
+      if (recorder != null) {
+        unawaited(recorder
+            .stop(recording)
+            .then<void>((_) {}, onError: (Object e) => logWarn('A recording did not stop: $e')));
+      }
     }
     _recordings.clear();
     for (final process in _processes.values) {
@@ -1102,17 +1244,29 @@ class DownloadManager extends ChangeNotifier {
 /// A picture and a sound file for the core to join, and what goes inside
 /// besides.
 class JoinRequest {
-  const JoinRequest({required this.video, required this.audio, required this.stem, this.container = 'auto', this.subtitles = const [], this.title, this.cover, this.cut = const []});
+  const JoinRequest(
+      {required this.video,
+      required this.audio,
+      required this.stem,
+      this.container = 'auto',
+      this.subtitles = const [],
+      this.title,
+      this.cover,
+      this.cut = const []});
   final String video;
   final String audio;
+
   /// The joined file's path without its extension.
   final String stem;
+
   /// mp4, webm, mkv, or `auto` for the one that fits the streams.
   final String container;
   final List<SavedSubtitle> subtitles;
   final String? title;
+
   /// A JPEG file.
   final String? cover;
+
   /// Stretches to leave out; the core narrows each to keyframes inside it.
   final List<(Duration, Duration)> cut;
 
@@ -1122,10 +1276,20 @@ class JoinRequest {
         'out': stem,
         'container': container,
         'subtitles': [
-          for (final s in subtitles) {'path': s.path, 'language': s.language, if (s.name.isNotEmpty) 'name': s.name, if (s.lines) 'lines': true, if (s.ass != null) 'ass': s.ass},
+          for (final s in subtitles)
+            {
+              'path': s.path,
+              'language': s.language,
+              if (s.name.isNotEmpty) 'name': s.name,
+              if (s.lines) 'lines': true,
+              if (s.ass != null) 'ass': s.ass
+            },
         ],
         if (title != null) 'title': title,
         if (cover != null) 'cover': cover,
-        if (cut.isNotEmpty) 'cut': [for (final (from, to) in cut) [from.inMilliseconds / 1000, to.inMilliseconds / 1000]],
+        if (cut.isNotEmpty)
+          'cut': [
+            for (final (from, to) in cut) [from.inMilliseconds / 1000, to.inMilliseconds / 1000]
+          ],
       };
 }

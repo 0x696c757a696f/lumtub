@@ -11,7 +11,9 @@ SubtitleCue cue(num start, num end, String text) => (start: s(start), end: s(end
 /// Lines of [each] seconds from 0 to [total], a sentence ending every
 /// [sentence] lines.
 List<SubtitleCue> talk(num total, {num each = 4, int sentence = 3}) => [
-      for (var i = 0; i * each < total; i++) cue(i * each, i * each + each - 0.2, (i + 1) % sentence == 0 ? 'and so it ends.' : 'some words go here'),
+      for (var i = 0; i * each < total; i++)
+        cue(i * each, i * each + each - 0.2,
+            (i + 1) % sentence == 0 ? 'and so it ends.' : 'some words go here'),
     ];
 
 void main() {
@@ -53,7 +55,9 @@ void main() {
     });
 
     test('without sentence ends it cuts at the widest gap', () {
-      final lines = [for (var i = 0; i < 60; i++) cue(i * 4, i * 4 + (i == 25 ? 2 : 3.8), 'no stop here')];
+      final lines = [
+        for (var i = 0; i < 60; i++) cue(i * 4, i * 4 + (i == 25 ? 2 : 3.8), 'no stop here')
+      ];
       final units = studyUnits(lines);
       expect(units.first.last, 25);
     });
@@ -169,12 +173,18 @@ void main() {
     test('reading ends at the last line of the unit', () {
       final r = run()..enter(StudyStep.read);
       final last = r.lines[r.current.last];
-      expect(play(r, last.start.inMilliseconds / 1000, last.end.inMilliseconds / 1000 + 1), [StudyEvent.readDone]);
+      expect(play(r, last.start.inMilliseconds / 1000, last.end.inMilliseconds / 1000 + 1),
+          [StudyEvent.readDone]);
     });
 
     test('shadowing without hard lines takes the longest line', () {
-      final lines = [cue(0, 3, 'short.'), cue(3, 8, 'a much longer line than that one.'), cue(8, 70, 'end.')];
-      final r = StudyRun(videoId: 'v', lines: lines, units: studyUnits(lines))..enter(StudyStep.shadow);
+      final lines = [
+        cue(0, 3, 'short.'),
+        cue(3, 8, 'a much longer line than that one.'),
+        cue(8, 70, 'end.')
+      ];
+      final r = StudyRun(videoId: 'v', lines: lines, units: studyUnits(lines))
+        ..enter(StudyStep.shadow);
       expect(r.shadowLines, [1]);
       expect(play(r, 3, 8.5), [StudyEvent.chunkDone]);
     });

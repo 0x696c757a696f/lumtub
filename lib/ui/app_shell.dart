@@ -84,25 +84,45 @@ class _AppShellState extends State<AppShell> {
 
   AppController get _controller => widget.controller;
   late final _layoutChanges = Listenable.merge([_controller, theaterMode]);
-  late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
+  late final _frames = FrameStats.start(
+      () => _controller.onWatchPage
+          ? (_controller.mini ? 'mini player' : 'watch')
+          : _controller.mode.name,
+      causes: () => _controller.rebuildCauses);
 
   List<(PageMode, IconData, IconData, String)> get _destinations => [
-    (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('Home')),
-    (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('Explore')),
-    (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('Subscriptions')),
-    (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('History')),
-    (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
-    (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
-    if (_controller.learningOn) (PageMode.learning, AppIcons.graduationCap, const IconData(0xe62c, fontFamily: 'Phosphor Fill'), tr('Learning')),
-  ];
+        (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('Home')),
+        (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('Explore')),
+        (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('Subscriptions')),
+        (
+          PageMode.history,
+          AppIcons.clockCounterClockwise,
+          AppIcons.clockCounterClockwiseFill,
+          tr('History')
+        ),
+        (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
+        (
+          PageMode.downloads,
+          AppIcons.arrowCircleDown,
+          AppIcons.arrowCircleDownFill,
+          tr('Downloads')
+        ),
+        if (_controller.learningOn)
+          (
+            PageMode.learning,
+            AppIcons.graduationCap,
+            const IconData(0xe62c, fontFamily: 'Phosphor Fill'),
+            tr('Learning')
+          ),
+      ];
 
   /// The bottom bar has room for four: History, Playlists and Downloads share
   /// one Library tab, with a switch at the top of each of those pages.
   static const _library = {PageMode.history, PageMode.playlists, PageMode.downloads};
   List<(PageMode, IconData, IconData, String)> get _bottomDestinations => [
-    ..._destinations.where((d) => !_library.contains(d.$1)),
-    (PageMode.history, AppIcons.bookOpen, AppIcons.bookOpenFill, tr('Library')),
-  ];
+        ..._destinations.where((d) => !_library.contains(d.$1)),
+        (PageMode.history, AppIcons.bookOpen, AppIcons.bookOpenFill, tr('Library')),
+      ];
   PageMode _lastLibrary = PageMode.history;
 
   @override
@@ -123,7 +143,8 @@ class _AppShellState extends State<AppShell> {
     _softwareQuality = _controller.softwareQualityNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(tr("Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.")),
+        content: Text(tr(
+            "Automatic quality stays at 1080p: this device can't decode VP9 or AV1 in hardware, and YouTube has nothing else above 1080p. You can still pick a higher quality or Quality first; it is then decoded in software, which uses more battery and gets warmer.")),
         duration: const Duration(seconds: 15),
         showCloseIcon: true,
       ));
@@ -131,28 +152,35 @@ class _AppShellState extends State<AppShell> {
     _battery = _controller.batteryNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(tr('Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.')),
+        content: Text(tr(
+            'Some phones close apps playing in the background to save battery. Let Lumtub run without battery limits so playback is not cut off.')),
         duration: const Duration(seconds: 15),
         showCloseIcon: true,
         persist: false,
-        action: SnackBarAction(label: tr('Allow'), onPressed: () => unawaited(_controller.askBatteryUnrestricted())),
+        action: SnackBarAction(
+            label: tr('Allow'), onPressed: () => unawaited(_controller.askBatteryUnrestricted())),
       ));
     });
     _waylandTop = _controller.waylandTopNotes.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(tr("This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.")),
+        content: Text(tr(
+            "This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.")),
         duration: const Duration(seconds: 12),
         showCloseIcon: true,
         // With an action Flutter keeps a snack bar until it is closed.
         persist: false,
-        action: SnackBarAction(label: tr('Switch and restart'), onPressed: () => unawaited(_controller.switchToX11())),
+        action: SnackBarAction(
+            label: tr('Switch and restart'), onPressed: () => unawaited(_controller.switchToX11())),
       ));
     });
     if (NativeCore.instance == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(NativeCore.missingMessage), duration: const Duration(minutes: 1), showCloseIcon: true));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(NativeCore.missingMessage),
+              duration: const Duration(minutes: 1),
+              showCloseIcon: true));
         }
       });
     }
@@ -161,11 +189,16 @@ class _AppShellState extends State<AppShell> {
       final path = task.filePath;
       if (!mounted || path == null) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(tr('Downloaded: {0}', [task.item.title]), maxLines: 2, overflow: TextOverflow.ellipsis),
+        content: Text(tr('Downloaded: {0}', [task.item.title]),
+            maxLines: 2, overflow: TextOverflow.ellipsis),
         duration: const Duration(seconds: 8),
         // With an action Flutter keeps a snack bar until it is closed.
         persist: false,
-        action: Platform.isAndroid || Platform.isIOS ? null : SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
+        action: Platform.isAndroid || Platform.isIOS
+            ? null
+            : SnackBarAction(
+                label: tr('Show in folder'),
+                onPressed: () => unawaited(openInExplorer(path, select: true))),
       ));
     });
   }
@@ -210,7 +243,11 @@ class _AppShellState extends State<AppShell> {
   /// plays and no dialog or other page is open.
   void _askForSupport() {
     final reminder = _controller.supportReminder;
-    if (reminder == null || !mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+    if (reminder == null ||
+        !mounted ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
     final now = DateTime.now();
     reminder.used(now);
     if (_controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
@@ -247,11 +284,19 @@ class _AppShellState extends State<AppShell> {
           constraints: const BoxConstraints(maxWidth: 640),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: SizedBox(height: 44, child: _SearchField(app: _controller, controller: _searchText, focusNode: _searchFocus, enabled: _controller.ready, autofocus: true, onSubmit: (value) {
-              if (value.trim().isEmpty) return;
-              Navigator.of(context).pop();
-              _submitSearch(value);
-            })),
+            child: SizedBox(
+                height: 44,
+                child: _SearchField(
+                    app: _controller,
+                    controller: _searchText,
+                    focusNode: _searchFocus,
+                    enabled: _controller.ready,
+                    autofocus: true,
+                    onSubmit: (value) {
+                      if (value.trim().isEmpty) return;
+                      Navigator.of(context).pop();
+                      _submitSearch(value);
+                    })),
           ),
         ),
       ),
@@ -263,7 +308,12 @@ class _AppShellState extends State<AppShell> {
     // Pressed again on its own page: to the top, and from the top, new
     // videos.
     final c = _controller;
-    if (target == c.mode && !c.onWatchPage && (target != PageMode.explore || c.query == null) && PullToRefresh.topOrRefresh(refresh: c.canRefreshPage)) return;
+    if (target == c.mode &&
+        !c.onWatchPage &&
+        (target != PageMode.explore || c.query == null) &&
+        PullToRefresh.topOrRefresh(refresh: c.canRefreshPage)) {
+      return;
+    }
     if (target == PageMode.explore) {
       _controller.openExplore();
     } else {
@@ -284,23 +334,35 @@ class _AppShellState extends State<AppShell> {
   /// video or a setting changes, never with the playing position.
   List<SkinMenu> _menus({required bool appMenu}) {
     final c = _controller;
-    final primary = Platform.isMacOS ? (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, meta: true, shift: shift) : (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, control: true, shift: shift);
+    final primary = Platform.isMacOS
+        ? (LogicalKeyboardKey key, {bool shift = false}) =>
+            SingleActivator(key, meta: true, shift: shift)
+        : (LogicalKeyboardKey key, {bool shift = false}) =>
+            SingleActivator(key, control: true, shift: shift);
     final appearance = c.appearance;
     void save(AppearanceSettings next) => unawaited(c.saveAppearance(next));
-    final settings = SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c), shortcut: primary(LogicalKeyboardKey.comma));
-    final exit = SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close()), shortcut: appMenu ? primary(LogicalKeyboardKey.keyQ) : null);
-    final about = SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about));
+    final settings = SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c),
+        shortcut: primary(LogicalKeyboardKey.comma));
+    final exit = SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close()),
+        shortcut: appMenu ? primary(LogicalKeyboardKey.keyQ) : null);
+    final about = SkinMenuEntry(
+        tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about));
     final playing = c.playing;
     return [
-      if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
+      if (appMenu)
+        SkinMenu(appName,
+            [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit],
+            bold: true),
       SkinMenu(tr('&File'), [
-        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: _keyOf(PlayerAction.search)),
+        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch,
+            shortcut: _keyOf(PlayerAction.search)),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
         SkinMenuEntry(tr('History'), () => c.navigate(PageMode.history)),
         SkinMenuEntry(tr('Playlist'), () => c.navigate(PageMode.playlists)),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: _keyOf(PlayerAction.incognito), checked: c.incognito),
+        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito),
+            shortcut: _keyOf(PlayerAction.incognito), checked: c.incognito),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
           settings,
@@ -309,17 +371,24 @@ class _AppShellState extends State<AppShell> {
         ],
       ]),
       SkinMenu(tr('&View'), [
-        for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
+        for (final (i, d) in _destinations.indexed)
+          SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Back'), _back, shortcut: _keyOf(PlayerAction.back)),
         const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)), checked: appearance.compact),
-        SkinMenuEntry(tr('&Status bar'), () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)), checked: appearance.showStatusBar),
+        SkinMenuEntry(
+            tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)),
+            checked: appearance.compact),
+        SkinMenuEntry(tr('&Status bar'),
+            () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)),
+            checked: appearance.showStatusBar),
       ]),
       if (playing != null) SkinMenu(tr('&Play'), _playMenu(playing)),
       SkinMenu(tr('Tools'), [
-        SkinMenuEntry(tr('Check for component updates'), c.checking ? null : () => unawaited(c.checkUpdates())),
-        SkinMenuEntry(tr('Clear cache'), () => openSettings(context, c, category: SettingsCategory.storage)),
+        SkinMenuEntry(tr('Check for component updates'),
+            c.checking ? null : () => unawaited(c.checkUpdates())),
+        SkinMenuEntry(
+            tr('Clear cache'), () => openSettings(context, c, category: SettingsCategory.storage)),
         SkinMenuEntry(tr('Error log'), () => unawaited(openLogs(context, c))),
         const SkinMenuEntry.divider(),
         SkinMenuEntry(tr('&Skins folder'), () {
@@ -328,9 +397,17 @@ class _AppShellState extends State<AppShell> {
         }),
       ]),
       SkinMenu(tr('&Help'), [
-        SkinMenuEntry(tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences)), shortcut: _keyOf(PlayerAction.help)),
-        SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
-        SkinMenuEntry(tr('Report a bug or suggest an idea'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/issues/new/choose'))),
+        SkinMenuEntry(
+            tr('Keyboard shortcuts'), () => unawaited(showShortcutHelp(context, c.preferences)),
+            shortcut: _keyOf(PlayerAction.help)),
+        SkinMenuEntry(
+            tr('How to &make a skin'),
+            () => unawaited(openExternal(
+                'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
+        SkinMenuEntry(
+            tr('Report a bug or suggest an idea'),
+            () => unawaited(
+                openExternal('https://github.com/0x696c757a696f/lumtub/issues/new/choose'))),
         if (!appMenu) ...[
           const SkinMenuEntry.divider(),
           about,
@@ -346,26 +423,37 @@ class _AppShellState extends State<AppShell> {
     final library = c.library;
     final danmaku = c.preferences.danmaku;
     return [
-      SkinMenuEntry(tr('&Play or pause'), player == null ? null : () => unawaited(player.playOrPause())),
+      SkinMenuEntry(
+          tr('&Play or pause'), player == null ? null : () => unawaited(player.playOrPause())),
       SkinMenuEntry(tr('P&revious video'), () => unawaited(c.playPrevious())),
       SkinMenuEntry(tr('&Next video'), () => unawaited(c.playNext())),
       const SkinMenuEntry.divider(),
       SkinMenuEntry(tr('&Mute'), player == null ? null : () => unawaited(c.toggleMute())),
       SkinMenuEntry(tr('&Audio only'), () => unawaited(c.toggleAudioOnly())),
       SkinMenuEntry(tr('Picture in p&icture'), () => c.setPip(true)),
-      if (c.hasDanmaku) SkinMenuEntry(tr('Bullet chat'), () => unawaited(c.setDanmaku(danmaku.copyWith(enabled: !danmaku.enabled))), checked: danmaku.enabled),
-      SkinMenuEntry(tr('Screenshot'), player == null ? null : () => unawaited(captureScreenshot(context, c))),
+      if (c.hasDanmaku)
+        SkinMenuEntry(tr('Bullet chat'),
+            () => unawaited(c.setDanmaku(danmaku.copyWith(enabled: !danmaku.enabled))),
+            checked: danmaku.enabled),
+      SkinMenuEntry(
+          tr('Screenshot'), player == null ? null : () => unawaited(captureScreenshot(context, c))),
       const SkinMenuEntry.divider(),
-      SkinMenuEntry(tr('Copy link'), () => unawaited(copyText(context, item.url, tr('Link copied')))),
+      SkinMenuEntry(
+          tr('Copy link'), () => unawaited(copyText(context, item.url, tr('Link copied')))),
       if (!item.isLive)
         SkinMenuEntry(tr('Copy link at current time'), () {
           final link = timestampLink(item.id, c.player?.state.position ?? Duration.zero);
           unawaited(copyText(context, link ?? item.url, tr('Link copied')));
         }),
-      if (library != null) SkinMenuEntry(tr('Watch later'), () => library.toggleWatchLater(item), checked: library.isWatchLater(item.id)),
-      if (c.downloads != null && (!item.isLive || c.downloads!.canRecord)) SkinMenuEntry(item.isLive ? tr('Record the live stream') : tr('Downloads'), () => unawaited(showDownloadChoice(context, c, item))),
+      if (library != null)
+        SkinMenuEntry(tr('Watch later'), () => library.toggleWatchLater(item),
+            checked: library.isWatchLater(item.id)),
+      if (c.downloads != null && (!item.isLive || c.downloads!.canRecord))
+        SkinMenuEntry(item.isLive ? tr('Record the live stream') : tr('Downloads'),
+            () => unawaited(showDownloadChoice(context, c, item))),
       SkinMenuEntry(tr('Cast'), () => unawaited(showCastDialog(context, c))),
-      if (c.playingChannel case final channel?) SkinMenuEntry(tr('View channel'), () => c.openChannel(channel)),
+      if (c.playingChannel case final channel?)
+        SkinMenuEntry(tr('View channel'), () => c.openChannel(channel)),
     ];
   }
 
@@ -382,6 +470,7 @@ class _AppShellState extends State<AppShell> {
       }
       move();
     }
+
     // Space on the watch page belongs to the player: it turns only a list
     // the mouse or the focus is in, never the page's own.
     bool main() => !(_controller.onWatchPage && space());
@@ -397,15 +486,20 @@ class _AppShellState extends State<AppShell> {
           _ => null,
         };
     return {
-      for (final MapEntry(:key, :value) in shortcutKeys(_controller.preferences.shortcutKeys).entries)
+      for (final MapEntry(:key, :value)
+          in shortcutKeys(_controller.preferences.shortcutKeys).entries)
         if (key.page)
           if (run(key) case final callback?)
-            for (final combo in value) (combo.control || combo.alt || combo.meta ? combo.activator : NotWhileTyping(combo.activator)): callback,
+            for (final combo in value)
+              (combo.control || combo.alt || combo.meta
+                  ? combo.activator
+                  : NotWhileTyping(combo.activator)): callback,
     };
   }
 
   /// The first key of [action], for a menu to show.
-  SingleActivator? _keyOf(PlayerAction action) => shortcutKeys(_controller.preferences.shortcutKeys)[action]!.firstOrNull?.activator;
+  SingleActivator? _keyOf(PlayerAction action) =>
+      shortcutKeys(_controller.preferences.shortcutKeys)[action]!.firstOrNull?.activator;
 
   /// F5 or Ctrl+R: the page shown loaded again.
   void _refreshPage() {
@@ -442,7 +536,11 @@ class _AppShellState extends State<AppShell> {
   }
 
   bool _onScroll(ScrollUpdateNotification notification) {
-    if (_swipe != null && notification.metrics.axis == Axis.horizontal && (notification.scrollDelta ?? 0) != 0) _swipeScrolled = true;
+    if (_swipe != null &&
+        notification.metrics.axis == Axis.horizontal &&
+        (notification.scrollDelta ?? 0) != 0) {
+      _swipeScrolled = true;
+    }
     return false;
   }
 
@@ -499,7 +597,8 @@ class _AppShellState extends State<AppShell> {
         const SingleActivator(LogicalKeyboardKey.browserBack): _back,
         const SingleActivator(LogicalKeyboardKey.channelDown): () => KeyScroll.byPage(1),
         const SingleActivator(LogicalKeyboardKey.channelUp): () => KeyScroll.byPage(-1),
-        SingleActivator(LogicalKeyboardKey.keyR, control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
+        SingleActivator(LogicalKeyboardKey.keyR,
+            control: !Platform.isMacOS, meta: Platform.isMacOS): _refreshPage,
         // Esc goes back too, except on the watch page, where it leaves
         // full screen and closes panels.
         const SingleActivator(LogicalKeyboardKey.escape): () {
@@ -521,171 +620,243 @@ class _AppShellState extends State<AppShell> {
           onPointerPanZoomEnd: _swipeEnd,
           // The window is built again only when its layout changes; each
           // part of it listens for what it shows itself.
-          child: EdgeSwipeBack(enabled: Platform.isIOS, canGoBack: () => _controller.canGoBack, onBack: _back, child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: SelectBuilder(
-            listenable: _layoutChanges,
-            select: () => _layoutOf(_controller),
-            builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
-              _frames.rebuilt();
-              if (_controller.ready && !_tvFocused) {
-                _tvFocused = true;
-                Device.focusFirstOnTv();
-              }
-              // Picture in picture shows the video alone.
-              if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
-                return ListenableBuilder(listenable: _controller, builder: (context, _) => PipView(controller: _controller));
-              }
-              final wide = constraints.maxWidth >= 720;
-              final skin = context.skin;
-              final rail = switch (_controller.appearance.navigation) {
-                NavigationStyle.auto => wide,
-                NavigationStyle.rail => true,
-                NavigationStyle.bottom => false,
-              };
-              final tabs = rail ? null : skin?.tabs;
-              // The same pages as the plain bottom bar, the library ones
-              // gathered under Library, so the labels fit a phone's width.
-              Widget tabBar(SkinTabs tabs) => _region(
-                    () => (_bottomIndex, currentLanguage),
-                    (context) => SkinTabBar(
-                      tabs: tabs,
-                      destinations: [for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)],
-                      selected: _bottomIndex,
-                      onSelected: _selectBottom,
-                    ),
-                  );
-              final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
-              // 剧场模式 gives the video the side rail's room too, as YouTube
-              // hides its guide while watching. The top bar steps aside as
-              // well and slides back in at the window's top edge, or for
-              // the search keys; a touch screen keeps it.
-              final theater = theaterMode.value && _controller.onWatchPage && !_controller.mini;
-              final railAside = theater || (_controller.onWatchPage && !_controller.mini && _controller.appearance.watchHidesRail);
-              final peekTopBar = theater && !touchFirst;
-              // Tab walks the top bar, the rail and the page each to its
-              // end before the next, not across them by position.
-              Widget topBar() => FocusTraversalGroup(child: _region(
-                    () => _TopBar.shownOf(_controller),
-                    (context) => _TopBar(
-                      wide: wide,
-                      controller: _controller,
-                      searchText: _searchText,
-                      searchFocus: _searchFocus,
-                      onSubmit: _submitSearch,
-                    ),
-                  ));
-              final skinRail = skin != null && skin.drawsRail;
-              _tvRail = Device.tv && rail && !skinRail;
-              // The bar to show at the bottom, also while it slides away.
-              final bottomTabs = skin?.tabs;
-              final scaffold = Scaffold(
-                // Under a skin the page is its picture, veiled on its own
-                // (_veiled); without one, the theme's page colour.
-                backgroundColor: skin == null ? null : Colors.transparent,
-                // Below Android's status bar and camera cutout; the
-                // navigation bar keeps clear of the gesture bar itself.
-                body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
-                  // A phone's watch page starts with the player, as phone
-                  // apps do; back is the player's arrow or the system's.
-                  if (!watchingOnPhone && !_tvRail) AnimatedVisibility.topBar(visible: !peekTopBar, child: topBar()),
-                  if (tabs != null && tabs.top) tabBar(tabs),
-                  Expanded(child: Stack(children: [
-                    Row(children: [
-                      AnimatedVisibility.rail(
-                        visible: rail && !watchingOnPhone && !railAside,
-                        child: FocusTraversalGroup(child: _region(
-                          () => (_selectedIndex, _controller.mode == PageMode.settings && !_controller.onWatchPage, currentLanguage),
-                          (context) => skinRail ? SkinRail(
-                            skin: skin,
-                            destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
-                            selected: _selectedIndex,
-                            onSelected: _select,
-                          ) : _navigationRail(context),
-                        )),
-                      ),
-                      Expanded(child: FocusTraversalGroup(child: KeyedSubtree(key: KeyScroll.area, child: _region(
-                        () => (_pageKey, _slideIndex),
-                        (context) => PageSwitcher(
-                          // Keyed per page so each page's list keeps its scroll position
-                          // (PageStorage) when the user comes back to it.
-                          pageKey: _pageKey,
-                          index: _slideIndex,
-                          slides: !rail,
-                          child: _LivePage(
-                            controller: _controller,
-                            pageKey: _pageKey,
-                            shownKey: () => _pageKey,
-                            onBuilt: _frames.pageRebuilt,
-                            builder: (context) => VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_refreshable(_content())) : _refreshable(_content()))),
-                          ),
+          child: EdgeSwipeBack(
+              enabled: Platform.isIOS,
+              canGoBack: () => _controller.canGoBack,
+              onBack: _back,
+              child: NotificationListener<ScrollUpdateNotification>(
+                  onNotification: _onScroll,
+                  child: SelectBuilder(
+                    listenable: _layoutChanges,
+                    select: () => _layoutOf(_controller),
+                    builder: (context, _, __) => LayoutBuilder(builder: (context, constraints) {
+                      _frames.rebuilt();
+                      if (_controller.ready && !_tvFocused) {
+                        _tvFocused = true;
+                        Device.focusFirstOnTv();
+                      }
+                      // Picture in picture shows the video alone.
+                      if (_controller.pip &&
+                          _controller.playing != null &&
+                          _controller.videoController != null) {
+                        return ListenableBuilder(
+                            listenable: _controller,
+                            builder: (context, _) => PipView(controller: _controller));
+                      }
+                      final wide = constraints.maxWidth >= 720;
+                      final skin = context.skin;
+                      final rail = switch (_controller.appearance.navigation) {
+                        NavigationStyle.auto => wide,
+                        NavigationStyle.rail => true,
+                        NavigationStyle.bottom => false,
+                      };
+                      final tabs = rail ? null : skin?.tabs;
+                      // The same pages as the plain bottom bar, the library ones
+                      // gathered under Library, so the labels fit a phone's width.
+                      Widget tabBar(SkinTabs tabs) => _region(
+                            () => (_bottomIndex, currentLanguage),
+                            (context) => SkinTabBar(
+                              tabs: tabs,
+                              destinations: [
+                                for (final d in _bottomDestinations) (d.$2, d.$3, d.$4)
+                              ],
+                              selected: _bottomIndex,
+                              onSelected: _selectBottom,
+                            ),
+                          );
+                      final watchingOnPhone = _controller.onWatchPage && watchesLikePhone(context);
+                      // 剧场模式 gives the video the side rail's room too, as YouTube
+                      // hides its guide while watching. The top bar steps aside as
+                      // well and slides back in at the window's top edge, or for
+                      // the search keys; a touch screen keeps it.
+                      final theater =
+                          theaterMode.value && _controller.onWatchPage && !_controller.mini;
+                      final railAside = theater ||
+                          (_controller.onWatchPage &&
+                              !_controller.mini &&
+                              _controller.appearance.watchHidesRail);
+                      final peekTopBar = theater && !touchFirst;
+                      // Tab walks the top bar, the rail and the page each to its
+                      // end before the next, not across them by position.
+                      Widget topBar() => FocusTraversalGroup(
+                              child: _region(
+                            () => _TopBar.shownOf(_controller),
+                            (context) => _TopBar(
+                              wide: wide,
+                              controller: _controller,
+                              searchText: _searchText,
+                              searchFocus: _searchFocus,
+                              onSubmit: _submitSearch,
+                            ),
+                          ));
+                      final skinRail = skin != null && skin.drawsRail;
+                      _tvRail = Device.tv && rail && !skinRail;
+                      // The bar to show at the bottom, also while it slides away.
+                      final bottomTabs = skin?.tabs;
+                      final scaffold = Scaffold(
+                        // Under a skin the page is its picture, veiled on its own
+                        // (_veiled); without one, the theme's page colour.
+                        backgroundColor: skin == null ? null : Colors.transparent,
+                        // Below Android's status bar and camera cutout; the
+                        // navigation bar keeps clear of the gesture bar itself.
+                        body: SafeArea(
+                            bottom: rail,
+                            left: rail,
+                            right: rail,
+                            top: !WindowFrame.supported,
+                            child: Column(children: [
+                              // A phone's watch page starts with the player, as phone
+                              // apps do; back is the player's arrow or the system's.
+                              if (!watchingOnPhone && !_tvRail)
+                                AnimatedVisibility.topBar(visible: !peekTopBar, child: topBar()),
+                              if (tabs != null && tabs.top) tabBar(tabs),
+                              Expanded(
+                                  child: Stack(children: [
+                                Row(children: [
+                                  AnimatedVisibility.rail(
+                                    visible: rail && !watchingOnPhone && !railAside,
+                                    child: FocusTraversalGroup(
+                                        child: _region(
+                                      () => (
+                                        _selectedIndex,
+                                        _controller.mode == PageMode.settings &&
+                                            !_controller.onWatchPage,
+                                        currentLanguage
+                                      ),
+                                      (context) => skinRail
+                                          ? SkinRail(
+                                              skin: skin,
+                                              destinations: [
+                                                for (final d in _destinations) (d.$2, d.$3, d.$4)
+                                              ],
+                                              selected: _selectedIndex,
+                                              onSelected: _select,
+                                            )
+                                          : _navigationRail(context),
+                                    )),
+                                  ),
+                                  Expanded(
+                                      child: FocusTraversalGroup(
+                                          child: KeyedSubtree(
+                                              key: KeyScroll.area,
+                                              child: _region(
+                                                () => (_pageKey, _slideIndex),
+                                                (context) => PageSwitcher(
+                                                  // Keyed per page so each page's list keeps its scroll position
+                                                  // (PageStorage) when the user comes back to it.
+                                                  pageKey: _pageKey,
+                                                  index: _slideIndex,
+                                                  slides: !rail,
+                                                  child: _LivePage(
+                                                    controller: _controller,
+                                                    pageKey: _pageKey,
+                                                    shownKey: () => _pageKey,
+                                                    onBuilt: _frames.pageRebuilt,
+                                                    builder: (context) => VideoActions(
+                                                        controller: _controller,
+                                                        child: _veiled(
+                                                            skin,
+                                                            !rail &&
+                                                                    !_controller.onWatchPage &&
+                                                                    _library
+                                                                        .contains(_controller.mode)
+                                                                ? _libraryTabs(
+                                                                    _refreshable(_content()))
+                                                                : _refreshable(_content()))),
+                                                  ),
+                                                ),
+                                              )))),
+                                ]),
+                                // The video keeps playing over the pages; the watch page
+                                // is not mounted meanwhile, so the card has the only Video.
+                                if (_controller.mini && _controller.playing != null)
+                                  Positioned.fill(
+                                      child: ListenableBuilder(
+                                          listenable: _controller,
+                                          builder: (context, _) =>
+                                              MiniPlayer(controller: _controller))),
+                                if (peekTopBar && !_tvRail)
+                                  Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      right: 0,
+                                      child: _PeekingBar(focus: _searchFocus, child: topBar())),
+                              ])),
+                              // No status line on phones, tablets and TVs: the room goes to the page.
+                              if (_controller.appearance.showStatusBar && !touchFirst)
+                                _region(
+                                  () => _StatusBar.shownOf(_controller),
+                                  (context) => _StatusBar(controller: _controller),
+                                ),
+                            ])),
+                        bottomNavigationBar: AnimatedVisibility.bottomBar(
+                          visible: !rail && !watchingOnPhone && !(tabs != null && tabs.top),
+                          child: bottomTabs != null && !bottomTabs.top
+                              ? tabBar(bottomTabs)
+                              : _region(
+                                  () => (_bottomIndex, currentLanguage),
+                                  (context) => NavigationBar(
+                                    height: 64,
+                                    // Six labels do not fit a phone's width side by side.
+                                    labelBehavior: MediaQuery.sizeOf(context).width < 600
+                                        ? NavigationDestinationLabelBehavior.onlyShowSelected
+                                        : null,
+                                    selectedIndex: _bottomIndex,
+                                    onDestinationSelected: _selectBottom,
+                                    destinations: [
+                                      for (final (i, d) in _bottomDestinations.indexed)
+                                        NavigationDestination(
+                                            icon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex),
+                                            selectedIcon:
+                                                FillIcon(d.$2, d.$3, selected: i == _bottomIndex),
+                                            label: d.$4),
+                                    ],
+                                  ),
+                                ),
                         ),
-                      )))),
-                    ]),
-                    // The video keeps playing over the pages; the watch page
-                    // is not mounted meanwhile, so the card has the only Video.
-                    if (_controller.mini && _controller.playing != null)
-                      Positioned.fill(child: ListenableBuilder(listenable: _controller, builder: (context, _) => MiniPlayer(controller: _controller))),
-                    if (peekTopBar && !_tvRail) Positioned(left: 0, top: 0, right: 0, child: _PeekingBar(focus: _searchFocus, child: topBar())),
-                  ])),
-                  // No status line on phones, tablets and TVs: the room goes to the page.
-                  if (_controller.appearance.showStatusBar && !touchFirst) _region(
-                    () => _StatusBar.shownOf(_controller),
-                    (context) => _StatusBar(controller: _controller),
-                  ),
-                ])),
-                bottomNavigationBar: AnimatedVisibility.bottomBar(
-                  visible: !rail && !watchingOnPhone && !(tabs != null && tabs.top),
-                  child: bottomTabs != null && !bottomTabs.top ? tabBar(bottomTabs) : _region(
-                    () => (_bottomIndex, currentLanguage),
-                    (context) => NavigationBar(
-                      height: 64,
-                      // Six labels do not fit a phone's width side by side.
-                      labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
-                      selectedIndex: _bottomIndex,
-                      onDestinationSelected: _selectBottom,
-                      destinations: [
-                        for (final (i, d) in _bottomDestinations.indexed) NavigationDestination(icon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), selectedIcon: FillIcon(d.$2, d.$3, selected: i == _bottomIndex), label: d.$4),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-              // 关灯 darkens the whole window but the player, under dialogs
-              // and menus, which are routes above the shell.
-              final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
-              return ValueListenableBuilder(
-                valueListenable: lightsOff,
-                builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
-                  child!,
-                  // Kept while watching, so turning the lights on fades too.
-                  if (watching) Positioned.fill(child: LightsOffLayer(visible: off, dim: _controller.preferences.lightsOffDim / 100)),
-                ]),
-                // Android's back button and gesture go back through the
-                // pages first; on the first page they send the app to the
-                // background, as Home does, so playing goes on.
-                child: WindowFrame.supported
-                    ? scaffold
-                    : SelectBuilder(
-                        listenable: _controller,
-                        select: () => _controller.canGoBack,
-                        child: scaffold,
-                        builder: (context, canGoBack, scaffold) => PopScope(
-                          canPop: !canGoBack && !Platform.isAndroid,
-                          onPopInvokedWithResult: (didPop, _) {
-                            if (didPop) return;
-                            if (canGoBack) {
-                              _back();
-                            } else {
-                              unawaited(moveAppToBack().then((moved) {
-                                if (!moved) unawaited(SystemNavigator.pop());
-                              }));
-                            }
-                          },
-                          child: scaffold!,
-                        ),
-                      ),
-              );
-            }),
-          ))),
+                      );
+                      // 关灯 darkens the whole window but the player, under dialogs
+                      // and menus, which are routes above the shell.
+                      final watching = _controller.onWatchPage &&
+                          !_controller.mini &&
+                          _controller.videoController != null;
+                      return ValueListenableBuilder(
+                        valueListenable: lightsOff,
+                        builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
+                          child!,
+                          // Kept while watching, so turning the lights on fades too.
+                          if (watching)
+                            Positioned.fill(
+                                child: LightsOffLayer(
+                                    visible: off, dim: _controller.preferences.lightsOffDim / 100)),
+                        ]),
+                        // Android's back button and gesture go back through the
+                        // pages first; on the first page they send the app to the
+                        // background, as Home does, so playing goes on.
+                        child: WindowFrame.supported
+                            ? scaffold
+                            : SelectBuilder(
+                                listenable: _controller,
+                                select: () => _controller.canGoBack,
+                                child: scaffold,
+                                builder: (context, canGoBack, scaffold) => PopScope(
+                                  canPop: !canGoBack && !Platform.isAndroid,
+                                  onPopInvokedWithResult: (didPop, _) {
+                                    if (didPop) return;
+                                    if (canGoBack) {
+                                      _back();
+                                    } else {
+                                      unawaited(moveAppToBack().then((moved) {
+                                        if (!moved) unawaited(SystemNavigator.pop());
+                                      }));
+                                    }
+                                  },
+                                  child: scaffold!,
+                                ),
+                              ),
+                      );
+                    }),
+                  ))),
         ),
       );
 
@@ -707,8 +878,8 @@ class _AppShellState extends State<AppShell> {
 
   /// A part of the window built again only when [select] reads something
   /// new from the controller.
-  Widget _region(Object? Function() select, WidgetBuilder builder) =>
-      SelectBuilder(listenable: _controller, select: select, builder: (context, _, __) => builder(context));
+  Widget _region(Object? Function() select, WidgetBuilder builder) => SelectBuilder(
+      listenable: _controller, select: select, builder: (context, _, __) => builder(context));
 
   Widget _navigationRail(BuildContext context) => NavigationRail(
         backgroundColor: context.tones.chrome,
@@ -720,15 +891,20 @@ class _AppShellState extends State<AppShell> {
         minWidth: 76,
         groupAlignment: -1,
         onDestinationSelected: _select,
-        leading: _tvRail ? IconButton(tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass)) : null,
+        leading: _tvRail
+            ? IconButton(
+                tooltip: tr('Search'), onPressed: _tvSearch, icon: Icon(AppIcons.magnifyingGlass))
+            : null,
         // The account is under Settings.
-        trailing: _tvRail ? IconButton(
-          tooltip: tr('Settings'),
-          isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
-          onPressed: () => openSettings(context, _controller),
-          icon: UpdateDot(controller: _controller, child: Icon(AppIcons.gear)),
-          selectedIcon: const Icon(AppIcons.gearFill),
-        ) : null,
+        trailing: _tvRail
+            ? IconButton(
+                tooltip: tr('Settings'),
+                isSelected: _controller.mode == PageMode.settings && !_controller.onWatchPage,
+                onPressed: () => openSettings(context, _controller),
+                icon: UpdateDot(controller: _controller, child: Icon(AppIcons.gear)),
+                selectedIcon: const Icon(AppIcons.gearFill),
+              )
+            : null,
         destinations: [
           for (final (i, d) in _destinations.indexed)
             NavigationRailDestination(
@@ -753,20 +929,28 @@ class _AppShellState extends State<AppShell> {
   Widget _veiled(Skin? skin, Widget page) {
     // Seeing the desktop: the pages solid in the glass's tint, as in a
     // Windows 7 window, or glass themselves.
-    if (context.glass case final glass?) return glass.whole ? page : Material(color: glass.tint, child: page);
+    if (context.glass case final glass?) {
+      return glass.whole ? page : Material(color: glass.tint, child: page);
+    }
     // Kept in low resource mode: one flat colour costs nothing.
     if (skin == null || skin.veil == 0) return page;
     // A Material, not a ColoredBox, so list rows still show their ink on it.
-    return Material(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
+    return Material(
+        color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)),
+        child: page);
   }
 
-  String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
-        PageMode.channel => 'channel:${_controller.channel?.id}',
-        PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
-        PageMode.youtubePlaylist => 'yt-playlist:${_controller.youtubePlaylist?.id}',
-        PageMode.explore when _controller.query != null => 'search:${_controller.query}',
-        final mode => mode.name,
-      };
+  String get _pageKey => !_controller.ready
+      ? 'setup'
+      : _controller.onWatchPage
+          ? 'watch'
+          : switch (_controller.mode) {
+              PageMode.channel => 'channel:${_controller.channel?.id}',
+              PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
+              PageMode.youtubePlaylist => 'yt-playlist:${_controller.youtubePlaylist?.id}',
+              PageMode.explore when _controller.query != null => 'search:${_controller.query}',
+              final mode => mode.name,
+            };
 
   /// Every page but the watch page can be pulled down; only those with
   /// videos to load again refresh.
@@ -779,10 +963,16 @@ class _AppShellState extends State<AppShell> {
   Widget _content() {
     final controller = _controller;
     if (!controller.ready) return _SetupView(controller: controller);
-    if (controller.onWatchPage && controller.videoController != null) return WatchPage(controller: controller);
+    if (controller.onWatchPage && controller.videoController != null) {
+      return WatchPage(controller: controller);
+    }
     return switch (controller.mode) {
-      PageMode.home => UpdateNotice(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: _focusSearch)),
-      PageMode.explore => controller.query == null ? ExplorePage(controller: controller) : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
+      PageMode.home => UpdateNotice(
+          controller: controller,
+          child: HomeFeedPage(controller: controller, onFocusSearch: _focusSearch)),
+      PageMode.explore => controller.query == null
+          ? ExplorePage(controller: controller)
+          : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
       PageMode.playlists => PlaylistsPage(controller: controller),
@@ -791,7 +981,10 @@ class _AppShellState extends State<AppShell> {
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
-      PageMode.settings => SettingsPage(controller: controller, initial: _takeOpenOn() ?? (SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account)),
+      PageMode.settings => SettingsPage(
+          controller: controller,
+          initial: _takeOpenOn() ??
+              (SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account)),
     };
   }
 }
@@ -815,7 +1008,12 @@ void openSettings(BuildContext context, AppController controller, {SettingsCateg
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: SkinAppBar(AppBar(title: Text(tr('Settings')))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
+          child: Focus(
+              autofocus: true,
+              child: Scaffold(
+                  appBar: SkinAppBar(AppBar(title: Text(tr('Settings')))),
+                  body: SettingsPage(
+                      controller: controller, initial: category ?? SettingsCategory.account))),
         ),
       );
     },
@@ -836,9 +1034,11 @@ class _PeekingBar extends StatefulWidget {
 
 class _PeekingBarState extends State<_PeekingBar> {
   bool _hovered = false;
+
   /// Folded away and done moving: then it is neither painted nor hit, but
   /// kept, so the search keys can still reach its field.
   bool _folded = true;
+
   /// Set once the bar in the window's column has slid away, as the two
   /// share the search field's focus and text.
   bool _ready = false;
@@ -900,7 +1100,12 @@ class _PeekingBarState extends State<_PeekingBar> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.wide, required this.controller, required this.searchText, required this.searchFocus, required this.onSubmit});
+  const _TopBar(
+      {required this.wide,
+      required this.controller,
+      required this.searchText,
+      required this.searchFocus,
+      required this.onSubmit});
   final bool wide;
   final AppController controller;
   final TextEditingController searchText;
@@ -931,88 +1136,133 @@ class _TopBar extends StatelessWidget {
     final ready = controller.ready;
     final skin = context.skin;
     return Container(
-      decoration: skin?.topBar != null ? SurfaceDecoration.of(context, skin!.topBar!) : BoxDecoration(color: context.tones.chrome),
+      decoration: skin?.topBar != null
+          ? SurfaceDecoration.of(context, skin!.topBar!)
+          : BoxDecoration(color: context.tones.chrome),
       height: AppStyle.topBarHeight,
       // A spinner or hover on the bar repaints in a layer of its own, not
       // with the bar's surface.
-      child: RepaintBoundary(child: _onTopBar(
+      child: RepaintBoundary(
+          child: _onTopBar(
         context,
         skin?.topBar == null ? null : skin?.topBarText,
         Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        // Seeing the desktop, each thing on the bar glows to stay readable:
-        // one plate for the whole row, as the halos are the same.
-        // On a phone, typing a search hands the field the whole bar, so its
-        // list of recent and suggested searches is as wide as the screen;
-        // the arrow puts the bar back.
-        child: ListenableBuilder(listenable: searchFocus, builder: (context, _) {
-          final searching = !wide && searchFocus.hasFocus && MediaQuery.sizeOf(context).width < 600;
-          return GlassPlate(surface: skin?.topBar, child: Row(children: [
-          if (searching)
-            IconButton(tooltip: tr('Back'), onPressed: searchFocus.unfocus, icon: Icon(AppIcons.arrowLeft))
-          else
-          InkWell(
-            borderRadius: AppStyle.cardRadius,
-            onTap: () => controller.navigate(PageMode.home),
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: skin != null && skin.hasLogo ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(8)),
-                  child: Icon(AppIcons.playFill, color: colors.onPrimary, size: 22),
-                ),
-                if (wide) ...[
-                  const SizedBox(width: 8),
-                  Text(appName, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-                ],
-              ]),
-            ),
-          ),
-          SizedBox(width: wide ? 16 : 8),
-          // Keyed: the arrow taking the logo's place and the buttons going
-          // would otherwise build a new field as it takes the focus, whose
-          // list of recent searches stays empty until something is typed.
-          Expanded(key: const ValueKey('search field'), child: Center(child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
-          ))),
-          if (!searching) ...[
-          SizedBox(width: wide ? 16 : 4),
-          IconButton(
-            tooltip: keyNames(controller.incognito ? tr('Incognito mode is on; click to turn it off (Ctrl+Shift+N)') : tr("Incognito mode: don't record watching and searching (Ctrl+Shift+N)")),
-            isSelected: controller.incognito,
-            style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
-            onPressed: () => controller.setIncognito(!controller.incognito),
-            icon: Icon(AppIcons.eyeSlash),
-            selectedIcon: const Icon(AppIcons.eyeSlashFill),
-          ),
-          // Phones and TVs have no Deno or libmpv to update.
-          if (!touchFirst) IconButton(
-            tooltip: tr('Check for component updates'),
-            onPressed: ready && !controller.checking ? controller.checkUpdates : null,
-            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowLineDown),
-          ),
-          IconButton(
-            tooltip: tr('Settings'),
-            isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
-            onPressed: () => openSettings(context, controller),
-            icon: UpdateDot(controller: controller, child: Icon(AppIcons.gear)),
-            selectedIcon: const Icon(AppIcons.gearFill),
-          ),
-          AccountButton(
-            account: controller.account,
-            // A narrow window goes straight to the account's page; a wide
-            // one shows it beside the other settings.
-            onOpenSettings: () => MediaQuery.sizeOf(context).width < SettingsPage.wideWidth
-                ? openSettingsCategory(context, controller, SettingsCategory.account)
-                : openSettings(context, controller, category: SettingsCategory.account),
-          ),
-          ],
-        ]));
-        }),
-      ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // Seeing the desktop, each thing on the bar glows to stay readable:
+          // one plate for the whole row, as the halos are the same.
+          // On a phone, typing a search hands the field the whole bar, so its
+          // list of recent and suggested searches is as wide as the screen;
+          // the arrow puts the bar back.
+          child: ListenableBuilder(
+              listenable: searchFocus,
+              builder: (context, _) {
+                final searching =
+                    !wide && searchFocus.hasFocus && MediaQuery.sizeOf(context).width < 600;
+                return GlassPlate(
+                    surface: skin?.topBar,
+                    child: Row(children: [
+                      if (searching)
+                        IconButton(
+                            tooltip: tr('Back'),
+                            onPressed: searchFocus.unfocus,
+                            icon: Icon(AppIcons.arrowLeft))
+                      else
+                        InkWell(
+                          borderRadius: AppStyle.cardRadius,
+                          onTap: () => controller.navigate(PageMode.home),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: skin != null && skin.hasLogo
+                                ? SkinWordmark(skin: skin, name: appName, showName: wide)
+                                : Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                          color: colors.primary,
+                                          borderRadius: BorderRadius.circular(8)),
+                                      child: Icon(AppIcons.playFill,
+                                          color: colors.onPrimary, size: 22),
+                                    ),
+                                    if (wide) ...[
+                                      const SizedBox(width: 8),
+                                      Text(appName,
+                                          style: context.text.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                                    ],
+                                  ]),
+                          ),
+                        ),
+                      SizedBox(width: wide ? 16 : 8),
+                      // Keyed: the arrow taking the logo's place and the buttons going
+                      // would otherwise build a new field as it takes the focus, whose
+                      // list of recent searches stays empty until something is typed.
+                      Expanded(
+                          key: const ValueKey('search field'),
+                          child: Center(
+                              child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 640),
+                            child: SizedBox(
+                                height: 40,
+                                child: _SearchField(
+                                    app: controller,
+                                    controller: searchText,
+                                    focusNode: searchFocus,
+                                    enabled: ready,
+                                    onSubmit: onSubmit)),
+                          ))),
+                      if (!searching) ...[
+                        SizedBox(width: wide ? 16 : 4),
+                        IconButton(
+                          tooltip: keyNames(controller.incognito
+                              ? tr('Incognito mode is on; click to turn it off (Ctrl+Shift+N)')
+                              : tr(
+                                  "Incognito mode: don't record watching and searching (Ctrl+Shift+N)")),
+                          isSelected: controller.incognito,
+                          style: controller.incognito
+                              ? IconButton.styleFrom(
+                                  backgroundColor: colors.tertiaryContainer,
+                                  foregroundColor: colors.onTertiaryContainer)
+                              : null,
+                          onPressed: () => controller.setIncognito(!controller.incognito),
+                          icon: Icon(AppIcons.eyeSlash),
+                          selectedIcon: const Icon(AppIcons.eyeSlashFill),
+                        ),
+                        // Phones and TVs have no Deno or libmpv to update.
+                        if (!touchFirst)
+                          IconButton(
+                            tooltip: tr('Check for component updates'),
+                            onPressed:
+                                ready && !controller.checking ? controller.checkUpdates : null,
+                            icon: controller.checking
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2))
+                                : Icon(AppIcons.arrowLineDown),
+                          ),
+                        IconButton(
+                          tooltip: tr('Settings'),
+                          isSelected:
+                              controller.mode == PageMode.settings && !controller.onWatchPage,
+                          onPressed: () => openSettings(context, controller),
+                          icon: UpdateDot(controller: controller, child: Icon(AppIcons.gear)),
+                          selectedIcon: const Icon(AppIcons.gearFill),
+                        ),
+                        AccountButton(
+                          account: controller.account,
+                          // A narrow window goes straight to the account's page; a wide
+                          // one shows it beside the other settings.
+                          onOpenSettings: () => MediaQuery.sizeOf(context).width <
+                                  SettingsPage.wideWidth
+                              ? openSettingsCategory(context, controller, SettingsCategory.account)
+                              : openSettings(context, controller,
+                                  category: SettingsCategory.account),
+                        ),
+                      ],
+                    ]));
+              }),
+        ),
       )),
     );
   }
@@ -1022,14 +1272,23 @@ class _TopBar extends StatelessWidget {
     if (color == null) return child;
     final theme = Theme.of(context);
     return IconButtonTheme(
-      data: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: color, disabledForegroundColor: color.withValues(alpha: 0.45)).merge(theme.iconButtonTheme.style)),
+      data: IconButtonThemeData(
+          style: IconButton.styleFrom(
+                  foregroundColor: color, disabledForegroundColor: color.withValues(alpha: 0.45))
+              .merge(theme.iconButtonTheme.style)),
       child: IconTheme.merge(data: IconThemeData(color: color), child: child),
     );
   }
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit, this.autofocus = false});
+  const _SearchField(
+      {required this.app,
+      required this.controller,
+      required this.focusNode,
+      required this.enabled,
+      required this.onSubmit,
+      this.autofocus = false});
   final bool autofocus;
   final AppController app;
   final TextEditingController controller;
@@ -1075,7 +1334,10 @@ class _SearchFieldState extends State<_SearchField> {
   /// The first arrow key only marks the first row; later ones move.
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     final key = event.logicalKey;
-    if (event is KeyUpEvent || (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp)) return KeyEventResult.ignored;
+    if (event is KeyUpEvent ||
+        (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp)) {
+      return KeyEventResult.ignored;
+    }
     if (_picking) return KeyEventResult.ignored;
     setState(() => _picking = true);
     return key == LogicalKeyboardKey.arrowDown ? KeyEventResult.handled : KeyEventResult.ignored;
@@ -1097,14 +1359,20 @@ class _SearchFieldState extends State<_SearchField> {
     widget.controller.value = value;
   }
 
-  Future<List<String>> _recent() async =>
-      widget.app.preferences.recordHistory ? await widget.app.searchHistory?.items() ?? const [] : const [];
+  Future<List<String>> _recent() async => widget.app.preferences.recordHistory
+      ? await widget.app.searchHistory?.items() ?? const []
+      : const [];
 
   Future<Iterable<_SearchOption>> _options(TextEditingValue value) async {
     final text = value.text.trim();
-    if (text.isEmpty) return [for (final q in (await _recent()).take(10)) _SearchOption(q, recent: true)];
+    if (text.isEmpty) {
+      return [for (final q in (await _recent()).take(10)) _SearchOption(q, recent: true)];
+    }
     final lower = text.toLowerCase();
-    final recent = [for (final q in await _recent()) if (q.toLowerCase().startsWith(lower) && q != text) q].take(3).toList();
+    final recent = [
+      for (final q in await _recent())
+        if (q.toLowerCase().startsWith(lower) && q != text) q
+    ].take(3).toList();
     // Wait for typing to pause before asking YouTube.
     await Future<void>.delayed(const Duration(milliseconds: 200));
     if (widget.controller.text.trim() != text) return const [];
@@ -1149,25 +1417,30 @@ class _SearchFieldState extends State<_SearchField> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 // A phone's box is too narrow for the whole sentence.
-                hintText: touchFirst && MediaQuery.sizeOf(context).width < 600 ? tr('Search') : tr('Search YouTube, or paste a video link'),
+                hintText: touchFirst && MediaQuery.sizeOf(context).width < 600
+                    ? tr('Search')
+                    : tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 prefixIcon: Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty && touchFirst
                     ? null
                     : controller.text.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 12),
-                        child: Center(widthFactor: 1, child: Text(keyNames('Ctrl+K'), style: TextStyle(fontSize: 12, color: context.colors.outline))),
-                      )
-                    : IconButton(
-                        tooltip: tr('Clear'),
-                        icon: Icon(AppIcons.x, size: 20),
-                        onPressed: () {
-                          controller.clear();
-                          setState(() {});
-                          focusNode.requestFocus();
-                        },
-                      ),
+                        ? Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 12),
+                            child: Center(
+                                widthFactor: 1,
+                                child: Text(keyNames('Ctrl+K'),
+                                    style: TextStyle(fontSize: 12, color: context.colors.outline))),
+                          )
+                        : IconButton(
+                            tooltip: tr('Clear'),
+                            icon: Icon(AppIcons.x, size: 20),
+                            onPressed: () {
+                              controller.clear();
+                              setState(() {});
+                              focusNode.requestFocus();
+                            },
+                          ),
               ),
             ),
             optionsViewBuilder: (context, onSelected, options) => Align(
@@ -1179,34 +1452,45 @@ class _SearchFieldState extends State<_SearchField> {
                   duration: Ease.fade,
                   scale: 0.97,
                   child: Material(
-                  elevation: 4,
-                  shadowColor: Colors.black.withValues(alpha: 0.25),
-                  shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
-                  clipBehavior: Clip.antiAlias,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      shrinkWrap: true,
-                      itemCount: options.length,
-                      itemBuilder: (context, i) {
-                        final option = options.elementAt(i);
-                        final highlighted = _picking && AutocompleteHighlightedOption.of(context) == i;
-                        return ListTile(
-                          dense: true,
-                          selected: highlighted,
-                          selectedTileColor: context.colors.surfaceContainerHighest,
-                          leading: Icon(option.recent ? AppIcons.clockCounterClockwiseFill : AppIcons.magnifyingGlass, size: 20),
-                          title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          trailing: option.recent
-                              ? IconButton(tooltip: tr('Delete this entry'), icon: Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
-                              : null,
-                          onTap: () => onSelected(option),
-                        );
-                      },
+                    elevation: 4,
+                    shadowColor: Colors.black.withValues(alpha: 0.25),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: AppStyle.cardRadius,
+                        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+                    clipBehavior: Clip.antiAlias,
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (context, i) {
+                          final option = options.elementAt(i);
+                          final highlighted =
+                              _picking && AutocompleteHighlightedOption.of(context) == i;
+                          return ListTile(
+                            dense: true,
+                            selected: highlighted,
+                            selectedTileColor: context.colors.surfaceContainerHighest,
+                            leading: Icon(
+                                option.recent
+                                    ? AppIcons.clockCounterClockwiseFill
+                                    : AppIcons.magnifyingGlass,
+                                size: 20),
+                            title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            trailing: option.recent
+                                ? IconButton(
+                                    tooltip: tr('Delete this entry'),
+                                    icon: Icon(AppIcons.x, size: 18),
+                                    onPressed: () => _remove(option.text))
+                                : null,
+                            onTap: () => onSelected(option),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
                 ),
               ),
             ),
@@ -1219,7 +1503,12 @@ class _SearchFieldState extends State<_SearchField> {
 /// while it is the page shown. One on its way out keeps what it showed
 /// last, so the next page's state never draws into it.
 class _LivePage extends StatefulWidget {
-  const _LivePage({required this.controller, required this.pageKey, required this.shownKey, required this.builder, this.onBuilt});
+  const _LivePage(
+      {required this.controller,
+      required this.pageKey,
+      required this.shownKey,
+      required this.builder,
+      this.onBuilt});
   final AppController controller;
   final String pageKey;
   final String Function() shownKey;
@@ -1282,13 +1571,18 @@ class _SetupView extends StatelessWidget {
         error: true,
         title: tr('Component installation ran into a problem'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
+        action: FilledButton.icon(
+            onPressed: controller.retryInitialize,
+            icon: Icon(AppIcons.arrowsClockwise),
+            label: Text(tr('Retry'))),
       );
     }
     return StatusView(
       icon: AppIcons.arrowCircleDown,
       title: tr('Preparing player components'),
-      message: tr('{0}\nThe first run downloads components from GitHub; after that Lumtub can start offline.', [controller.status]),
+      message: tr(
+          '{0}\nThe first run downloads components from GitHub; after that Lumtub can start offline.',
+          [controller.status]),
       action: const SizedBox(width: 240, child: LinearProgressIndicator()),
     );
   }
@@ -1298,7 +1592,8 @@ class _StatusBar extends StatelessWidget {
   const _StatusBar({required this.controller});
   final AppController controller;
 
-  static Object shownOf(AppController controller) => (controller.status, controller.ready, controller.paths, controller.tools?.libmpvLabel);
+  static Object shownOf(AppController controller) =>
+      (controller.status, controller.ready, controller.paths, controller.tools?.libmpvLabel);
 
   @override
   Widget build(BuildContext context) {
@@ -1313,12 +1608,22 @@ class _StatusBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: switch (context.skin?.statusBar) {
         final surface? => SurfaceDecoration.of(context, surface),
-        null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
+        null => BoxDecoration(
+            color: context.tones.chrome,
+            border: Border(
+                top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
       alignment: AlignmentDirectional.centerStart,
-      child: RepaintBoundary(child: GlassPlate(
+      child: RepaintBoundary(
+          child: GlassPlate(
         surface: context.skin?.statusBar,
-        child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+        child: Text(text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: context.skin?.statusBarText ?? context.colors.outline,
+                fontSize: 12,
+                fontFamily: context.skin?.monoFont)),
       )),
     );
   }

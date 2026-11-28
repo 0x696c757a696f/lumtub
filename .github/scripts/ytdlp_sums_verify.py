@@ -71,7 +71,14 @@ def public_key():
         tag, body, rest = packet(f.read())
     if tag != 6 or rest or body[0] != 4 or body[5] != 1:
         raise ValueError("the key file is not a v4 RSA public key")
-    fingerprint = hashlib.sha1(b"\x99" + struct.pack(">H", len(body)) + body).hexdigest().upper()
+    # A v4 key fingerprint is SHA-1 by definition (RFC 4880 12.2).
+    fingerprint = (
+        hashlib.sha1(  # noqa: S324
+            b"\x99" + struct.pack(">H", len(body)) + body
+        )
+        .hexdigest()
+        .upper()
+    )
     if fingerprint != FINGERPRINT:
         raise ValueError(f"the key file has fingerprint {fingerprint}")
     n, rest = mpi(body[6:])

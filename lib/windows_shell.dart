@@ -34,7 +34,8 @@ class WindowsShell {
           // Test bindings and an older runner can leave an unimplemented
           // platform call pending. The Settings page must still open.
           .timeout(const Duration(milliseconds: 500), onTimeout: () => const <String>[]);
-      return (names ?? const <String>[]).where((name) => name.trim().isNotEmpty).toSet().toList()..sort();
+      return (names ?? const <String>[]).where((name) => name.trim().isNotEmpty).toSet().toList()
+        ..sort();
     } on MissingPluginException {
       return const [];
     } on PlatformException {
@@ -51,6 +52,7 @@ class WindowsShell {
   /// previous or stop.
   void Function(String button)? onButton;
   void Function(Duration position)? onSeek;
+
   /// Android's picture in picture began or ended.
   void Function(bool on)? onPip;
 
@@ -79,13 +81,15 @@ class WindowsShell {
   }
 
   /// What the overlay shows; [thumbnail] is an https address, may be empty.
-  Future<void> setMetadata({required String title, required String artist, String thumbnail = ''}) =>
+  Future<void> setMetadata(
+          {required String title, required String artist, String thumbnail = ''}) =>
       _send('setMetadata', {'title': title, 'artist': artist, 'thumbnail': thumbnail});
 
   /// [status] is playing, paused or stopped.
   Future<void> setStatus(String status) => _send('setStatus', status);
 
-  Future<void> setButtons({required bool next, required bool previous}) => _send('setButtons', {'next': next, 'previous': previous});
+  Future<void> setButtons({required bool next, required bool previous}) =>
+      _send('setButtons', {'next': next, 'previous': previous});
 
   /// Position and length, at most once per [timelineInterval] unless [force].
   Future<void> setTimeline(Duration position, Duration duration, {bool force = false}) async {
@@ -93,7 +97,8 @@ class WindowsShell {
     final last = _lastTimeline;
     if (!force && last != null && now.difference(last) < timelineInterval) return;
     _lastTimeline = now;
-    await _send('setTimeline', {'position': position.inMilliseconds, 'duration': duration.inMilliseconds});
+    await _send(
+        'setTimeline', {'position': position.inMilliseconds, 'duration': duration.inMilliseconds});
   }
 
   /// With [enabled] the close button, and with [minimize] minimising, hides
@@ -115,7 +120,8 @@ class WindowsShell {
       Uint8List? png;
       if (icon != AppIcon.classic) {
         try {
-          png = (await rootBundle.load('assets/app_icons/${icon.name}-mac.png')).buffer.asUint8List();
+          png =
+              (await rootBundle.load('assets/app_icons/${icon.name}-mac.png')).buffer.asUint8List();
         } catch (_) {
           return;
         }
@@ -148,6 +154,7 @@ class WindowsShellSync {
   (bool, bool)? _tray;
   AppIcon? _icon;
   Duration _duration = Duration.zero;
+
   /// The playing video's frame rate as mpv reads it, and the one the
   /// screen was last asked to fit (0: its own choice).
   double _fps = 0, _fitted = 0;
@@ -188,7 +195,10 @@ class WindowsShellSync {
       if (video == null) {
         unawaited(shell.setStatus('stopped'));
       } else {
-        unawaited(shell.setMetadata(title: video.title, artist: controller.playingChannel?.name ?? video.channel, thumbnail: video.thumbnail));
+        unawaited(shell.setMetadata(
+            title: video.title,
+            artist: controller.playingChannel?.name ?? video.channel,
+            thumbnail: video.thumbnail));
         _hasNext = _hasPrevious = null;
         _status(player?.state.playing ?? false);
       }
@@ -196,7 +206,13 @@ class WindowsShellSync {
     // Android, iPhone and iPad: going home while a video plays on the watch
     // page keeps it in picture in picture, when chosen in the settings;
     // otherwise its sound plays on in the background.
-    final autoPip = (Platform.isAndroid || Platform.isIOS) && !Device.tv && controller.preferences.pipOnLeave && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
+    final autoPip = (Platform.isAndroid || Platform.isIOS) &&
+        !Device.tv &&
+        controller.preferences.pipOnLeave &&
+        video != null &&
+        controller.onWatchPage &&
+        !controller.mini &&
+        (player?.state.playing ?? false);
     if (autoPip != _autoPip) {
       _autoPip = autoPip;
       if (Platform.isIOS) {
@@ -220,7 +236,9 @@ class WindowsShellSync {
     final want = controller.preferences.matchFrameRate && controller.playing != null ? _fps : 0.0;
     if ((want - _fitted).abs() < 0.01) return;
     _fitted = want;
-    unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setFrameRate', want).catchError((Object _) {}));
+    unawaited(const MethodChannel('lumtub/windows_shell')
+        .invokeMethod<void>('setFrameRate', want)
+        .catchError((Object _) {}));
   }
 
   void _status(bool playing) {
@@ -248,7 +266,9 @@ class WindowsShellSync {
         if (_videoId != null) unawaited(shell.setTimeline(player.state.position, d, force: true));
       }),
       player.stream.position.listen((p) {
-        if (_videoId != null && _duration > Duration.zero) unawaited(shell.setTimeline(p, _duration));
+        if (_videoId != null && _duration > Duration.zero) {
+          unawaited(shell.setTimeline(p, _duration));
+        }
       }),
     ]);
   }

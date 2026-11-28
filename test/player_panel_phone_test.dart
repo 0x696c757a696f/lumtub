@@ -9,14 +9,20 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
-      home: Builder(builder: (context) => Scaffold(body: TextButton(onPressed: () => showPlayerPanel(context, title: 'Panel', builder: (context) => const Text('inside')), child: const Text('open')))),
+      home: Builder(
+          builder: (context) => Scaffold(
+              body: TextButton(
+                  onPressed: () => showPlayerPanel(context,
+                      title: 'Panel', builder: (context) => const Text('inside')),
+                  child: const Text('open')))),
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('inside'), findsOneWidget);
   }
 
-  testWidgets('a phone held upright opens player panels as a sheet under the player', (tester) async {
+  testWidgets('a phone held upright opens player panels as a sheet under the player',
+      (tester) async {
     debugTouchFirst = true;
     addTearDown(() => debugTouchFirst = null);
     await open(tester, const Size(412, 900));

@@ -14,11 +14,19 @@ void main() {
     tester.view.physicalSize = const Size(412, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    const title = 'A long title that goes on and on about what the video is, more than two lines on a phone held upright for sure';
+    const title =
+        'A long title that goes on and on about what the video is, more than two lines on a phone held upright for sure';
     final controller = AppController()
       ..ready = true
-      ..playing = const VideoItem(id: 'abcdefghijk', title: title, channel: 'Channel', url: 'https://www.youtube.com/watch?v=abcdefghijk', viewCount: 232000);
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: debugPhoneIntro(controller)))));
+      ..playing = const VideoItem(
+          id: 'abcdefghijk',
+          title: title,
+          channel: 'Channel',
+          url: 'https://www.youtube.com/watch?v=abcdefghijk',
+          viewCount: 232000);
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: VideoActions(controller: controller, child: debugPhoneIntro(controller)))));
     Text titleText() => tester.widget<Text>(find.text(title));
     expect(titleText().maxLines, 2);
     await tester.tap(find.text(title));

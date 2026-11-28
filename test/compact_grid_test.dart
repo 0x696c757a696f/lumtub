@@ -16,6 +16,7 @@ void main() {
 
   test('compact mode on a wide window keeps its own card width', () {
     compactCards = true;
-    expect(gridLayoutFor(1200).columns, ((1200 + gridGap) / (videoCardMinWidth * 0.8 + gridGap)).floor());
+    expect(gridLayoutFor(1200).columns,
+        ((1200 + gridGap) / (videoCardMinWidth * 0.8 + gridGap)).floor());
   });
 }

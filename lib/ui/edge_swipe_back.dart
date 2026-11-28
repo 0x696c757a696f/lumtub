@@ -8,7 +8,12 @@ import 'motion.dart';
 /// reach them. In a right-to-left language the swipe starts at the right
 /// edge.
 class EdgeSwipeBack extends StatefulWidget {
-  const EdgeSwipeBack({super.key, required this.enabled, required this.canGoBack, required this.onBack, required this.child});
+  const EdgeSwipeBack(
+      {super.key,
+      required this.enabled,
+      required this.canGoBack,
+      required this.onBack,
+      required this.child});
   final bool enabled;
   final bool Function() canGoBack;
   final VoidCallback onBack;
@@ -22,7 +27,8 @@ class EdgeSwipeBack extends StatefulWidget {
 }
 
 class _EdgeSwipeBackState extends State<EdgeSwipeBack> with SingleTickerProviderStateMixin {
-  late final _offset = AnimationController(vsync: this, lowerBound: 0, upperBound: double.infinity, value: 0);
+  late final _offset =
+      AnimationController(vsync: this, lowerBound: 0, upperBound: double.infinity, value: 0);
   bool _dragging = false;
 
   @override
@@ -66,7 +72,8 @@ class _EdgeSwipeBackState extends State<EdgeSwipeBack> with SingleTickerProvider
       return Stack(children: [
         AnimatedBuilder(
           animation: _offset,
-          builder: (context, child) => Transform.translate(offset: Offset(rtl ? -_offset.value : _offset.value, 0), child: child),
+          builder: (context, child) => Transform.translate(
+              offset: Offset(rtl ? -_offset.value : _offset.value, 0), child: child),
           child: widget.child,
         ),
         PositionedDirectional(

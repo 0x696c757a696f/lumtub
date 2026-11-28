@@ -11,7 +11,8 @@ import 'vocabulary.dart';
 /// line and the picture of its video where there are. Opening the file
 /// in Anki imports it; importing it again updates the same notes.
 /// Null, or why it could not.
-Future<String?> writeAnkiPackage(List<VocabularyWord> words, VocabularyBook book, File out, {AnkiPicture? picture}) async {
+Future<String?> writeAnkiPackage(List<VocabularyWord> words, VocabularyBook book, File out,
+    {AnkiPicture? picture}) async {
   final scratch = await Directory.systemTemp.createTemp('lumtub-anki');
   try {
     final media = <Map<String, String>>[];
@@ -70,4 +71,6 @@ Future<String?> writeAnkiPackage(List<VocabularyWord> words, VocabularyBook book
 
 /// Whether [bytes] are a WebP picture rather than a JPEG.
 bool isWebp(List<int> bytes) =>
-    bytes.length > 12 && String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' && String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';
+    bytes.length > 12 &&
+    String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+    String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';

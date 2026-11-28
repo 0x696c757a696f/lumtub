@@ -13,13 +13,18 @@ import 'native_core.dart';
 /// app's own update keys) and keeps the file only when it is newer than
 /// the lists in use; it is read at the next start.
 class BlockListUpdates {
-  BlockListUpdates({required http.Client client, required Directory data, required Directory cache, List<int>? Function(String folder)? keptSignature})
+  BlockListUpdates(
+      {required http.Client client,
+      required Directory data,
+      required Directory cache,
+      List<int>? Function(String folder)? keptSignature})
       : _client = client,
         _data = data,
         _cache = cache,
         _keptSignature = keptSignature ?? BlockLists.keptSignature;
 
   final http.Client _client;
+
   /// The signature of the verified download kept in a folder, if any.
   final List<int>? Function(String folder) _keptSignature;
   final Directory _data;
@@ -52,10 +57,18 @@ class BlockListUpdates {
     if (_checking) return;
     _checking = true;
     try {
-      if (!force && await _checked.exists() && DateTime.now().difference(await _checked.lastModified()) < const Duration(days: 1)) return;
+      if (!force &&
+          await _checked.exists() &&
+          DateTime.now().difference(await _checked.lastModified()) < const Duration(days: 1)) {
+        return;
+      }
       final headers = {'User-Agent': 'Lumtub/$appVersion'};
-      final signature = await _client.get(Uri.parse('$_base/lists.json.sig'), headers: headers).timeout(const Duration(seconds: 30));
-      if (signature.statusCode != 200) throw HttpException('HTTP ${signature.statusCode} for lists.json.sig');
+      final signature = await _client
+          .get(Uri.parse('$_base/lists.json.sig'), headers: headers)
+          .timeout(const Duration(seconds: 30));
+      if (signature.statusCode != 200) {
+        throw HttpException('HTTP ${signature.statusCode} for lists.json.sig');
+      }
       // The same signature as the kept file, which verifies, is the same
       // file: nothing more to fetch. A kept file that is missing or
       // damaged has none, so the lists are fetched again.
@@ -63,7 +76,9 @@ class BlockListUpdates {
       if (kept != null && _same(kept, signature.bodyBytes)) {
         logInfo('Block lists are up to date');
       } else {
-        final lists = await _client.get(Uri.parse('$_base/lists.json'), headers: headers).timeout(const Duration(minutes: 2));
+        final lists = await _client
+            .get(Uri.parse('$_base/lists.json'), headers: headers)
+            .timeout(const Duration(minutes: 2));
         if (lists.statusCode != 200) throw HttpException('HTTP ${lists.statusCode} for lists.json');
         await _cache.create(recursive: true);
         final file = File('${_cache.path}${Platform.pathSeparator}lists.json');
@@ -82,13 +97,17 @@ class BlockListUpdates {
           }
         }
         final json = answer == null ? null : jsonDecode(answer);
-        if (json is! Map<String, dynamic>) throw const FormatException('lumtub_core did not answer');
+        if (json is! Map<String, dynamic>) {
+          throw const FormatException('lumtub_core did not answer');
+        }
         if (json['error'] case final String error) throw FormatException(error);
         if (json['newer'] == true) {
           waiting = (json['version'] as num).toInt();
-          logInfo('Block lists version $waiting downloaded (${json['lists']} lists, ${json['records']} records); used from the next start');
+          logInfo(
+              'Block lists version $waiting downloaded (${json['lists']} lists, ${json['records']} records); used from the next start');
         } else {
-          logInfo('Block lists: the published version ${json['version']} is not newer than the one in use');
+          logInfo(
+              'Block lists: the published version ${json['version']} is not newer than the one in use');
         }
       }
       await _data.create(recursive: true);

@@ -42,6 +42,7 @@ class CollectedProcess {
   late final Future<String> _out;
   late final Future<String> _err;
   bool _tooLong = false;
+
   /// Whether the process has ended.
   bool exited = false;
 
@@ -51,7 +52,10 @@ class CollectedProcess {
     try {
       final code = await process.exitCode.timeout(timeout);
       final text = await _out;
-      if (_tooLong) throw ProcessException(executable, arguments, 'Output longer than ${stdoutLimit >> 20} Mi characters; stopped');
+      if (_tooLong) {
+        throw ProcessException(executable, arguments,
+            'Output longer than ${stdoutLimit >> 20} Mi characters; stopped');
+      }
       return ProcessResult(process.pid, code, text, await _err);
     } on TimeoutException {
       process.kill();

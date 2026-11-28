@@ -5,7 +5,8 @@ import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/windows_shell.dart';
 
-VideoItem _video(String id) => VideoItem(id: id, title: 'T $id', channel: 'C $id', url: 'https://www.youtube.com/watch?v=$id');
+VideoItem _video(String id) =>
+    VideoItem(id: id, title: 'T $id', channel: 'C $id', url: 'https://www.youtube.com/watch?v=$id');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -15,20 +16,24 @@ void main() {
   setUp(() {
     calls = [];
     channel = const MethodChannel(WindowsShell.channelName);
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
       calls.add(call);
       return null;
     });
   });
-  tearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+  tearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, null));
 
   test('metadata, status and buttons go to the runner', () async {
     final shell = WindowsShell();
-    await shell.setMetadata(title: 'Song', artist: 'Band', thumbnail: 'https://i.ytimg.com/vi/a/hqdefault.jpg');
+    await shell.setMetadata(
+        title: 'Song', artist: 'Band', thumbnail: 'https://i.ytimg.com/vi/a/hqdefault.jpg');
     await shell.setStatus('playing');
     await shell.setButtons(next: true, previous: false);
     expect(calls.map((c) => c.method), ['setMetadata', 'setStatus', 'setButtons']);
-    expect(calls[0].arguments, {'title': 'Song', 'artist': 'Band', 'thumbnail': 'https://i.ytimg.com/vi/a/hqdefault.jpg'});
+    expect(calls[0].arguments,
+        {'title': 'Song', 'artist': 'Band', 'thumbnail': 'https://i.ytimg.com/vi/a/hqdefault.jpg'});
     expect(calls[1].arguments, 'playing');
     expect(calls[2].arguments, {'next': true, 'previous': false});
   });
@@ -58,8 +63,11 @@ void main() {
     shell
       ..onButton = buttons.add
       ..onSeek = (p) => seek = p;
-    Future<void> fromNative(String method, Object? arguments) => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .handlePlatformMessage(WindowsShell.channelName, const StandardMethodCodec().encodeMethodCall(MethodCall(method, arguments)), (_) {});
+    Future<void> fromNative(String method, Object? arguments) =>
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+            WindowsShell.channelName,
+            const StandardMethodCodec().encodeMethodCall(MethodCall(method, arguments)),
+            (_) {});
     await fromNative('button', 'next');
     await fromNative('seek', 12000);
     expect(buttons, ['next']);
@@ -67,7 +75,8 @@ void main() {
   });
 
   test('without a native side every call is ignored', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
     final shell = WindowsShell();
     await shell.setStatus('paused');
     await shell.setTray(enabled: false);
@@ -107,16 +116,25 @@ void main() {
 
   test('the new window settings are off by default and round trip', () {
     const defaults = AppPreferences();
-    expect((defaults.closeToTray, defaults.minimizeToTray, defaults.audioOnlyInBackground), (false, false, false));
-    final copy = AppPreferences.fromJson(defaults.copyWith(closeToTray: true, minimizeToTray: true, audioOnlyInBackground: true).toJson());
+    expect((defaults.closeToTray, defaults.minimizeToTray, defaults.audioOnlyInBackground),
+        (false, false, false));
+    final copy = AppPreferences.fromJson(defaults
+        .copyWith(closeToTray: true, minimizeToTray: true, audioOnlyInBackground: true)
+        .toJson());
     expect((copy.closeToTray, copy.minimizeToTray, copy.audioOnlyInBackground), (true, true, true));
   });
 
   test('the graphics card follows Windows by default and keeps only known values', () {
     expect(const AppPreferences().gpuPreference, 'system');
     for (final value in gpuPreferences) {
-      expect(AppPreferences.fromJson(const AppPreferences().copyWith(gpuPreference: value).toJson()).gpuPreference, value);
+      expect(
+          AppPreferences.fromJson(const AppPreferences().copyWith(gpuPreference: value).toJson())
+              .gpuPreference,
+          value);
     }
-    expect(AppPreferences.fromJson({...const AppPreferences().toJson(), 'gpuPreference': 'nvidia'}).gpuPreference, 'system');
+    expect(
+        AppPreferences.fromJson({...const AppPreferences().toJson(), 'gpuPreference': 'nvidia'})
+            .gpuPreference,
+        'system');
   });
 }

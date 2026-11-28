@@ -81,7 +81,9 @@ extension StudyActions on AppController {
       _notice(tr('Turn on a subtitle first'));
       return;
     }
-    final units = studyUnits(lines, breaks: [for (final c in details?.chapters ?? const <Chapter>[]) c.start], target: store.unitLength);
+    final units = studyUnits(lines,
+        breaks: [for (final c in details?.chapters ?? const <Chapter>[]) c.start],
+        target: store.unitLength);
     final saved = resume ? store.of(item.id) : null;
     final from = fromStart ? Duration.zero : saved?.unitStart ?? player.state.position;
     final run = StudyRun(videoId: item.id, lines: lines, units: units, unit: unitAt(units, from));
@@ -318,11 +320,13 @@ extension StudyActions on AppController {
       _studyChanged();
       return;
     }
-    final units = studyUnits(run.lines, breaks: [for (final c in details?.chapters ?? const <Chapter>[]) c.start], target: length);
+    final units = studyUnits(run.lines,
+        breaks: [for (final c in details?.chapters ?? const <Chapter>[]) c.start], target: length);
     final at = run.current.start;
-    _studyRun = StudyRun(videoId: run.videoId, lines: run.lines, units: units, unit: unitAt(units, at))
-      ..replays.addAll(run.replays)
-      ..marked.addAll(run.marked);
+    _studyRun =
+        StudyRun(videoId: run.videoId, lines: run.lines, units: units, unit: unitAt(units, at))
+          ..replays.addAll(run.replays)
+          ..marked.addAll(run.marked);
     await _enterStudyStep(StudyStep.blind, play: player.state.playing);
   }
 
@@ -332,7 +336,9 @@ extension StudyActions on AppController {
     store.slowRate = rate;
     unawaited(store.save());
     final player = this.player;
-    if (_studyRun?.step == StudyStep.shadow && _studyRateBefore != null && player != null) await player.setRate(rate);
+    if (_studyRun?.step == StudyStep.shadow && _studyRateBefore != null && player != null) {
+      await player.setRate(rate);
+    }
     _studyChanged();
   }
 }

@@ -43,29 +43,43 @@ SsdpResponse? parseSsdpResponse(String text) {
   final headers = read;
   String header(String name) => headers[name] is String ? headers[name] as String : '';
   final location = Uri.tryParse(header('location'));
-  if (location == null || !location.hasScheme || !location.scheme.startsWith('http') || location.host.isEmpty) return null;
-  return SsdpResponse(location: location, usn: header('usn'), st: headers['st'] is String ? header('st') : header('nt'));
+  if (location == null ||
+      !location.hasScheme ||
+      !location.scheme.startsWith('http') ||
+      location.host.isEmpty) {
+    return null;
+  }
+  return SsdpResponse(
+      location: location,
+      usn: header('usn'),
+      st: headers['st'] is String ? header('st') : header('nt'));
 }
 
 /// Whether [host] (from an address) is [address].
 bool sameAddress(String host, InternetAddress address) {
-  final ip = InternetAddress.tryParse(host.startsWith('[') ? host.substring(1, host.length - 1) : host);
+  final ip =
+      InternetAddress.tryParse(host.startsWith('[') ? host.substring(1, host.length - 1) : host);
   return ip != null && ip.address == address.address;
 }
 
-String xmlEscape(String text) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+String xmlEscape(String text) => text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
 
 String xmlUnescape(String text) => text
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&apos;', "'")
-    .replaceAllMapped(RegExp(r'&#(x?)([0-9a-fA-F]+);'), (m) {
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&apos;', "'")
+        .replaceAllMapped(RegExp(r'&#(x?)([0-9a-fA-F]+);'), (m) {
       final code = int.tryParse(m[2]!, radix: m[1]!.isEmpty ? 10 : 16);
-      final valid = code != null && code > 0 && code <= 0x10FFFF && !(code >= 0xD800 && code <= 0xDFFF);
+      final valid =
+          code != null && code > 0 && code <= 0x10FFFF && !(code >= 0xD800 && code <= 0xDFFF);
       return valid ? String.fromCharCode(code) : m[0]!;
-    })
-    .replaceAll('&amp;', '&');
+    }).replaceAll('&amp;', '&');
 
 /// One service of a UPnP device.
 class UpnpService {
@@ -76,15 +90,18 @@ class UpnpService {
 
 /// A UPnP device description, as far as casting needs it.
 class DlnaDescription {
-  const DlnaDescription({required this.name, required this.udn, required this.services, this.apple = false});
+  const DlnaDescription(
+      {required this.name, required this.udn, required this.services, this.apple = false});
   final String name;
   final String udn;
   final List<UpnpService> services;
+
   /// Whether the renderer runs on an iPhone, iPad or Mac, where players
   /// take a transport stream only as HLS.
   final bool apple;
 
-  UpnpService? get avTransport => services.where((s) => s.type.startsWith(avTransportPrefix)).firstOrNull;
+  UpnpService? get avTransport =>
+      services.where((s) => s.type.startsWith(avTransportPrefix)).firstOrNull;
 }
 
 /// Whether [a] and [b] name the same host and port.
@@ -104,7 +121,12 @@ DlnaDescription parseDeviceDescription(String xml, Uri location) {
 
   final baseText = text('URLBase');
   final named = baseText == null ? null : Uri.tryParse(baseText);
-  final base = named != null && named.hasScheme && named.scheme.startsWith('http') && _sameHost(named, location) ? named : location;
+  final base = named != null &&
+          named.hasScheme &&
+          named.scheme.startsWith('http') &&
+          _sameHost(named, location)
+      ? named
+      : location;
   final services = <UpnpService>[];
   final listed = found['services'];
   for (final service in listed is List ? listed : const []) {
@@ -114,8 +136,15 @@ DlnaDescription parseDeviceDescription(String xml, Uri location) {
     services.add(UpnpService(service['type'] as String, address));
   }
   final name = text('friendlyName');
-  final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) text(tag)].whereType<String>().join(' ');
-  return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: text('UDN') ?? location.toString(), services: services, apple: looksApple(about));
+  final about = [
+    name,
+    for (final tag in ['manufacturer', 'modelName', 'modelDescription']) text(tag)
+  ].whereType<String>().join(' ');
+  return DlnaDescription(
+      name: name == null || name.isEmpty ? location.host : name,
+      udn: text('UDN') ?? location.toString(),
+      services: services,
+      apple: looksApple(about));
 }
 
 /// Where a service's [control] path points from [base]. Lebo (乐播)
@@ -130,10 +159,14 @@ Uri controlAddress(Uri base, String control) {
 }
 
 /// Whether a renderer described as [about] runs on Apple's systems.
-bool looksApple(String about) => RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|tvOS|Apple TV|macOS|Mac|MacBook|iMac|Apple)\b', caseSensitive: false).hasMatch(about);
+bool looksApple(String about) =>
+    RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|tvOS|Apple TV|macOS|Mac|MacBook|iMac|Apple)\b',
+            caseSensitive: false)
+        .hasMatch(about);
 
 /// The SOAP request body for [action] of [serviceType].
-String soapEnvelope(String serviceType, String action, Map<String, String> arguments) => '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:$action xmlns:u="$serviceType">${arguments.entries.map((e) => '<${e.key}>${xmlEscape(e.value)}</${e.key}>').join()}</u:$action></s:Body></s:Envelope>';
+String soapEnvelope(String serviceType, String action, Map<String, String> arguments) =>
+    '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:$action xmlns:u="$serviceType">${arguments.entries.map((e) => '<${e.key}>${xmlEscape(e.value)}</${e.key}>').join()}</u:$action></s:Body></s:Envelope>';
 
 /// The output arguments of a SOAP response, or throws [CastException] with
 /// the UPnP error when the body is a fault.
@@ -147,7 +180,10 @@ Map<String, String> parseSoapResponse(String xml) {
     throw CastException('UPnP ${code ?? 'error'}${description.isEmpty ? '' : ': $description'}');
   }
   final args = answer['args'];
-  return {if (args is Map) for (final MapEntry(:key, :value) in args.entries) '$key': '$value'};
+  return {
+    if (args is Map)
+      for (final MapEntry(:key, :value) in args.entries) '$key': '$value'
+  };
 }
 
 /// DIDL-Lite metadata naming the video, which many renderers want. A
@@ -158,7 +194,12 @@ Map<String, String> parseSoapResponse(String xml) {
 /// a second `res` (most), Samsung's `sec:CaptionInfoEx` and the
 /// `upnp:subtitle` some players read. A renderer that knows none of them
 /// plays without.
-String didlLite({required String title, required String url, required String mime, bool seekable = true, String? subtitles}) =>
+String didlLite(
+        {required String title,
+        required String url,
+        required String mime,
+        bool seekable = true,
+        String? subtitles}) =>
     '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"${subtitles == null ? '' : ' xmlns:sec="http://www.sec.co.kr/"'}><item id="0" parentID="-1" restricted="1"><dc:title>${xmlEscape(title)}</dc:title><upnp:class>object.item.videoItem</upnp:class><res protocolInfo="http-get:*:$mime:DLNA.ORG_OP=${seekable ? '01' : '00'};DLNA.ORG_FLAGS=01700000000000000000000000000000">${xmlEscape(url)}</res>${subtitles == null ? '' : '<res protocolInfo="http-get:*:text/srt:*">${xmlEscape(subtitles)}</res><sec:CaptionInfoEx sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfoEx><sec:CaptionInfo sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfo><upnp:subtitle>${xmlEscape(subtitles)}</upnp:subtitle>'}</item></DIDL-Lite>';
 
 /// `H:MM:SS` as UPnP writes positions.
@@ -172,7 +213,11 @@ String formatUpnpTime(Duration time) {
 Duration? parseUpnpTime(String? text) {
   final m = RegExp(r'^\+?(\d+):(\d{1,2}):(\d{1,2})(?:\.(\d+))?').firstMatch(text?.trim() ?? '');
   if (m == null) return null;
-  return Duration(hours: int.parse(m[1]!), minutes: int.parse(m[2]!), seconds: int.parse(m[3]!), milliseconds: m[4] == null ? 0 : (double.parse('0.${m[4]}') * 1000).round());
+  return Duration(
+      hours: int.parse(m[1]!),
+      minutes: int.parse(m[2]!),
+      seconds: int.parse(m[3]!),
+      milliseconds: m[4] == null ? 0 : (double.parse('0.${m[4]}') * 1000).round());
 }
 
 CastState dlnaState(String? transportState) => switch (transportState) {
@@ -184,7 +229,13 @@ CastState dlnaState(String? transportState) => switch (transportState) {
 
 /// A UPnP media renderer, driven through its AVTransport service.
 class DlnaDevice implements CastDevice {
-  DlnaDevice({required this.name, required this.id, required this.serviceType, required this.controlUrl, this.apple = false, HttpClient? client})
+  DlnaDevice(
+      {required this.name,
+      required this.id,
+      required this.serviceType,
+      required this.controlUrl,
+      this.apple = false,
+      HttpClient? client})
       : _client = (client ?? HttpClient())..connectionTimeout = const Duration(seconds: 5);
 
   @override
@@ -199,11 +250,13 @@ class DlnaDevice implements CastDevice {
   int get port => controlUrl.port;
   final String serviceType;
   final Uri controlUrl;
+
   /// See [DlnaDescription.apple].
   final bool apple;
   final HttpClient _client;
 
-  Future<Map<String, String>> _soap(String action, [Map<String, String> arguments = const {}]) async {
+  Future<Map<String, String>> _soap(String action,
+      [Map<String, String> arguments = const {}]) async {
     final body = utf8.encode(soapEnvelope(serviceType, action, {'InstanceID': '0', ...arguments}));
     try {
       final request = await _client.postUrl(controlUrl);
@@ -215,7 +268,9 @@ class DlnaDevice implements CastDevice {
       request.add(body);
       final response = await request.close().timeout(const Duration(seconds: 8));
       final text = await readDeviceReply(response).timeout(const Duration(seconds: 8));
-      if (response.statusCode >= 400 && !text.contains('Fault>')) throw CastException('HTTP ${response.statusCode}');
+      if (response.statusCode >= 400 && !text.contains('Fault>')) {
+        throw CastException('HTTP ${response.statusCode}');
+      }
       return parseSoapResponse(text);
     } on SocketException catch (e) {
       throw CastException(e.message);
@@ -230,7 +285,12 @@ class DlnaDevice implements CastDevice {
   Future<void> load(CastMedia media) async {
     await _soap('SetAVTransportURI', {
       'CurrentURI': media.url,
-      'CurrentURIMetaData': didlLite(title: media.title, url: media.url, mime: media.mime, seekable: media.restart == null, subtitles: media.subtitles?.srt),
+      'CurrentURIMetaData': didlLite(
+          title: media.title,
+          url: media.url,
+          mime: media.mime,
+          seekable: media.restart == null,
+          subtitles: media.subtitles?.srt),
     });
     await _soap('Play', {'Speed': '1'});
     if (media.start > const Duration(seconds: 1)) unawaited(_seekWhenReady(media.start));
@@ -257,7 +317,8 @@ class DlnaDevice implements CastDevice {
   @override
   Future<void> pause() => _soap('Pause');
   @override
-  Future<void> seek(Duration position) => _soap('Seek', {'Unit': 'REL_TIME', 'Target': formatUpnpTime(position)});
+  Future<void> seek(Duration position) =>
+      _soap('Seek', {'Unit': 'REL_TIME', 'Target': formatUpnpTime(position)});
 
   @override
   Future<void> stop() async {
@@ -308,7 +369,12 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
       final description = parseDeviceDescription(xml, found.location);
       final service = description.avTransport;
       if (service == null || !seen.add(description.udn) || controller.isClosed) return;
-      controller.add(DlnaDevice(name: description.name, id: description.udn, serviceType: service.type, controlUrl: service.controlUrl, apple: description.apple));
+      controller.add(DlnaDevice(
+          name: description.name,
+          id: description.udn,
+          serviceType: service.type,
+          controlUrl: service.controlUrl,
+          apple: description.apple));
     } catch (e) {
       logWarn('Could not read the DLNA device description ${found.location}: $e');
     }
@@ -342,11 +408,16 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
         socket.listen((event) {
           if (event != RawSocketEvent.read) return;
           final packet = socket.receive();
-          final found = packet == null ? null : parseSsdpResponse(utf8.decode(packet.data, allowMalformed: true));
+          final found = packet == null
+              ? null
+              : parseSsdpResponse(utf8.decode(packet.data, allowMalformed: true));
           // Only a device on this network is asked for its description, and
           // only at its own address: a reply naming another host (this
           // computer, the router) would have Lumtub fetch that for it.
-          if (found != null && isLocalHost(found.location.host) && sameAddress(found.location.host, packet!.address) && locations.add(found.location.toString())) {
+          if (found != null &&
+              isLocalHost(found.location.host) &&
+              sameAddress(found.location.host, packet!.address) &&
+              locations.add(found.location.toString())) {
             unawaited(describe(found));
           }
         });

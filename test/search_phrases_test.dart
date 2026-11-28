@@ -26,14 +26,16 @@ void main() {
     final file = File('${dir.path}/search_phrases.json');
     final fake = _Fake();
     final phrases = SearchPhrases(fake, file: file);
-    expect(await phrases.translate(['sports', 'painting', 'sports'], 'it'), {'sports': 'it:sports', 'painting': 'it:painting'});
+    expect(await phrases.translate(['sports', 'painting', 'sports'], 'it'),
+        {'sports': 'it:sports', 'painting': 'it:painting'});
     expect(fake.asked, ['sports\npainting']);
     await phrases.translate(['sports', 'chess'], 'it');
     expect(fake.asked.last, 'chess');
     // Another start reads them back, and asks nothing while refused.
     final again = _Fake()..refuse = true;
     Object? why;
-    final back = await SearchPhrases(again, file: file).translate(['sports', 'chess', 'cooking'], 'it', failure: (e) => why = e);
+    final back = await SearchPhrases(again, file: file)
+        .translate(['sports', 'chess', 'cooking'], 'it', failure: (e) => why = e);
     expect(back, {'sports': 'it:sports', 'chess': 'it:chess'});
     expect(again.asked, ['cooking']);
     expect(why, isA<TranslationException>());
@@ -49,8 +51,10 @@ void main() {
 
   test('bundled phrases are used before the disk and the translator', () async {
     final fake = _Fake();
-    final phrases = SearchPhrases(fake, bundled: () async => '{"phrases": ["sports", "chess"], "it": ["sport", ""]}');
-    expect(await phrases.translate(['sports', 'chess'], 'it'), {'sports': 'sport', 'chess': 'it:chess'});
+    final phrases = SearchPhrases(fake,
+        bundled: () async => '{"phrases": ["sports", "chess"], "it": ["sport", ""]}');
+    expect(await phrases.translate(['sports', 'chess'], 'it'),
+        {'sports': 'sport', 'chess': 'it:chess'});
     expect(fake.asked, ['chess']);
   });
 
@@ -59,7 +63,11 @@ void main() {
     final missing = <String>{};
     void add(String query) {
       for (final w in searchPhrasesOf(englishSearchOf(query))) {
-        if (translatesInto(w, ExploreLanguage.it) && searchGlossary[w] == null && !listed.contains(w)) missing.add(w);
+        if (translatesInto(w, ExploreLanguage.it) &&
+            searchGlossary[w] == null &&
+            !listed.contains(w)) {
+          missing.add(w);
+        }
       }
     }
 
@@ -68,7 +76,12 @@ void main() {
       s.subs.forEach(sub);
     }
 
-    for (final f in <WordFilter>[...ContentFormat.values, ...ContentView.values, ...FaithFormat.values, ...FaithView.values]) {
+    for (final f in <WordFilter>[
+      ...ContentFormat.values,
+      ...ContentView.values,
+      ...FaithFormat.values,
+      ...FaithView.values
+    ]) {
       if (f.words.isNotEmpty) add(f.words);
     }
     for (final section in ExploreSection.values) {
@@ -84,9 +97,15 @@ void main() {
 
   test('the bundled file has every listed phrase in every language', () async {
     final fake = _Fake();
-    final phrases = SearchPhrases(fake, bundled: () async => File('assets/search_phrases.json').readAsStringSync());
-    final listed = File('.github/search_phrases/phrases.txt').readAsLinesSync().where((l) => l.trim().isNotEmpty).toList();
-    for (final language in File('.github/search_phrases/languages.txt').readAsLinesSync().where((l) => l.isNotEmpty)) {
+    final phrases = SearchPhrases(fake,
+        bundled: () async => File('assets/search_phrases.json').readAsStringSync());
+    final listed = File('.github/search_phrases/phrases.txt')
+        .readAsLinesSync()
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
+    for (final language in File('.github/search_phrases/languages.txt')
+        .readAsLinesSync()
+        .where((l) => l.isNotEmpty)) {
       expect((await phrases.translate(listed, language)).length, listed.length, reason: language);
     }
     expect(fake.asked, isEmpty);

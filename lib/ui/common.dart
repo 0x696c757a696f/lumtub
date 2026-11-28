@@ -38,26 +38,35 @@ class KeptPositions {
 
 /// Whether a scrolled list is close enough to its end to fetch the next
 /// page: two screens ahead, so it usually arrives before the user gets there.
-bool nearListEnd(ScrollMetrics metrics) => metrics.extentAfter < (metrics.viewportDimension * 2).clamp(1200, double.infinity);
+bool nearListEnd(ScrollMetrics metrics) =>
+    metrics.extentAfter < (metrics.viewportDimension * 2).clamp(1200, double.infinity);
 
 /// Calls [onNearEnd] when the vertical list in [child] is [nearListEnd],
 /// while scrolling and also when its content changes size, so a first page
 /// too short to scroll on a tall window still brings the next one.
 class NearEndListener extends StatelessWidget {
-  const NearEndListener({super.key, required this.onNearEnd, required this.child, this.enabled = true});
+  const NearEndListener(
+      {super.key, required this.onNearEnd, required this.child, this.enabled = true});
   final VoidCallback onNearEnd;
   final bool enabled;
   final Widget child;
 
   bool _check(ScrollMetrics metrics, int depth) {
-    if (enabled && depth == 0 && metrics.axis == Axis.vertical && metrics.hasContentDimensions && nearListEnd(metrics)) onNearEnd();
+    if (enabled &&
+        depth == 0 &&
+        metrics.axis == Axis.vertical &&
+        metrics.hasContentDimensions &&
+        nearListEnd(metrics)) {
+      onNearEnd();
+    }
     return false;
   }
 
   @override
   Widget build(BuildContext context) => NotificationListener<ScrollMetricsNotification>(
         onNotification: (n) => _check(n.metrics, n.depth),
-        child: NotificationListener<ScrollNotification>(onNotification: (n) => _check(n.metrics, n.depth), child: child),
+        child: NotificationListener<ScrollNotification>(
+            onNotification: (n) => _check(n.metrics, n.depth), child: child),
       );
 }
 
@@ -101,7 +110,9 @@ class LeavesByKeys extends StatelessWidget {
     final focus = FocusManager.instance.primaryFocus;
     final context = focus?.context;
     if (focus == null || context == null) return KeyEventResult.ignored;
-    final editable = context.widget is EditableText ? (context as StatefulElement).state as EditableTextState : context.findAncestorStateOfType<EditableTextState>();
+    final editable = context.widget is EditableText
+        ? (context as StatefulElement).state as EditableTextState
+        : context.findAncestorStateOfType<EditableTextState>();
     if (editable == null || editable.widget.maxLines != 1) return KeyEventResult.ignored;
     final value = editable.textEditingValue;
     if (value.composing.isValid && !value.composing.isCollapsed) return KeyEventResult.ignored;
@@ -111,13 +122,20 @@ class LeavesByKeys extends StatelessWidget {
       return KeyEventResult.handled;
     }
     final selection = value.selection;
-    final atEnd = !selection.isValid || (selection.isCollapsed && selection.baseOffset == (up ? 0 : value.text.length));
+    final atEnd = !selection.isValid ||
+        (selection.isCollapsed && selection.baseOffset == (up ? 0 : value.text.length));
     if (!atEnd) return KeyEventResult.ignored;
-    return focus.focusInDirection(up ? TraversalDirection.up : TraversalDirection.down) ? KeyEventResult.handled : KeyEventResult.ignored;
+    return focus.focusInDirection(up ? TraversalDirection.up : TraversalDirection.down)
+        ? KeyEventResult.handled
+        : KeyEventResult.ignored;
   }
 
   @override
-  Widget build(BuildContext context) => Focus(canRequestFocus: false, skipTraversal: true, onKeyEvent: _onKey, child: OwnScrollMemory(child: child));
+  Widget build(BuildContext context) => Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _onKey,
+      child: OwnScrollMemory(child: child));
 }
 
 /// What a page shows again when it comes back after the watch page or
@@ -146,7 +164,13 @@ class PageMemory<T extends Object> {
 
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
-  const StatusView({super.key, required this.icon, required this.title, this.message, this.action, this.error = false});
+  const StatusView(
+      {super.key,
+      required this.icon,
+      required this.title,
+      this.message,
+      this.action,
+      this.error = false});
   final IconData icon;
   final String title;
   final String? message;
@@ -156,23 +180,38 @@ class StatusView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Center(child: SingleChildScrollView(
+    return Center(
+        child: SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
         // Comes in once, so the state reads as arrived rather than blinked in.
-        child: Entrance(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        child: Entrance(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
             width: 72,
             height: 72,
-            decoration: BoxDecoration(color: error ? colors.errorContainer : colors.secondaryContainer, shape: BoxShape.circle),
-            child: Icon(icon, size: 34, color: error ? colors.onErrorContainer : colors.onSecondaryContainer),
+            decoration: BoxDecoration(
+                color: error ? colors.errorContainer : colors.secondaryContainer,
+                shape: BoxShape.circle),
+            child: Icon(icon,
+                size: 34, color: error ? colors.onErrorContainer : colors.onSecondaryContainer),
           ),
           const SizedBox(height: 16),
-          Semantics(header: true, liveRegion: true, child: Text(title, textAlign: TextAlign.center, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600))),
+          Semantics(
+              header: true,
+              liveRegion: true,
+              child: Text(title,
+                  textAlign: TextAlign.center,
+                  style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600))),
           if (message != null) ...[
             const SizedBox(height: 8),
-            Text(message!, textAlign: TextAlign.center, maxLines: 6, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
+            Text(message!,
+                textAlign: TextAlign.center,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
           ],
           if (action != null) ...[const SizedBox(height: 16), action!],
         ])),
@@ -186,6 +225,7 @@ class ErrorBanner extends StatelessWidget {
   const ErrorBanner(this.message, {super.key, this.onRetry, this.retryLabel});
   final String message;
   final VoidCallback? onRetry;
+
   /// What the button says, when it does something other than retry.
   final String? retryLabel;
 
@@ -193,16 +233,26 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     // Said by the screen reader as it appears, wherever focus is.
-    return Reveal(child: Semantics(container: true, liveRegion: true, child: Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
-      decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
-      child: Row(children: [
-        Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
-        const SizedBox(width: 12),
-        Expanded(child: SelectableText(message, minLines: 1, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
-      ]),
-    )));
+    return Reveal(
+        child: Semantics(
+            container: true,
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
+              decoration:
+                  BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
+              child: Row(children: [
+                Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: SelectableText(message,
+                        minLines: 1,
+                        maxLines: 8,
+                        style: TextStyle(color: colors.onErrorContainer))),
+                if (onRetry != null)
+                  TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
+              ]),
+            )));
   }
 }
 
@@ -228,27 +278,43 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heading = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Semantics(header: true, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700))),
-      // A TV's few hundred pixels of height go to the videos.
-      if (subtitle != null && !Device.tv) ...[
-        const SizedBox(height: 2),
-        Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
-      ],
-    ]);
+    final heading = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+              header: true,
+              child: Text(title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700))),
+          // A TV's few hundred pixels of height go to the videos.
+          if (subtitle != null && !Device.tv) ...[
+            const SizedBox(height: 2),
+            Text(subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant)),
+          ],
+        ]);
     final trailing = this.trailing;
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppStyle.pagePadding, Device.tv ? 0 : 8, AppStyle.pagePadding, Device.tv ? 8 : 16),
+      padding: EdgeInsets.fromLTRB(
+          AppStyle.pagePadding, Device.tv ? 0 : 8, AppStyle.pagePadding, Device.tv ? 8 : 16),
       child: trailing == null
           ? Row(children: [Expanded(child: heading)])
           : LayoutBuilder(
-              builder: (context, constraints) => constraints.maxWidth < stackBelow * textGrowth(context)
-                  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      heading,
-                      const SizedBox(height: 4),
-                      SingleChildScrollView(key: const PageStorageKey('header-actions'), scrollDirection: Axis.horizontal, child: trailing),
-                    ])
-                  : HeadingLine(children: [heading, trailing]),
+              builder: (context, constraints) =>
+                  constraints.maxWidth < stackBelow * textGrowth(context)
+                      ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          heading,
+                          const SizedBox(height: 4),
+                          SingleChildScrollView(
+                              key: const PageStorageKey('header-actions'),
+                              scrollDirection: Axis.horizontal,
+                              child: trailing),
+                        ])
+                      : HeadingLine(children: [heading, trailing]),
             ),
     );
   }
@@ -268,17 +334,27 @@ class BackHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final back = IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft));
-    final heading = Row(children: [back, const SizedBox(width: 8), Expanded(child: Semantics(header: true, child: title))]);
+    final back = IconButton(
+        tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft));
+    final heading = Row(children: [
+      back,
+      const SizedBox(width: 8),
+      Expanded(child: Semantics(header: true, child: title))
+    ]);
     if (buttons.isEmpty) return heading;
-    final wrapped = Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: buttons);
-    return LayoutBuilder(builder: (context, constraints) => constraints.maxWidth < stackBelow * textGrowth(context)
-        ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            heading,
-            const SizedBox(height: 8),
-            Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: wrapped),
-          ])
-        : HeadingLine(children: [heading, wrapped]));
+    final wrapped = Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: buttons);
+    return LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth < stackBelow * textGrowth(context)
+            ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                heading,
+                const SizedBox(height: 8),
+                Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: wrapped),
+              ])
+            : HeadingLine(children: [heading, wrapped]));
   }
 }
 
@@ -289,17 +365,22 @@ class HeadingLine extends MultiChildRenderObjectWidget {
   const HeadingLine({super.key, required super.children}) : assert(children.length == 2);
 
   @override
-  RenderObject createRenderObject(BuildContext context) => _RenderHeadingLine(Directionality.of(context), textGrowth(context));
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHeadingLine(Directionality.of(context), textGrowth(context));
 
   @override
-  void updateRenderObject(BuildContext context, RenderObject renderObject) => (renderObject as _RenderHeadingLine)
-    ..direction = Directionality.of(context)
-    ..growth = textGrowth(context);
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderHeadingLine)
+        ..direction = Directionality.of(context)
+        ..growth = textGrowth(context);
 }
 
 class _HeadingParentData extends ContainerBoxParentData<RenderBox> {}
 
-class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<RenderBox, _HeadingParentData>, RenderBoxContainerDefaultsMixin<RenderBox, _HeadingParentData> {
+class _RenderHeadingLine extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _HeadingParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _HeadingParentData> {
   _RenderHeadingLine(this._direction, this._growth);
 
   /// The title keeps this much beside the buttons, more with larger text.
@@ -339,7 +420,8 @@ class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<Rende
       return constraints.constrain(Size(width, title.height + _gap + buttons.height));
     }
     final title = _title.getDryLayout(BoxConstraints.tightFor(width: width - buttons.width));
-    return constraints.constrain(Size(width, title.height > buttons.height ? title.height : buttons.height));
+    return constraints
+        .constrain(Size(width, title.height > buttons.height ? title.height : buttons.height));
   }
 
   @override
@@ -367,7 +449,8 @@ class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<Rende
   }
 
   @override
-  double computeMinIntrinsicHeight(double width) => computeDryLayout(BoxConstraints(maxWidth: width)).height;
+  double computeMinIntrinsicHeight(double width) =>
+      computeDryLayout(BoxConstraints(maxWidth: width)).height;
 
   @override
   double computeMaxIntrinsicHeight(double width) => computeMinIntrinsicHeight(width);
@@ -376,7 +459,8 @@ class _RenderHeadingLine extends RenderBox with ContainerRenderObjectMixin<Rende
   void paint(PaintingContext context, Offset offset) => defaultPaint(context, offset);
 
   @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) => defaultHitTestChildren(result, position: position);
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
 }
 
 /// Chips and filters: wrapped over as many lines as they need, or on a TV
@@ -393,10 +477,17 @@ class FilterFlow extends StatelessWidget {
           key: const PageStorageKey('filters'),
           scrollDirection: Axis.horizontal,
           child: Row(children: [
-            for (final (i, child) in children.indexed) Padding(padding: EdgeInsetsDirectional.only(end: i == children.length - 1 ? 0 : spacing), child: child),
+            for (final (i, child) in children.indexed)
+              Padding(
+                  padding: EdgeInsetsDirectional.only(end: i == children.length - 1 ? 0 : spacing),
+                  child: child),
           ]),
         )
-      : Wrap(spacing: spacing, runSpacing: spacing, crossAxisAlignment: WrapCrossAlignment.center, children: children);
+      : Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: children);
 }
 
 String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -423,7 +514,11 @@ String formatAgo(DateTime date, {DateTime? now}) {
   final days = age.inDays;
   final (count, one, many) = switch (age) {
     _ when age.inMinutes < 1 => (0, '', ''),
-    _ when age.inHours < 1 => (age.inMinutes, tr('1 minute ago'), tr('{0} minutes ago', [age.inMinutes])),
+    _ when age.inHours < 1 => (
+        age.inMinutes,
+        tr('1 minute ago'),
+        tr('{0} minutes ago', [age.inMinutes])
+      ),
     _ when days < 1 => (age.inHours, tr('1 hour ago'), tr('{0} hours ago', [age.inHours])),
     _ when days < 7 => (days, tr('1 day ago'), tr('{0} days ago', [days])),
     _ when days < 30 => (days ~/ 7, tr('1 week ago'), tr('{0} weeks ago', [days ~/ 7])),
@@ -445,7 +540,8 @@ String formatScheduledStart(DateTime date) {
 
 /// A dialog body's width: [wanted], or less on a screen too narrow for it
 /// (the dialog's own margins and padding take 128).
-double dialogWidth(BuildContext context, [double wanted = 420]) => math.max(200.0, math.min(wanted, MediaQuery.sizeOf(context).width - 128));
+double dialogWidth(BuildContext context, [double wanted = 420]) =>
+    math.max(200.0, math.min(wanted, MediaQuery.sizeOf(context).width - 128));
 
 /// [url] as an http(s) link, or null for anything else, such as a folder
 /// path, which `openInExplorer` opens.
@@ -461,7 +557,8 @@ Future<void> openExternal(String url) async {
   if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.
-  await Process.start(windowsProgram(r'System32\rundll32.exe'), ['url.dll,FileProtocolHandler', uri.toString()]);
+  await Process.start(
+      windowsProgram(r'System32\rundll32.exe'), ['url.dll,FileProtocolHandler', uri.toString()]);
 }
 
 Future<void> copyText(BuildContext context, String text, String notice) async {
@@ -471,7 +568,15 @@ Future<void> copyText(BuildContext context, String text, String notice) async {
 
 /// A search option chip that opens a menu of its values.
 class OptionChip<T> extends StatelessWidget {
-  const OptionChip({super.key, required this.icon, required this.value, required this.values, required this.label, required this.item, required this.changed, required this.onSelected});
+  const OptionChip(
+      {super.key,
+      required this.icon,
+      required this.value,
+      required this.values,
+      required this.label,
+      required this.item,
+      required this.changed,
+      required this.onSelected});
   final IconData icon;
   final T value;
   final List<T> values;
@@ -492,7 +597,10 @@ class OptionChip<T> extends StatelessWidget {
         ],
         builder: (context, menu, _) => FilterChip(
           avatar: Icon(icon, size: 18, color: chipForeground(context, changed)),
-          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), Icon(AppIcons.caretDown, size: 18, color: chipForeground(context, changed))]),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(label(value)),
+            Icon(AppIcons.caretDown, size: 18, color: chipForeground(context, changed))
+          ]),
           selected: changed,
           showCheckmark: false,
           onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
@@ -517,7 +625,8 @@ final bool _touchFirst = Platform.isAndroid || Platform.isIOS;
 /// tablet's, never a TV, whose screen is as few pixels across but far
 /// away. Its watch page is laid out as phone apps do: the player at
 /// the top edge, full screen when turned sideways.
-bool isPhone(BuildContext context) => touchFirst && !Device.tv && MediaQuery.sizeOf(context).shortestSide < 600;
+bool isPhone(BuildContext context) =>
+    touchFirst && !Device.tv && MediaQuery.sizeOf(context).shortestSide < 600;
 
 /// A watch page laid out as a phone's: on a phone, and on a tablet held
 /// upright, where the player across the width leaves room for tabs under it.
@@ -532,21 +641,30 @@ typedef SheetChoice<T> = ({T? value, IconData? icon, String? label, bool selecte
 
 /// A phone's menu: [choices] as rows a finger can hit, in a sheet from the
 /// bottom of the screen. The picked value, or null when dismissed.
-Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, {String? title}) => showModalBottomSheet<T>(
+Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, {String? title}) =>
+    showModalBottomSheet<T>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
       showDragHandle: true,
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
-      builder: (context) => ListView(shrinkWrap: true, padding: const EdgeInsets.only(bottom: 8), children: [
-        if (title != null) Padding(padding: const EdgeInsets.fromLTRB(24, 0, 24, 8), child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+      builder: (context) =>
+          ListView(shrinkWrap: true, padding: const EdgeInsets.only(bottom: 8), children: [
+        if (title != null)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
         for (final c in choices)
           if (c.label == null)
             const Divider(height: 8)
           else
             ListTile(
               minTileHeight: 52,
-              leading: c.icon != null ? Icon(c.icon) : c.selected ? Icon(AppIcons.check) : const SizedBox(width: 24),
+              leading: c.icon != null
+                  ? Icon(c.icon)
+                  : c.selected
+                      ? Icon(AppIcons.check)
+                      : const SizedBox(width: 24),
               title: Text(c.label!),
               selected: c.selected,
               trailing: c.icon != null && c.selected ? Icon(AppIcons.check) : null,
@@ -558,7 +676,8 @@ Future<T?> pickFromSheet<T>(BuildContext context, List<SheetChoice<T>> choices, 
 /// Whether panels open as a side sheet: a window wide enough to keep the
 /// page in view beside one, as wide as the shell's side rail needs. A phone
 /// keeps its sheet from the bottom whichever way it is held.
-bool opensSideSheet(BuildContext context) => !isPhone(context) && MediaQuery.sizeOf(context).width >= sideSheetBreakpoint;
+bool opensSideSheet(BuildContext context) =>
+    !isPhone(context) && MediaQuery.sizeOf(context).width >= sideSheetBreakpoint;
 
 /// A panel of choices, details or a form: a side sheet from the end edge
 /// in a wide window, a dialog in a narrow one. On a phone a sheet that
@@ -580,15 +699,21 @@ Future<T?> showPanel<T>(BuildContext context, WidgetBuilder builder) {
 
 /// A panel that stays a dialog on a phone and in a narrow window, and
 /// opens as a side sheet in a wide one. Lay its inside out with [PanelDialog].
-Future<T?> showSheet<T>(BuildContext context, WidgetBuilder builder) =>
-    opensSideSheet(context) ? showSideSheet<T>(context, builder) : showDialog<T>(context: context, builder: builder);
+Future<T?> showSheet<T>(BuildContext context, WidgetBuilder builder) => opensSideSheet(context)
+    ? showSideSheet<T>(context, builder)
+    : showDialog<T>(context: context, builder: builder);
 
 /// The inside of a [showPanel] or [showSheet]: an [AlertDialog] in a
 /// dialog; in a sheet the same title, content and buttons laid out down it.
 /// [scrollable] scrolls the dialog's title and content together, and the
 /// content alone in a sheet.
 class PanelDialog extends StatelessWidget {
-  const PanelDialog({super.key, required this.title, required this.content, this.actions = const [], this.scrollable = false});
+  const PanelDialog(
+      {super.key,
+      required this.title,
+      required this.content,
+      this.actions = const [],
+      this.scrollable = false});
   final Widget title;
   final Widget content;
   final List<Widget> actions;
@@ -596,19 +721,28 @@ class PanelDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!inSheet(context)) return AlertDialog(scrollable: scrollable, title: title, content: content, actions: actions);
+    if (!inSheet(context)) {
+      return AlertDialog(scrollable: scrollable, title: title, content: content, actions: actions);
+    }
     final theme = Theme.of(context);
     final body = scrollable ? SingleChildScrollView(child: content) : content;
-    final buttons = actions.isEmpty ? null : OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, children: actions);
+    final buttons = actions.isEmpty
+        ? null
+        : OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, children: actions);
     if (isPhone(context)) {
-      return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-          child: DefaultTextStyle.merge(style: theme.textTheme.titleLarge, child: title),
-        ),
-        Flexible(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: body)),
-        if (buttons != null) Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: buttons),
-      ]);
+      return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              child: DefaultTextStyle.merge(style: theme.textTheme.titleLarge, child: title),
+            ),
+            Flexible(
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: body)),
+            if (buttons != null)
+              Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: buttons),
+          ]);
     }
     // A side sheet: the title with a close button at the top, the buttons
     // along the bottom under a hairline.
@@ -617,10 +751,15 @@ class PanelDialog extends StatelessWidget {
         padding: const EdgeInsetsDirectional.fromSTEB(24, 12, 12, 8),
         child: Row(children: [
           Expanded(child: DefaultTextStyle.merge(style: theme.textTheme.titleLarge, child: title)),
-          IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).maybePop(), icon: Icon(AppIcons.x)),
+          IconButton(
+              tooltip: tr('Close'),
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: Icon(AppIcons.x)),
         ]),
       ),
-      Expanded(child: Padding(padding: const EdgeInsetsDirectional.symmetric(horizontal: 24), child: body)),
+      Expanded(
+          child:
+              Padding(padding: const EdgeInsetsDirectional.symmetric(horizontal: 24), child: body)),
       if (buttons != null) ...[
         const Divider(height: 1),
         Padding(padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8), child: buttons),
@@ -633,8 +772,15 @@ class PanelDialog extends StatelessWidget {
 @visibleForTesting
 bool? debugTouchFirst;
 
-String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;
+String keyNames(String text) => Platform.isMacOS
+    ? text
+        .replaceAll('Ctrl + ', '⌘ + ')
+        .replaceAll('Ctrl+', '⌘')
+        .replaceAll('Alt + ', '⌥ + ')
+        .replaceAll('Alt+', '⌥')
+    : text;
 
 /// How much larger than usual the reader has made text, from 1 to 2:
 /// layouts that switch at a width switch that much sooner.
-double textGrowth(BuildContext context) => (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 2.0);
+double textGrowth(BuildContext context) =>
+    (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 2.0);

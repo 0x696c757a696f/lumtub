@@ -115,7 +115,8 @@ class VideoOutputSize {
   /// nothing to fit. With [canvas] (and not [cover]) the drawing is the
   /// box's shape, the video fitted in its middle at no more than its own
   /// size.
-  static (int, int)? target(Size video, Iterable<Size> boxes, {bool cover = false, bool canvas = false}) {
+  static (int, int)? target(Size video, Iterable<Size> boxes,
+      {bool cover = false, bool canvas = false}) {
     if (video.isEmpty || boxes.isEmpty) return null;
     final box = boxes.reduce((a, b) => a.width * a.height >= b.width * b.height ? a : b);
     if (box.isEmpty) return null;
@@ -147,7 +148,8 @@ class VideoOutputSize {
   /// Registers the picture's texture again at the same size, for a picture
   /// that stopped reaching the screen.
   Future<void> refresh() async {
-    final size = _applied ?? (_video.isEmpty ? null : (_video.width.round(), _video.height.round()));
+    final size =
+        _applied ?? (_video.isEmpty ? null : (_video.width.round(), _video.height.round()));
     if (size == null) return;
     await _set(size.$1, size.$2 + 2);
     final applied = _applied;
@@ -158,7 +160,8 @@ class VideoOutputSize {
     // While a page covers the video, the size stays: drawing it again at
     // another size for nobody to see costs a texture swap twice.
     if (_boxes.isEmpty && !_hidden) return;
-    final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover, canvas: _canvas);
+    final next =
+        target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover, canvas: _canvas);
     if (next == null) {
       if (_native) return;
       _native = true;

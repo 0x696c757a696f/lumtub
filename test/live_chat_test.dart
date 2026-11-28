@@ -9,13 +9,17 @@ void main() {
   String line(Map<String, Object?> renderer, {int? offset}) => jsonEncode({
         if (offset == null)
           'actions': [
-            {'addChatItemAction': {'item': renderer}}
+            {
+              'addChatItemAction': {'item': renderer}
+            }
           ]
         else
           'replayChatItemAction': {
             'videoOffsetTimeMsec': '$offset',
             'actions': [
-              {'addChatItemAction': {'item': renderer}}
+              {
+                'addChatItemAction': {'item': renderer}
+              }
             ],
           },
       });
@@ -44,7 +48,8 @@ void main() {
       };
 
   test('reads a replay message and its video offset', () {
-    final messages = LiveChatMessage.parseLine(line({'liveChatTextMessageRenderer': textRenderer('message-1', 'Hello ')}, offset: 12345));
+    final messages = LiveChatMessage.parseLine(
+        line({'liveChatTextMessageRenderer': textRenderer('message-1', 'Hello ')}, offset: 12345));
     expect(messages, hasLength(1));
     final message = messages.single;
     expect(message.kind, LiveChatKind.message);
@@ -91,7 +96,10 @@ void main() {
   });
 
   test('ignores non-chat actions and unknown renderers', () {
-    expect(LiveChatMessage.parseLines('{"actions": []}\n{"actions":[{"addChatItemAction":{"item":{"unknownRenderer":{"id":"x"}}}}]}'), isEmpty);
+    expect(
+        LiveChatMessage.parseLines(
+            '{"actions": []}\n{"actions":[{"addChatItemAction":{"item":{"unknownRenderer":{"id":"x"}}}}]}'),
+        isEmpty);
   });
 
   test('a replay file read a few lines at a time gives every message in order', () async {
@@ -103,7 +111,11 @@ void main() {
         line({
           'liveChatTextMessageRenderer': {
             'id': 'm$i',
-            'message': {'runs': [{'text': 'hello $i'}]},
+            'message': {
+              'runs': [
+                {'text': 'hello $i'}
+              ]
+            },
             'authorName': {'simpleText': 'A'},
           }
         }, offset: i * 1000),

@@ -49,7 +49,12 @@ class _ExplorePageState extends State<ExplorePage> {
     final items = controller.visible(loader?.items ?? const []);
     // The AI filter can hide videos after they were listed: when it hides
     // them all, the next page is read rather than the page left empty.
-    if (loader != null && items.isEmpty && loader.items.isNotEmpty && !loader.loading && loader.hasMore && loader.error == null) {
+    if (loader != null &&
+        items.isEmpty &&
+        loader.items.isNotEmpty &&
+        !loader.loading &&
+        loader.hasMore &&
+        loader.error == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => loader.loadMore());
     }
     final error = loader?.error;
@@ -58,15 +63,26 @@ class _ExplorePageState extends State<ExplorePage> {
     final topic = controller.exploreTopicNow;
     final mode = controller.exploreMode;
     final subNow = controller.exploreSubNow;
-    final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
+    final name = [
+      topic.label,
+      if (subNow != null) subNow.label,
+      if (controller.exploreLeafNow case final leafNow?) leafNow.label
+    ].join(' · ');
     final subtitle = switch (mode) {
-      ExploreMode.curated => tr('{0} · Relevant full-length videos, less clickbait, up to 3 per channel', [name]),
-      ExploreMode.popular when topic.mix => tr('All · most watched {0} across the zones, at most 2 per channel', [controller.explorePeriod.label]),
+      ExploreMode.curated =>
+        tr('{0} · Relevant full-length videos, less clickbait, up to 3 per channel', [name]),
+      ExploreMode.popular when topic.mix => tr(
+          'All · most watched {0} across the zones, at most 2 per channel',
+          [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · most watched {1}', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · Based on your watch history', [name]),
       ExploreMode.gems => tr('{0} · Great videos with under 50K views', [name]),
-      ExploreMode.fresh => tr('{0} · New this week, under 5,000 views, from channels you have not watched', [name]),
-      ExploreMode.long => '${tr('{0} · most watched {1}', [name, controller.explorePeriod.label])} · ${SearchDuration.long.label}',
+      ExploreMode.fresh =>
+        tr('{0} · New this week, under 5,000 views, from channels you have not watched', [name]),
+      ExploreMode.long => '${tr('{0} · most watched {1}', [
+              name,
+              controller.explorePeriod.label
+            ])} · ${SearchDuration.long.label}',
       ExploreMode.latest => tr('{0} · Latest uploads', [name]),
       ExploreMode.liveViewers => tr('{0} live · By viewers', [name]),
       ExploreMode.liveLatest => tr('{0} live · Just started', [name]),
@@ -82,7 +98,9 @@ class _ExplorePageState extends State<ExplorePage> {
         key: ValueKey((half, vertical)),
         vertical: vertical,
         topics: topics,
-        selected: section.tabs != null ? topics.indexWhere((t) => t.opens?.tabs == section.tabs) : controller.exploreTopic,
+        selected: section.tabs != null
+            ? topics.indexWhere((t) => t.opens?.tabs == section.tabs)
+            : controller.exploreTopic,
         onSelected: (i) {
           if (section.tabs != null && topics[i].opens?.tabs == section.tabs) return;
           controller.setExplore(section: half, topic: i);
@@ -97,7 +115,12 @@ class _ExplorePageState extends State<ExplorePage> {
     // leaving the full width below the filters to the videos.
     return LayoutBuilder(builder: (context, constraints) {
       final wide = constraints.maxWidth >= ExplorePage.wideLayout;
-      final page = _page(context, items: items, error: error, loading: loading, subtitle: subtitle, strip: wide ? null : strip());
+      final page = _page(context,
+          items: items,
+          error: error,
+          loading: loading,
+          subtitle: subtitle,
+          strip: wide ? null : strip());
       if (!wide) return page;
       return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         SizedBox(width: _railWidth, child: strip(vertical: true)),
@@ -105,8 +128,10 @@ class _ExplorePageState extends State<ExplorePage> {
           cursor: SystemMouseCursors.resizeLeftRight,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onHorizontalDragUpdate: (details) => setState(() => _railWidth = (_railWidth + details.delta.dx).clamp(TopicStrip.railWidth, 360).toDouble()),
-            onHorizontalDragEnd: (_) => unawaited(controller.savePreferences(controller.preferences.copyWith(exploreRailWidth: _railWidth))),
+            onHorizontalDragUpdate: (details) => setState(() => _railWidth =
+                (_railWidth + details.delta.dx).clamp(TopicStrip.railWidth, 360).toDouble()),
+            onHorizontalDragEnd: (_) => unawaited(controller
+                .savePreferences(controller.preferences.copyWith(exploreRailWidth: _railWidth))),
             child: const SizedBox(width: 8),
           ),
         ),
@@ -135,11 +160,14 @@ class _ExplorePageState extends State<ExplorePage> {
           listenable: controller,
           builder: (context, _) => SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(tr('Filters'), style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: _filters(context)),
-            ]),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(tr('Filters'), style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 8, runSpacing: 8, children: _filters(context)),
+                ]),
           ),
         ),
       );
@@ -227,7 +255,12 @@ class _ExplorePageState extends State<ExplorePage> {
     ];
   }
 
-  Widget _page(BuildContext context, {required List<VideoItem> items, required String? error, required bool loading, required String subtitle, required Widget? strip}) {
+  Widget _page(BuildContext context,
+      {required List<VideoItem> items,
+      required String? error,
+      required bool loading,
+      required String subtitle,
+      required Widget? strip}) {
     final loader = controller.explore;
     final section = controller.exploreSection;
     final topic = controller.exploreTopicNow;
@@ -240,14 +273,21 @@ class _ExplorePageState extends State<ExplorePage> {
     return NearEndListener(
       onNearEnd: () => loader?.loadMore(),
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
-        SliverToBoxAdapter(child: PageHeader(
+        SliverToBoxAdapter(
+            child: PageHeader(
           tr('Explore'),
           subtitle: subtitle,
           trailing: SegmentedButton<ExploreSection>(
             showSelectedIcon: false,
             segments: [
-              ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(AppIcons.filmReelFill, size: 18)),
-              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: Icon(AppIcons.broadcast, size: 18)),
+              ButtonSegment(
+                  value: ExploreSection.popular,
+                  label: Text(ExploreSection.popular.label),
+                  icon: const Icon(AppIcons.filmReelFill, size: 18)),
+              ButtonSegment(
+                  value: ExploreSection.live,
+                  label: Text(ExploreSection.live.label),
+                  icon: Icon(AppIcons.broadcast, size: 18)),
             ],
             // 宗教与信仰 and 学术 show as part of the half they were opened from.
             selected: {controller.exploreHalf},
@@ -258,19 +298,22 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
         )),
         if (section.tabs case final tabs?)
-          SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
+          SliverToBoxAdapter(
+              child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+                AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               // A half with one tab, as live has, needs no row to pick it.
-              if (tabs.length > 1) Padding(
-                padding: const EdgeInsetsDirectional.only(start: 8),
-                child: FittingSegments<ExploreSection>(
-                  values: tabs,
-                  label: (s) => s.label,
-                  selected: section,
-                  onSelected: (s) => controller.setExplore(section: s),
+              if (tabs.length > 1)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: FittingSegments<ExploreSection>(
+                    values: tabs,
+                    label: (s) => s.label,
+                    selected: section,
+                    onSelected: (s) => controller.setExplore(section: s),
+                  ),
                 ),
-              ),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: 8),
@@ -287,8 +330,14 @@ class _ExplorePageState extends State<ExplorePage> {
                       unawaited(_removeTopic(context, section, topics[i]));
                     },
                     trailing: [
-                      IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
-                      IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
+                      IconButton(
+                          tooltip: tr('Add'),
+                          icon: Icon(AppIcons.plus, size: 18),
+                          onPressed: () => _addTopic(context, section)),
+                      IconButton(
+                          tooltip: tr('Manage'),
+                          icon: Icon(AppIcons.slidersHorizontal, size: 18),
+                          onPressed: () => _manageTopics(context, section)),
                     ],
                   );
                 }),
@@ -297,13 +346,15 @@ class _ExplorePageState extends State<ExplorePage> {
           )),
         if (strip != null) SliverToBoxAdapter(child: strip),
         if (topic.subs.isNotEmpty)
-          SliverToBoxAdapter(child: Padding(
+          SliverToBoxAdapter(
+              child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
             child: ChipStrip(
               title: topic.label,
               choices: [
                 (label: tr('All'), icon: null),
-                for (final s in topic.subs) (label: s.label, icon: s.opensLearning ? AppIcons.graduationCap : null),
+                for (final s in topic.subs)
+                  (label: s.label, icon: s.opensLearning ? AppIcons.graduationCap : null),
               ],
               selected: sub,
               onSelected: (i) {
@@ -318,17 +369,25 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
           )),
         if (subNow != null && subNow.subs.isNotEmpty)
-          SliverToBoxAdapter(child: Padding(
+          SliverToBoxAdapter(
+              child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 0),
             child: ChipStrip(
               compact: true,
               title: subNow.label,
-              choices: [for (final label in [tr('All {0}', [subNow.label]), for (final s in subNow.subs) s.label]) (label: label, icon: null)],
+              choices: [
+                for (final label in [
+                  tr('All {0}', [subNow.label]),
+                  for (final s in subNow.subs) s.label
+                ])
+                  (label: label, icon: null)
+              ],
               selected: leaf,
               onSelected: (i) => controller.setExplore(leaf: i),
             ),
           )),
-        SliverToBoxAdapter(child: Padding(
+        SliverToBoxAdapter(
+            child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, 16),
           child: narrow
               // One line on a phone: the orders scroll, the filters wait in a sheet.
@@ -337,14 +396,21 @@ class _ExplorePageState extends State<ExplorePage> {
                   choices: [for (final m in ExploreMode.of(section)) (label: m.label, icon: null)],
                   selected: ExploreMode.of(section).indexOf(mode),
                   onSelected: (i) => controller.setExplore(mode: ExploreMode.of(section)[i]),
-                  trailing: [_FilterButton(changed: _changedFilters(live, mode), onPressed: () => _showFilters(context))],
+                  trailing: [
+                    _FilterButton(
+                        changed: _changedFilters(live, mode),
+                        onPressed: () => _showFilters(context))
+                  ],
                 )
               : FilterFlow(children: [
                   // On a TV the whole line scrolls.
                   _scrollsAlone(SegmentedButton<ExploreMode>(
                     showSelectedIcon: false,
                     style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                    segments: [for (final m in ExploreMode.of(section)) ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))],
+                    segments: [
+                      for (final m in ExploreMode.of(section))
+                        ButtonSegment(value: m, label: Text(m.label, maxLines: 1, softWrap: false))
+                    ],
                     selected: {mode},
                     onSelectionChanged: (value) {
                       Haptics.select();
@@ -354,58 +420,87 @@ class _ExplorePageState extends State<ExplorePage> {
                   ..._filters(context),
                 ]),
         )),
-        if (items.isNotEmpty) SliverReveal(key: const ValueKey('videos'), sliver: SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items))),
+        if (items.isNotEmpty)
+          SliverReveal(
+              key: const ValueKey('videos'),
+              sliver: SliverVideoGrid(
+                  items: items,
+                  thumbnails: controller.thumbnailDirectory,
+                  onOpen: (item) => controller.play(item, from: items))),
         if (loading) ...[
-          if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+          if (items.isNotEmpty)
+            const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
         ],
         if (error != null)
-          SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(items.isEmpty ? tr("Couldn't load: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader?.loadMore(retry: true)),
+          SliverToBoxAdapter(
+              child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+            child: ErrorBanner(
+                items.isEmpty
+                    ? tr("Couldn't load: {0}", [error])
+                    : tr("Couldn't load more: {0}", [error]),
+                onRetry: () => loader?.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loading && error == null)
           if (controller.exploreLanguageCheck case final check? when check.asked > 0)
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(
-              icon: AppIcons.translate,
-              title: tr('Checked {0} videos, none in {1}', [check.asked, controller.preferences.exploreLanguage.label]),
-              message: tr('Keep looking further, or try another category or a wider duration and region'),
-              action: FilledButton.icon(
-                onPressed: controller.searchExploreFurther,
-                icon: Icon(AppIcons.magnifyingGlass),
-                label: Text(tr('Keep looking')),
-              ),
-            ))
+            SliverFillRemaining(
+                hasScrollBody: false,
+                child: StatusView(
+                  icon: AppIcons.translate,
+                  title: tr('Checked {0} videos, none in {1}',
+                      [check.asked, controller.preferences.exploreLanguage.label]),
+                  message: tr(
+                      'Keep looking further, or try another category or a wider duration and region'),
+                  action: FilledButton.icon(
+                    onPressed: controller.searchExploreFurther,
+                    icon: Icon(AppIcons.magnifyingGlass),
+                    label: Text(tr('Keep looking')),
+                  ),
+                ))
           else
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(
-              icon: AppIcons.compass,
-              title: switch (mode) {
-                ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
-                ExploreMode.liveReplay => tr('No stream replays in this category'),
-                _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
-              },
-              // Found but all hidden reads differently from nothing found.
-              message: loader != null && loader.read > 0 ? tr('{0} were found, and your filters and settings left all of them out', [loader.read]) : null,
-              action: loader != null && loader.hasMore
-                  ? FilledButton.icon(
-                      onPressed: loader.loadMore,
-                      icon: Icon(AppIcons.magnifyingGlass),
-                      label: Text(tr('Keep looking')),
-                    )
-                  : null,
-            )),
+            SliverFillRemaining(
+                hasScrollBody: false,
+                child: StatusView(
+                  icon: AppIcons.compass,
+                  title: switch (mode) {
+                    ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
+                    ExploreMode.liveReplay => tr('No stream replays in this category'),
+                    _ => live
+                        ? tr('No live streams in this category right now')
+                        : tr('No videos in this category right now'),
+                  },
+                  // Found but all hidden reads differently from nothing found.
+                  message: loader != null && loader.read > 0
+                      ? tr('{0} were found, and your filters and settings left all of them out',
+                          [loader.read])
+                      : null,
+                  action: loader != null && loader.hasMore
+                      ? FilledButton.icon(
+                          onPressed: loader.loadMore,
+                          icon: Icon(AppIcons.magnifyingGlass),
+                          label: Text(tr('Keep looking')),
+                        )
+                      : null,
+                )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
   }
 
   Future<void> _addTopic(BuildContext context, ExploreSection section) async {
-    final topic = await showDialog<CustomTopic>(context: context, builder: (context) => _AddTopicDialog(section: section));
+    final topic = await showDialog<CustomTopic>(
+        context: context, builder: (context) => _AddTopicDialog(section: section));
     if (topic != null) await controller.addExploreTopic(topic);
   }
 
-  Future<void> _removeTopic(BuildContext context, ExploreSection section, ExploreTopic topic) async {
-    final ok = await confirmDialog(context, title: tr('Delete category'), content: tr('Delete custom category "{0}"?', [topic.label]), confirm: tr('Delete'));
+  Future<void> _removeTopic(
+      BuildContext context, ExploreSection section, ExploreTopic topic) async {
+    final ok = await confirmDialog(context,
+        title: tr('Delete category'),
+        content: tr('Delete custom category "{0}"?', [topic.label]),
+        confirm: tr('Delete'));
     if (ok) await controller.removeExploreTopic(section, topic.label);
   }
 
@@ -415,7 +510,8 @@ class _ExplorePageState extends State<ExplorePage> {
       context: context,
       builder: (context) => _ManageTopicsDialog(
         section: section,
-        topics: arrangeTopics(all, controller.preferences.exploreOrder[section.name] ?? const [], const {}),
+        topics: arrangeTopics(
+            all, controller.preferences.exploreOrder[section.name] ?? const [], const {}),
         hidden: {...?controller.preferences.exploreHidden[section.name]},
         defaults: all,
       ),
@@ -457,45 +553,55 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
         title: Text(tr('Add category')),
         content: SizedBox(
           width: dialogWidth(context, 380),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TextField(
-              controller: _label,
-              autofocus: true,
-              maxLength: 24,
-              decoration: InputDecoration(labelText: tr('Name'), hintText: tr('e.g. Catholic music')),
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _submit(),
-            ),
-            TextField(
-              controller: _query,
-              decoration: InputDecoration(labelText: tr('Search terms (optional)'), hintText: tr('Leave empty to search by name, e.g. Gregorian chant')),
-              onSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 16),
-            SegmentedButton<ExploreSection>(
-              showSelectedIcon: false,
-              segments: [
-                for (final s in widget.section.tabs ?? const [ExploreSection.popular, ExploreSection.live])
-                  ButtonSegment(value: s, label: Text(s.label)),
-              ],
-              selected: {_section},
-              onSelectionChanged: (value) => setState(() => _section = value.first),
-            ),
-          ]),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _label,
+                  autofocus: true,
+                  maxLength: 24,
+                  decoration:
+                      InputDecoration(labelText: tr('Name'), hintText: tr('e.g. Catholic music')),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => _submit(),
+                ),
+                TextField(
+                  controller: _query,
+                  decoration: InputDecoration(
+                      labelText: tr('Search terms (optional)'),
+                      hintText: tr('Leave empty to search by name, e.g. Gregorian chant')),
+                  onSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 16),
+                SegmentedButton<ExploreSection>(
+                  showSelectedIcon: false,
+                  segments: [
+                    for (final s in widget.section.tabs ??
+                        const [ExploreSection.popular, ExploreSection.live])
+                      ButtonSegment(value: s, label: Text(s.label)),
+                  ],
+                  selected: {_section},
+                  onSelectionChanged: (value) => setState(() => _section = value.first),
+                ),
+              ]),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          FilledButton(onPressed: _label.text.trim().isEmpty ? null : _submit, child: Text(tr('Add'))),
+          FilledButton(
+              onPressed: _label.text.trim().isEmpty ? null : _submit, child: Text(tr('Add'))),
         ],
       );
 }
 
 /// Puts the zones in order, pins them to the front or hides them.
 class _ManageTopicsDialog extends StatefulWidget {
-  const _ManageTopicsDialog({required this.section, required this.topics, required this.hidden, required this.defaults});
+  const _ManageTopicsDialog(
+      {required this.section, required this.topics, required this.hidden, required this.defaults});
   final ExploreSection section;
   final List<ExploreTopic> topics;
   final Set<String> hidden;
+
   /// The zones in their built-in order, for 恢复默认.
   final List<ExploreTopic> defaults;
 
@@ -507,7 +613,8 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
   late final _topics = [...widget.topics];
   late final _hidden = {...widget.hidden};
 
-  bool _lastShown(ExploreTopic topic) => !_hidden.contains(topic.key) && _topics.where((t) => !_hidden.contains(t.key)).length == 1;
+  bool _lastShown(ExploreTopic topic) =>
+      !_hidden.contains(topic.key) && _topics.where((t) => !_hidden.contains(t.key)).length == 1;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -516,12 +623,15 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
           width: dialogWidth(context),
           height: 480,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('Drag to reorder, pin to move to the top, turn off the switch to hide.'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+            Text(tr('Drag to reorder, pin to move to the top, turn off the switch to hide.'),
+                style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 8),
-            Expanded(child: ReorderableListView.builder(
+            Expanded(
+                child: ReorderableListView.builder(
               buildDefaultDragHandles: false,
               itemCount: _topics.length,
-              onReorderItem: (from, to) => setState(() => _topics.insert(to, _topics.removeAt(from))),
+              onReorderItem: (from, to) =>
+                  setState(() => _topics.insert(to, _topics.removeAt(from))),
               itemBuilder: (context, i) {
                 final topic = _topics[i];
                 final shown = !_hidden.contains(topic.key);
@@ -529,21 +639,32 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   key: ValueKey(topic.key),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: ReorderableDragStartListener(index: i, child: Padding(padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
+                  leading: ReorderableDragStartListener(
+                      index: i,
+                      child: Padding(
+                          padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
                   title: Row(children: [
                     Icon(topic.icon, size: 20, color: shown ? null : context.colors.outline),
                     const SizedBox(width: 8),
-                    Flexible(child: Text(topic.label, overflow: TextOverflow.ellipsis, style: TextStyle(color: shown ? null : context.colors.outline))),
+                    Flexible(
+                        child: Text(topic.label,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: shown ? null : context.colors.outline))),
                   ]),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(
                       tooltip: tr('Pinned'),
                       icon: Icon(AppIcons.alignTop),
-                      onPressed: i == 0 ? null : () => setState(() => _topics.insert(0, _topics.removeAt(i))),
+                      onPressed: i == 0
+                          ? null
+                          : () => setState(() => _topics.insert(0, _topics.removeAt(i))),
                     ),
                     Switch(
                       value: shown,
-                      onChanged: _lastShown(topic) ? null : (on) => setState(() => on ? _hidden.remove(topic.key) : _hidden.add(topic.key)),
+                      onChanged: _lastShown(topic)
+                          ? null
+                          : (on) => setState(
+                              () => on ? _hidden.remove(topic.key) : _hidden.add(topic.key)),
                     ),
                   ]),
                 );
@@ -562,7 +683,9 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
             child: Text(tr('Restore default')),
           ),
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          FilledButton(onPressed: () => Navigator.pop(context, ([for (final t in _topics) t.key], _hidden)), child: Text(tr('Save'))),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, ([for (final t in _topics) t.key], _hidden)),
+              child: Text(tr('Save'))),
         ],
       );
 }
@@ -570,17 +693,29 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
 /// A row of category icons that scrolls sideways, with the mouse wheel or
 /// the arrows at its ends.
 class TopicStrip extends StatefulWidget {
-  const TopicStrip({super.key, required this.topics, required this.selected, required this.onSelected, this.onAdd, this.onManage, this.onRemove, this.vertical = false});
+  const TopicStrip(
+      {super.key,
+      required this.topics,
+      required this.selected,
+      required this.onSelected,
+      this.onAdd,
+      this.onManage,
+      this.onRemove,
+      this.vertical = false});
+
   /// A column down the left of a wide page instead of a row across the top.
   final bool vertical;
   static const railWidth = 128.0;
   final List<ExploreTopic> topics;
   final int selected;
   final ValueChanged<int> onSelected;
+
   /// Adds a category of the user's own, from a tile after the others.
   final VoidCallback? onAdd;
+
   /// Opens the order and hidden zones, from the last tile.
   final VoidCallback? onManage;
+
   /// Removes a category the user added, on right-click or long press.
   final ValueChanged<ExploreTopic>? onRemove;
 
@@ -610,7 +745,8 @@ class _TopicStripState extends State<TopicStrip> {
 
   List<(ExploreTopic, VoidCallback)> get _extras => [
         if (widget.onAdd case final add?) (ExploreTopic(tr('Add'), AppIcons.plus, ''), add),
-        if (widget.onManage case final manage?) (ExploreTopic(tr('Manage'), AppIcons.slidersHorizontal, ''), manage),
+        if (widget.onManage case final manage?)
+          (ExploreTopic(tr('Manage'), AppIcons.slidersHorizontal, ''), manage),
       ];
 
   bool _extent(bool Function(ScrollPosition position) test) =>
@@ -619,7 +755,8 @@ class _TopicStripState extends State<TopicStrip> {
   void _by(double delta) {
     if (!_scroll.hasClients) return;
     final position = _scroll.position;
-    final target = (position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent);
+    final target =
+        (position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent);
     unawaited(Motion.scrollTo(_scroll, target));
   }
 
@@ -627,7 +764,8 @@ class _TopicStripState extends State<TopicStrip> {
   /// from the bottom on a phone, a dialog elsewhere.
   Future<void> _showAll(int index) async {
     if (index != widget.selected) widget.onSelected(index);
-    Widget grid(BuildContext context) => _TopicGrid(topics: widget.topics, selected: index, extras: _extras);
+    Widget grid(BuildContext context) =>
+        _TopicGrid(topics: widget.topics, selected: index, extras: _extras);
     final picked = isPhone(context)
         ? await showModalBottomSheet<Object>(
             context: context,
@@ -639,7 +777,10 @@ class _TopicStripState extends State<TopicStrip> {
           )
         : await showDialog<Object>(
             context: context,
-            builder: (context) => Dialog(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560, maxHeight: 560), child: Padding(padding: const EdgeInsets.only(top: 16), child: grid(context)))),
+            builder: (context) => Dialog(
+                child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560, maxHeight: 560),
+                    child: Padding(padding: const EdgeInsets.only(top: 16), child: grid(context)))),
           );
     if (!mounted) return;
     switch (picked) {
@@ -654,7 +795,8 @@ class _TopicStripState extends State<TopicStrip> {
     final remove = widget.onRemove;
     // Adding and managing stay in reach below the list, however long it is.
     return Column(children: [
-      Expanded(child: ListView(
+      Expanded(
+          child: ListView(
         controller: _scroll,
         padding: const EdgeInsetsDirectional.fromSTEB(8, 12, 4, 8),
         children: [
@@ -671,74 +813,104 @@ class _TopicStripState extends State<TopicStrip> {
         const Divider(height: 1, indent: 12, endIndent: 12),
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(8, 4, 4, 8),
-          child: Column(children: [for (final (topic, onTap) in _extras) _RailTile(topic: topic, selected: false, onTap: onTap, quiet: true)]),
+          child: Column(children: [
+            for (final (topic, onTap) in _extras)
+              _RailTile(topic: topic, selected: false, onTap: onTap, quiet: true)
+          ]),
         ),
       ],
     ]);
   }
 
   @override
-  Widget build(BuildContext context) => widget.vertical ? _rail(context) : SizedBox(
-        height: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1),
-        child: Row(children: [
-          const SizedBox(width: AppStyle.pagePadding - 12),
-          _Arrow(icon: AppIcons.caretLeft, tooltip: tr('Scroll left'), onTap: _extent((p) => p.pixels > p.minScrollExtent) ? () => _by(-_tileWidth * 4) : null),
-          Expanded(child: Listener(
-            // A vertical wheel turn scrolls the row.
-            onPointerSignal: (event) {
-              if (event is PointerScrollEvent && _scroll.hasClients && _scroll.position.maxScrollExtent > 0) {
-                GestureBinding.instance.pointerSignalResolver.register(event, (event) {
-                  final scroll = event as PointerScrollEvent;
-                  final delta = scroll.scrollDelta.dy.abs() > scroll.scrollDelta.dx.abs() ? scroll.scrollDelta.dy : scroll.scrollDelta.dx;
-                  final position = _scroll.position;
-                  _scroll.jumpTo((position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent));
-                });
-              }
-            },
-            child: NotificationListener<Notification>(
-              // Show or hide the arrows as the row scrolls or resizes.
-              onNotification: (notification) {
-                if (notification is ScrollMetricsNotification || notification is ScrollEndNotification) setState(() {});
-                return false;
-              },
-              child: ListView.builder(
-              key: const PageStorageKey('topics'),
-              controller: _scroll,
-              scrollDirection: Axis.horizontal,
-              itemCount: widget.topics.length + _extras.length,
-              itemExtent: _tileWidth,
-              itemBuilder: (context, i) {
-                if (i >= widget.topics.length) {
-                  final (topic, onTap) = _extras[i - widget.topics.length];
-                  return _TopicTile(topic: topic, selected: false, onTap: onTap);
+  Widget build(BuildContext context) => widget.vertical
+      ? _rail(context)
+      : SizedBox(
+          height: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1),
+          child: Row(children: [
+            const SizedBox(width: AppStyle.pagePadding - 12),
+            _Arrow(
+                icon: AppIcons.caretLeft,
+                tooltip: tr('Scroll left'),
+                onTap: _extent((p) => p.pixels > p.minScrollExtent)
+                    ? () => _by(-_tileWidth * 4)
+                    : null),
+            Expanded(
+                child: Listener(
+              // A vertical wheel turn scrolls the row.
+              onPointerSignal: (event) {
+                if (event is PointerScrollEvent &&
+                    _scroll.hasClients &&
+                    _scroll.position.maxScrollExtent > 0) {
+                  GestureBinding.instance.pointerSignalResolver.register(event, (event) {
+                    final scroll = event as PointerScrollEvent;
+                    final delta = scroll.scrollDelta.dy.abs() > scroll.scrollDelta.dx.abs()
+                        ? scroll.scrollDelta.dy
+                        : scroll.scrollDelta.dx;
+                    final position = _scroll.position;
+                    _scroll.jumpTo((position.pixels + delta)
+                        .clamp(position.minScrollExtent, position.maxScrollExtent));
+                  });
                 }
-                final topic = widget.topics[i];
-                final remove = widget.onRemove;
-                return _TopicTile(
-                  topic: topic,
-                  selected: i == widget.selected,
-                  // 全部 also lays every category out at once, to pick from.
-                  onTap: topic.mix ? () => _showAll(i) : () => widget.onSelected(i),
-                  onRemove: topic.custom && remove != null ? () => remove(topic) : null,
-                  opens: topic.mix,
-                );
               },
+              child: NotificationListener<Notification>(
+                // Show or hide the arrows as the row scrolls or resizes.
+                onNotification: (notification) {
+                  if (notification is ScrollMetricsNotification ||
+                      notification is ScrollEndNotification) {
+                    setState(() {});
+                  }
+                  return false;
+                },
+                child: ListView.builder(
+                  key: const PageStorageKey('topics'),
+                  controller: _scroll,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: widget.topics.length + _extras.length,
+                  itemExtent: _tileWidth,
+                  itemBuilder: (context, i) {
+                    if (i >= widget.topics.length) {
+                      final (topic, onTap) = _extras[i - widget.topics.length];
+                      return _TopicTile(topic: topic, selected: false, onTap: onTap);
+                    }
+                    final topic = widget.topics[i];
+                    final remove = widget.onRemove;
+                    return _TopicTile(
+                      topic: topic,
+                      selected: i == widget.selected,
+                      // 全部 also lays every category out at once, to pick from.
+                      onTap: topic.mix ? () => _showAll(i) : () => widget.onSelected(i),
+                      onRemove: topic.custom && remove != null ? () => remove(topic) : null,
+                      opens: topic.mix,
+                    );
+                  },
+                ),
               ),
-            ),
-          )),
-          _Arrow(icon: AppIcons.caretRight, tooltip: tr('Scroll right'), onTap: _extent((p) => p.pixels < p.maxScrollExtent) ? () => _by(_tileWidth * 4) : null),
-          const SizedBox(width: AppStyle.pagePadding - 12),
-        ]),
-      );
+            )),
+            _Arrow(
+                icon: AppIcons.caretRight,
+                tooltip: tr('Scroll right'),
+                onTap: _extent((p) => p.pixels < p.maxScrollExtent)
+                    ? () => _by(_tileWidth * 4)
+                    : null),
+            const SizedBox(width: AppStyle.pagePadding - 12),
+          ]),
+        );
 }
 
 /// One zone in the left column: a bar marks the one shown.
 class _RailTile extends StatelessWidget {
-  const _RailTile({required this.topic, required this.selected, required this.onTap, this.onRemove, this.quiet = false});
+  const _RailTile(
+      {required this.topic,
+      required this.selected,
+      required this.onTap,
+      this.onRemove,
+      this.quiet = false});
   final ExploreTopic topic;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onRemove;
+
   /// Add and manage, drawn fainter than the zones.
   final bool quiet;
 
@@ -747,9 +919,15 @@ class _RailTile extends StatelessWidget {
     final colors = context.colors;
     // The accent where it reads on the page, else the text colour: the bar
     // and the tint mark the chosen one either way.
-    final color = selected ? linkColor(Theme.of(context)) : quiet ? colors.onSurfaceVariant : colors.onSurface;
+    final color = selected
+        ? linkColor(Theme.of(context))
+        : quiet
+            ? colors.onSurfaceVariant
+            : colors.onSurface;
     return Tooltip(
-      message: onRemove == null ? topic.label : tr('{0} (right-click or long-press to delete)', [topic.label]),
+      message: onRemove == null
+          ? topic.label
+          : tr('{0} (right-click or long-press to delete)', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -768,16 +946,19 @@ class _RailTile extends StatelessWidget {
               curve: Ease.out,
               width: 3,
               height: selected ? 20 : 0,
-              decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
+              decoration:
+                  BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(width: 8),
             Icon(topic.icon, size: 18, color: color),
             const SizedBox(width: 8),
-            Expanded(child: Text(
+            Expanded(
+                child: Text(
               topic.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 14, color: color, fontWeight: selected ? FontWeight.w600 : null),
+              style: TextStyle(
+                  fontSize: 14, color: color, fontWeight: selected ? FontWeight.w600 : null),
             )),
           ]),
         ),
@@ -795,7 +976,14 @@ class _Arrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
         width: 32,
-        child: onTap == null ? null : IconButton(tooltip: tooltip, padding: EdgeInsets.zero, iconSize: 22, onPressed: onTap, icon: Icon(icon)),
+        child: onTap == null
+            ? null
+            : IconButton(
+                tooltip: tooltip,
+                padding: EdgeInsets.zero,
+                iconSize: 22,
+                onPressed: onTap,
+                icon: Icon(icon)),
       );
 }
 
@@ -808,25 +996,44 @@ class _TopicGrid extends StatelessWidget {
   final List<(ExploreTopic, VoidCallback)> extras;
 
   @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-          child: Text(tr('All categories'), style: Theme.of(context).textTheme.titleMedium),
-        ),
-        Flexible(child: GridView(
-          shrinkWrap: true,
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 88 * cardTextScale(context).clamp(1.0, 2.0), mainAxisExtent: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1)),
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+  Widget build(BuildContext context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final (i, topic) in topics.indexed) _TopicTile(topic: topic, selected: i == selected, onTap: () => Navigator.pop(context, i)),
-            for (final (topic, onTap) in extras) _TopicTile(topic: topic, selected: false, onTap: () => Navigator.pop<Object>(context, onTap)),
-          ],
-        )),
-      ]);
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(tr('All categories'), style: Theme.of(context).textTheme.titleMedium),
+            ),
+            Flexible(
+                child: GridView(
+              shrinkWrap: true,
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 88 * cardTextScale(context).clamp(1.0, 2.0),
+                  mainAxisExtent: 84 + 20 * (cardTextScale(context).clamp(1.0, 2.0) - 1)),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              children: [
+                for (final (i, topic) in topics.indexed)
+                  _TopicTile(
+                      topic: topic,
+                      selected: i == selected,
+                      onTap: () => Navigator.pop(context, i)),
+                for (final (topic, onTap) in extras)
+                  _TopicTile(
+                      topic: topic,
+                      selected: false,
+                      onTap: () => Navigator.pop<Object>(context, onTap)),
+              ],
+            )),
+          ]);
 }
 
 class _TopicTile extends StatelessWidget {
-  const _TopicTile({required this.topic, required this.selected, required this.onTap, this.onRemove, this.opens = false});
+  const _TopicTile(
+      {required this.topic,
+      required this.selected,
+      required this.onTap,
+      this.onRemove,
+      this.opens = false});
   final ExploreTopic topic;
   final bool selected;
   final VoidCallback onTap;
@@ -839,7 +1046,9 @@ class _TopicTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Tooltip(
-      message: onRemove == null ? topic.label : tr('{0} (right-click or long-press to delete)', [topic.label]),
+      message: onRemove == null
+          ? topic.label
+          : tr('{0} (right-click or long-press to delete)', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -856,11 +1065,13 @@ class _TopicTile extends StatelessWidget {
               color: selected ? colors.primary : colors.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(topic.icon, size: 22, color: selected ? colors.onPrimary : colors.onSurfaceVariant),
+            child: Icon(topic.icon,
+                size: 22, color: selected ? colors.onPrimary : colors.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
           Row(mainAxisSize: MainAxisSize.min, children: [
-            Flexible(child: Text(
+            Flexible(
+                child: Text(
               topic.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -878,7 +1089,10 @@ class _TopicTile extends StatelessWidget {
 
 /// [child] scrolling sideways on its own where a [FilterFlow] wraps, and
 /// as it is where the flow is one line that scrolls already.
-Widget _scrollsAlone(Widget child) => Device.tv ? child : SingleChildScrollView(key: const PageStorageKey('modes'), scrollDirection: Axis.horizontal, child: child);
+Widget _scrollsAlone(Widget child) => Device.tv
+    ? child
+    : SingleChildScrollView(
+        key: const PageStorageKey('modes'), scrollDirection: Axis.horizontal, child: child);
 
 /// Opens a phone's filters, counting the ones that are set.
 class _FilterButton extends StatelessWidget {
@@ -893,7 +1107,10 @@ class _FilterButton extends StatelessWidget {
           tooltip: tr('Filters'),
           onPressed: onPressed,
           isSelected: changed > 0,
-          icon: Badge(isLabelVisible: changed > 0, label: Text('$changed'), child: Icon(AppIcons.funnel, size: 20)),
+          icon: Badge(
+              isLabelVisible: changed > 0,
+              label: Text('$changed'),
+              child: Icon(AppIcons.funnel, size: 20)),
         ),
       );
 }

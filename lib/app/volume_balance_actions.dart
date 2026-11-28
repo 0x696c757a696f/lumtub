@@ -16,12 +16,15 @@ extension VolumeBalanceActions on AppController {
     final loudness = _repository?.streams.loudnessOf(item.id);
     final live = item.isLive;
     try {
-      await platform.command(['af', 'add', VolumeBalance.filter(strength, loudnessDb: loudness, live: live)]);
-      logInfo('Volume balance at $strength%${loudness == null ? '' : ', ${VolumeBalance.gainFor(loudness).toStringAsFixed(1)} dB for loudness ${loudness.toStringAsFixed(1)}'}');
+      await platform
+          .command(['af', 'add', VolumeBalance.filter(strength, loudnessDb: loudness, live: live)]);
+      logInfo(
+          'Volume balance at $strength%${loudness == null ? '' : ', ${VolumeBalance.gainFor(loudness).toStringAsFixed(1)} dB for loudness ${loudness.toStringAsFixed(1)}'}');
     } catch (e) {
       // A libmpv built without alimiter still has the normaliser.
       try {
-        await platform.command(['af', 'add', VolumeBalance.filter(strength, live: live, withLimiters: false)]);
+        await platform.command(
+            ['af', 'add', VolumeBalance.filter(strength, live: live, withLimiters: false)]);
         logInfo('Volume balance at $strength% without limiters: $e');
       } catch (e) {
         logWarn('Could not turn on volume balance: $e');

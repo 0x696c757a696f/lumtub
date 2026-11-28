@@ -26,12 +26,16 @@ class LiveChatBatch {
   });
 
   final List<LiveChatMessage> messages;
+
   /// Messages the channel's moderators took down.
   final Set<String> removed;
+
   /// Channels whose messages were all taken down.
   final Set<String> removedAuthors;
+
   /// Who may write, when not everyone may.
   final String? restricted;
+
   /// The view these messages come from; null when the chat offers only one.
   final ChatView? view;
 }
@@ -52,12 +56,16 @@ class _Answer {
   final bool replay;
   final String? next;
   final int? timeoutMs;
+
   /// Each view's continuation and whether it is the one answered with.
   final List<(String, bool)> views;
   final LiveChatBatch batch;
 
   static _Answer read(Map<String, dynamic> raw) {
-    Set<String> ids(String key) => {for (final id in (raw[key] as List? ?? const [])) if (id is String) id};
+    Set<String> ids(String key) => {
+          for (final id in (raw[key] as List? ?? const []))
+            if (id is String) id
+        };
     return _Answer(
       start: raw['start'] as String?,
       visitor: raw['visitor'] as String?,
@@ -65,10 +73,14 @@ class _Answer {
       next: raw['next'] as String?,
       timeoutMs: (raw['timeoutMs'] as num?)?.toInt(),
       views: [
-        for (final view in (raw['views'] as List? ?? const []).cast<Map<String, dynamic>>()) (view['continuation'] as String, view['selected'] == true),
+        for (final view in (raw['views'] as List? ?? const []).cast<Map<String, dynamic>>())
+          (view['continuation'] as String, view['selected'] == true),
       ],
       batch: LiveChatBatch(
-        messages: [for (final m in (raw['messages'] as List? ?? const []).cast<Map<String, dynamic>>()) LiveChatMessage.fromCore(m)],
+        messages: [
+          for (final m in (raw['messages'] as List? ?? const []).cast<Map<String, dynamic>>())
+            LiveChatMessage.fromCore(m)
+        ],
         removed: ids('removed'),
         removedAuthors: ids('removedAuthors'),
         restricted: raw['restricted'] as String?,
@@ -97,18 +109,23 @@ class LiveChatFeed {
   LiveChatFeed(this._client, {this.base = 'https://www.youtube.com'});
 
   final http.Client _client;
+
   /// Another server than YouTube, for tests.
   final String base;
 
   /// The most read from one answer; a busy chat's is under a megabyte.
   static const maxBytes = 8 << 20;
+
   /// Answers larger than this are read away from the UI isolate.
   static const _inBackground = 128 << 10;
+
   /// The most messages read from one replay, as from yt-dlp's file.
   static const maxReplayMessages = 200000;
+
   /// Waits between a live chat's requests, whatever YouTube asks.
   static const minWait = Duration(milliseconds: 1000);
   static const maxWait = Duration(seconds: 10);
+
   /// Tries of one request before the chat is given up.
   static const _tries = 5;
 
@@ -119,7 +136,9 @@ class LiveChatFeed {
     if (_bound) return _answer;
     _bound = true;
     try {
-      _answer = NativeCore.instance?.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat_answer');
+      _answer = NativeCore.instance?.library.lookupFunction<
+          Pointer<Utf8> Function(Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat_answer');
     } catch (_) {
       _answer = null;
     }
@@ -159,20 +178,26 @@ class LiveChatFeed {
       await response.stream.drain<void>().catchError((_) {});
       throw http.ClientException('YouTube answered ${response.statusCode} to $endpoint');
     }
-    if ((response.contentLength ?? 0) > maxBytes) throw http.ClientException('The answer to $endpoint is over ${maxBytes >> 20} MiB');
+    if ((response.contentLength ?? 0) > maxBytes) {
+      throw http.ClientException('The answer to $endpoint is over ${maxBytes >> 20} MiB');
+    }
     final bytes = BytesBuilder(copy: false);
     await for (final chunk in response.stream.timeout(const Duration(seconds: 20))) {
-      if (bytes.length + chunk.length > maxBytes) throw http.ClientException('The answer to $endpoint is over ${maxBytes >> 20} MiB');
+      if (bytes.length + chunk.length > maxBytes) {
+        throw http.ClientException('The answer to $endpoint is over ${maxBytes >> 20} MiB');
+      }
       bytes.add(chunk);
     }
     final body0 = bytes.takeBytes();
-    final answer = body0.length > _inBackground ? await Isolate.run(() => _parse(body0)) : _parse(body0);
+    final answer =
+        body0.length > _inBackground ? await Isolate.run(() => _parse(body0)) : _parse(body0);
     if (answer.visitor != null) session.visitor = answer.visitor;
     return answer;
   }
 
   /// [_post], tried again a few times, waiting longer each time.
-  Future<_Answer> _postTrying(_Session session, String endpoint, Map<String, Object?> body, bool Function() stopped) async {
+  Future<_Answer> _postTrying(
+      _Session session, String endpoint, Map<String, Object?> body, bool Function() stopped) async {
     for (var attempt = 1;; attempt++) {
       try {
         return await _post(session, endpoint, body);
@@ -194,7 +219,9 @@ class LiveChatFeed {
     late final StreamController<LiveChatBatch> out;
     Future<void> run() async {
       try {
-        if (!available) throw StateError(tr("The installation is incomplete, so the chat can't be read"));
+        if (!available) {
+          throw StateError(tr("The installation is incomplete, so the chat can't be read"));
+        }
         final session = _Session();
         final opened = await _post(session, 'next', {'videoId': videoId});
         final start = opened.start;
@@ -246,7 +273,8 @@ class LiveChatFeed {
           last = next;
           if (!replay) {
             final wait = Duration(milliseconds: answer.timeoutMs ?? 5000);
-            await Future<void>.delayed(wait < minWait ? minWait : (wait > maxWait ? maxWait : wait));
+            await Future<void>.delayed(
+                wait < minWait ? minWait : (wait > maxWait ? maxWait : wait));
             if (stopped) break;
           }
           answer = await _postTrying(session, endpoint, ask(next, offset), () => stopped);

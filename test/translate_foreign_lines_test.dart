@@ -16,7 +16,8 @@ void main() {
 
   test('only the lines in another language are sent and replaced', () async {
     final t = _Echo();
-    final out = await translateForeignLines(t, 'Be still, and know that I am God\n处于真实的自己的生活状态，是得到安宁的途径。', 'zh-CN', zh);
+    final out = await translateForeignLines(
+        t, 'Be still, and know that I am God\n处于真实的自己的生活状态，是得到安宁的途径。', 'zh-CN', zh);
     expect(t.sent, ['Be still, and know that I am God']);
     expect(out, '[Be still, and know that I am God]\n处于真实的自己的生活状态，是得到安宁的途径。');
   });

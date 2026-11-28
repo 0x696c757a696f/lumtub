@@ -15,6 +15,7 @@ void main() {
     expect(file.statSync().mode & 0x1FF, 0x1C9);
     setFileMode(file.path, executableMode);
     expect(file.statSync().mode & 0x1FF, executableMode);
-    expect(() => setFileMode('${folder.path}/missing', ownerOnlyMode), throwsA(isA<FileSystemException>()));
+    expect(() => setFileMode('${folder.path}/missing', ownerOnlyMode),
+        throwsA(isA<FileSystemException>()));
   });
 }

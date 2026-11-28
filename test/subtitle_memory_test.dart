@@ -6,20 +6,27 @@ import 'package:lumtub/player_settings.dart';
 
 void main() {
   const en = SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/en.vtt');
-  const jaAuto = SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/ja.vtt', kind: SubtitleKind.automatic);
-  const zh = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/ja.vtt&tlang=zh-Hans', kind: SubtitleKind.translated);
+  const jaAuto = SubtitleOption(
+      language: 'ja', name: '', url: 'https://yt.example/ja.vtt', kind: SubtitleKind.automatic);
+  const zh = SubtitleOption(
+      language: 'zh-Hans',
+      name: '',
+      url: 'https://yt.example/ja.vtt&tlang=zh-Hans',
+      kind: SubtitleKind.translated);
 
   late AppController controller;
   setUp(() {
     controller = AppController();
-    controller.details = const VideoDetails(title: 't', channel: 'c', language: 'ja', subtitles: [en, jaAuto, zh]);
+    controller.details =
+        const VideoDetails(title: 't', channel: 'c', language: 'ja', subtitles: [en, jaAuto, zh]);
   });
 
   test('the first subtitle chosen comes back on the next video', () async {
     await controller.rememberSubtitleChoice(primary: true, option: jaAuto);
     expect(controller.settings.subtitleMode, SubtitleMode.always);
     expect(controller.settings.subtitleOriginal, isTrue);
-    expect(PlayerOptionApplicator.ytdlRawOptions(controller.settings), contains('sub-langs=.*-orig'));
+    expect(
+        PlayerOptionApplicator.ytdlRawOptions(controller.settings), contains('sub-langs=.*-orig'));
 
     await controller.rememberSubtitleChoice(primary: true, option: en);
     expect(controller.settings.subtitleOriginal, isFalse);

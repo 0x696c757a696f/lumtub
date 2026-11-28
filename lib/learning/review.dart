@@ -29,7 +29,13 @@ enum ReviewGrade {
 /// when it is next due.
 @immutable
 class ReviewState {
-  const ReviewState({required this.stability, required this.difficulty, required this.due, required this.last, this.reps = 0, this.lapses = 0});
+  const ReviewState(
+      {required this.stability,
+      required this.difficulty,
+      required this.due,
+      required this.last,
+      this.reps = 0,
+      this.lapses = 0});
 
   final double stability;
   final double difficulty;
@@ -38,7 +44,13 @@ class ReviewState {
   final int reps;
   final int lapses;
 
-  ReviewState copyWith({DateTime? due}) => ReviewState(stability: stability, difficulty: difficulty, due: due ?? this.due, last: last, reps: reps, lapses: lapses);
+  ReviewState copyWith({DateTime? due}) => ReviewState(
+      stability: stability,
+      difficulty: difficulty,
+      due: due ?? this.due,
+      last: last,
+      reps: reps,
+      lapses: lapses);
 
   /// Remembered for three weeks or more at a time: no longer a new word.
   bool get known => stability >= 21;
@@ -56,7 +68,15 @@ class ReviewState {
     if (json is! Map) return null;
     final s = json['s'], d = json['d'];
     final due = DateTime.tryParse('${json['due']}'), last = DateTime.tryParse('${json['last']}');
-    if (s is! num || d is! num || due == null || last == null || !s.isFinite || s <= 0 || !d.isFinite) return null;
+    if (s is! num ||
+        d is! num ||
+        due == null ||
+        last == null ||
+        !s.isFinite ||
+        s <= 0 ||
+        !d.isFinite) {
+      return null;
+    }
     return ReviewState(
       stability: s.toDouble(),
       difficulty: d.toDouble().clamp(1, 10),
@@ -72,7 +92,25 @@ class ReviewState {
 /// a word's state and a grade, its next state, aiming at a 90 % chance of
 /// still knowing the word when it comes back.
 abstract final class Fsrs {
-  static const w = [0.4072, 1.1829, 3.1262, 15.4722, 7.2102, 0.5316, 1.0651, 0.0234, 1.616, 0.1544, 1.0824, 1.9813, 0.0953, 0.2975, 2.2042, 0.2407, 2.9466];
+  static const w = [
+    0.4072,
+    1.1829,
+    3.1262,
+    15.4722,
+    7.2102,
+    0.5316,
+    1.0651,
+    0.0234,
+    1.616,
+    0.1544,
+    1.0824,
+    1.9813,
+    0.0953,
+    0.2975,
+    2.2042,
+    0.2407,
+    2.9466
+  ];
   static const _decay = -0.5;
   static const _factor = 19 / 81;
   static const retention = 0.9;
@@ -82,7 +120,8 @@ abstract final class Fsrs {
   static const relearn = Duration(minutes: 10);
 
   /// The chance of still knowing a word [days] after the last review.
-  static double retrievability(double days, double stability) => math.pow(1 + _factor * days / stability, _decay).toDouble();
+  static double retrievability(double days, double stability) =>
+      math.pow(1 + _factor * days / stability, _decay).toDouble();
 
   /// Days until the chance of knowing the word falls to [retention].
   static int interval(double stability) =>
@@ -90,7 +129,9 @@ abstract final class Fsrs {
 
   static double _initialDifficulty(int g) => (w[4] - (g - 3) * w[5]).clamp(1, 10).toDouble();
 
-  static final _core = NativeCore.instance?.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_review_next');
+  static final _core = NativeCore.instance?.library.lookupFunction<
+      Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_review_next');
 
   /// The state after reviewing [state] (null for a word never reviewed)
   /// with [grade] at [now]: worked out by lumtub_core, or here when it is
@@ -100,7 +141,14 @@ abstract final class Fsrs {
     if (core != null && function != null) {
       final input = jsonEncode({
         if (state != null)
-          'state': {'s': state.stability, 'd': state.difficulty, 'reps': state.reps, 'lapses': state.lapses, 'last': state.last.millisecondsSinceEpoch, 'due': state.due.millisecondsSinceEpoch},
+          'state': {
+            's': state.stability,
+            'd': state.difficulty,
+            'reps': state.reps,
+            'lapses': state.lapses,
+            'last': state.last.millisecondsSinceEpoch,
+            'due': state.due.millisecondsSinceEpoch
+          },
         'grade': grade.value,
         'now': now.millisecondsSinceEpoch,
       });
@@ -127,7 +175,9 @@ abstract final class Fsrs {
       return ReviewState(
         stability: stability,
         difficulty: _initialDifficulty(g),
-        due: grade == ReviewGrade.again ? now.add(relearn) : now.add(Duration(days: interval(stability))),
+        due: grade == ReviewGrade.again
+            ? now.add(relearn)
+            : now.add(Duration(days: interval(stability))),
         last: now,
         reps: 1,
         lapses: grade == ReviewGrade.again ? 1 : 0,
@@ -139,16 +189,30 @@ abstract final class Fsrs {
     final difficulty = (w[7] * _initialDifficulty(4) + (1 - w[7]) * d0).clamp(1, 10).toDouble();
     final double stability;
     if (grade == ReviewGrade.again) {
-      stability = math.min(state.stability, w[11] * math.pow(difficulty, -w[12]) * (math.pow(state.stability + 1, w[13]) - 1) * math.exp(w[14] * (1 - r)));
+      stability = math.min(
+          state.stability,
+          w[11] *
+              math.pow(difficulty, -w[12]) *
+              (math.pow(state.stability + 1, w[13]) - 1) *
+              math.exp(w[14] * (1 - r)));
     } else {
       final hard = grade == ReviewGrade.hard ? w[15] : 1.0;
       final easy = grade == ReviewGrade.easy ? w[16] : 1.0;
-      stability = state.stability * (math.exp(w[8]) * (11 - difficulty) * math.pow(state.stability, -w[9]) * (math.exp(w[10] * (1 - r)) - 1) * hard * easy + 1);
+      stability = state.stability *
+          (math.exp(w[8]) *
+                  (11 - difficulty) *
+                  math.pow(state.stability, -w[9]) *
+                  (math.exp(w[10] * (1 - r)) - 1) *
+                  hard *
+                  easy +
+              1);
     }
     return ReviewState(
       stability: stability,
       difficulty: difficulty,
-      due: grade == ReviewGrade.again ? now.add(relearn) : now.add(Duration(days: interval(stability))),
+      due: grade == ReviewGrade.again
+          ? now.add(relearn)
+          : now.add(Duration(days: interval(stability))),
       last: now,
       reps: state.reps + 1,
       lapses: state.lapses + (grade == ReviewGrade.again ? 1 : 0),
@@ -272,7 +336,8 @@ class ReviewStore extends ChangeNotifier {
   }
 
   /// Words of [words] remembered well enough to count as learnt.
-  int knownCount(List<VocabularyWord> words) => words.where((w) => _states[w.key]?.known ?? false).length;
+  int knownCount(List<VocabularyWord> words) =>
+      words.where((w) => _states[w.key]?.known ?? false).length;
 
   /// The days in a row, up to [now], with at least one review; today
   /// counts once a review is done, and a streak still alive from
@@ -292,14 +357,17 @@ class ReviewStore extends ChangeNotifier {
 
   /// What [grade] would give [key] at [now], without keeping it: for the
   /// intervals shown on the grade buttons.
-  ReviewState preview(String key, ReviewGrade grade, DateTime now) => Fsrs.next(_states[key], grade, now);
+  ReviewState preview(String key, ReviewGrade grade, DateTime now) =>
+      Fsrs.next(_states[key], grade, now);
 
   /// Keeps [key]'s new state; [seconds] is how long the word was on
   /// screen, which teaches [secondsPerWord] (a word left open while the
   /// learner was away counts as a minute at most).
   Future<void> grade(String key, ReviewGrade grade, DateTime now, {double? seconds}) async {
     _states[key] = Fsrs.next(_states[key], grade, now);
-    if (seconds != null && seconds > 0) _pace = (_pace * 0.9 + seconds.clamp(2, 60) * 0.1).clamp(3, 60);
+    if (seconds != null && seconds > 0) {
+      _pace = (_pace * 0.9 + seconds.clamp(2, 60) * 0.1).clamp(3, 60);
+    }
     _days.update(dayOf(now), (n) => n + 1, ifAbsent: () => 1);
     notifyListeners();
     await _save();
@@ -329,13 +397,15 @@ class ReviewStore extends ChangeNotifier {
 
   Future<void> _save() async {
     try {
-      await writeFileAtomic(file, jsonEncode({
-        'version': 1,
-        'words': {for (final MapEntry(:key, :value) in _states.entries) key: value.toJson()},
-        'days': _days,
-        'pace': double.parse(_pace.toStringAsFixed(2)),
-        if (_focus) 'focus': true,
-      }));
+      await writeFileAtomic(
+          file,
+          jsonEncode({
+            'version': 1,
+            'words': {for (final MapEntry(:key, :value) in _states.entries) key: value.toJson()},
+            'days': _days,
+            'pace': double.parse(_pace.toStringAsFixed(2)),
+            if (_focus) 'focus': true,
+          }));
     } catch (e) {
       logError('Could not save the review schedule', e);
     }
@@ -356,8 +426,8 @@ String reviewIntervalLabel(Duration d) {
 final _stores = <String, ReviewStore>{};
 
 /// The review schedule kept beside [book].
-ReviewStore reviewStoreOf(VocabularyBook book) =>
-    _stores.putIfAbsent(book.file.path, () => ReviewStore(File('${book.file.parent.path}${Platform.pathSeparator}review.json')));
+ReviewStore reviewStoreOf(VocabularyBook book) => _stores.putIfAbsent(book.file.path,
+    () => ReviewStore(File('${book.file.parent.path}${Platform.pathSeparator}review.json')));
 
 /// The words of a review heard in one video ([videoId] empty: words saved
 /// without one).
@@ -368,7 +438,8 @@ class ReviewScene {
   final String title;
   final List<VocabularyWord> words;
 
-  VideoItem get video => VideoItem(id: videoId, title: title, channel: '', url: 'https://www.youtube.com/watch?v=$videoId');
+  VideoItem get video => VideoItem(
+      id: videoId, title: title, channel: '', url: 'https://www.youtube.com/watch?v=$videoId');
 }
 
 /// [queue] by the video each word was heard in, the videos with most words
@@ -380,7 +451,9 @@ List<ReviewScene> todaysScenes(List<VocabularyWord> queue) {
     (by[w.videoId] ??= []).add(w);
     if (w.videoTitle.isNotEmpty) titles[w.videoId] = w.videoTitle;
   }
-  final scenes = [for (final MapEntry(:key, :value) in by.entries) ReviewScene(key, titles[key] ?? '', value)];
+  final scenes = [
+    for (final MapEntry(:key, :value) in by.entries) ReviewScene(key, titles[key] ?? '', value)
+  ];
   scenes.sort((a, b) {
     if (a.videoId.isEmpty != b.videoId.isEmpty) return a.videoId.isEmpty ? 1 : -1;
     return b.words.length.compareTo(a.words.length);

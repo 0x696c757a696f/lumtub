@@ -7,7 +7,8 @@ import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/subtitle_cues.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:media_kit_video/media_kit_video.dart' show BlurredUntilShown, SecondaryRevealArea, SubtitleLine, SubtitleViewConfiguration;
+import 'package:media_kit_video/media_kit_video.dart'
+    show BlurredUntilShown, SecondaryRevealArea, SubtitleLine, SubtitleViewConfiguration;
 
 Duration ms(int value) => Duration(milliseconds: value);
 
@@ -17,9 +18,13 @@ void main() {
   final lines = [cue(1000, 3000, 'one'), cue(3000, 5000, 'two'), cue(6000, 8000, 'three')];
 
   group('LinePause', () {
-    List<int> pausesWhilePlaying(List<SubtitleCue> lines, Iterable<int> positions, {double rate = 1}) {
+    List<int> pausesWhilePlaying(List<SubtitleCue> lines, Iterable<int> positions,
+        {double rate = 1}) {
       final pause = LinePause();
-      return [for (final p in positions) if (pause.observe(lines, ms(p), rate: rate)) p];
+      return [
+        for (final p in positions)
+          if (pause.observe(lines, ms(p), rate: rate)) p
+      ];
     }
 
     test('pauses once at the end of each line, a moment early', () {
@@ -55,7 +60,8 @@ void main() {
     });
 
     test('faster playback pauses earlier and allows longer steps', () {
-      expect(pausesWhilePlaying(lines, [for (var p = 0; p <= 9000; p += 80) p], rate: 2), [2800, 4800, 7760]);
+      expect(pausesWhilePlaying(lines, [for (var p = 0; p <= 9000; p += 80) p], rate: 2),
+          [2800, 4800, 7760]);
     });
 
     test('no lines, no pause', () {
@@ -144,7 +150,8 @@ void main() {
     test('every second line is blurred without its outline; the main lines stay as they were', () {
       const settings = PlayerSettings();
       final cues = [cue(1000, 3000, 'Bonjour'), cue(3000, 5000, 'le monde')];
-      final main = (cues: [cue(1000, 5000, 'Hello world')], font: 'sans-serif', room: 40.0, wrapFont: '');
+      final main =
+          (cues: [cue(1000, 5000, 'Hello world')], font: 'sans-serif', room: 40.0, wrapFont: '');
       final plain = secondAss(cues, settings, outline: 0.1, main: main);
       final blurred = secondAss(cues, settings, outline: 0.1, main: main, blurred: true);
       expect(plain, isNot(contains(r'\blur')));
@@ -158,7 +165,8 @@ void main() {
     });
 
     test('without the main subtitle too', () {
-      final blurred = secondAss([cue(0, 1000, 'Hola')], const PlayerSettings(), outline: 0.1, blurred: true);
+      final blurred =
+          secondAss([cue(0, 1000, 'Hola')], const PlayerSettings(), outline: 0.1, blurred: true);
       expect(blurred, contains(r'{\bord0\shad0\blur'));
     });
   });
@@ -179,13 +187,20 @@ void main() {
       expect(keys[PlayerAction.linePause], [const KeyCombo(LogicalKeyboardKey.keyQ)]);
       expect(keys[PlayerAction.revealTranslation], [const KeyCombo(LogicalKeyboardKey.keyV)]);
       for (final MapEntry(:key, :value) in keys.entries) {
-        if (key.page || key == PlayerAction.linePause || key == PlayerAction.revealTranslation) continue;
+        if (key.page || key == PlayerAction.linePause || key == PlayerAction.revealTranslation) {
+          continue;
+        }
         expect(value, isNot(contains(const KeyCombo(LogicalKeyboardKey.keyQ))), reason: key.name);
         expect(value, isNot(contains(const KeyCombo(LogicalKeyboardKey.keyV))), reason: key.name);
       }
       expect(keys[PlayerAction.lineLoop], [const KeyCombo(LogicalKeyboardKey.keyR, shift: true)]);
       final loopKey = const KeyCombo(LogicalKeyboardKey.keyR, shift: true);
-      expect([for (final MapEntry(:key, :value) in keys.entries) if (!key.page && value.contains(loopKey)) key], [PlayerAction.lineLoop]);
+      expect([
+        for (final MapEntry(:key, :value) in keys.entries)
+          if (!key.page && value.contains(loopKey)) key
+      ], [
+        PlayerAction.lineLoop
+      ]);
       expect(PlayerAction.lineLoop.page, isFalse);
       expect(PlayerAction.linePause.page, isFalse);
       expect(PlayerAction.revealTranslation.page, isFalse);
@@ -193,17 +208,22 @@ void main() {
   });
 
   group('SecondaryRevealArea', () {
-    testWidgets('takes taps and hovering over the line, above the controls, and nowhere else', (tester) async {
+    testWidgets('takes taps and hovering over the line, above the controls, and nowhere else',
+        (tester) async {
       var hovering = false, taps = 0, controlTaps = 0;
       const line = Rect.fromLTWH(200, 300, 400, 40);
       await tester.pumpWidget(MaterialApp(
         home: Stack(children: [
           // The player's controls, which take every tap.
-          Positioned.fill(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => controlTaps++)),
+          Positioned.fill(
+              child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => controlTaps++)),
           Positioned.fill(
             child: SecondaryRevealArea(
               rect: () => line,
-              configuration: SubtitleViewConfiguration(blurSecondary: true, onSecondaryHover: (over) => hovering = over, onSecondaryTap: () => taps++),
+              configuration: SubtitleViewConfiguration(
+                  blurSecondary: true,
+                  onSecondaryHover: (over) => hovering = over,
+                  onSecondaryTap: () => taps++),
             ),
           ),
         ]),
@@ -232,8 +252,13 @@ void main() {
       var taps = 0, controlTaps = 0;
       await tester.pumpWidget(MaterialApp(
         home: Stack(children: [
-          Positioned.fill(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => controlTaps++)),
-          Positioned.fill(child: SecondaryRevealArea(rect: () => null, configuration: SubtitleViewConfiguration(blurSecondary: true, onSecondaryTap: () => taps++))),
+          Positioned.fill(
+              child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => controlTaps++)),
+          Positioned.fill(
+              child: SecondaryRevealArea(
+                  rect: () => null,
+                  configuration: SubtitleViewConfiguration(
+                      blurSecondary: true, onSecondaryTap: () => taps++))),
         ]),
       ));
       await tester.tapAt(const Offset(400, 300));
@@ -250,13 +275,20 @@ void main() {
     ];
 
     Future<Size> lay(WidgetTester tester, String text, {ValueNotifier<bool>? shown}) async {
-      final line = SubtitleLine(text, style: const TextStyle(fontSize: 28), textAlign: TextAlign.center, textScaler: TextScaler.noScaling);
+      final line = SubtitleLine(text,
+          style: const TextStyle(fontSize: 28),
+          textAlign: TextAlign.center,
+          textScaler: TextScaler.noScaling);
       await tester.pumpWidget(MaterialApp(
         home: Center(
           child: SizedBox(
             width: 360,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              KeyedSubtree(key: const Key('line'), child: shown == null ? line : BlurredUntilShown(shown: shown, sigma: 5, child: line)),
+              KeyedSubtree(
+                  key: const Key('line'),
+                  child: shown == null
+                      ? line
+                      : BlurredUntilShown(shown: shown, sigma: 5, child: line)),
             ]),
           ),
         ),
@@ -265,7 +297,9 @@ void main() {
     }
 
     for (final text in lines) {
-      testWidgets('a long unspaced line wraps the same blurred, shown and plain: ${text.substring(0, 6)}', (tester) async {
+      testWidgets(
+          'a long unspaced line wraps the same blurred, shown and plain: ${text.substring(0, 6)}',
+          (tester) async {
         final plain = await lay(tester, text);
         expect(tester.takeException(), isNull);
         expect(plain.width, lessThanOrEqualTo(360));

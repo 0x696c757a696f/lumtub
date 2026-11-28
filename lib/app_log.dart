@@ -95,14 +95,18 @@ class AppLog {
 
   final _pending = StringBuffer();
   Timer? _timer;
+
   /// Appends run one after another, so lines stay in order.
   Future<void> _writes = Future.value();
 
   /// Queues a line; lines are written together shortly after, or at once
   /// for errors, without blocking the caller.
   void write(LogLevel level, String message) {
-    if (level == LogLevel.off || level.index > AppLog.level.index || AppLog.level == LogLevel.off) return;
-    _pending.write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(inEnglish(message))}\n');
+    if (level == LogLevel.off || level.index > AppLog.level.index || AppLog.level == LogLevel.off) {
+      return;
+    }
+    _pending
+        .write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(inEnglish(message))}\n');
     if (!_levelKnown) return;
     if (level == LogLevel.error) {
       unawaited(flush());
@@ -140,7 +144,9 @@ class AppLog {
 
   static final _secrets = [
     // OAuth values in queries, forms and JSON.
-    RegExp(r'''((?:access_token|refresh_token|id_token|client_secret|code|token)["']?\s*[:=]\s*["']?)[^\s&"',}]+''', caseSensitive: false),
+    RegExp(
+        r'''((?:access_token|refresh_token|id_token|client_secret|code|token)["']?\s*[:=]\s*["']?)[^\s&"',}]+''',
+        caseSensitive: false),
     RegExp(r'(Bearer\s+)\S+', caseSensitive: false),
   ];
   // Stream addresses are signed for one viewer and expire; the host is

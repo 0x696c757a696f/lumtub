@@ -9,11 +9,19 @@ import 'pages/watch_page.dart' show subtitleViewFor;
 
 /// Font families this system installs, offered before a typed name, each
 /// with the name to translate, or null for one shown as it is written.
-List<(String, String?)> get subtitleFonts => Platform.isMacOS ? _macFonts : Platform.isIOS ? _iosFonts : Platform.isLinux ? _linuxFonts : _windowsFonts;
+List<(String, String?)> get subtitleFonts => Platform.isMacOS
+    ? _macFonts
+    : Platform.isIOS
+        ? _iosFonts
+        : Platform.isLinux
+            ? _linuxFonts
+            : _windowsFonts;
 
 /// [font] as this system draws it: the default (Microsoft YaHei, saved the
 /// same everywhere) is another font off Windows.
-String _drawnFont(String font) => Platform.isIOS || Platform.isMacOS || Platform.isLinux ? PlayerSettings.fontForThisSystem(font) : font;
+String _drawnFont(String font) => Platform.isIOS || Platform.isMacOS || Platform.isLinux
+    ? PlayerSettings.fontForThisSystem(font)
+    : font;
 
 /// libmpv has only the app's own fonts on iOS, Noto Sans SC first.
 const _iosFonts = [
@@ -65,8 +73,18 @@ const _windowsFonts = [
 ];
 
 const subtitleColors = [
-  0xFFFFFF, 0xFFE7A8, 0xFFF59D, 0xFFEB3B, 0xFFC107, 0xFF9800, 0xF48FB1,
-  0x80DEEA, 0x4FC3F7, 0xA5D6A7, 0x69F0AE, 0xB0BEC5,
+  0xFFFFFF,
+  0xFFE7A8,
+  0xFFF59D,
+  0xFFEB3B,
+  0xFFC107,
+  0xFF9800,
+  0xF48FB1,
+  0x80DEEA,
+  0x4FC3F7,
+  0xA5D6A7,
+  0x69F0AE,
+  0xB0BEC5,
 ];
 
 String subtitleFontLabel(String font) {
@@ -80,7 +98,8 @@ String subtitleFontLabel(String font) {
 String subtitleColorLabel(int color) => '#${color.toRadixString(16).padLeft(6, '0').toUpperCase()}';
 
 /// A preset family, or one typed in.
-Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged<String> onSelected) async {
+Future<void> pickSubtitleFont(
+    BuildContext context, String current, ValueChanged<String> onSelected) async {
   const custom = '\u0000custom';
   current = _drawnFont(current);
   final known = subtitleFonts.any((f) => f.$1 == current);
@@ -107,7 +126,9 @@ Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged
       initialText: known ? '' : current,
       hintText: tr('Name of an installed font, such as Noto Sans SC'),
       helper: (text) => Text(
-        text.trim().isNotEmpty && PlayerSettings.cleanFont(text).isEmpty ? tr('A font name cannot contain commas, semicolons or quotes') : tr('The default font is used when Windows does not have this one'),
+        text.trim().isNotEmpty && PlayerSettings.cleanFont(text).isEmpty
+            ? tr('A font name cannot contain commas, semicolons or quotes')
+            : tr('The default font is used when Windows does not have this one'),
         style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline),
       ),
     ),
@@ -116,8 +137,10 @@ Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged
 }
 
 /// A swatch, or a typed #RRGGBB.
-Future<void> pickSubtitleColor(BuildContext context, int current, ValueChanged<int> onSelected) async {
-  final chosen = await showDialog<int>(context: context, builder: (context) => _ColorDialog(current: current));
+Future<void> pickSubtitleColor(
+    BuildContext context, int current, ValueChanged<int> onSelected) async {
+  final chosen =
+      await showDialog<int>(context: context, builder: (context) => _ColorDialog(current: current));
   if (chosen != null && chosen != current) onSelected(chosen);
 }
 
@@ -152,51 +175,64 @@ class _ColorDialogState extends State<_ColorDialog> {
       title: Text(tr('Color')),
       content: SizedBox(
         width: 300,
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Wrap(spacing: 10, runSpacing: 10, children: [
-            for (final color in subtitleColors)
-              Tooltip(
-                message: subtitleColorLabel(color),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => setState(() {
-                    _color = color;
-                    _text.text = subtitleColorLabel(color);
-                  }),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF000000 | color),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: color == _color ? colors.primary : colors.outlineVariant, width: color == _color ? 3 : 1),
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(spacing: 10, runSpacing: 10, children: [
+                for (final color in subtitleColors)
+                  Tooltip(
+                    message: subtitleColorLabel(color),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => setState(() {
+                        _color = color;
+                        _text.text = subtitleColorLabel(color);
+                      }),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF000000 | color),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: color == _color ? colors.primary : colors.outlineVariant,
+                              width: color == _color ? 3 : 1),
+                        ),
+                      ),
                     ),
                   ),
+              ]),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _text,
+                decoration: InputDecoration(
+                  isDense: true,
+                  labelText: tr('Custom color'),
+                  hintText: '#RRGGBB',
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                            color: Color(0xFF000000 | _color),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: colors.outlineVariant))),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
+                onChanged: (text) {
+                  final parsed = _parse(text);
+                  if (parsed != null) setState(() => _color = parsed);
+                },
               ),
-          ]),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _text,
-            decoration: InputDecoration(
-              isDense: true,
-              labelText: tr('Custom color'),
-              hintText: '#RRGGBB',
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Container(width: 16, height: 16, decoration: BoxDecoration(color: Color(0xFF000000 | _color), shape: BoxShape.circle, border: Border.all(color: colors.outlineVariant))),
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            ),
-            onChanged: (text) {
-              final parsed = _parse(text);
-              if (parsed != null) setState(() => _color = parsed);
-            },
-          ),
-        ]),
+            ]),
       ),
       actions: [
-        TextButton(onPressed: Navigator.of(context).pop, child: Text(tr('Cancel'), style: TextStyle(color: colors.outline))),
+        TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: Text(tr('Cancel'), style: TextStyle(color: colors.outline))),
         TextButton(onPressed: () => Navigator.pop(context, _color), child: Text(tr('OK'))),
       ],
     );
@@ -221,19 +257,26 @@ class SubtitlePreview extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF37474F), Color(0xFF101418)]),
+        gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF37474F), Color(0xFF101418)]),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(tr('The second subtitle shows here'), textAlign: TextAlign.center, style: shrink(view.secondaryStyle ?? view.style)),
+        Text(tr('The second subtitle shows here'),
+            textAlign: TextAlign.center, style: shrink(view.secondaryStyle ?? view.style)),
         const SizedBox(height: 2),
-        Text(tr('The first subtitle shows here'), textAlign: TextAlign.center, style: shrink(view.style)),
+        Text(tr('The first subtitle shows here'),
+            textAlign: TextAlign.center, style: shrink(view.style)),
       ]),
     );
   }
 }
 
 /// Opacity as a percentage slider.
-Future<void> pickSubtitleOpacity(BuildContext context, double current, ValueChanged<double> onSelected) => pickWithSlider(
+Future<void> pickSubtitleOpacity(
+        BuildContext context, double current, ValueChanged<double> onSelected) =>
+    pickWithSlider(
       context,
       title: tr('Opacity'),
       value: (current * 100).roundToDouble(),

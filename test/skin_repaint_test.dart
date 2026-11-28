@@ -38,7 +38,8 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light, skin: skin),
-      builder: (context, child) => WindowChrome(controller: controller, title: 'Lumtub', child: child!),
+      builder: (context, child) =>
+          WindowChrome(controller: controller, title: 'Lumtub', child: child!),
       home: const SizedBox.expand(),
     ));
     await tester.pump();
@@ -68,7 +69,8 @@ void main() {
 
     final before = ScenePainter.recordings;
     paintAt(const Size(961, 650));
-    expect(ScenePainter.recordings - before, 1, reason: 'a window at rest gets its exact size at once');
+    expect(ScenePainter.recordings - before, 1,
+        reason: 'a window at rest gets its exact size at once');
     expect(scales.last, closeTo(1, 0.001));
     for (var w = 964.0; w <= 1020; w += 3) {
       paintAt(Size(w, 650 + (w - 961) / 4));
@@ -84,14 +86,21 @@ void main() {
     expect(ScenePainter.recordings - before, 3, reason: 'kept');
   });
 
-  testWidgets("the LCD's meter asks for about 20 frames a second, not one per refresh", (tester) async {
+  testWidgets("the LCD's meter asks for about 20 frames a second, not one per refresh",
+      (tester) async {
     final player = FakePlayer();
     player.state = player.state.copyWith(playing: true);
     final skin = _skin({
       'player': {'style': 'lcd'},
     });
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: SkinLcd(skin: skin, player: player, title: 'A title long enough to run past the display ' * 3, subtitle: 'Channel', still: false)),
+      home: Scaffold(
+          body: SkinLcd(
+              skin: skin,
+              player: player,
+              title: 'A title long enough to run past the display ' * 3,
+              subtitle: 'Channel',
+              still: false)),
     ));
     var frames = 0;
     await tester.pump();
@@ -110,10 +119,15 @@ void main() {
   testWidgets("the deck's groove moving does not paint the deck's body again", (tester) async {
     final player = FakePlayer();
     final skin = _skin({
-      'player': {'style': 'deck', 'deck': {'speakers': true}},
+      'player': {
+        'style': 'deck',
+        'deck': {'speakers': true}
+      },
     });
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: SkinDeckView(deck: skin.player.deck!, player: player, title: 'Title', onSeek: player.seek)),
+      home: Scaffold(
+          body: SkinDeckView(
+              deck: skin.player.deck!, player: player, title: 'Title', onSeek: player.seek)),
     ));
     await tester.pump();
     final before = SkinDeckView.bodyPaints;

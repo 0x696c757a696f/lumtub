@@ -22,9 +22,11 @@ const defaultSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0];
 /// How playback picks among the codecs that are not disabled; see
 /// `FormatPolicy`.
 enum PlaybackStrategy {
-  auto('Smart auto (recommended)', 'Chosen automatically from hardware decoding support and video quality'),
+  auto('Smart auto (recommended)',
+      'Chosen automatically from hardware decoding support and video quality'),
   quality('Quality first', 'Prefers resolution, frame rate and quality; software decoding allowed'),
-  lowResource('Low resource use first', 'Uses hardware decoding wherever possible to lower CPU use');
+  lowResource(
+      'Low resource use first', 'Uses hardware decoding wherever possible to lower CPU use');
 
   const PlaybackStrategy(this._label, this._description);
   final String _label;
@@ -95,8 +97,10 @@ class SubtitleLanguage {
 
   /// The interface's language.
   static const auto = SubtitleLanguage._('auto', '');
-  static const zh = SubtitleLanguage._('zh', 'zh-CN', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng');
-  static const zhHant = SubtitleLanguage._('zhHant', 'zh-TW', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng');
+  static const zh = SubtitleLanguage._(
+      'zh', 'zh-CN', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng');
+  static const zhHant = SubtitleLanguage._(
+      'zhHant', 'zh-TW', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng');
   static const en = SubtitleLanguage._('en', 'en', 'en.*', 'en,eng,en-US,en-GB');
   static const ja = SubtitleLanguage._('ja', 'ja', '(ja|en).*', 'ja,jpn,en,eng');
   static const ko = SubtitleLanguage._('ko', 'ko', '(ko|en).*', 'ko,kor,en,eng');
@@ -124,7 +128,8 @@ class SubtitleLanguage {
   /// The choice saved as [name]; null for an unknown one.
   static SubtitleLanguage? byName(Object? name) => values.where((l) => l.name == name).firstOrNull;
 
-  String get label => this == auto ? tr('Interface language ({0})', [resolved.label]) : translation.label;
+  String get label =>
+      this == auto ? tr('Interface language ({0})', [resolved.label]) : translation.label;
 
   /// yt-dlp's `--sub-langs` value; a regex without commas so it fits in
   /// mpv's `ytdl-raw-options` list.
@@ -145,13 +150,17 @@ class SubtitleLanguage {
   /// Windows' language as a translation language, English when there is
   /// none for it.
   static TranslationLanguage get systemTranslation => switch (systemLocale()) {
-        Locale(languageCode: 'zh', scriptCode: 'Hant') || Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => TranslationLanguage.byCode('zh-TW'),
-        Locale(:final languageCode) => TranslationLanguage.ofTag(languageCode) ?? TranslationLanguage.byCode('en'),
+        Locale(languageCode: 'zh', scriptCode: 'Hant') ||
+        Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') =>
+          TranslationLanguage.byCode('zh-TW'),
+        Locale(:final languageCode) =>
+          TranslationLanguage.ofTag(languageCode) ?? TranslationLanguage.byCode('en'),
       };
 
   /// The language subtitles are translated into when a video has none in
   /// this one.
-  TranslationLanguage get translation => this == auto ? interfaceTranslationLanguage : TranslationLanguage.byCode(_code);
+  TranslationLanguage get translation =>
+      this == auto ? interfaceTranslationLanguage : TranslationLanguage.byCode(_code);
 
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved {
@@ -190,7 +199,8 @@ enum Upscaling {
 /// one is tone mapped down to standard range either way.
 enum HdrPreference {
   auto('Automatic', 'Standard range version; HDR with Quality first'),
-  sdr('Standard range version', 'Plays the version YouTube made for normal screens; less decoding work'),
+  sdr('Standard range version',
+      'Plays the version YouTube made for normal screens; less decoding work'),
   hdr('HDR version', 'Tone mapped to this screen; 10-bit decoding uses more power');
 
   const HdrPreference(this._label, this._description);
@@ -310,10 +320,10 @@ const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
 /// 音量均衡 presets, as mpv `--af` filters.
 List<(String, String)> get audioFilterPresets => [
-  ('', tr('Close')),
-  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('Preset dynaudnorm (dynamic normalization)')),
-  ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('Preset loudnorm (loudness normalization)')),
-];
+      ('', tr('Close')),
+      ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('Preset dynaudnorm (dynamic normalization)')),
+      ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('Preset loudnorm (loudness normalization)')),
+    ];
 
 /// Picture adjustments offered in the player, as mpv properties.
 /// How far each picture property may go either way. Brightness stops short
@@ -331,14 +341,46 @@ List<(String, String)> get pictureProperties => [
 /// Options a custom line may not set: ones that load code or files, write
 /// files, or would break media_kit's rendering and playback control.
 const _blockedOptions = {
-  'vo', 'wid', 'include', 'config', 'config-dir', 'ytdl', 'ytdl-path', 'idle', 'keep-open', 'force-window',
-  'log-file', 'o', 'of', 'ofopts', 'ovc', 'ovcopts', 'oac', 'oacopts', 'stream-record', 'record-file',
-  'input-conf', 'use-filedir-conf', 'watch-later-dir', 'watch-later-directory', 'screenshot-directory', 'screenshot-dir',
+  'vo',
+  'wid',
+  'include',
+  'config',
+  'config-dir',
+  'ytdl',
+  'ytdl-path',
+  'idle',
+  'keep-open',
+  'force-window',
+  'log-file',
+  'o',
+  'of',
+  'ofopts',
+  'ovc',
+  'ovcopts',
+  'oac',
+  'oacopts',
+  'stream-record',
+  'record-file',
+  'input-conf',
+  'use-filedir-conf',
+  'watch-later-dir',
+  'watch-later-directory',
+  'screenshot-directory',
+  'screenshot-dir',
 };
+
 /// `ytdl-raw-options` (and its -append/-add/-set forms) would let a line,
 /// or a settings backup someone shares, hand yt-dlp `exec=` or a config
 /// file, undoing ProcessTree.ytDlpIsolation.
-const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua', 'ytdl-raw-options'];
+const _blockedPrefixes = [
+  'script',
+  'load-',
+  'input-ipc',
+  'dump-',
+  'glsl-shader',
+  'lua',
+  'ytdl-raw-options'
+];
 
 /// One line of a custom mpv.conf that was not applied, and why.
 typedef RejectedOption = (String line, String reason);
@@ -365,7 +407,9 @@ typedef RejectedOption = (String line, String reason);
       key = key.substring(3);
       value = 'no';
     }
-    if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
+    if (value.length >= 2 &&
+        ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'")))) {
       value = value.substring(1, value.length - 1);
     }
     final reason = PlayerSettings.customOptionProblem(key, value);
@@ -462,34 +506,44 @@ class PlayerSettings {
   }) : chosenCodecs = disabledCodecs;
 
   factory PlayerSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const PlayerSettings().copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
+    if (raw is! Map) {
+      return const PlayerSettings()
+          .copyWith(cacheMemoryMb: defaultBufferMb, libassSubtitles: Platform.isIOS);
+    }
     String choice(String key, Set<String> allowed, String fallback) {
       final value = raw[key]?.toString();
       return allowed.contains(value) ? value! : fallback;
     }
+
     int number(String key, int fallback, int min, int max) {
       final value = raw[key];
       final parsed = value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
       if (parsed == null || parsed < min) return fallback;
       return parsed.clamp(min, max);
     }
+
     double decimal(String key, double fallback, double min, double max) {
       final value = raw[key];
       final parsed = value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
       return parsed == null ? fallback : parsed.clamp(min, max);
     }
+
     final results = <String, DecoderStatus>{};
     // Earlier builds kept custom options as a map.
     var conf = raw['mpvConf'] is String ? raw['mpvConf'] as String : '';
     if (conf.isEmpty && raw['customOptions'] is Map) {
-      conf = [for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'].join('\n');
+      conf = [
+        for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'
+      ].join('\n');
     }
     if (conf.length > 200000) conf = '';
     final picture = <String, int>{};
     if (raw['picture'] is Map) {
       for (final (key, _) in pictureProperties) {
         final value = (raw['picture'] as Map)[key];
-        if (value is num && value != 0) picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
+        if (value is num && value != 0) {
+          picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
+        }
       }
     }
     final filter = raw['audioFilter']?.toString() ?? '';
@@ -501,18 +555,31 @@ class PlayerSettings {
       }
     }
     final speeds = raw['speeds'] is List
-        ? ((raw['speeds'] as List).whereType<num>().map((s) => s.toDouble()).where((s) => s >= 0.1 && s <= 8).toSet().toList()..sort())
+        ? ((raw['speeds'] as List)
+            .whereType<num>()
+            .map((s) => s.toDouble())
+            .where((s) => s >= 0.1 && s <= 8)
+            .toSet()
+            .toList()
+          ..sort())
         : defaultSpeeds;
     final categories = raw['sponsorCategories'] is List
-        ? (raw['sponsorCategories'] as List).map((c) => c.toString()).where(sponsorCategoryNames.containsKey).toSet()
+        ? (raw['sponsorCategories'] as List)
+            .map((c) => c.toString())
+            .where(sponsorCategoryNames.containsKey)
+            .toSet()
         : defaultSponsorCategories;
     // Builds before the format policy saved a preferred `codec`: "any" and a
     // switched-off codec selection meant best quality, the rest automatic.
     final strategy = raw.containsKey('strategy')
         ? _enumByName(PlaybackStrategy.values, raw['strategy'], PlaybackStrategy.auto)
-        : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
+        : raw['codec'] == 'any' || raw['autoSelectCodec'] == false
+            ? PlaybackStrategy.quality
+            : PlaybackStrategy.auto;
     final disabled = raw['disabledCodecs'] is List
-        ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
+        ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}
+            .whereType<VideoCodec>()
+            .toSet()
         : null;
     // A file that disables every codec YouTube plays would play nothing.
     if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
@@ -521,8 +588,12 @@ class PlayerSettings {
     // when untouched; the default is now to stop at the end.
     final savedOrder = raw.containsKey('playOrder')
         ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.pause)
-        : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
-    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
+        : raw['autoplayNext'] == false
+            ? PlayOrder.pause
+            : PlayOrder.autoPlayRelated;
+    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated
+        ? PlayOrder.pause
+        : savedOrder;
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
     final bufferVersion = raw['bufferDefaults'] is int ? raw['bufferDefaults'] as int : 1;
@@ -535,33 +606,49 @@ class PlayerSettings {
       interpolation: raw['interpolation'] == true,
       subtitleScale: decimal('subtitleScale', 1.0, 0.5, 3.0),
       subtitlePosition: number('subtitlePosition', 100, 0, 100),
-      subtitleFont: raw.containsKey('subtitleFont') ? cleanFont(raw['subtitleFont']) : defaultSubtitleFont,
+      subtitleFont:
+          raw.containsKey('subtitleFont') ? cleanFont(raw['subtitleFont']) : defaultSubtitleFont,
       subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
       subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
-      secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
+      secondaryFont:
+          raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
       // 0.8 was the default before it grew to 0.9, too small to read;
       // from subtitleStyleVersion 2 on, a saved 0.8 was chosen.
-      secondaryScale: raw['secondaryScale'] == 0.8 && raw['subtitleStyleVersion'] != 2 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
+      secondaryScale: raw['secondaryScale'] == 0.8 && raw['subtitleStyleVersion'] != 2
+          ? 0.9
+          : decimal('secondaryScale', 0.9, 0.5, 3.0),
       secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
       secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
       cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
       // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
       // those move to the larger defaults that ride out network hiccups.
-      cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
+      cacheSeconds:
+          oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
       // Builds before bufferDefaults 3 saved mpv's 150 MB even when
       // untouched; it now uses less memory, less still on phones and TVs.
       // Before bufferDefaults 4 iPhones and iPads saved the computers' 100
       // MB, and devices with little memory the phones' 64 MB.
-      cacheMemoryMb: (oldBuffer && savedBuffer == 64) || (bufferVersion < 3 && savedBuffer == 150) || (bufferVersion < 4 && ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory))) ? defaultBufferMb : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
+      cacheMemoryMb: (oldBuffer && savedBuffer == 64) ||
+              (bufferVersion < 3 && savedBuffer == 150) ||
+              (bufferVersion < 4 &&
+                  ((savedBuffer == 100 && smallMemory) || (savedBuffer == 64 && lowMemory)))
+          ? defaultBufferMb
+          : number('cacheMemoryMb', defaultBufferMb, 16, 1024),
       strategy: strategy,
       disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
       dubbedAudio: _enumByName(DubbedAudio.values, raw['dubbedAudio'], DubbedAudio.original),
-      audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
+      audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]'))
+          ? 'auto'
+          : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
       upscaling: _enumByName(Upscaling.values, raw['upscaling'], Upscaling.off),
       hdr: _enumByName(HdrPreference.values, raw['hdr'], HdrPreference.auto),
-      maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
+      maxHeight: raw['maxHeight'] is int &&
+              (raw['maxHeight'] as int) >= 0 &&
+              (raw['maxHeight'] as int) <= 4320
+          ? raw['maxHeight'] as int
+          : 0,
       playOrder: playOrder,
       defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),
       speeds: speeds.isEmpty ? defaultSpeeds : speeds,
@@ -571,18 +658,25 @@ class PlayerSettings {
       // Saved under a new key since 跟随界面语言 came; 简体中文优先, the
       // default before it, saved under the old one now follows too.
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
-          ? SubtitleLanguage.byName(raw['subtitleLanguageV2'] ?? raw['subtitleLanguage']) ?? SubtitleLanguage.auto
+          ? SubtitleLanguage.byName(raw['subtitleLanguageV2'] ?? raw['subtitleLanguage']) ??
+              SubtitleLanguage.auto
           : SubtitleLanguage.auto,
       subtitleOriginal: raw['subtitleOriginal'] == true,
       // Saved under a new key since the interface's language became the
       // default; none, the default before it, follows it too.
-      secondarySubtitleLanguage: switch (raw['secondarySubtitleLanguageV2'] ?? (raw['secondarySubtitleLanguage'] == '' ? null : raw['secondarySubtitleLanguage'])) {
+      secondarySubtitleLanguage: switch (raw['secondarySubtitleLanguageV2'] ??
+          (raw['secondarySubtitleLanguage'] == '' ? null : raw['secondarySubtitleLanguage'])) {
         null => interfaceSubtitle,
         originalSubtitle => originalSubtitle,
         interfaceSubtitle => interfaceSubtitle,
         final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
       },
-      knownLanguages: raw['knownLanguages'] is List ? [for (final code in (raw['knownLanguages'] as List).whereType<String>()) if (TranslationLanguage.maybeByCode(code) != null) code] : const [],
+      knownLanguages: raw['knownLanguages'] is List
+          ? [
+              for (final code in (raw['knownLanguages'] as List).whereType<String>())
+                if (TranslationLanguage.maybeByCode(code) != null) code
+            ]
+          : const [],
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
@@ -600,7 +694,8 @@ class PlayerSettings {
       relayFallback: raw['relayFallback'] != false,
       skipSilence: raw['skipSilence'] == true,
       mixWithOthers: raw['mixWithOthers'] == true,
-      volumeBalance: raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
+      volumeBalance:
+          raw['volumeBalance'] is num ? (raw['volumeBalance'] as num).round().clamp(0, 100) : 0,
       sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
@@ -609,18 +704,25 @@ class PlayerSettings {
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
       // Always on iOS: Flutter's subtitles over the video's platform view
       // leave ghosts of earlier lines there.
-      libassSubtitles: raw['libassSubtitles'] == true || (Platform.isIOS && !raw.containsKey('libassSubtitles')),
+      libassSubtitles:
+          raw['libassSubtitles'] == true || (Platform.isIOS && !raw.containsKey('libassSubtitles')),
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       dnsServer: raw['dnsServer']?.toString() ?? '',
       dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
-      certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
-      postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
-      ipVersion: const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
+      certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots'])
+          ? raw['certificateRoots'] as String
+          : 'system',
+      postQuantum: const ['off', 'require'].contains(raw['postQuantum'])
+          ? raw['postQuantum'] as String
+          : 'prefer',
+      ipVersion:
+          const ['ipv4', 'any'].contains(raw['ipVersion']) ? raw['ipVersion'] as String : 'auto',
       signInWhenBlocked: raw['signInWhenBlocked'] == true,
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
-      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),
+      playbackSource:
+          _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),
       pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
       invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
@@ -647,7 +749,11 @@ class PlayerSettings {
   /// 1080p (cache-secs stops it sooner there); 64 MB on phones and TVs, 32
   /// MB on those with little memory. The cache of what was played is a
   /// quarter of it.
-  static int get defaultBufferMb => lowMemory ? 32 : smallMemory ? 64 : 100;
+  static int get defaultBufferMb => lowMemory
+      ? 32
+      : smallMemory
+          ? 64
+          : 100;
 
   final String hwdec;
   final String scale;
@@ -655,11 +761,13 @@ class PlayerSettings {
   final bool interpolation;
   final double subtitleScale;
   final int subtitlePosition;
+
   /// The main subtitle's font family (empty: the default), color
   /// (0xRRGGBB) and opacity (0.1 to 1); [subtitleScale] is its size.
   final String subtitleFont;
   final int subtitleColor;
   final double subtitleOpacity;
+
   /// The same for the secondary subtitle (双语字幕), drawn above the main.
   /// libmpv has no separate style for it, so these apply only while the
   /// interface draws subtitles.
@@ -671,6 +779,7 @@ class PlayerSettings {
   final int cacheSeconds;
   final int cacheMemoryMb;
   final PlaybackStrategy strategy;
+
   /// The codecs the user chose to disable; null leaves them to Lumtub.
   final Set<VideoCodec>? chosenCodecs;
 
@@ -694,42 +803,55 @@ class PlayerSettings {
   /// These settings with [disabled] disabled: the user's choice, or back to
   /// the automatic one when it is the same.
   PlayerSettings withDisabledCodecs(Set<VideoCodec> disabled) =>
-      _sameCodecs(disabled, copyWith(automaticCodecs: true).automaticCodecs) ? copyWith(automaticCodecs: true) : copyWith(disabledCodecs: disabled);
+      _sameCodecs(disabled, copyWith(automaticCodecs: true).automaticCodecs)
+          ? copyWith(automaticCodecs: true)
+          : copyWith(disabledCodecs: disabled);
 
-  static bool _sameCodecs(Set<VideoCodec> a, Set<VideoCodec> b) => a.length == b.length && a.containsAll(b);
+  static bool _sameCodecs(Set<VideoCodec> a, Set<VideoCodec> b) =>
+      a.length == b.length && a.containsAll(b);
   final AudioQuality audioQuality;
   final DubbedAudio dubbedAudio;
+
   /// The language of the dub to play, as YouTube starts its audio language
   /// codes (`zh`, `it`), the first subtitle language's or else the
   /// interface's; empty when [dubbedAudio] keeps the original.
-  String get dubLanguage => dubbedAudio == DubbedAudio.original ? '' : subtitleLanguage.translation.code.split('-').first;
+  String get dubLanguage =>
+      dubbedAudio == DubbedAudio.original ? '' : subtitleLanguage.translation.code.split('-').first;
+
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
   final VideoSync videoSync;
   final Upscaling upscaling;
   final HdrPreference hdr;
+
   /// Highest video height to request, or 0 for no limit.
   final int maxHeight;
   final PlayOrder playOrder;
   final double defaultSpeed;
   final List<double> speeds;
+
   /// Volume when Lumtub starts, 0–100.
   final int defaultVolume;
+
   /// Highest volume allowed; above 100 boosts quiet videos.
   final int volumeMax;
   final SubtitleMode subtitleMode;
   final SubtitleLanguage subtitleLanguage;
+
   /// The first subtitle in the language the video is spoken in rather than
   /// [subtitleLanguage].
   final bool subtitleOriginal;
+
   /// The TranslationLanguage code of the subtitle shown above the main
   /// one when a video opens; empty for none.
   /// [secondarySubtitleLanguage] for the video's own subtitle in its own
   /// language, uploaded or automatic.
   static const originalSubtitle = 'original';
+
   /// [secondarySubtitleLanguage] for the interface's language, the default.
   static const interfaceSubtitle = 'interface';
   final String secondarySubtitleLanguage;
+
   /// TranslationLanguage codes of the languages the user understands, for
   /// [SubtitleMode.foreign]; empty for [understood]'s default.
   final List<String> knownLanguages;
@@ -737,93 +859,126 @@ class PlayerSettings {
   /// The languages a video is left without subtitles in under
   /// [SubtitleMode.foreign]: [knownLanguages], else the interface's and
   /// the first subtitle's.
-  List<String> get understood => knownLanguages.isNotEmpty ? knownLanguages : {interfaceTranslationLanguage.code, subtitleLanguage.translation.code}.toList();
+  List<String> get understood => knownLanguages.isNotEmpty
+      ? knownLanguages
+      : {interfaceTranslationLanguage.code, subtitleLanguage.translation.code}.toList();
 
   /// The language [secondarySubtitleLanguage] names, null for none or the
   /// video's own.
-  TranslationLanguage? get secondaryTarget =>
-      secondarySubtitleLanguage == interfaceSubtitle ? interfaceTranslationLanguage : TranslationLanguage.maybeByCode(secondarySubtitleLanguage);
+  TranslationLanguage? get secondaryTarget => secondarySubtitleLanguage == interfaceSubtitle
+      ? interfaceTranslationLanguage
+      : TranslationLanguage.maybeByCode(secondarySubtitleLanguage);
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
+
   /// Playback pauses as each subtitle line ends (学外语).
   final bool pauseEachLine;
+
   /// The second subtitle, a translation, is blurred until asked for.
   final bool blurSecondary;
+
   /// Subtitles show in the picture-in-picture window.
   final bool pipSubtitles;
+
   /// Subtitles show in the in-app mini player.
   final bool miniPlayerSubtitles;
+
   /// Skip segments marked on SponsorBlock. Off by default because it asks a
   /// third-party server, even if only by an anonymous hash prefix.
   final bool sponsorBlock;
+
   /// Shows Return YouTube Dislike's estimate of the dislikes.
   final bool returnDislike;
+
   /// The graphics adapter and driver [decoderResults] were measured on.
   final String decoderAdapter;
+
   /// DeArrow's titles and thumbnails in place of YouTube's.
   final bool deArrowTitles;
   final bool deArrowThumbnails;
   final Set<String> sponsorCategories;
   final bool sponsorNotice;
+
   /// Leave the chosen segments out of downloaded files, at keyframes.
   final bool sponsorCut;
   final String? cachePath;
   final int? cacheLimitGb;
+
   /// Extra libmpv options in mpv.conf syntax, applied after all others.
   final String mpvConf;
   final Map<String, DecoderStatus> decoderResults;
+
   /// `--d3d11va-zero-copy`.
   final bool d3d11vaZeroCopy;
+
   /// libmpv draws subtitles itself (libass), so the mpv subtitle options
   /// apply; off, Flutter draws them over the video. Switches at once.
   final bool libassSubtitles;
+
   /// How yt-dlp, libmpv and the app reach YouTube.
   final ProxyMode proxyMode;
+
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
+
   /// 加密 DNS: a [DnsServer] id, `custom` for [dnsCustomUrl], or `''` for
   /// the system resolver.
   final String dnsServer;
   final String dnsCustomUrl;
+
   /// The certificate authorities the app's HTTPS trusts: `system` (the
   /// system's store), `mozilla` or `google`.
   final String certificateRoots;
+
   /// The post-quantum key exchange on the core's connections: 'prefer',
   /// 'off' or 'require'.
   final String postQuantum;
+
   /// When yt-dlp connects over IPv4 only (`--force-ipv4`): 'auto' when
   /// IPv6 does not reach YouTube (checked at start), 'ipv4' always, 'any'
   /// never. For networks whose IPv6 addresses go nowhere and make each run
   /// wait for a time-out.
   final String ipVersion;
+
   /// Whether a video YouTube refuses as from a bot is asked once more with
   /// the browser sign-in's cookies (off by default): YouTube then knows the
   /// account watched it, and an account used often from a shared address
   /// may be flagged too.
   final bool signInWhenBlocked;
+
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
+
   /// Play from public Piped or Invidious servers when YouTube refuses a
   /// video, which tells them what is watched.
   final bool relayFallback;
+
   /// Skip silent stretches by playing them faster.
   final bool skipSilence;
+
   /// iOS: play along with other apps' sound instead of stopping it. iOS
   /// then leaves Lumtub out of Now Playing (Lock Screen, Dynamic Island).
   final bool mixWithOthers;
+
   /// 音量平衡 strength, 0 (off) to 100; see [VolumeBalance].
   final int volumeBalance;
+
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
+
   /// The Invidious instance for [PlaybackSource.invidiousCustom].
   final String invidiousServer;
+
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
+
   /// `--autosync`; 0 turns it off.
   final int autosync;
+
   /// `--af`, such as a loudness filter; empty for none.
   final String audioFilter;
+
   /// Brightness, contrast, saturation, gamma and hue, -100 to 100.
   final Map<String, int> picture;
   final int audioDelayMs;
@@ -916,7 +1071,8 @@ class PlayerSettings {
     String? audioFilter,
     Map<String, int>? picture,
     int? audioDelayMs,
-  }) => PlayerSettings(
+  }) =>
+      PlayerSettings(
         hwdec: hwdec ?? this.hwdec,
         scale: scale ?? this.scale,
         deband: deband ?? this.deband,
@@ -1015,7 +1171,12 @@ class PlayerSettings {
         'bufferDefaults': 4,
         'subtitleStyleVersion': 2,
         'strategy': strategy.name,
-        'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
+        'disabledCodecs': chosenCodecs == null
+            ? null
+            : [
+                for (final c in VideoCodec.values)
+                  if (chosenCodecs!.contains(c)) c.name
+              ],
         'audioQuality': audioQuality.name,
         'dubbedAudio': dubbedAudio.name,
         'audioDevice': audioDevice,
@@ -1101,7 +1262,8 @@ class PlayerSettings {
     // picks for the text.
     if (Platform.isIOS) return iosSubtitleFont;
     if (font != defaultSubtitleFont) return font;
-    return defaultFontOn(Platform.operatingSystem, cjkFormOf(language), downloaded: downloadedCjkFamilies);
+    return defaultFontOn(Platform.operatingSystem, cjkFormOf(language),
+        downloaded: downloadedCjkFamilies);
   }
 
   /// The default subtitle font on [system] (Platform.operatingSystem) for
@@ -1109,7 +1271,9 @@ class PlayerSettings {
   /// other language). Each is part of every install of that system; on
   /// Linux a font downloaded as a data pack ([downloaded]) stands in where
   /// the distribution has no Noto Sans CJK for it.
-  static String defaultFontOn(String system, String? forms, {Map<String, String> downloaded = const {}}) => switch ((system, forms)) {
+  static String defaultFontOn(String system, String? forms,
+          {Map<String, String> downloaded = const {}}) =>
+      switch ((system, forms)) {
         ('windows', 'ja') => 'Yu Gothic UI',
         ('windows', 'ko') => 'Malgun Gothic',
         ('windows', 'zh-Hant') => 'Microsoft JhengHei',
@@ -1119,7 +1283,8 @@ class PlayerSettings {
         ('macos', 'zh-Hant') => 'PingFang TC',
         // macOS has PingFang, and no Noto fonts.
         ('macos', _) => 'PingFang SC',
-        (_, final String forms) => downloaded[forms] ?? 'Noto Sans CJK ${const {'ja': 'JP', 'ko': 'KR', 'zh-Hant': 'TC'}[forms] ?? 'SC'}',
+        (_, final String forms) => downloaded[forms] ??
+            'Noto Sans CJK ${const {'ja': 'JP', 'ko': 'KR', 'zh-Hant': 'TC'}[forms] ?? 'SC'}',
         _ => 'Noto Sans CJK SC',
       };
 
@@ -1151,7 +1316,8 @@ class PlayerSettings {
 
   /// [rgb] (0xRRGGBB) at [opacity] as mpv's #AARRGGBB.
   static String mpvColor(int rgb, double opacity) =>
-      '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
+      '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'
+          .toUpperCase();
 
   /// [value] if it is a comma list of decoders offered on this platform
   /// (or in [choices]), else null.
@@ -1159,25 +1325,35 @@ class PlayerSettings {
     if (value == null) return null;
     final known = {for (final (name, _) in choices ?? hwdecChoices) name};
     final parts = value.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty || parts.any((p) => !known.contains(p)) || parts.toSet().length != parts.length) return null;
+    if (parts.isEmpty ||
+        parts.any((p) => !known.contains(p)) ||
+        parts.toSet().length != parts.length) {
+      return null;
+    }
     return parts.join(',');
   }
 
   /// Why a custom option cannot be applied, or null when it can.
   static String? customOptionProblem(String key, String value) {
     if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return tr('Invalid option name');
-    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr("Lumtub doesn't allow setting this option");
+    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) {
+      return tr("Lumtub doesn't allow setting this option");
+    }
     if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return tr('Invalid option value');
     return null;
   }
 
-  static bool isSafeCustomOption(String key, String value) => customOptionProblem(key, value) == null;
+  static bool isSafeCustomOption(String key, String value) =>
+      customOptionProblem(key, value) == null;
 }
 
 /// SponsorBlock's categories with the names shown for them.
 final sponsorCategoryNames = {
   'sponsor': (tr('Sponsor'), tr('Paid promotions, paid referrals and direct ads')),
-  'selfpromo': (tr('Self-promotion'), tr('Unpaid promotion: merch, donations or collaborator info')),
+  'selfpromo': (
+    tr('Self-promotion'),
+    tr('Unpaid promotion: merch, donations or collaborator info')
+  ),
   'interaction': (tr('Like and subscribe reminders'), tr('Reminders to like, subscribe or follow')),
   'intro': (tr('Intro'), tr('Intro animations and pause screens with no real content')),
   'outro': (tr('Outro'), tr('End credits, outro animations and next-episode previews')),
@@ -1187,16 +1363,21 @@ final sponsorCategoryNames = {
 };
 
 class PlayerSettingsStore {
-  PlayerSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
+  PlayerSettingsStore(AppDirectories directories)
+      : file = File('${directories.config.path}${Platform.pathSeparator}player_settings.json');
   final File file;
 
   Future<PlayerSettings> load() async {
-    if (!await file.exists()) return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
+    if (!await file.exists()) {
+      return const PlayerSettings()
+          .copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
+    }
     try {
       return PlayerSettings.fromJson(jsonDecode(await file.readAsString()));
     } catch (e) {
       await setBrokenFileAside(file, e);
-      return const PlayerSettings().copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
+      return const PlayerSettings()
+          .copyWith(cacheMemoryMb: PlayerSettings.defaultBufferMb, libassSubtitles: Platform.isIOS);
     }
   }
 
@@ -1209,4 +1390,5 @@ class PlayerSettingsStore {
 }
 
 /// The interface's language as a translation target.
-TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.ofTag(currentLanguage.tag) ?? TranslationLanguage.byCode('en');
+TranslationLanguage get interfaceTranslationLanguage =>
+    TranslationLanguage.ofTag(currentLanguage.tag) ?? TranslationLanguage.byCode('en');

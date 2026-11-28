@@ -8,7 +8,12 @@ import 'package:lumtub/ai_filter.dart';
 import 'package:lumtub/models.dart';
 
 void main() {
-  VideoItem video(String id, String channelId) => VideoItem(id: id, title: id, channel: 'Channel', url: 'https://www.youtube.com/watch?v=$id', channelId: channelId);
+  VideoItem video(String id, String channelId) => VideoItem(
+      id: id,
+      title: id,
+      channel: 'Channel',
+      url: 'https://www.youtube.com/watch?v=$id',
+      channelId: channelId);
 
   Map<String, Object?> next({required bool ai}) => {
         'contents': {
@@ -43,22 +48,27 @@ void main() {
     final asked = <String>[];
     final client = MockClient((request) async {
       if (request.url.host == 'api.killslop.app') {
-        return http.Response(jsonEncode({
-          'license': 'CC-BY-SA-4.0',
-          'channels': [
-            {'id': 'UClisted0000000000000000', 'score': 0},
-          ],
-        }), 200);
+        return http.Response(
+            jsonEncode({
+              'license': 'CC-BY-SA-4.0',
+              'channels': [
+                {'id': 'UClisted0000000000000000', 'score': 0},
+              ],
+            }),
+            200);
       }
       if (request.url.host == 'raw.githubusercontent.com') {
-        return http.Response('! AiSList blocklist by YouTube channel ID\nUCaislist000000000000000\n', 200);
+        return http.Response(
+            '! AiSList blocklist by YouTube channel ID\nUCaislist000000000000000\n', 200);
       }
       expect(request.url.path, '/youtubei/v1/next');
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
       return http.Response(jsonEncode(next(ai: id == 'aaaaaaaaaaa')), 200);
     });
-    final filter = AiFilter(client, labelsFile: File('${folder.path}/labels.json'), channelsFile: File('${folder.path}/channels.json'));
+    final filter = AiFilter(client,
+        labelsFile: File('${folder.path}/labels.json'),
+        channelsFile: File('${folder.path}/channels.json'));
     final labeled = video('aaaaaaaaaaa', 'UCother00000000000000000');
     final plain = video('bbbbbbbbbbb', 'UCother00000000000000000');
     final listed = video('ccccccccccc', 'UClisted0000000000000000');
@@ -94,7 +104,10 @@ void main() {
     });
     final filter = AiFilter(client);
     await filter.setMode(AiFilterMode.labeled);
-    filter.check([for (var i = 0; i < 8; i++) video('video${i}000000'.substring(0, 11), 'UCother00000000000000000')]);
+    filter.check([
+      for (var i = 0; i < 8; i++)
+        video('video${i}000000'.substring(0, 11), 'UCother00000000000000000')
+    ]);
     await Future<void>.delayed(const Duration(milliseconds: 20));
     filter.dispose();
     await Future<void>.delayed(const Duration(milliseconds: 400));

@@ -7,8 +7,17 @@ import 'package:lumtub/models.dart';
 
 void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
-  const video = VideoItem(id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', channelId: 'UCuAXFkgsw1L7xaCfnd5JJOw');
-  const other = VideoItem(id: 'aaaaaaaaaaa', title: 'Other', channel: '', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
+  const video = VideoItem(
+      id: 'dQw4w9WgXcQ',
+      title: 'Never Gonna Give You Up',
+      channel: 'Rick Astley',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      channelId: 'UCuAXFkgsw1L7xaCfnd5JJOw');
+  const other = VideoItem(
+      id: 'aaaaaaaaaaa',
+      title: 'Other',
+      channel: '',
+      url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
 
   late Directory dir;
   setUp(() async => dir = await Directory.systemTemp.createTemp('lumtub_library'));
@@ -84,7 +93,8 @@ void main() {
   });
 
   test('ignores a damaged file and bad channel ids', () async {
-    await File('${dir.path}/library.json').writeAsString('{"channels":[{"id":"not-a-channel"}],"favorites":"x","progress":{"a":[1]}}');
+    await File('${dir.path}/library.json').writeAsString(
+        '{"channels":[{"id":"not-a-channel"}],"favorites":"x","progress":{"a":[1]}}');
     final library = store();
     await library.load();
     expect(library.channels, isEmpty);
@@ -102,7 +112,8 @@ void main() {
     source.favorites.add(video);
     source.watchLater.add(other);
     source.createPlaylist('Mine').items.add(video);
-    source.playlists.add(LocalPlaylist(id: '${remotePlaylistPrefix}PL1', name: 'From YouTube', items: [other]));
+    source.playlists
+        .add(LocalPlaylist(id: '${remotePlaylistPrefix}PL1', name: 'From YouTube', items: [other]));
     source.setProgress(video.id, const Duration(seconds: 90), const Duration(minutes: 3));
     final json = jsonDecode(jsonEncode(source.backup().toJson()));
     expect((json as Map).containsKey('progress'), isFalse);

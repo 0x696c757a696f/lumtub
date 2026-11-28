@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/learning/vocabulary.dart';
 
-VocabularyWord _word(String word, {String sentence = '我们一起学习中文', int seconds = 75}) => VocabularyWord(
+VocabularyWord _word(String word, {String sentence = '我们一起学习中文', int seconds = 75}) =>
+    VocabularyWord(
       word: word,
       language: 'zh',
       reading: 'xué xí',
@@ -38,13 +39,17 @@ void main() {
   test('CSV quotes what needs it and links to the moment', () {
     final csv = vocabularyCsv([_word('学习')]);
     expect(csv, startsWith('﻿word,reading,meaning,sentence,translation,video,time,link\r\n'));
-    expect(csv, contains('学习,xué xí,to learn; to study,我们一起学习中文,"We study Chinese, together","Lesson ""one""",1:15,https://www.youtube.com/watch?v=abc123&t=74s'));
+    expect(
+        csv,
+        contains(
+            '学习,xué xí,to learn; to study,我们一起学习中文,"We study Chinese, together","Lesson ""one""",1:15,https://www.youtube.com/watch?v=abc123&t=74s'));
   });
 
   test('Anki file has the header, the word in bold and no stray tabs', () {
     final anki = vocabularyAnki([_word('学习')]);
     final lines = anki.trim().split('\n');
-    expect(lines.take(4), ['#separator:tab', '#html:true', '#columns:Front\tBack\tTags', '#tags column:3']);
+    expect(lines.take(4),
+        ['#separator:tab', '#html:true', '#columns:Front\tBack\tTags', '#tags column:3']);
     final fields = lines[4].split('\t');
     expect(fields, hasLength(3));
     expect(fields[0], '学习');

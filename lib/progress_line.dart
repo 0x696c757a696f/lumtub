@@ -11,7 +11,8 @@ enum ProgressLine {
   final String _label;
   String get label => tr(_label);
 
-  static ProgressLine parse(Object? raw, ProgressLine fallback) => values.where((v) => v.name == raw).firstOrNull ?? fallback;
+  static ProgressLine parse(Object? raw, ProgressLine fallback) =>
+      values.where((v) => v.name == raw).firstOrNull ?? fallback;
 
   bool shows({required bool fullscreen}) => switch (this) {
         always => true,

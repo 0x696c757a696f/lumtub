@@ -49,15 +49,29 @@ class NetworkProxy {
   /// [arguments] for yt-dlp without the credentials of a `--proxy` address,
   /// which would show in the process list; they go to the child as the
   /// proxy environment variables instead, added to [environment].
-  static (List<String>, Map<String, String>?) hideCredentials(List<String> arguments, Map<String, String>? environment) {
+  static (List<String>, Map<String, String>?) hideCredentials(
+      List<String> arguments, Map<String, String>? environment) {
     final at = arguments.indexOf('--proxy');
-    if (at < 0 || at + 1 >= arguments.length || !RegExp(r'//[^@/]*@').hasMatch(arguments[at + 1])) return (arguments, environment);
+    if (at < 0 || at + 1 >= arguments.length || !RegExp(r'//[^@/]*@').hasMatch(arguments[at + 1])) {
+      return (arguments, environment);
+    }
     final value = arguments[at + 1];
     final rest = [...arguments]..removeRange(at, at + 2);
-    return (rest, {
-      ...?environment,
-      for (final name in ['ALL_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'all_proxy', 'https_proxy', 'http_proxy']) name: value,
-    });
+    return (
+      rest,
+      {
+        ...?environment,
+        for (final name in [
+          'ALL_PROXY',
+          'HTTPS_PROXY',
+          'HTTP_PROXY',
+          'all_proxy',
+          'https_proxy',
+          'http_proxy'
+        ])
+          name: value,
+      }
+    );
   }
 
   /// Normalises what a person typed, such as `127.0.0.1:7890` or
@@ -81,7 +95,8 @@ class NetworkProxy {
     if (!parts.any((p) => p.contains('='))) return normalize(parts.first);
     final byScheme = {
       for (final part in parts)
-        if (part.contains('=')) part.substring(0, part.indexOf('=')).toLowerCase(): part.substring(part.indexOf('=') + 1),
+        if (part.contains('='))
+          part.substring(0, part.indexOf('=')).toLowerCase(): part.substring(part.indexOf('=') + 1),
     };
     final http = byScheme['https'] ?? byScheme['http'];
     if (http != null) return normalize(http.contains('://') ? http : 'http://$http');
@@ -91,15 +106,29 @@ class NetworkProxy {
 
   /// The Linux proxy: the environment's https_proxy or all_proxy, else
   /// GNOME's proxy setting (gsettings), which other desktops often share.
-  static Future<NetworkProxy> linux({Map<String, String>? environment, Future<String?> Function(String key)? gsettings, Future<String?> Function(String url)? fetchPac}) async {
+  static Future<NetworkProxy> linux(
+      {Map<String, String>? environment,
+      Future<String?> Function(String key)? gsettings,
+      Future<String?> Function(String url)? fetchPac}) async {
     final env = environment ?? Platform.environment;
-    for (final name in ['https_proxy', 'HTTPS_PROXY', 'http_proxy', 'HTTP_PROXY', 'all_proxy', 'ALL_PROXY']) {
+    for (final name in [
+      'https_proxy',
+      'HTTPS_PROXY',
+      'http_proxy',
+      'HTTP_PROXY',
+      'all_proxy',
+      'ALL_PROXY'
+    ]) {
       final value = env[name]?.trim() ?? '';
-      if (value.isNotEmpty) return NetworkProxy(normalize(value.contains('://') ? value : 'http://$value'));
+      if (value.isNotEmpty) {
+        return NetworkProxy(normalize(value.contains('://') ? value : 'http://$value'));
+      }
     }
     final read = gsettings ?? _gsettings;
     final mode = await read('org.gnome.system.proxy mode');
-    if (mode == 'auto') return pac(await read('org.gnome.system.proxy autoconfig-url') ?? '', fetch: fetchPac);
+    if (mode == 'auto') {
+      return pac(await read('org.gnome.system.proxy autoconfig-url') ?? '', fetch: fetchPac);
+    }
     if (mode != 'manual') return direct;
     for (final (schema, scheme) in [('https', 'http'), ('http', 'http'), ('socks', 'socks5')]) {
       final host = await read('org.gnome.system.proxy.$schema host') ?? '';
@@ -111,10 +140,12 @@ class NetworkProxy {
 
   /// The macOS proxy of the active network service, as `scutil --proxy`
   /// prints it (the setting in System Settings › Network › Proxies).
-  static Future<NetworkProxy> mac({Future<String?> Function()? scutil, Future<String?> Function(String url)? fetchPac}) async {
+  static Future<NetworkProxy> mac(
+      {Future<String?> Function()? scutil, Future<String?> Function(String url)? fetchPac}) async {
     final text = await (scutil ?? _scutil)() ?? '';
     final values = {
-      for (final match in RegExp(r'^\s*(\w+)\s*:\s*(\S+)\s*$', multiLine: true).allMatches(text)) match.group(1)!: match.group(2)!,
+      for (final match in RegExp(r'^\s*(\w+)\s*:\s*(\S+)\s*$', multiLine: true).allMatches(text))
+        match.group(1)!: match.group(2)!,
     };
     for (final (key, scheme) in [('HTTPS', 'http'), ('HTTP', 'http'), ('SOCKS', 'socks5')]) {
       if (values['${key}Enable'] != '1') continue;
@@ -122,7 +153,9 @@ class NetworkProxy {
       final port = int.tryParse(values['${key}Port'] ?? '') ?? 0;
       if (host.isNotEmpty && port > 0) return NetworkProxy(normalize('$scheme://$host:$port'));
     }
-    if (values['ProxyAutoConfigEnable'] == '1') return pac(values['ProxyAutoConfigURLString'] ?? '', fetch: fetchPac);
+    if (values['ProxyAutoConfigEnable'] == '1') {
+      return pac(values['ProxyAutoConfigURLString'] ?? '', fetch: fetchPac);
+    }
     return direct;
   }
 
@@ -152,7 +185,8 @@ class NetworkProxy {
 
   static Future<String?> _scutil() async {
     try {
-      final result = await Process.run('/usr/sbin/scutil', ['--proxy']).timeout(const Duration(seconds: 3));
+      final result =
+          await Process.run('/usr/sbin/scutil', ['--proxy']).timeout(const Duration(seconds: 3));
       return result.exitCode == 0 ? result.stdout.toString() : null;
     } catch (_) {
       return null;
@@ -161,10 +195,13 @@ class NetworkProxy {
 
   static Future<String?> _gsettings(String key) async {
     try {
-      final result = await Process.run('gsettings', ['get', ...key.split(' ')]).timeout(const Duration(seconds: 3));
+      final result = await Process.run('gsettings', ['get', ...key.split(' ')])
+          .timeout(const Duration(seconds: 3));
       if (result.exitCode != 0) return null;
       final text = result.stdout.toString().trim();
-      return text.startsWith("'") && text.endsWith("'") && text.length >= 2 ? text.substring(1, text.length - 1) : text;
+      return text.startsWith("'") && text.endsWith("'") && text.length >= 2
+          ? text.substring(1, text.length - 1)
+          : text;
     } catch (_) {
       return null;
     }
@@ -179,7 +216,9 @@ class NetworkProxy {
         final setting = jsonDecode(core.take(core.systemProxy()) ?? 'null');
         if (setting is Map && setting['enabled'] is bool) {
           final server = '${setting['server'] ?? ''}';
-          if (setting['enabled'] == true && server.isNotEmpty) return NetworkProxy(parseWindows(server));
+          if (setting['enabled'] == true && server.isNotEmpty) {
+            return NetworkProxy(parseWindows(server));
+          }
           return await pac('${setting['pac'] ?? ''}');
         }
       } catch (_) {
@@ -188,12 +227,21 @@ class NetworkProxy {
     }
     try {
       const key = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings';
-      final enabled = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyEnable']).timeout(const Duration(seconds: 5));
+      final enabled = await Process.run(
+              windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyEnable'])
+          .timeout(const Duration(seconds: 5));
       if (!RegExp(r'ProxyEnable\s+REG_DWORD\s+0x0*1\b').hasMatch(enabled.stdout.toString())) {
-        final script = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'AutoConfigURL']).timeout(const Duration(seconds: 5));
-        return await pac(RegExp(r'AutoConfigURL\s+REG_SZ\s+(.+)').firstMatch(script.stdout.toString())?.group(1) ?? '');
+        final script = await Process.run(
+                windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'AutoConfigURL'])
+            .timeout(const Duration(seconds: 5));
+        return await pac(RegExp(r'AutoConfigURL\s+REG_SZ\s+(.+)')
+                .firstMatch(script.stdout.toString())
+                ?.group(1) ??
+            '');
       }
-      final server = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyServer']).timeout(const Duration(seconds: 5));
+      final server = await Process.run(
+              windowsProgram(r'System32\reg.exe'), ['query', key, '/v', 'ProxyServer'])
+          .timeout(const Duration(seconds: 5));
       final match = RegExp(r'ProxyServer\s+REG_SZ\s+(.+)').firstMatch(server.stdout.toString());
       return NetworkProxy(match == null ? null : parseWindows(match.group(1)!.trim()));
     } catch (_) {
@@ -250,7 +298,9 @@ class ProxyHttpOverrides extends HttpOverrides {
     // behind the proxy.
     if (isLocalHost(uri.host)) return 'DIRECT';
     if (endpoint != null) return 'PROXY $endpoint';
-    return useEnvironment ? HttpClient.findProxyFromEnvironment(uri, environment: environment) : 'DIRECT';
+    return useEnvironment
+        ? HttpClient.findProxyFromEnvironment(uri, environment: environment)
+        : 'DIRECT';
   }
 }
 

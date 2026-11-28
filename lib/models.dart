@@ -7,7 +7,8 @@ class VideoItem {
     required this.id,
     required this.title,
     required this.channel,
-    required this.url, this.duration,
+    required this.url,
+    this.duration,
     this.viewCount,
     this.watching,
     this.channelId,
@@ -39,12 +40,18 @@ class VideoItem {
     final height = map['height'];
     final description = map['description'];
     final listed = '${map['original_url'] ?? ''} ${map['webpage_url'] ?? ''}';
-    final liveStatus = const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null;
+    final liveStatus = const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status'])
+        ? map['live_status'] as String
+        : null;
     DateTime? unixTime(Object? value) {
       final seconds = value is num ? value.toInt() : int.tryParse('${value ?? ''}');
-      return seconds == null || seconds <= 0 ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true).toLocal();
+      return seconds == null || seconds <= 0
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true).toLocal();
     }
-    final savedScheduledStart = DateTime.tryParse(map['scheduled_start']?.toString() ?? '')?.toLocal();
+
+    final savedScheduledStart =
+        DateTime.tryParse(map['scheduled_start']?.toString() ?? '')?.toLocal();
     return VideoItem(
       id: id,
       title: map['title']?.toString() ?? 'Untitled video',
@@ -56,12 +63,18 @@ class VideoItem {
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
       // Lists give only about when ("3 days ago"); the core and yt-dlp's
       // approximate_date turn that into a timestamp.
-      published: DateTime.tryParse(map['published']?.toString() ?? '') ?? (liveStatus == null || liveStatus == 'was_live' ? unixTime(map['timestamp']) : null),
+      published: DateTime.tryParse(map['published']?.toString() ?? '') ??
+          (liveStatus == null || liveStatus == 'was_live' ? unixTime(map['timestamp']) : null),
       liveStatus: liveStatus,
-      scheduledStart: savedScheduledStart ?? (liveStatus == 'is_upcoming' ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp']) : null),
+      scheduledStart: savedScheduledStart ??
+          (liveStatus == 'is_upcoming'
+              ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp'])
+              : null),
       width: width is num ? width.toInt() : null,
       height: height is num ? height.toInt() : null,
-      description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
+      description: description is String && description.isNotEmpty
+          ? description.substring(0, description.length < 120 ? description.length : 120)
+          : null,
       isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
       membersOnly: map['availability'] == 'subscriber_only',
       age: map['age'] is String ? map['age'] as String : null,
@@ -73,34 +86,46 @@ class VideoItem {
   final String channel;
   final int? duration;
   final String url;
+
   /// Views in all; a stream that is live lists [watching] instead.
   final int? viewCount;
+
   /// People watching a live stream now, when listed.
   final int? watching;
+
   /// The channel's `UC…` id, when the source listed it.
   final String? channelId;
+
   /// Upload time, known for subscription feed entries.
   final DateTime? published;
+
   /// yt-dlp's live_status: is_live, is_upcoming or was_live; null otherwise.
   final String? liveStatus;
+
   /// Scheduled local start time for an upcoming stream, reported by yt-dlp.
   final DateTime? scheduledStart;
+
   /// Frame size, when the source listed it; height over width is vertical.
   final int? width;
   final int? height;
+
   /// The start of the description, when listed: auto-generated music
   /// uploads say "Provided to YouTube by".
   final String? description;
+
   /// Listed as a Short (a /shorts/ address), whatever its length.
   final bool isShortListing;
+
   /// Listed with YouTube's members-only badge: only the channel's members
   /// can watch it.
   final bool membersOnly;
+
   /// How long ago it was published, as YouTube wrote it in the interface's
   /// language, for lists that give no time to work it out from.
   final String? age;
 
   bool get isLive => liveStatus == 'is_live';
+
   /// What a card shows: people watching for a live stream, else views.
   int? get audience => isLive ? watching ?? viewCount : viewCount;
   bool get isUpcoming => liveStatus == 'is_upcoming';
@@ -170,7 +195,8 @@ class VideoItem {
 
   /// This video with what its listing left out: [length], [views] and
   /// [publishedAt], each used only where this one has none.
-  VideoItem filledIn({int? length, int? views, DateTime? publishedAt, String? liveStatus}) => VideoItem(
+  VideoItem filledIn({int? length, int? views, DateTime? publishedAt, String? liveStatus}) =>
+      VideoItem(
         id: id,
         title: title,
         channel: channel,
@@ -258,6 +284,7 @@ class ChannelRef {
   const ChannelRef(this.id, this.name, [this.avatar]);
   final String id;
   final String name;
+
   /// The channel's picture, when a subscription import or search listed one.
   final String? avatar;
 
@@ -270,7 +297,11 @@ class ChannelRef {
   /// plain http forms some responses use are upgraded.
   static String? avatarUrl(Object? raw) {
     if (raw is! String) return null;
-    final url = raw.startsWith('//') ? 'https:$raw' : raw.startsWith('http://') ? 'https://${raw.substring(7)}' : raw;
+    final url = raw.startsWith('//')
+        ? 'https:$raw'
+        : raw.startsWith('http://')
+            ? 'https://${raw.substring(7)}'
+            : raw;
     return url.startsWith('https://') ? url : null;
   }
 
@@ -279,7 +310,9 @@ class ChannelRef {
   static ChannelRef? fromJson(Object? raw) {
     if (raw is! Map) return null;
     final id = raw['id']?.toString() ?? '';
-    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '', avatarUrl(raw['avatar'])) : null;
+    return isValidId(id)
+        ? ChannelRef(id, raw['name']?.toString() ?? '', avatarUrl(raw['avatar']))
+        : null;
   }
 
   @override
@@ -291,8 +324,10 @@ class ChannelRef {
 
 /// A channel found by a search, with what the result listed about it.
 class ChannelResult {
-  const ChannelResult(this.ref, {this.subscribers, this.handle, this.avatar, this.description = ''});
+  const ChannelResult(this.ref,
+      {this.subscribers, this.handle, this.avatar, this.description = ''});
   final ChannelRef ref;
+
   /// YouTube's own subscriber text, such as "123万位订阅者"; search results
   /// often carry the handle in its place.
   final String? subscribers;
@@ -316,7 +351,8 @@ class ChannelResult {
     }
     return ChannelResult(
       ChannelRef(id, (map['channel'] ?? map['title'] ?? '').toString()),
-      subscribers: followers is num ? tr('{0} subscribers', [formatCount(followers.toInt())]) : null,
+      subscribers:
+          followers is num ? tr('{0} subscribers', [formatCount(followers.toInt())]) : null,
       handle: map['uploader_id']?.toString(),
       avatar: ChannelRef.avatarUrl(avatar),
       description: map['description']?.toString() ?? '',
@@ -326,7 +362,8 @@ class ChannelResult {
 
 /// A YouTube playlist found by a search or on a channel's playlists tab.
 class PlaylistResult {
-  const PlaylistResult({required this.id, required this.title, this.channel = '', this.count, this.thumbnail});
+  const PlaylistResult(
+      {required this.id, required this.title, this.channel = '', this.count, this.thumbnail});
   final String id;
   final String title;
   final String channel;
@@ -409,13 +446,16 @@ String formatCount(int value) {
   return '${_trim(value / 1000000000)}B';
 }
 
-String _trim(double value) => value >= 100 ? value.toStringAsFixed(0) : value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
+String _trim(double value) => value >= 100
+    ? value.toStringAsFixed(0)
+    : value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
 
 /// Metadata shown on the watch page, fetched separately from playback.
 /// A titled part of a video, from the uploader's chapter list.
 class Chapter {
   const Chapter(this.start, this.end, this.title);
   final Duration start;
+
   /// [Duration.zero] when unknown; the next chapter's start then ends it.
   final Duration end;
   final String title;
@@ -423,11 +463,13 @@ class Chapter {
   /// yt-dlp's `chapters`, in order, without unusable entries.
   static List<Chapter> listFrom(Object? raw) {
     if (raw is! List) return const [];
-    Duration? seconds(Object? value) => value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
+    Duration? seconds(Object? value) =>
+        value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
     final chapters = [
       for (final entry in raw.whereType<Map<String, Object?>>())
         if (seconds(entry['start_time']) case final start?)
-          Chapter(start, seconds(entry['end_time']) ?? Duration.zero, entry['title']?.toString().trim() ?? ''),
+          Chapter(start, seconds(entry['end_time']) ?? Duration.zero,
+              entry['title']?.toString().trim() ?? ''),
     ]..sort((a, b) => a.start.compareTo(b.start));
     return chapters.length < 2 ? const [] : chapters;
   }
@@ -479,8 +521,12 @@ class VideoDetails {
       title: map['title']?.toString() ?? '',
       channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
       channelUrl: map['channel_url']?.toString(),
-      channelId: ChannelRef.isValidId(map['channel_id']?.toString() ?? '') ? map['channel_id'].toString() : null,
-      uploadDate: match == null ? null : DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!)),
+      channelId: ChannelRef.isValidId(map['channel_id']?.toString() ?? '')
+          ? map['channel_id'].toString()
+          : null,
+      uploadDate: match == null
+          ? null
+          : DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!)),
       viewCount: number('view_count'),
       likeCount: number('like_count'),
       description: map['description']?.toString() ?? '',
@@ -489,7 +535,9 @@ class VideoDetails {
       scheduledStart: map['live_status'] == 'is_upcoming' && map['release_timestamp'] is num
           ? DateTime.fromMillisecondsSinceEpoch((map['release_timestamp'] as num).toInt() * 1000)
           : null,
-      language: map['language'] is String && (map['language'] as String).isNotEmpty ? map['language'] as String : null,
+      language: map['language'] is String && (map['language'] as String).isNotEmpty
+          ? map['language'] as String
+          : null,
       music: MusicTags.fromJson(map),
     );
   }
@@ -503,13 +551,17 @@ class VideoDetails {
   final int? likeCount;
   final String description;
   final List<Chapter> chapters;
+
   /// Every subtitle YouTube offers: uploaded ones, then automatic captions
   /// and their machine translations.
   final List<SubtitleOption> subtitles;
+
   /// When a live stream or premiere that has not started is scheduled to.
   final DateTime? scheduledStart;
+
   /// The language the video is in, as yt-dlp tags it, when known.
   final String? language;
+
   /// What yt-dlp knows of it as music: its category and song tags.
   final MusicTags music;
 
@@ -517,12 +569,18 @@ class VideoDetails {
   /// interface language. Chapters come from the description's timestamps,
   /// so where the translated one lists the same times, theirs are renamed.
   VideoDetails localized(String title, String description, {int? likes}) {
-    if (title.isEmpty || (title == this.title && description == this.description && (likes == null || likeCount != null))) return this;
+    if (title.isEmpty ||
+        (title == this.title &&
+            description == this.description &&
+            (likes == null || likeCount != null))) {
+      return this;
+    }
     final names = <int, String>{};
     for (final line in const LineSplitter().convert(description)) {
       final match = _chapterLine.firstMatch(line);
       if (match == null) continue;
-      final seconds = int.parse(match[1] ?? '0') * 3600 + int.parse(match[2]!) * 60 + int.parse(match[3]!);
+      final seconds =
+          int.parse(match[1] ?? '0') * 3600 + int.parse(match[2]!) * 60 + int.parse(match[3]!);
       names.putIfAbsent(seconds, () => match[4]!.trim());
     }
     return VideoDetails(
@@ -582,7 +640,8 @@ class VideoDetails {
   /// These details with the subtitles and spoken language of [online]: a
   /// download keeps neither, so a downloaded video played while online
   /// gets the same subtitles, translations too, as when it streams.
-  VideoDetails withSubtitlesOf(VideoDetails online) => withSubtitles(online.subtitles, language: online.language);
+  VideoDetails withSubtitlesOf(VideoDetails online) =>
+      withSubtitles(online.subtitles, language: online.language);
 
   /// These details with [options] as their subtitles, the speech
   /// recognition one kept.
@@ -602,7 +661,8 @@ class VideoDetails {
         music: music,
       );
 
-  static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
+  static final _chapterLine =
+      RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
 }
 
 /// What yt-dlp read of a video as music: YouTube's category, and the song
@@ -621,7 +681,11 @@ class MusicTags {
       artists.addAll(artist.split(RegExp(r',\s*')).where((name) => name.isNotEmpty));
     }
     return MusicTags(
-      categories: [if (map['categories'] is List) for (final c in map['categories'] as List) if (c is String) c],
+      categories: [
+        if (map['categories'] is List)
+          for (final c in map['categories'] as List)
+            if (c is String) c
+      ],
       track: text(map['track']),
       artists: artists,
       album: text(map['album']),
@@ -638,7 +702,11 @@ class MusicTags {
 
 /// A subtitle track of a video that can be added to the player by URL.
 class SubtitleOption {
-  const SubtitleOption({required this.language, required this.name, required this.url, this.kind = SubtitleKind.uploaded});
+  const SubtitleOption(
+      {required this.language,
+      required this.name,
+      required this.url,
+      this.kind = SubtitleKind.uploaded});
   final String language;
   final String name;
   final String url;
@@ -690,21 +758,51 @@ class SubtitleOption {
     return [
       ...read(uploaded, false),
       ...byLanguage.values,
-      ...auto.where((s) => s.kind == SubtitleKind.translated && !originalLanguages.contains(s.language)),
+      ...auto.where(
+          (s) => s.kind == SubtitleKind.translated && !originalLanguages.contains(s.language)),
     ];
   }
 
   static (String, String)? _vtt(List<Object?> formats) {
-    final maps = formats.whereType<Map<String, Object?>>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
-    final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ?? maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
+    final maps = formats
+        .whereType<Map<String, Object?>>()
+        .where((f) => '${f['url'] ?? ''}'.startsWith('https://'))
+        .toList();
+    final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ??
+        maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
     return pick == null ? null : ('${pick['url']}', '${pick['name'] ?? ''}');
   }
 
   static final _names = {
-    'zh-Hans': tr('Chinese (Simplified)'), 'zh-CN': tr('Chinese (China)'), 'zh-Hant': tr('Chinese (Traditional)'), 'zh-TW': tr('Chinese (Taiwan)'), 'zh-HK': tr('Chinese (Hong Kong)'), 'zh': tr('Chinese'),
-    'en': tr('English'), 'en-US': tr('English (US)'), 'en-GB': tr('English (UK)'), 'ja': tr('Japanese'), 'ko': tr('Korean'), 'fr': tr('French'), 'de': tr('German'), 'es': tr('Spanish'),
-    'pt': tr('Portuguese'), 'pt-BR': tr('Portuguese (Brazil)'), 'ru': tr('Russian'), 'it': tr('Italian'), 'vi': tr('Vietnamese'), 'th': tr('Thai'), 'id': tr('Indonesian'), 'ms': tr('Malay'),
-    'ar': tr('Arabic'), 'hi': tr('Hindi'), 'tr': tr('Turkish'), 'nl': tr('Dutch'), 'pl': tr('Polish'), 'uk': tr('Ukrainian'), 'fil': tr('Filipino'),
+    'zh-Hans': tr('Chinese (Simplified)'),
+    'zh-CN': tr('Chinese (China)'),
+    'zh-Hant': tr('Chinese (Traditional)'),
+    'zh-TW': tr('Chinese (Taiwan)'),
+    'zh-HK': tr('Chinese (Hong Kong)'),
+    'zh': tr('Chinese'),
+    'en': tr('English'),
+    'en-US': tr('English (US)'),
+    'en-GB': tr('English (UK)'),
+    'ja': tr('Japanese'),
+    'ko': tr('Korean'),
+    'fr': tr('French'),
+    'de': tr('German'),
+    'es': tr('Spanish'),
+    'pt': tr('Portuguese'),
+    'pt-BR': tr('Portuguese (Brazil)'),
+    'ru': tr('Russian'),
+    'it': tr('Italian'),
+    'vi': tr('Vietnamese'),
+    'th': tr('Thai'),
+    'id': tr('Indonesian'),
+    'ms': tr('Malay'),
+    'ar': tr('Arabic'),
+    'hi': tr('Hindi'),
+    'tr': tr('Turkish'),
+    'nl': tr('Dutch'),
+    'pl': tr('Polish'),
+    'uk': tr('Ukrainian'),
+    'fil': tr('Filipino'),
   };
 
   /// A Chinese name for [code], else YouTube's own [name], else the code.

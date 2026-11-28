@@ -85,13 +85,20 @@ class _ChipStripState extends State<ChipStrip> {
   void _centre({required bool animate}) {
     if (!mounted || !_scroll.hasClients) return;
     final position = _scroll.position;
-    if (!position.hasContentDimensions || widget.selected < 0 || widget.selected >= _keys.length) return;
+    if (!position.hasContentDimensions || widget.selected < 0 || widget.selected >= _keys.length) {
+      return;
+    }
     final chip = _keys[widget.selected].currentContext?.findRenderObject();
     final viewport = position.context.notificationContext?.findRenderObject();
-    if (chip is! RenderBox || viewport is! RenderBox || !chip.attached || !viewport.attached) return;
+    if (chip is! RenderBox || viewport is! RenderBox || !chip.attached || !viewport.attached) {
+      return;
+    }
     var from = chip.localToGlobal(Offset.zero, ancestor: viewport).dx;
-    if (Directionality.of(context) == TextDirection.rtl) from = viewport.size.width - from - chip.size.width;
-    final target = (position.pixels + from + chip.size.width / 2 - viewport.size.width / 2).clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (Directionality.of(context) == TextDirection.rtl) {
+      from = viewport.size.width - from - chip.size.width;
+    }
+    final target = (position.pixels + from + chip.size.width / 2 - viewport.size.width / 2)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
     if ((target - position.pixels).abs() < 1) return;
     if (animate) {
       unawaited(Motion.scrollTo(_scroll, target, duration: Motion.of(Ease.move)));
@@ -115,7 +122,8 @@ class _ChipStripState extends State<ChipStrip> {
     if (event is! PointerScrollEvent || !_scroll.hasClients) return;
     final position = _scroll.position;
     final delta = event.scrollDelta.dx != 0 ? event.scrollDelta.dx : event.scrollDelta.dy;
-    final target = (position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent);
+    final target =
+        (position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent);
     if (target == position.pixels) return;
     GestureBinding.instance.pointerSignalResolver.register(event, (_) {
       _userMoved = true;
@@ -129,7 +137,8 @@ class _ChipStripState extends State<ChipStrip> {
   }
 
   Shader _edgeMask(Rect bounds) {
-    final position = _scroll.hasClients && _scroll.position.hasContentDimensions ? _scroll.position : null;
+    final position =
+        _scroll.hasClients && _scroll.position.hasContentDimensions ? _scroll.position : null;
     double edge(double extent) => 1 - (extent / _fade).clamp(0.0, 1.0);
     final start = position == null ? 1.0 : edge(position.pixels - position.minScrollExtent);
     final end = position == null ? 1.0 : edge(position.maxScrollExtent - position.pixels);
@@ -158,12 +167,17 @@ class _ChipStripState extends State<ChipStrip> {
             duration: Motion.of(Ease.fade),
             curve: Ease.out,
             padding: const EdgeInsets.fromLTRB(4, 10, 4, 8),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 2.5, color: selected ? colors.primary : Colors.transparent))),
+            decoration: BoxDecoration(
+                border: Border(
+                    bottom: BorderSide(
+                        width: 2.5, color: selected ? colors.primary : Colors.transparent))),
             child: Text(
               choice.label,
               maxLines: 1,
               softWrap: false,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? colors.onSurface : colors.onSurfaceVariant),
+              style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? colors.onSurface : colors.onSurfaceVariant),
             ),
           ),
         ),
@@ -174,7 +188,9 @@ class _ChipStripState extends State<ChipStrip> {
       onSecondaryTap: widget.onLongPress == null ? null : () => widget.onLongPress!(i),
       child: ChoiceChip(
         visualDensity: widget.compact ? VisualDensity.compact : null,
-        avatar: choice.icon == null ? null : Icon(choice.icon, size: 18, color: chipForeground(context, selected)),
+        avatar: choice.icon == null
+            ? null
+            : Icon(choice.icon, size: 18, color: chipForeground(context, selected)),
         label: Text(choice.label, maxLines: 1, softWrap: false),
         showCheckmark: false,
         selected: selected,
@@ -191,7 +207,10 @@ class _ChipStripState extends State<ChipStrip> {
           ? () async {
               final picked = await pickFromSheet<int>(
                 context,
-                [for (final (i, c) in widget.choices.indexed) (value: i, icon: c.icon, label: c.label, selected: i == widget.selected)],
+                [
+                  for (final (i, c) in widget.choices.indexed)
+                    (value: i, icon: c.icon, label: c.label, selected: i == widget.selected)
+                ],
                 title: widget.title,
               );
               if (picked != null) widget.onSelected(picked);
@@ -205,7 +224,11 @@ class _ChipStripState extends State<ChipStrip> {
       menuChildren: [
         for (final (i, c) in widget.choices.indexed)
           MenuItemButton(
-            leadingIcon: i == widget.selected ? Icon(AppIcons.check, size: 18) : c.icon == null ? null : Icon(c.icon, size: 18),
+            leadingIcon: i == widget.selected
+                ? Icon(AppIcons.check, size: 18)
+                : c.icon == null
+                    ? null
+                    : Icon(c.icon, size: 18),
             onPressed: () => widget.onSelected(i),
             child: Text(c.label),
           ),
@@ -228,7 +251,10 @@ class _ChipStripState extends State<ChipStrip> {
       ),
       child: NotificationListener<ScrollNotification>(
         onNotification: (n) {
-          if ((n is ScrollStartNotification && n.dragDetails != null) || (n is ScrollUpdateNotification && n.dragDetails != null)) _userMoved = true;
+          if ((n is ScrollStartNotification && n.dragDetails != null) ||
+              (n is ScrollUpdateNotification && n.dragDetails != null)) {
+            _userMoved = true;
+          }
           return false;
         },
         child: NotificationListener<ScrollMetricsNotification>(
@@ -240,7 +266,8 @@ class _ChipStripState extends State<ChipStrip> {
             onPointerSignal: _wheel,
             child: ListenableBuilder(
               listenable: _scroll,
-              builder: (context, child) => ShaderMask(blendMode: BlendMode.dstIn, shaderCallback: _edgeMask, child: child),
+              builder: (context, child) =>
+                  ShaderMask(blendMode: BlendMode.dstIn, shaderCallback: _edgeMask, child: child),
               child: SingleChildScrollView(
                 key: const PageStorageKey<String>('chips'),
                 controller: _scroll,
@@ -259,7 +286,8 @@ class _ChipStripState extends State<ChipStrip> {
     );
     return Row(children: [
       Expanded(child: row),
-      if (_overflow) Padding(padding: const EdgeInsetsDirectional.only(start: 4), child: _showAll(context)),
+      if (_overflow)
+        Padding(padding: const EdgeInsetsDirectional.only(start: 4), child: _showAll(context)),
       ...widget.trailing,
     ]);
   }

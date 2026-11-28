@@ -35,7 +35,8 @@ import 'video_notes.dart';
 /// in view. A tap jumps there; the copy button copies the line, and a
 /// right click or long press offers to copy it, explain it with AI or keep
 /// it as a note. Words searched for are marked.
-Future<void> showSubtitleList(BuildContext context, AppController controller, Player player) => showPlayerPanel(
+Future<void> showSubtitleList(BuildContext context, AppController controller, Player player) =>
+    showPlayerPanel(
       context,
       title: tr('Subtitle list'),
       width: 420,
@@ -57,6 +58,7 @@ class _SubtitleListState extends State<SubtitleList> {
   StreamSubscription<Object?>? _trackChanges;
   StreamSubscription<Duration>? _positions;
   int _current = -1;
+
   /// Following the playing line stops while the person scrolls.
   bool _follow = true;
   String _query = '';
@@ -73,11 +75,14 @@ class _SubtitleListState extends State<SubtitleList> {
   static bool _readBySentence = false;
   bool _bySentence = _readBySentence;
   (List<PairedCue>, List<PairedCue>)? _sentences;
+
   /// Whole-sentence translations asked for, by sentence.
   final _wholeTranslations = <String, Future<String?>>{};
+
   /// What is selected in the list (with a mouse), for the menu's 讲解 and
   /// 记笔记 of part of a line.
   String _selected = '';
+
   /// Which search match was stepped to last, for the arrows.
   int _match = -1;
 
@@ -94,14 +99,20 @@ class _SubtitleListState extends State<SubtitleList> {
   /// The translation of the whole [sentence] into the language set for
   /// translations, asked once; null when it is already in that language
   /// or could not be translated.
-  Future<String?> _wholeTranslation(String sentence) => _wholeTranslations.putIfAbsent(sentence, () async {
+  Future<String?> _wholeTranslation(String sentence) =>
+      _wholeTranslations.putIfAbsent(sentence, () async {
         final prefs = widget.controller.preferences;
         final target = prefs.translateTarget;
         bool done(String line) => readsAs(line, target, chineseAsOne: prefs.chineseAsOne);
         if (done(sentence)) return null;
         try {
-          final result = (await translateForeignLines(widget.controller.translator, sentence, target, done)).trim();
-          return result.isEmpty || result == sentence.trim() ? null : ChurchWording.apply(result, target, rite: widget.controller.playingRite, original: sentence);
+          final result =
+              (await translateForeignLines(widget.controller.translator, sentence, target, done))
+                  .trim();
+          return result.isEmpty || result == sentence.trim()
+              ? null
+              : ChurchWording.apply(result, target,
+                  rite: widget.controller.playingRite, original: sentence);
         } catch (_) {
           return null;
         }
@@ -175,7 +186,9 @@ class _SubtitleListState extends State<SubtitleList> {
     _shownFor = (cues, _query);
     return _shown = [
       for (final (i, cue) in cues.indexed)
-        if (cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
+        if (cue.cue.text.toLowerCase().contains(_query) ||
+            (cue.second?.toLowerCase().contains(_query) ?? false))
+          i,
     ];
   }
 
@@ -183,7 +196,8 @@ class _SubtitleListState extends State<SubtitleList> {
   /// the learning pack's dictionary is there; otherwise plain.
   /// A line whose words a tap looks up; while searching, the matches
   /// marked instead.
-  Widget _line(String text, TextStyle style, {required String? other, required Duration at, required ColorScheme colors}) {
+  Widget _line(String text, TextStyle style,
+      {required String? other, required Duration at, required ColorScheme colors}) {
     if (_query.isNotEmpty) return _marked(text, style, colors);
     if (!widget.controller.learningOn) return Text(text, style: style);
     final learning = widget.controller.learning;
@@ -196,10 +210,17 @@ class _SubtitleListState extends State<SubtitleList> {
       style: style,
       pinyin: learning.showPinyin,
       hard: learning.isHard,
-      hardColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFFC23D) : const Color(0xFFB86E00),
-      highlight: book == null ? null : (token) => book.contains(Learning.languageOf(token), token.key) || book.contains(Learning.languageOf(token), token.key.toLowerCase()),
+      hardColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFFFC23D)
+          : const Color(0xFFB86E00),
+      highlight: book == null
+          ? null
+          : (token) =>
+              book.contains(Learning.languageOf(token), token.key) ||
+              book.contains(Learning.languageOf(token), token.key.toLowerCase()),
       known: known?.knows,
-      onWord: (token) => unawaited(showWordCard(context, widget.controller, token, sentence: text, translation: other, at: at)),
+      onWord: (token) => unawaited(showWordCard(context, widget.controller, token,
+          sentence: text, translation: other, at: at)),
     );
     if (known == null || !known.oneNew(tokens)) return line;
     // One word away from understood: the line most worth learning from.
@@ -210,8 +231,10 @@ class _SubtitleListState extends State<SubtitleList> {
         message: tr('One new word in this line: the easiest line to learn from'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-          decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(6)),
-          child: Text('+1', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: colors.primary)),
+          decoration:
+              BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(6)),
+          child: Text('+1',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: colors.primary)),
         ),
       ),
     ]);
@@ -226,7 +249,11 @@ class _SubtitleListState extends State<SubtitleList> {
 
   void _secondChanged() {
     final mode = widget.controller.preferences.subtitleListMode;
-    if (identical(widget.controller.secondarySubtitle, _second) && widget.controller.secondaryTrackId == _secondTrack && mode == _mode) return;
+    if (identical(widget.controller.secondarySubtitle, _second) &&
+        widget.controller.secondaryTrackId == _secondTrack &&
+        mode == _mode) {
+      return;
+    }
     _second = widget.controller.secondarySubtitle;
     _secondTrack = widget.controller.secondaryTrackId;
     _mode = mode;
@@ -244,9 +271,11 @@ class _SubtitleListState extends State<SubtitleList> {
   Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(
         tooltip: tr('List shows'),
         initialValue: _mode,
-        onSelected: (mode) => unawaited(widget.controller.savePreferences(widget.controller.preferences.copyWith(subtitleListMode: mode))),
+        onSelected: (mode) => unawaited(widget.controller
+            .savePreferences(widget.controller.preferences.copyWith(subtitleListMode: mode))),
         itemBuilder: (context) => [
-          for (final mode in SubtitleListMode.values) CheckedPopupMenuItem(value: mode, checked: mode == _mode, child: Text(mode.label)),
+          for (final mode in SubtitleListMode.values)
+            CheckedPopupMenuItem(value: mode, checked: mode == _mode, child: Text(mode.label)),
         ],
         icon: Icon(AppIcons.rows, color: colors.onSurfaceVariant),
       );
@@ -270,7 +299,9 @@ class _SubtitleListState extends State<SubtitleList> {
       final index = cueIndexAt(starts, position);
       if (index == _current || !mounted) return;
       setState(() => _current = index);
-      if (_follow && _query.isEmpty && index >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(index, cues.length));
+      if (_follow && _query.isEmpty && index >= 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(index, cues.length));
+      }
     }
 
     _positions = widget.player.stream.position.listen(at);
@@ -287,13 +318,16 @@ class _SubtitleListState extends State<SubtitleList> {
       final position = _scroll.position;
       if ((target - position.pixels).abs() < 1) return;
       final duration = jump ? Duration.zero : Motion.of(const Duration(milliseconds: 200));
-      duration == Duration.zero ? position.jumpTo(target) : unawaited(position.animateTo(target, duration: duration, curve: Ease.curve));
+      duration == Duration.zero
+          ? position.jumpTo(target)
+          : unawaited(position.animateTo(target, duration: duration, curve: Ease.curve));
       return;
     }
     if (count == 0) return;
     final position = _scroll.position;
     final average = (position.maxScrollExtent + position.viewportDimension) / count;
-    position.jumpTo((index * average - position.viewportDimension / 3).clamp(0.0, position.maxScrollExtent));
+    position.jumpTo(
+        (index * average - position.viewportDimension / 3).clamp(0.0, position.maxScrollExtent));
     // Once built, the row is put exactly in place.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final target = mounted && _scroll.hasClients ? _rowOffset() : null;
@@ -309,7 +343,10 @@ class _SubtitleListState extends State<SubtitleList> {
     final viewport = RenderAbstractViewport.maybeOf(row);
     if (viewport == null) return null;
     final position = _scroll.position;
-    return viewport.getOffsetToReveal(row, 0.3).offset.clamp(position.minScrollExtent, position.maxScrollExtent);
+    return viewport
+        .getOffsetToReveal(row, 0.3)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
   /// Saves every line, with its translation, as a CSV file where the
@@ -318,11 +355,15 @@ class _SubtitleListState extends State<SubtitleList> {
     final messenger = ScaffoldMessenger.maybeOf(context);
     final id = widget.controller.playing?.id ?? 'video';
     try {
-      if (!await saveFileAs('lumtub-subtitles-$id.csv', utf8.encode(pairedCuesCsv(cues)), mime: 'text/csv', label: 'CSV', extension: 'csv')) return;
+      if (!await saveFileAs('lumtub-subtitles-$id.csv', utf8.encode(pairedCuesCsv(cues)),
+          mime: 'text/csv', label: 'CSV', extension: 'csv')) {
+        return;
+      }
       messenger?.showSnackBar(SnackBar(content: Text(tr('Subtitles exported'))));
     } catch (e) {
       logError('Could not export the subtitles', e);
-      messenger?.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
+      messenger
+          ?.showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
     }
   }
 
@@ -337,34 +378,65 @@ class _SubtitleListState extends State<SubtitleList> {
     final part = _selected.trim();
     final picked = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(local.dx, local.dy, overlay.size.width - local.dx, overlay.size.height - local.dy),
+      position: RelativeRect.fromLTRB(
+          local.dx, local.dy, overlay.size.width - local.dx, overlay.size.height - local.dy),
       items: [
         if (part.isNotEmpty && widget.controller.canSummarize)
-          PopupMenuItem(value: 'explainPart', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain the selection with AI')))),
+          PopupMenuItem(
+              value: 'explainPart',
+              child: ListTile(
+                  dense: true,
+                  leading: Icon(AppIcons.lightbulb, size: 18),
+                  title: Text(tr('Explain the selection with AI')))),
         if (part.isNotEmpty)
-          PopupMenuItem(value: 'notePart', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save the selection as a note')))),
+          PopupMenuItem(
+              value: 'notePart',
+              child: ListTile(
+                  dense: true,
+                  leading: Icon(AppIcons.notePencil, size: 18),
+                  title: Text(tr('Save the selection as a note')))),
         if (part.isNotEmpty) const PopupMenuDivider(),
-        PopupMenuItem(value: 'copy', child: ListTile(dense: true, leading: Icon(AppIcons.copy, size: 18), title: Text(tr('Copy')))),
-        if (widget.controller.canSummarize) PopupMenuItem(value: 'explain', child: ListTile(dense: true, leading: Icon(AppIcons.lightbulb, size: 18), title: Text(tr('Explain with AI')))),
-        PopupMenuItem(value: 'note', child: ListTile(dense: true, leading: Icon(AppIcons.notePencil, size: 18), title: Text(tr('Save as note')))),
+        PopupMenuItem(
+            value: 'copy',
+            child: ListTile(
+                dense: true, leading: Icon(AppIcons.copy, size: 18), title: Text(tr('Copy')))),
+        if (widget.controller.canSummarize)
+          PopupMenuItem(
+              value: 'explain',
+              child: ListTile(
+                  dense: true,
+                  leading: Icon(AppIcons.lightbulb, size: 18),
+                  title: Text(tr('Explain with AI')))),
+        PopupMenuItem(
+            value: 'note',
+            child: ListTile(
+                dense: true,
+                leading: Icon(AppIcons.notePencil, size: 18),
+                title: Text(tr('Save as note')))),
       ],
     );
     if (!mounted || picked == null) return;
     final text = [line.cue.text, if (line.second != null) line.second!].join('\n');
     String words(PairedCue c) => c.cue.text;
     final before = [for (final c in cues.sublist(i > 3 ? i - 3 : 0, i)) words(c)];
-    final after = [for (final c in cues.sublist(i + 1, i + 4 < cues.length ? i + 4 : cues.length)) words(c)];
+    final after = [
+      for (final c in cues.sublist(i + 1, i + 4 < cues.length ? i + 4 : cues.length)) words(c)
+    ];
     switch (picked) {
       case 'explainPart':
-        await showLineExplanation(context, widget.controller, text: part, at: line.cue.start, before: [...before, line.cue.text], after: after);
+        await showLineExplanation(context, widget.controller,
+            text: part, at: line.cue.start, before: [...before, line.cue.text], after: after);
       case 'notePart':
-        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: part, before: [...before, line.cue.text], after: after);
+        await showNoteEditor(context, widget.controller,
+            at: line.cue.start, quote: part, before: [...before, line.cue.text], after: after);
       case 'copy':
         _copy(line);
       case 'explain':
-        await showLineExplanation(context, widget.controller, text: line.cue.text, at: line.cue.start, before: before, after: after);
+        await showLineExplanation(context, widget.controller,
+            text: line.cue.text, at: line.cue.start, before: before, after: after);
       case 'note':
-        await showNoteEditor(context, widget.controller, at: line.cue.start, quote: text, before: before, after: after);
+        await showNoteEditor(context, widget.controller,
+            at: line.cue.start, quote: text, before: before, after: after);
     }
   }
 
@@ -379,7 +451,10 @@ class _SubtitleListState extends State<SubtitleList> {
     var from = 0;
     for (var at = lower.indexOf(query); at >= 0; at = lower.indexOf(query, at + query.length)) {
       if (at > from) spans.add(TextSpan(text: text.substring(from, at)));
-      spans.add(TextSpan(text: text.substring(at, at + query.length), style: TextStyle(backgroundColor: colors.tertiaryContainer, color: colors.onTertiaryContainer)));
+      spans.add(TextSpan(
+          text: text.substring(at, at + query.length),
+          style: TextStyle(
+              backgroundColor: colors.tertiaryContainer, color: colors.onTertiaryContainer)));
       from = at + query.length;
     }
     if (from < text.length) spans.add(TextSpan(text: text.substring(from)));
@@ -387,8 +462,10 @@ class _SubtitleListState extends State<SubtitleList> {
   }
 
   void _copy(PairedCue line) {
-    unawaited(Clipboard.setData(ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
+    unawaited(Clipboard.setData(
+        ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
   }
 
   Widget _row(List<PairedCue> cues, int i, bool playing, ColorScheme colors) {
@@ -418,48 +495,69 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               SizedBox(
                 width: 52,
-                child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.onSecondaryContainer : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
+                child: Text(formatClock(cue.start),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: playing ? colors.onSecondaryContainer : colors.outline,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
               ),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  _line(
-                    top,
-                    TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
-                    other: under,
-                    at: cue.start,
-                    colors: colors,
-                  ),
-                  if (_bySentence && !swap)
-                    // The whole sentence translated as one, in place of the
-                    // second subtitle's lines joined, once it is there.
-                    FutureBuilder<String?>(
-                      future: _wholeTranslation(cue.text),
-                      builder: (context, snapshot) {
-                        final words = snapshot.data ?? under;
-                        if (words == null) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: _line(
-                            words,
-                            TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
-                            other: top,
-                            at: cue.start,
-                            colors: colors,
-                          ),
-                        );
-                      },
-                    )
-                  else if (under != null) ...[
-                    const SizedBox(height: 2),
-                    _line(
-                      under,
-                      TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
-                      other: top,
-                      at: cue.start,
-                      colors: colors,
-                    ),
-                  ],
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _line(
+                        top,
+                        TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: playing ? colors.onSecondaryContainer : colors.onSurface,
+                            fontWeight: playing ? FontWeight.w600 : null),
+                        other: under,
+                        at: cue.start,
+                        colors: colors,
+                      ),
+                      if (_bySentence && !swap)
+                        // The whole sentence translated as one, in place of the
+                        // second subtitle's lines joined, once it is there.
+                        FutureBuilder<String?>(
+                          future: _wholeTranslation(cue.text),
+                          builder: (context, snapshot) {
+                            final words = snapshot.data ?? under;
+                            if (words == null) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: _line(
+                                words,
+                                TextStyle(
+                                    fontSize: 12,
+                                    height: 1.4,
+                                    color: playing
+                                        ? colors.onSecondaryContainer.withValues(alpha: 0.8)
+                                        : colors.onSurfaceVariant),
+                                other: top,
+                                at: cue.start,
+                                colors: colors,
+                              ),
+                            );
+                          },
+                        )
+                      else if (under != null) ...[
+                        const SizedBox(height: 2),
+                        _line(
+                          under,
+                          TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: playing
+                                  ? colors.onSecondaryContainer.withValues(alpha: 0.8)
+                                  : colors.onSurfaceVariant),
+                          other: top,
+                          at: cue.start,
+                          colors: colors,
+                        ),
+                      ],
+                    ]),
               ),
               ValueListenableBuilder<int>(
                 valueListenable: widget.controller.shadowTakes,
@@ -507,14 +605,19 @@ class _SubtitleListState extends State<SubtitleList> {
     return FutureBuilder<List<PairedCue>>(
       future: _cues,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final cues = _rowsOf(snapshot.data ?? const <PairedCue>[]);
         if (cues.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) && widget.controller.secondarySubtitle == null ? tr('Turn on a subtitle first') : tr("This subtitle can't be listed"),
+                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) &&
+                        widget.controller.secondarySubtitle == null
+                    ? tr('Turn on a subtitle first')
+                    : tr("This subtitle can't be listed"),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colors.outline),
               ),
@@ -523,7 +626,8 @@ class _SubtitleListState extends State<SubtitleList> {
         }
         if (_positions == null) _listen(cues);
         // Anything a row shows but the playing line builds them all again.
-        final rowsFor = Object.hash(cues, _query, _mode, _bySentence, colors, _learningSeen, Localizations.maybeLocaleOf(context), MediaQuery.textScalerOf(context));
+        final rowsFor = Object.hash(cues, _query, _mode, _bySentence, colors, _learningSeen,
+            Localizations.maybeLocaleOf(context), MediaQuery.textScalerOf(context));
         if (rowsFor != _rowsFor) {
           _rowsFor = rowsFor;
           _rows.clear();
@@ -534,8 +638,12 @@ class _SubtitleListState extends State<SubtitleList> {
             padding: EdgeInsetsDirectional.fromSTEB(16, 0, _bothOn ? 4 : 16, 8),
             child: Row(children: [
               Expanded(
-                child: LeavesByKeys(child: TextField(
-                  decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
+                child: LeavesByKeys(
+                    child: TextField(
+                  decoration: InputDecoration(
+                      isDense: true,
+                      prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
+                      hintText: tr('Search subtitles')),
                   onChanged: (v) {
                     // Filtering thousands of lines waits for a pause in typing.
                     _typing?.cancel();
@@ -555,7 +663,10 @@ class _SubtitleListState extends State<SubtitleList> {
                   padding: const EdgeInsetsDirectional.only(start: 8),
                   child: Text(
                     shown.isEmpty ? '0' : '${_match < 0 ? 0 : _match + 1}/${shown.length}',
-                    style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: colors.outline,
+                        fontFeatures: const [FontFeature.tabularFigures()]),
                   ),
                 ),
                 IconButton(
@@ -572,7 +683,9 @@ class _SubtitleListState extends State<SubtitleList> {
                 ),
               ],
               IconButton(
-                tooltip: _bySentence ? tr('Show line by line') : tr('Read by whole sentence, translated as a whole'),
+                tooltip: _bySentence
+                    ? tr('Show line by line')
+                    : tr('Read by whole sentence, translated as a whole'),
                 isSelected: _bySentence,
                 icon: Icon(AppIcons.bookOpenText, size: 20),
                 onPressed: _toggleSentences,
@@ -589,28 +702,34 @@ class _SubtitleListState extends State<SubtitleList> {
             // The way back floats over the list, so it stays in sight however
             // short the panel is.
             child: Stack(children: [
-              Positioned.fill(child: StudyVeil(controller: widget.controller, child: NotificationListener<ScrollStartNotification>(
-              // Following stops when the person drags the list, not when it
-              // moves by itself or the page around it scrolls.
-              onNotification: (n) {
-                if (n.depth == 0 && n.dragDetails != null && _follow) setState(() => _follow = false);
-                return false;
-              },
-              child: _selectable(ListView.builder(
-                controller: _scroll,
-                // Room under the last line for the way back to the playing one.
-                padding: const EdgeInsets.only(bottom: 64),
-                itemCount: shown?.length ?? cues.length,
-                itemBuilder: (context, k) {
-                  final i = shown == null ? k : shown[k];
-                  final playing = i == _current;
-                  if (_rows[i] case (final was, final row) when was == playing) return row;
-                  final row = _row(cues, i, playing, colors);
-                  _rows[i] = (playing, row);
-                  return row;
-                },
-              )),
-            )),),
+              Positioned.fill(
+                child: StudyVeil(
+                    controller: widget.controller,
+                    child: NotificationListener<ScrollStartNotification>(
+                      // Following stops when the person drags the list, not when it
+                      // moves by itself or the page around it scrolls.
+                      onNotification: (n) {
+                        if (n.depth == 0 && n.dragDetails != null && _follow) {
+                          setState(() => _follow = false);
+                        }
+                        return false;
+                      },
+                      child: _selectable(ListView.builder(
+                        controller: _scroll,
+                        // Room under the last line for the way back to the playing one.
+                        padding: const EdgeInsets.only(bottom: 64),
+                        itemCount: shown?.length ?? cues.length,
+                        itemBuilder: (context, k) {
+                          final i = shown == null ? k : shown[k];
+                          final playing = i == _current;
+                          if (_rows[i] case (final was, final row) when was == playing) return row;
+                          final row = _row(cues, i, playing, colors);
+                          _rows[i] = (playing, row);
+                          return row;
+                        },
+                      )),
+                    )),
+              ),
               if (!_follow)
                 PositionedDirectional(
                   start: 0,
@@ -620,7 +739,10 @@ class _SubtitleListState extends State<SubtitleList> {
                     child: FilledButton.tonalIcon(
                       onPressed: () {
                         setState(() => _follow = true);
-                        if (_current >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(_current, cues.length));
+                        if (_current >= 0) {
+                          WidgetsBinding.instance
+                              .addPostFrameCallback((_) => _reveal(_current, cues.length));
+                        }
                       },
                       icon: Icon(AppIcons.crosshair, size: 18),
                       label: Text(tr('Back to the current line')),

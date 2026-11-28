@@ -10,14 +10,16 @@ void main() {
       return;
     }
     if (!YoutubeWebSignIn.available) {
-      expect(Platform.environment['LUMTUB_CORE_DLL'], isNull, reason: 'the core was given but not loaded');
+      expect(Platform.environment['LUMTUB_CORE_DLL'], isNull,
+          reason: 'the core was given but not loaded');
       markTestSkipped('no native core');
       return;
     }
     final dir = await Directory.systemTemp.createTemp('lumtub_members');
     addTearDown(() => dir.delete(recursive: true));
     final source = File('${dir.path}/cookies.txt');
-    await source.writeAsString('# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t1900000000\tSAPISID\tabc\n.youtube.com\tTRUE\t/\tTRUE\t1900000000\tLOGIN_INFO\txyz\n.google.com\tTRUE\t/\tTRUE\t1900000000\tSID\tother\n');
+    await source.writeAsString(
+        '# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t1900000000\tSAPISID\tabc\n.youtube.com\tTRUE\t/\tTRUE\t1900000000\tLOGIN_INFO\txyz\n.google.com\tTRUE\t/\tTRUE\t1900000000\tSID\tother\n');
     final sign = YoutubeWebSignIn(folder: dir.path)..load();
     final out = '${dir.path}/v.cookies.txt';
     expect(await sign.writeCookies(out), isFalse);

@@ -17,7 +17,8 @@ Future<String> learningDeviceId(Directory data) async {
   } catch (_) {}
   if (raw.isEmpty) {
     final random = Random.secure();
-    raw = [for (var i = 0; i < 16; i++) random.nextInt(256).toRadixString(16).padLeft(2, '0')].join();
+    raw =
+        [for (var i = 0; i < 16; i++) random.nextInt(256).toRadixString(16).padLeft(2, '0')].join();
     try {
       await file.writeAsString(raw, flush: true);
     } catch (_) {}

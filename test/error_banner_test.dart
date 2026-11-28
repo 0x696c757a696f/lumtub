@@ -5,7 +5,11 @@ import 'package:material_ui/material_ui.dart';
 void main() {
   testWidgets('a one-line error takes one line, a long one grows', (tester) async {
     Future<double> height(String message) async {
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: Align(alignment: Alignment.topCenter, child: SizedBox(width: 600, child: ErrorBanner(message, onRetry: () {}))))));
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(width: 600, child: ErrorBanner(message, onRetry: () {}))))));
       return tester.getSize(find.byType(ErrorBanner)).height;
     }
 

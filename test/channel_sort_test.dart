@@ -9,9 +9,34 @@ void main() {
           'header': {
             'feedFilterChipBarRenderer': {
               'contents': [
-                {'chipCloudChipRenderer': {'text': {'simpleText': 'Latest'}, 'isSelected': true}},
-                {'chipCloudChipRenderer': {'text': {'simpleText': 'Popular'}, 'navigationEndpoint': {'continuationCommand': {'token': 'POP'}}}},
-                {'chipCloudChipRenderer': {'text': {'runs': [{'text': 'Old'}, {'text': 'est'}]}, 'navigationEndpoint': {'commandMetadata': <String, Object?>{}, 'continuationCommand': {'token': 'OLD'}}}},
+                {
+                  'chipCloudChipRenderer': {
+                    'text': {'simpleText': 'Latest'},
+                    'isSelected': true
+                  }
+                },
+                {
+                  'chipCloudChipRenderer': {
+                    'text': {'simpleText': 'Popular'},
+                    'navigationEndpoint': {
+                      'continuationCommand': {'token': 'POP'}
+                    }
+                  }
+                },
+                {
+                  'chipCloudChipRenderer': {
+                    'text': {
+                      'runs': [
+                        {'text': 'Old'},
+                        {'text': 'est'}
+                      ]
+                    },
+                    'navigationEndpoint': {
+                      'commandMetadata': <String, Object?>{},
+                      'continuationCommand': {'token': 'OLD'}
+                    }
+                  }
+                },
               ],
             },
           },
@@ -26,7 +51,11 @@ void main() {
       {
         'chipViewModel': {
           'text': 'Popular',
-          'tapCommand': {'innertubeCommand': {'continuationCommand': {'token': 'POP2'}}},
+          'tapCommand': {
+            'innertubeCommand': {
+              'continuationCommand': {'token': 'POP2'}
+            }
+          },
         },
       },
     ];

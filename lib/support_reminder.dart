@@ -37,7 +37,8 @@ class SupportReminder {
     try {
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) throw const FormatException('Not a JSON object');
-      DateTime? time(Object? value) => value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;
+      DateTime? time(Object? value) =>
+          value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;
       _first = time(data['first']);
       _last = time(data['last']);
       _star = time(data['star']);
@@ -71,7 +72,13 @@ class SupportReminder {
   /// Whether to ask, this one time, for a star on GitHub at [now].
   bool starDue(DateTime now) {
     final first = _first;
-    if (_off || _star != null || first == null || _days.length < _daysUsed || now.difference(first) < _starAfter) return false;
+    if (_off ||
+        _star != null ||
+        first == null ||
+        _days.length < _daysUsed ||
+        now.difference(first) < _starAfter) {
+      return false;
+    }
     final last = _last;
     return last == null || now.difference(last) >= _apart;
   }

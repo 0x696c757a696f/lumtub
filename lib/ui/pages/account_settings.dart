@@ -38,14 +38,16 @@ class AccountSettings extends StatelessWidget {
             _Section(
               number: 1,
               title: tr('Browser sign-in'),
-              purpose: tr('Recommended. Your YouTube home feed, history, Watch Later and playlists; like, comment, subscribe and save to playlists; community posts, live chat and members-only videos'),
+              purpose: tr(
+                  'Recommended. Your YouTube home feed, history, Watch Later and playlists; like, comment, subscribe and save to playlists; community posts, live chat and members-only videos'),
               signedIn: web.signedIn,
               expanded: true,
               children: [
                 CookieSignInTile(web, note: note, onSignOut: (context) async {
                   final forget = await confirmSignOut(context,
                       title: tr('Sign out of the browser sign-in?'),
-                      content: tr('The cookies saved on this device are deleted. Followed channels and playlists stay on this device.'));
+                      content: tr(
+                          'The cookies saved on this device are deleted. Followed channels and playlists stay on this device.'));
                   if (forget == null) return;
                   web.signOut();
                   if (forget) account.forgetSynced();
@@ -56,49 +58,76 @@ class AccountSettings extends StatelessWidget {
           _Section(
             number: web == null ? 1 : 2,
             title: tr('Google sign-in'),
-            purpose: tr('Optional. Does the same through YouTube\'s official API, if the browser sign-in does not work for you; it needs a Google Cloud client and has a daily limit'),
+            purpose: tr(
+                'Optional. Does the same through YouTube\'s official API, if the browser sign-in does not work for you; it needs a Google Cloud client and has a daily limit'),
             signedIn: account.signedIn,
-            expanded: account.signedIn || account.state == AccountState.signingIn || error != null || web == null,
+            expanded: account.signedIn ||
+                account.state == AccountState.signingIn ||
+                error != null ||
+                web == null,
             children: [
               switch (account.state) {
-                AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                AccountState.signedIn =>
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     SignInRow(
                       leading: account.avatar == null
                           ? CircleAvatar(
                               backgroundColor: colors.primaryContainer,
                               child: Icon(AppIcons.userFill, color: colors.onPrimaryContainer),
                             )
-                          : ChannelAvatar(name: account.name ?? '', image: account.avatar, radius: 20),
+                          : ChannelAvatar(
+                              name: account.name ?? '', image: account.avatar, radius: 20),
                       title: Text(account.name ?? tr('YouTube account')),
                       subtitle: Text(account.syncing
                           ? tr('Syncing subscriptions and playlists…')
                           : account.lastSync == null
                               ? tr('Signed in, not synced yet')
-                              : tr('Last synced: {0} {1}', [formatDate(account.lastSync!), _time(account.lastSync!)])),
-                      actions: [if (!account.canWrite) FilledButton.tonal(onPressed: account.signIn, child: Text(tr('Sign in again to enable likes and comments')))],
+                              : tr('Last synced: {0} {1}',
+                                  [formatDate(account.lastSync!), _time(account.lastSync!)])),
+                      actions: [
+                        if (!account.canWrite)
+                          FilledButton.tonal(
+                              onPressed: account.signIn,
+                              child: Text(tr('Sign in again to enable likes and comments')))
+                      ],
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: Wrap(spacing: 8, runSpacing: 8, children: [
                         FilledButton.tonalIcon(
                           onPressed: account.syncing ? null : account.sync,
-                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowsCounterClockwise),
+                          icon: account.syncing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2))
+                              : Icon(AppIcons.arrowsCounterClockwise),
                           label: Text(tr('Sync now')),
                         ),
-                        OutlinedButton(onPressed: () => _confirmSignOut(context, account), child: Text(tr('Sign out'))),
+                        OutlinedButton(
+                            onPressed: () => _confirmSignOut(context, account),
+                            child: Text(tr('Sign out'))),
                       ]),
                     ),
                   ]),
                 AccountState.signingIn => SignInRow(
-                    leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                    leading: const SizedBox(
+                        width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
                     title: Text(tr('Finish signing in in your browser')),
-                    subtitle: Text(tr("The Google sign-in page has opened in your default browser. You'll return here automatically when done.")),
-                    actions: [TextButton(onPressed: account.cancelSignIn, child: Text(tr('Cancel')))],
+                    subtitle: Text(tr(
+                        "The Google sign-in page has opened in your default browser. You'll return here automatically when done.")),
+                    actions: [
+                      TextButton(onPressed: account.cancelSignIn, child: Text(tr('Cancel')))
+                    ],
                   ),
                 AccountState.signedOut => SignInRow(
                     leading: Icon(AppIcons.userCircle, color: colors.primary),
                     title: Text(tr('Signed out')),
-                    subtitle: Text(account.client == null ? tr('This build has no built-in Google client. Enter your own client below first.') : tr('After signing in you can import subscriptions, playlists and liked videos, and also like, comment, save to playlists and subscribe.')),
+                    subtitle: Text(account.client == null
+                        ? tr(
+                            'This build has no built-in Google client. Enter your own client below first.')
+                        : tr(
+                            'After signing in you can import subscriptions, playlists and liked videos, and also like, comment, save to playlists and subscribe.')),
                     actions: [
                       FilledButton.icon(
                         onPressed: account.client == null ? null : account.signIn,
@@ -111,7 +140,11 @@ class AccountSettings extends StatelessWidget {
               if (error != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: error == YouTubeApiException.apiNotEnabled ? ErrorBanner(error, onRetry: () => openExternal(YouTubeApiException.enableApiUrl), retryLabel: tr('Enable it')) : ErrorBanner(error),
+                  child: error == YouTubeApiException.apiNotEnabled
+                      ? ErrorBanner(error,
+                          onRetry: () => openExternal(YouTubeApiException.enableApiUrl),
+                          retryLabel: tr('Enable it'))
+                      : ErrorBanner(error),
                 ),
               _ClientSettings(account: account, note: note),
             ],
@@ -128,12 +161,14 @@ class AccountSettings extends StatelessWidget {
     );
   }
 
-  static String _time(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  static String _time(DateTime time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
   Future<void> _confirmSignOut(BuildContext context, AccountController account) async {
     final forget = await confirmSignOut(context,
         title: tr('Sign out of Google?'),
-        content: tr("This deletes the sign-in credentials saved on this device and asks Google to revoke Lumtub's access. Imported followed channels and playlists are kept."));
+        content: tr(
+            "This deletes the sign-in credentials saved on this device and asks Google to revoke Lumtub's access. Imported followed channels and playlists are kept."));
     if (forget == null) return;
     await account.signOut();
     if (forget) account.forgetSynced();
@@ -143,27 +178,32 @@ class AccountSettings extends StatelessWidget {
 /// Asks before signing out, with a box (off by default) to also delete the
 /// playlists syncing copied from YouTube. Null when cancelled, else whether
 /// the box was ticked.
-Future<bool?> confirmSignOut(BuildContext context, {required String title, required String content}) {
+Future<bool?> confirmSignOut(BuildContext context,
+    {required String title, required String content}) {
   var forget = false;
   return showDialog<bool>(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
         title: Text(title),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(content),
-          const SizedBox(height: 8),
-          CheckboxListTile(
-            value: forget,
-            onChanged: (value) => setState(() => forget = value ?? false),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(tr('Also delete the playlists synced from YouTube')),
-          ),
-        ]),
+        content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(content),
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                value: forget,
+                onChanged: (value) => setState(() => forget = value ?? false),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(tr('Also delete the playlists synced from YouTube')),
+              ),
+            ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          FilledButton(onPressed: () => Navigator.pop(context, forget), child: Text(tr('Sign out'))),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, forget), child: Text(tr('Sign out'))),
         ],
       ),
     ),
@@ -178,9 +218,12 @@ class _Intro extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(tr('Signing in is optional'), style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(tr('Signing in is optional'),
+              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(tr('Search and playback work without it. Most people need only the browser sign-in; ticked ones are signed in.'), style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
+          Text(
+              tr('Search and playback work without it. Most people need only the browser sign-in; ticked ones are signed in.'),
+              style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
         ]),
       );
 }
@@ -198,8 +241,13 @@ class _Badge extends StatelessWidget {
       width: 24,
       height: 24,
       alignment: Alignment.center,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: done ? colors.primary : colors.surfaceContainerHighest),
-      child: done ? Icon(AppIcons.check, size: 16, color: colors.onPrimary) : Text('$number', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant)),
+      decoration: BoxDecoration(
+          shape: BoxShape.circle, color: done ? colors.primary : colors.surfaceContainerHighest),
+      child: done
+          ? Icon(AppIcons.check, size: 16, color: colors.onPrimary)
+          : Text('$number',
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant)),
     );
   }
 }
@@ -207,7 +255,13 @@ class _Badge extends StatelessWidget {
 /// One sign-in: a header with what it is for, folding its controls away
 /// until they are wanted.
 class _Section extends StatelessWidget {
-  const _Section({required this.number, required this.title, required this.purpose, required this.signedIn, required this.expanded, required this.children});
+  const _Section(
+      {required this.number,
+      required this.title,
+      required this.purpose,
+      required this.signedIn,
+      required this.expanded,
+      required this.children});
   final int number;
   final String title;
   final String purpose;
@@ -220,7 +274,8 @@ class _Section extends StatelessWidget {
     final colors = context.colors;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: colors.outlineVariant)),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8), border: Border.all(color: colors.outlineVariant)),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         key: PageStorageKey('account:$number'),
@@ -229,7 +284,8 @@ class _Section extends StatelessWidget {
         collapsedShape: const Border(),
         leading: _Badge(number, done: signedIn),
         title: Text(title, style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-        subtitle: Text(purpose, style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+        subtitle:
+            Text(purpose, style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
         childrenPadding: const EdgeInsets.only(bottom: 8),
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
@@ -248,10 +304,14 @@ class _WebSync extends StatelessWidget {
     final last = account.lastSync;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      child:
+          Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
         FilledButton.tonalIcon(
           onPressed: account.syncing ? null : account.sync,
-          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowsCounterClockwise),
+          icon: account.syncing
+              ? const SizedBox(
+                  width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(AppIcons.arrowsCounterClockwise),
           label: Text(tr('Sync now')),
         ),
         Text(
@@ -329,9 +389,18 @@ class _ClientSettingsState extends State<_ClientSettings> {
         // without one its scroll offset would be read back from the
         // tile's own saved open/closed flag, a bool, and fail to build.
         TextField(
-            key: const PageStorageKey('client:id'), controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('Client ID'), hintText: '…apps.googleusercontent.com')),
+            key: const PageStorageKey('client:id'),
+            controller: _id,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+                labelText: tr('Client ID'), hintText: '…apps.googleusercontent.com')),
         const SizedBox(height: 8),
-        TextField(key: const PageStorageKey('client:secret'), controller: _secret, onChanged: (_) => setState(() {}), obscureText: true, decoration: InputDecoration(labelText: tr('Client secret'))),
+        TextField(
+            key: const PageStorageKey('client:secret'),
+            controller: _secret,
+            onChanged: (_) => setState(() {}),
+            obscureText: true,
+            decoration: InputDecoration(labelText: tr('Client secret'))),
         const SizedBox(height: 12),
         Wrap(spacing: 8, children: [
           FilledButton.tonal(
@@ -345,7 +414,9 @@ class _ClientSettingsState extends State<_ClientSettings> {
                 _secret.clear();
                 unawaited(_apply(null));
               },
-              child: Text(OAuthClientConfig.builtIn.isValid ? tr('Revert to built-in client') : tr('Clear')),
+              child: Text(OAuthClientConfig.builtIn.isValid
+                  ? tr('Revert to built-in client')
+                  : tr('Clear')),
             ),
         ]),
       ],
@@ -356,7 +427,9 @@ class _ClientSettingsState extends State<_ClientSettings> {
     final messenger = ScaffoldMessenger.of(context);
     final wasSignedIn = widget.account.signedIn;
     await widget.account.setCustomClient(config);
-    messenger.showSnackBar(SnackBar(content: Text(wasSignedIn ? tr('Client changed. Please sign in again') : tr('Client saved'))));
+    messenger.showSnackBar(SnackBar(
+        content:
+            Text(wasSignedIn ? tr('Client changed. Please sign in again') : tr('Client saved'))));
   }
 }
 
@@ -380,7 +453,8 @@ class AccountButton extends StatelessWidget {
             radius: 16,
             backgroundColor: signedIn ? colors.primaryContainer : colors.surfaceContainerHighest,
             child: signedIn && name.isNotEmpty
-                ? Text(String.fromCharCode(name.runes.first).toUpperCase(), style: TextStyle(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))
+                ? Text(String.fromCharCode(name.runes.first).toUpperCase(),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))
                 : Icon(AppIcons.user, size: 20, color: colors.onSurfaceVariant),
           );
     if (account == null || !signedIn) {
@@ -391,9 +465,24 @@ class AccountButton extends StatelessWidget {
       icon: avatar,
       onSelected: (value) => value == 'sync' ? account.sync() : onOpenSettings(),
       itemBuilder: (context) => [
-        PopupMenuItem(enabled: false, child: Text(name.isEmpty ? tr('YouTube account') : name, style: context.text.titleSmall)),
-        PopupMenuItem(value: 'sync', enabled: !account.syncing, child: ListTile(dense: true, leading: Icon(AppIcons.arrowsCounterClockwise), title: Text(account.syncing ? tr('Syncing…') : tr('Sync subscriptions and playlists')))),
-        PopupMenuItem(value: 'settings', child: ListTile(dense: true, leading: Icon(AppIcons.userGear), title: Text(tr('Account settings')))),
+        PopupMenuItem(
+            enabled: false,
+            child:
+                Text(name.isEmpty ? tr('YouTube account') : name, style: context.text.titleSmall)),
+        PopupMenuItem(
+            value: 'sync',
+            enabled: !account.syncing,
+            child: ListTile(
+                dense: true,
+                leading: Icon(AppIcons.arrowsCounterClockwise),
+                title: Text(
+                    account.syncing ? tr('Syncing…') : tr('Sync subscriptions and playlists')))),
+        PopupMenuItem(
+            value: 'settings',
+            child: ListTile(
+                dense: true,
+                leading: Icon(AppIcons.userGear),
+                title: Text(tr('Account settings')))),
       ],
     );
   }

@@ -23,6 +23,7 @@ class DanmakuLayer extends StatefulWidget {
 class _Sprite {
   _Sprite(this.image, this.pad);
   final ui.Image image;
+
   /// Room left of the text, for the outline, in image pixels.
   final double pad;
 }
@@ -36,6 +37,7 @@ class _DanmakuLayerState extends State<DanmakuLayer> with SingleTickerProviderSt
 
   List<DanmakuItem> _items = const [];
   int _itemsRevision = -1;
+
   /// The moment the items were asked for: they hold until a little later.
   double? _itemsAt;
   static const _lookAhead = 1500.0;

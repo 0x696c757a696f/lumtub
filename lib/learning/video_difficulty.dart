@@ -37,12 +37,19 @@ class VideoDifficulty extends ChangeNotifier {
       final videos = json is Map ? json['videos'] : null;
       if (videos is! Map) return;
       for (final MapEntry(:key, :value) in videos.entries) {
-        if (value is num && value.isFinite && value >= 0 && value <= 1 && _id.hasMatch('$key')) _known['$key'] = value.toDouble();
+        if (value is num && value.isFinite && value >= 0 && value <= 1 && _id.hasMatch('$key')) {
+          _known['$key'] = value.toDouble();
+        }
       }
       final seen = json is Map ? json['seen'] : null;
       if (seen is Map) {
         for (final MapEntry(:key, :value) in seen.entries) {
-          if (value is List) _seen['$key'] = [for (final id in value.whereType<String>().take(videosPerWord)) if (_id.hasMatch(id)) id];
+          if (value is List) {
+            _seen['$key'] = [
+              for (final id in value.whereType<String>().take(videosPerWord))
+                if (_id.hasMatch(id)) id
+            ];
+          }
         }
       }
       notifyListeners();

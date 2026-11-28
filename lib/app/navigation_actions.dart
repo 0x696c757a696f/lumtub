@@ -56,10 +56,18 @@ extension NavigationActions on AppController {
     if (video != null && !mini) {
       final state = player?.state;
       // A video that had finished starts over rather than ending again.
-      final ended = state == null || (state.duration > Duration.zero && state.position > state.duration - const Duration(seconds: 5));
-      return BackEntry.video(video, mode: mode, position: ended ? null : state.position, queue: queue);
+      final ended = state == null ||
+          (state.duration > Duration.zero &&
+              state.position > state.duration - const Duration(seconds: 5));
+      return BackEntry.video(video,
+          mode: mode, position: ended ? null : state.position, queue: queue);
     }
-    return BackEntry.page(mode, query: _query, channel: channel, channelTab: channelTab, playlistId: openPlaylistId, youtubePlaylist: youtubePlaylist);
+    return BackEntry.page(mode,
+        query: _query,
+        channel: channel,
+        channelTab: channelTab,
+        playlistId: openPlaylistId,
+        youtubePlaylist: youtubePlaylist);
   }
 
   void _remember() {
@@ -67,7 +75,12 @@ extension NavigationActions on AppController {
   }
 
   /// Whether 返回 has somewhere to go.
-  bool get canGoBack => !_back.isEmpty || onWatchPage || _query != null || mode != PageMode.home || channelQuery != null;
+  bool get canGoBack =>
+      !_back.isEmpty ||
+      onWatchPage ||
+      _query != null ||
+      mode != PageMode.home ||
+      channelQuery != null;
 
   /// Goes back to the previous page or video: a search inside a channel is
   /// cleared first; with nothing earlier it closes the video, then the
@@ -158,8 +171,11 @@ extension NavigationActions on AppController {
     final repository = _repository;
     if (repository == null) return;
     try {
-      final resolved = await repository.streams.resolve(item.id, _formatFor(item.id), formatSort: _formatSort, membersOnly: item.membersOnly);
-      if (resolved.details.channelId case final id? when ChannelRef.isValidId(id)) return openChannel(ChannelRef(id, resolved.details.channel));
+      final resolved = await repository.streams.resolve(item.id, _formatFor(item.id),
+          formatSort: _formatSort, membersOnly: item.membersOnly);
+      if (resolved.details.channelId case final id? when ChannelRef.isValidId(id)) {
+        return openChannel(ChannelRef(id, resolved.details.channel));
+      }
     } catch (e) {
       logWarn('Could not find the channel of ${item.id}: $e');
     }
@@ -174,10 +190,14 @@ extension NavigationActions on AppController {
     final loader = channelVideos;
     if (loader == null) return;
     void named() {
-      final name = loader.items.map((item) => item.channel).firstWhere((name) => name.isNotEmpty && name != 'YouTube', orElse: () => '');
+      final name = loader.items
+          .map((item) => item.channel)
+          .firstWhere((name) => name.isNotEmpty && name != 'YouTube', orElse: () => '');
       if (name.isEmpty && loader.loading) return;
       loader.removeListener(named);
-      if (name.isNotEmpty && channel?.id == ref.id && (channel?.name.isEmpty ?? false)) _update(() => channel = ChannelRef(ref.id, name, ref.avatar));
+      if (name.isNotEmpty && channel?.id == ref.id && (channel?.name.isEmpty ?? false)) {
+        _update(() => channel = ChannelRef(ref.id, name, ref.avatar));
+      }
     }
 
     loader.addListener(named);
@@ -254,7 +274,12 @@ extension NavigationActions on AppController {
   void setChannelLength(SearchDuration length) {
     final repository = _repository;
     final ref = channel;
-    if (repository == null || ref == null || length == channelLength || channelTab == ChannelTab.posts) return;
+    if (repository == null ||
+        ref == null ||
+        length == channelLength ||
+        channelTab == ChannelTab.posts) {
+      return;
+    }
     _update(() {
       channelLength = length;
       channelVideos?.dispose();
@@ -266,7 +291,8 @@ extension NavigationActions on AppController {
   /// order YouTube does not offer is made by [ChannelLengths], which reads
   /// the tab newest first and keeps it, so the next time only new uploads
   /// are read.
-  VideoListLoader _channelLoader(VideoRepository repository, ChannelRef ref, ChannelTab tab, ChannelSort sort) {
+  VideoListLoader _channelLoader(
+      VideoRepository repository, ChannelRef ref, ChannelTab tab, ChannelSort sort) {
     channelLengths = null;
     var open = () => repository.channelTab(ref, tab, sort: sort);
     if (sort.rank != null && sort.fits(tab)) {
@@ -276,14 +302,17 @@ extension NavigationActions on AppController {
         channel: ref,
         tab: tab,
         sort: sort,
-        folder: root == null ? null : '${root.path}${Platform.pathSeparator}${CacheManager.channelsFolder}',
+        folder: root == null
+            ? null
+            : '${root.path}${Platform.pathSeparator}${CacheManager.channelsFolder}',
       );
       lengths.read.addListener(_passOn('channel'));
       open = lengths.listing;
     }
     final length = channelLength;
     final strict = length != SearchDuration.any;
-    return VideoListLoader(open, where: strict ? (item) => length.admits(item.duration) : null, fill: strict ? 20 : 1)
+    return VideoListLoader(open,
+        where: strict ? (item) => length.admits(item.duration) : null, fill: strict ? 20 : 1)
       ..addListener(_passOn('channel'))
       ..loadMore();
   }
@@ -297,7 +326,12 @@ extension NavigationActions on AppController {
     youtubePlaylist = playlist;
     final feed = accountFeed;
     final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
-    youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id, signedIn: signedIn ? () => feed.lines('VL${playlist.id}', pages: 50) : null), pageSize: 50, trickle: true, name: 'YouTube playlist ${playlist.id}')
+    youtubePlaylistVideos = VideoListLoader(
+        () => repository.playlist(playlist.id,
+            signedIn: signedIn ? () => feed.lines('VL${playlist.id}', pages: 50) : null),
+        pageSize: 50,
+        trickle: true,
+        name: 'YouTube playlist ${playlist.id}')
       ..addListener(_passOn('youtube playlist'))
       ..loadMore();
     _go(PageMode.youtubePlaylist);
@@ -371,7 +405,13 @@ extension NavigationActions on AppController {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
-    if (feed == null || repository == null || !preferences.homeShowRecommended || preferences.focusHideHome || feed.loading) return;
+    if (feed == null ||
+        repository == null ||
+        !preferences.homeShowRecommended ||
+        preferences.focusHideHome ||
+        feed.loading) {
+      return;
+    }
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
     // The last launch's feed shows while a new one is gathered.
     await feed.restore(filter: visible);
@@ -387,7 +427,8 @@ extension NavigationActions on AppController {
   bool get canRefreshPage {
     if (onWatchPage || !ready) return false;
     return switch (mode) {
-      PageMode.home => homeFeed != null && preferences.homeShowRecommended && !preferences.focusHideHome,
+      PageMode.home =>
+        homeFeed != null && preferences.homeShowRecommended && !preferences.focusHideHome,
       PageMode.explore => true,
       PageMode.subscriptions => library != null,
       PageMode.channel => channel != null && channelQuery == null,
@@ -400,12 +441,16 @@ extension NavigationActions on AppController {
   /// when every source has answered.
   Future<void> refreshPage() async {
     if (!canRefreshPage) return;
-    bool listed(VideoListLoader? list) => list != null && !list.loading && (list.items.isNotEmpty || list.error != null || !list.hasMore);
+    bool listed(VideoListLoader? list) =>
+        list != null &&
+        !list.loading &&
+        (list.items.isNotEmpty || list.error != null || !list.hasMore);
     switch (mode) {
       case PageMode.home:
         final feed = homeFeed!;
         final before = feed.loadedAt;
-        await Future.any([refreshHomeFeed(force: true, ahead: true), _until(() => feed.loadedAt != before)]);
+        await Future.any(
+            [refreshHomeFeed(force: true, ahead: true), _until(() => feed.loadedAt != before)]);
       case PageMode.explore when _query != null:
         retrySearch();
         await _until(() => listed(searchResults));
@@ -443,8 +488,11 @@ extension NavigationActions on AppController {
     void check() {
       if (!finished.isCompleted && done()) finished.complete();
     }
+
     addListener(check);
-    return finished.future.timeout(limit, onTimeout: () {}).whenComplete(() => removeListener(check));
+    return finished.future
+        .timeout(limit, onTimeout: () {})
+        .whenComplete(() => removeListener(check));
   }
 
   /// The next page of 为你推荐, as the home page scrolls to its end.
@@ -465,10 +513,18 @@ extension NavigationActions on AppController {
     final feed = homeFeed;
     final repository = _repository;
     final player = this.player;
-    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended || incognito) return;
+    if (item == null ||
+        feed == null ||
+        repository == null ||
+        player == null ||
+        !preferences.homeShowRecommended ||
+        incognito) {
+      return;
+    }
     final position = player.state.position;
     final duration = player.state.duration;
-    final fraction = duration > Duration.zero ? position.inMilliseconds / duration.inMilliseconds : 0.0;
+    final fraction =
+        duration > Duration.zero ? position.inMilliseconds / duration.inMilliseconds : 0.0;
     final skipped = position < const Duration(seconds: 15) && fraction < 0.1;
     if (!skipped && position < const Duration(seconds: 30) && fraction < 0.3) return;
     unawaited(() async {
@@ -482,38 +538,49 @@ extension NavigationActions on AppController {
   void _reportWatchedToYoutube(VideoItem item) {
     final sign = webSignIn;
     final player = this.player;
-    if (sign == null || !sign.signedIn || player == null || !preferences.syncHistoryToYoutube || !preferences.recordHistory || incognito) return;
+    if (sign == null ||
+        !sign.signedIn ||
+        player == null ||
+        !preferences.syncHistoryToYoutube ||
+        !preferences.recordHistory ||
+        incognito) {
+      return;
+    }
     final to = player.state.position.inMilliseconds / 1000;
     if (to < 5) return;
     final length = player.state.duration.inMilliseconds / 1000;
     unawaited(() async {
-      final why = await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
+      final why =
+          await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
       if (why != null) logWarn('Could not add ${item.id} to the YouTube history: $why');
     }());
   }
 
   Future<HomeFeedSources> _homeSources(VideoRepository repository) async {
     final library = this.library;
-    final weekly = searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
+    final weekly = searchParams(
+        type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
     return HomeFeedSources(
-        history: history,
-        progressOf: library?.progressOf,
-        favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
-        followed: library?.channels ?? const [],
-        subscriptions: library?.feed ?? const [],
-        searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
-        youtubeHome: accountFeed?.available ?? false ? () => accountFeed!.videos(YoutubeAccountFeed.home, limit: 40) : null,
-        related: relatedVideos.forVideo,
-        channelUploads: library?.uploadsOf ?? (_) async => const [],
-        search: (query) async {
-          final listing = repository.search(query, sp: weekly);
-          try {
-            return (await listing.next(10).toList()).whereType<VideoItem>().toList();
-          } finally {
-            listing.close();
-          }
-        },
-      );
+      history: history,
+      progressOf: library?.progressOf,
+      favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
+      followed: library?.channels ?? const [],
+      subscriptions: library?.feed ?? const [],
+      searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
+      youtubeHome: accountFeed?.available ?? false
+          ? () => accountFeed!.videos(YoutubeAccountFeed.home, limit: 40)
+          : null,
+      related: relatedVideos.forVideo,
+      channelUploads: library?.uploadsOf ?? (_) async => const [],
+      search: (query) async {
+        final listing = repository.search(query, sp: weekly);
+        try {
+          return (await listing.next(10).toList()).whereType<VideoItem>().toList();
+        } finally {
+          listing.close();
+        }
+      },
+    );
   }
 
   /// Follows or unfollows [channel] here, and on YouTube when signed in
@@ -524,7 +591,9 @@ extension NavigationActions on AppController {
     if (library == null) return false;
     final following = library.toggleFollow(channel);
     final account = this.account;
-    if (account != null && account.canAct && preferences.syncFollowToYoutube) unawaited(account.setSubscribed(channel, following));
+    if (account != null && account.canAct && preferences.syncFollowToYoutube) {
+      unawaited(account.setSubscribed(channel, following));
+    }
     return following;
   }
 

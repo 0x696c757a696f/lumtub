@@ -1,0 +1,5 @@
+# Scripts run on Linux and macOS, so they keep LF line ends even when the
+# repository is checked out on Windows. Vendored code stays as it came.
+*.sh text eol=lf
+*.py text eol=lf
+/vendor/** -text

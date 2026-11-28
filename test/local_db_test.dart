@@ -12,7 +12,10 @@ import 'package:lumtub/video_repository.dart';
 
 void main() {
   LocalDb.enabledForTesting = true;
-  final skip = LocalDb.enabled && (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false) ? false : 'needs lumtub_core (LUMTUB_CORE_DLL)';
+  final skip = LocalDb.enabled &&
+          (NativeCore.instance?.library.providesSymbol('lumtub_store_write') ?? false)
+      ? false
+      : 'needs lumtub_core (LUMTUB_CORE_DLL)';
   late Directory root;
   late AppDirectories directories;
 
@@ -28,7 +31,12 @@ void main() {
     await root.delete(recursive: true);
   });
 
-  VideoItem video(int i) => VideoItem(id: 'v${i.toString().padLeft(10, '0')}', title: '视频 $i', channel: 'Channel', url: 'https://www.youtube.com/watch?v=$i', duration: 60 + i);
+  VideoItem video(int i) => VideoItem(
+      id: 'v${i.toString().padLeft(10, '0')}',
+      title: '视频 $i',
+      channel: 'Channel',
+      url: 'https://www.youtube.com/watch?v=$i',
+      duration: 60 + i);
   File libraryFile() => File('${directories.data.path}${Platform.pathSeparator}library.json');
   File database() => File('${directories.data.path}${Platform.pathSeparator}lumtub.db');
 
@@ -83,7 +91,11 @@ void main() {
       'favorites': [video(7).toJson()],
       'watchLater': <Object>[],
       'playlists': [
-        {'id': 'p1', 'name': 'Old', 'items': [video(8).toJson()]},
+        {
+          'id': 'p1',
+          'name': 'Old',
+          'items': [video(8).toJson()]
+        },
       ],
       'channels': [
         {'id': 'UCbbbbbbbbbbbbbbbbbbbbbb', 'name': 'B'},
@@ -109,11 +121,17 @@ void main() {
   }, skip: skip);
 
   test('a damaged database is set aside and the old file read again', () async {
-    await libraryFile().writeAsString(jsonEncode({'favorites': [video(9).toJson()]}));
-    await database().writeAsString('not a database, only some text that is long enough to have a header');
+    await libraryFile().writeAsString(jsonEncode({
+      'favorites': [video(9).toJson()]
+    }));
+    await database()
+        .writeAsString('not a database, only some text that is long enough to have a header');
     final store = await openLibrary();
     expect(store.favorites.single.id, video(9).id);
-    final kept = directories.data.listSync().map((entry) => entry.uri.pathSegments.last).where((name) => name.startsWith('lumtub.db.broken-'));
+    final kept = directories.data
+        .listSync()
+        .map((entry) => entry.uri.pathSegments.last)
+        .where((name) => name.startsWith('lumtub.db.broken-'));
     expect(kept, isNotEmpty);
     final again = await openLibrary();
     expect(again.favorites.single.id, video(9).id);
@@ -151,7 +169,8 @@ void main() {
     final entries = [for (var i = 0; i < 50; i++) ('k$i', '{"n":$i}')];
     await db.write({'list': entries});
     await db.write({'list': entries});
-    final found = await LocalDb('${directories.data.path}${Platform.pathSeparator}lumtub.db').read(['list']);
+    final found =
+        await LocalDb('${directories.data.path}${Platform.pathSeparator}lumtub.db').read(['list']);
     expect(found.lists['list']!.length, 50);
     expect(found.lists['list']!.first.$1, 'k0');
     expect(found.lists['list']!.first.$2, {'n': 0});
@@ -159,11 +178,14 @@ void main() {
 
   test('additions, removals, changes and moves all reach the file in order', () async {
     final db = LocalDb('${directories.data.path}${Platform.pathSeparator}lumtub.db');
-    Future<List<String>> stored() async => [for (final (key, _) in (await db.read(['list'])).lists['list']!) key];
+    Future<List<String>> stored() async => [
+          for (final (key, _) in (await db.read(['list'])).lists['list']!) key
+        ];
     var entries = [for (var i = 0; i < 10; i++) ('k$i', '{"n":$i}')];
     await db.write({'list': entries});
     // Nothing moved: sent as an edit.
-    entries = [('new', '{}'), ...entries.where((e) => e.$1 != 'k3'), ('end', '{}')]..insert(5, ('mid', '{}'));
+    entries = [('new', '{}'), ...entries.where((e) => e.$1 != 'k3'), ('end', '{}')]
+      ..insert(5, ('mid', '{}'));
     entries[2] = ('k1', '{"n":"changed"}');
     await db.write({'list': entries});
     expect(await stored(), [for (final (key, _) in entries) key]);

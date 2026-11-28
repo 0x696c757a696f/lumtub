@@ -9,11 +9,16 @@ void main() {
   test('clear keeps the folders a running download uses', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
     addTearDown(() => temp.delete(recursive: true));
-    final manager = CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
+    final manager =
+        CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
     const settings = PlayerSettings();
     final root = await manager.prepare(settings);
-    final part = File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part')..writeAsStringSync('1234');
-    final picture = File('${root.path}${Platform.pathSeparator}thumbnails${Platform.pathSeparator}a.jpg')..writeAsStringSync('12');
+    final part =
+        File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part')
+          ..writeAsStringSync('1234');
+    final picture =
+        File('${root.path}${Platform.pathSeparator}thumbnails${Platform.pathSeparator}a.jpg')
+          ..writeAsStringSync('12');
     final result = await manager.clear(settings, keep: CacheManager.downloadFolders);
     expect(result, (freed: 2, skipped: 0));
     expect(part.existsSync(), isTrue);
@@ -23,14 +28,17 @@ void main() {
   test('clear removes only Lumtub-managed cache folders', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-cache-test-');
     addTearDown(() => temp.delete(recursive: true));
-    final manager = CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
+    final manager =
+        CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
     const settings = PlayerSettings();
     final root = await manager.prepare(settings);
-    await File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part').writeAsString('1234');
+    await File('${root.path}${Platform.pathSeparator}temp${Platform.pathSeparator}download.part')
+        .writeAsString('1234');
     final userFile = File('${root.path}${Platform.pathSeparator}do-not-delete.txt');
     await userFile.writeAsString('user file');
 
-    final nested = File('${root.path}${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}youtube-sigfuncs${Platform.pathSeparator}a.json');
+    final nested = File(
+        '${root.path}${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}youtube-sigfuncs${Platform.pathSeparator}a.json');
     await nested.create(recursive: true);
     await nested.writeAsString('123456');
 
@@ -52,59 +60,92 @@ void main() {
     late Directory temp;
     late CacheManager manager;
     late PlayerSettings from, to;
-    String sub(PlayerSettings s, String name, [String file = '']) => '${manager.rootFor(s).path}${Platform.pathSeparator}$name$file';
+    String sub(PlayerSettings s, String name, [String file = '']) =>
+        '${manager.rootFor(s).path}${Platform.pathSeparator}$name$file';
 
     setUp(() async {
       temp = await Directory.systemTemp.createTemp('lumtub-migrate-test-');
       addTearDown(() => temp.delete(recursive: true));
-      manager = CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
+      manager =
+          CacheManager(AppDirectories.at(Directory('${temp.path}${Platform.pathSeparator}app')));
       from = const PlayerSettings();
       to = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}new');
       await manager.prepare(from);
       await File(sub(from, 'thumbnails', '${Platform.pathSeparator}a.jpg')).writeAsString('1234');
-      await File(sub(from, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json')).create(recursive: true);
-      await File(sub(from, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json')).writeAsString('123456');
+      await File(
+              sub(from, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json'))
+          .create(recursive: true);
+      await File(
+              sub(from, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json'))
+          .writeAsString('123456');
     });
 
     test('copies, saves the new location, then deletes the old folders', () async {
       var committed = false;
       await manager.migrate(from, to, commit: () async {
         // Until the setting is saved the old cache is still whole.
-        expect(await File(sub(from, 'thumbnails', '${Platform.pathSeparator}a.jpg')).exists(), isTrue);
+        expect(
+            await File(sub(from, 'thumbnails', '${Platform.pathSeparator}a.jpg')).exists(), isTrue);
         committed = true;
       });
       expect(committed, isTrue);
-      expect(await File(sub(to, 'thumbnails', '${Platform.pathSeparator}a.jpg')).readAsString(), '1234');
-      expect(await File(sub(to, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json')).readAsString(), '123456');
+      expect(await File(sub(to, 'thumbnails', '${Platform.pathSeparator}a.jpg')).readAsString(),
+          '1234');
+      expect(
+          await File(
+                  sub(to, 'yt-dlp', '${Platform.pathSeparator}deep${Platform.pathSeparator}b.json'))
+              .readAsString(),
+          '123456');
       expect(await manager.size(from), 0);
       expect(await manager.size(to), 10);
-      expect(await Directory(manager.rootFor(to).path).list().map((e) => e.path).where((p) => p.contains('.migrating') || p.contains('.replaced')).toList(), isEmpty);
+      expect(
+          await Directory(manager.rootFor(to).path)
+              .list()
+              .map((e) => e.path)
+              .where((p) => p.contains('.migrating') || p.contains('.replaced'))
+              .toList(),
+          isEmpty);
     });
 
     test('refuses a new location inside the old cache, and the other way round', () async {
-      final inside = PlayerSettings(cachePath: '${sub(from, 'thumbnails')}${Platform.pathSeparator}LumtubCache');
+      final inside = PlayerSettings(
+          cachePath: '${sub(from, 'thumbnails')}${Platform.pathSeparator}LumtubCache');
       expect(manager.nested(from, inside), isTrue);
       await expectLater(manager.migrate(from, inside), throwsA(isA<FileSystemException>()));
       expect(await Directory(inside.cachePath!).exists(), isFalse);
       expect(await manager.size(from), 10);
       final outer = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer');
-      final under = PlayerSettings(cachePath: '${temp.path}${Platform.pathSeparator}outer${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}x');
+      final under = PlayerSettings(
+          cachePath:
+              '${temp.path}${Platform.pathSeparator}outer${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}x');
       expect(manager.nested(outer, under), isTrue);
       expect(manager.nested(under, outer), isTrue);
       expect(manager.nested(from, to), isFalse);
-      expect(CacheManager.isWithin('${temp.path}${Platform.pathSeparator}ab', '${temp.path}${Platform.pathSeparator}a'), isFalse);
+      expect(
+          CacheManager.isWithin(
+              '${temp.path}${Platform.pathSeparator}ab', '${temp.path}${Platform.pathSeparator}a'),
+          isFalse);
     });
 
     test('a failure while saving keeps the old cache and the target as it was', () async {
       final existing = File(sub(to, 'thumbnails', '${Platform.pathSeparator}keep.jpg'));
       await manager.prepare(to);
       await existing.writeAsString('mine');
-      await expectLater(manager.migrate(from, to, commit: () async => throw const FileSystemException('disk full')), throwsA(isA<FileSystemException>()));
+      await expectLater(
+          manager.migrate(from, to,
+              commit: () async => throw const FileSystemException('disk full')),
+          throwsA(isA<FileSystemException>()));
       expect(await manager.size(from), 10);
       expect(await existing.readAsString(), 'mine');
       expect(await File(sub(to, 'thumbnails', '${Platform.pathSeparator}a.jpg')).exists(), isFalse);
       expect(await manager.size(to), 4);
-      expect(await Directory(manager.rootFor(to).path).list().map((e) => e.path).where((p) => p.contains('.migrating') || p.contains('.replaced')).toList(), isEmpty);
+      expect(
+          await Directory(manager.rootFor(to).path)
+              .list()
+              .map((e) => e.path)
+              .where((p) => p.contains('.migrating') || p.contains('.replaced'))
+              .toList(),
+          isEmpty);
     });
 
     test('a failure while copying leaves the target untouched and the old cache whole', () async {

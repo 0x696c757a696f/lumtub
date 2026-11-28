@@ -20,19 +20,32 @@ void main() {
 
     test('combines order, upload date, type and length', () {
       // YouTube's own "this week, videos, by upload date".
-      expect(searchParams(type: SearchFilter.videos, sort: SearchSort.date, date: SearchUploadDate.week), 'CAISBAgDEAE%253D');
+      expect(
+          searchParams(
+              type: SearchFilter.videos, sort: SearchSort.date, date: SearchUploadDate.week),
+          'CAISBAgDEAE%253D');
       // "Over 20 minutes, by view count".
       expect(searchParams(sort: SearchSort.views, duration: SearchDuration.long), 'CAMSAhgC');
-      final bytes = base64.decode(Uri.decodeComponent(Uri.decodeComponent(searchParams(type: SearchFilter.live, duration: SearchDuration.medium)!)));
+      final bytes = base64.decode(Uri.decodeComponent(Uri.decodeComponent(
+          searchParams(type: SearchFilter.live, duration: SearchDuration.medium)!)));
       expect(bytes, [0x12, 4, 0x40, 1, 0x18, 3]);
     });
   });
 
   test('parses suggestions', () {
-    expect(SearchSuggestions.parse('["lofi",["lofi hip hop","lofi 中文",3]]'), ['lofi hip hop', 'lofi 中文']);
+    expect(SearchSuggestions.parse('["lofi",["lofi hip hop","lofi 中文",3]]'),
+        ['lofi hip hop', 'lofi 中文']);
     expect(SearchSuggestions.parse('<html>'), isEmpty);
-    for (final body in ['["lofi",["lofi hip hop","lofi 中文",3]]', '<html>', '["q"]', '["q",["${'x' * 201}","ok"]]', '["q",[${List.filled(30, '"s"').join(',')}]]', '{"a":[]}']) {
-      expect(SearchSuggestions.parseBytes(utf8.encode(body)), SearchSuggestions.parse(body), reason: body);
+    for (final body in [
+      '["lofi",["lofi hip hop","lofi 中文",3]]',
+      '<html>',
+      '["q"]',
+      '["q",["${'x' * 201}","ok"]]',
+      '["q",[${List.filled(30, '"s"').join(',')}]]',
+      '{"a":[]}'
+    ]) {
+      expect(SearchSuggestions.parseBytes(utf8.encode(body)), SearchSuggestions.parse(body),
+          reason: body);
     }
   });
 

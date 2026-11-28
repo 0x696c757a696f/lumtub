@@ -21,7 +21,9 @@ class DeviceMemory {
     try {
       if (Platform.isIOS || Platform.isMacOS) return _sysctl('hw.memsize') >> 20;
       if (Platform.isAndroid || Platform.isLinux) {
-        final line = File('/proc/meminfo').readAsLinesSync().firstWhere((l) => l.startsWith('MemTotal:'), orElse: () => '');
+        final line = File('/proc/meminfo')
+            .readAsLinesSync()
+            .firstWhere((l) => l.startsWith('MemTotal:'), orElse: () => '');
         final kb = int.tryParse(RegExp(r'\d+').firstMatch(line)?.group(0) ?? '') ?? 0;
         return kb >> 10;
       }
@@ -34,7 +36,8 @@ class DeviceMemory {
   static int _sysctl(String name) {
     final sysctlbyname = DynamicLibrary.process().lookupFunction<
         Int32 Function(Pointer<Utf8>, Pointer<Uint64>, Pointer<Size>, Pointer<Void>, Size),
-        int Function(Pointer<Utf8>, Pointer<Uint64>, Pointer<Size>, Pointer<Void>, int)>('sysctlbyname');
+        int Function(
+            Pointer<Utf8>, Pointer<Uint64>, Pointer<Size>, Pointer<Void>, int)>('sysctlbyname');
     final key = name.toNativeUtf8();
     final value = calloc<Uint64>();
     final size = calloc<Size>()..value = sizeOf<Uint64>();

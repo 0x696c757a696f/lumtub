@@ -39,9 +39,13 @@ enum TranslationService {
   /// What kind of interface it is, for 设置: an official API, an unofficial
   /// web endpoint, or a server of one's own. Empty where the page says it.
   String get kind => switch (this) {
-        google || deeplx => tr('Unofficial web interface: free and needs no key, but it may be limited or stop working without notice.'),
-        mymemory => tr('Public API with a small free daily allowance (about 5,000 characters, more with your email). Used only for short texts such as comments and titles; subtitles keep Google Translate.'),
-        deepl || baidu => tr('Official API: needs your own key; the provider sets its free allowance and prices.'),
+        google || deeplx => tr(
+            'Unofficial web interface: free and needs no key, but it may be limited or stop working without notice.'),
+        mymemory => tr(
+            'Public API with a small free daily allowance (about 5,000 characters, more with your email). Used only for short texts such as comments and titles; subtitles keep Google Translate.'),
+        deepl ||
+        baidu =>
+          tr('Official API: needs your own key; the provider sets its free allowance and prices.'),
         libre => tr('Open-source service: use your own server, or a public one you trust.'),
         microsoft || ai => '',
       };
@@ -67,11 +71,13 @@ class PromptPreset {
   String get label => tr(_label);
 }
 
-const _lineRule = 'The input has {lines} lines. Output exactly {lines} lines, in the same order, one translation per line. '
+const _lineRule =
+    'The input has {lines} lines. Output exactly {lines} lines, in the same order, one translation per line. '
     'Do not number the lines, do not add explanations, notes or quotation marks, and do not merge or split lines. ';
 
 /// Network failures and statuses shared by every service.
-Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, String body, Map<int, String> errors, Duration timeout) async {
+Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, String body,
+    Map<int, String> errors, Duration timeout) async {
   final http.Response response;
   try {
     response = await client.post(uri, headers: headers, body: body).timeout(timeout);
@@ -85,7 +91,8 @@ Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, S
   throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
 }
 
-TranslationException _unrecognized() => TranslationException(tr('Translation service returned unrecognized content'));
+TranslationException _unrecognized() =>
+    TranslationException(tr('Translation service returned unrecognized content'));
 
 Object? _decode(String body) {
   try {
@@ -131,7 +138,10 @@ abstract class _LineTranslator extends _CachedTranslator {
   Future<String> translateUncached(String text, String target) async {
     final lines = text.split('\n');
     final out = List<String>.of(lines);
-    final indexes = [for (var i = 0; i < lines.length; i++) if (lines[i].trim().isNotEmpty) i];
+    final indexes = [
+      for (var i = 0; i < lines.length; i++)
+        if (lines[i].trim().isNotEmpty) i
+    ];
     for (var start = 0; start < indexes.length; start += batchSize) {
       final part = indexes.sublist(start, math.min(start + batchSize, indexes.length));
       final result = await translateBatch([for (final i in part) lines[i]], target);
@@ -165,7 +175,32 @@ class DeepLTranslator extends _LineTranslator {
         'pt' => 'PT-BR',
         'iw' => 'HE',
         'no' => 'NB',
-        'ar' || 'bg' || 'cs' || 'da' || 'de' || 'el' || 'es' || 'et' || 'fi' || 'fr' || 'hu' || 'id' || 'it' || 'ja' || 'ko' || 'lt' || 'lv' || 'nl' || 'pl' || 'ro' || 'ru' || 'sk' || 'sv' || 'tr' || 'uk' => target.toUpperCase(),
+        'ar' ||
+        'bg' ||
+        'cs' ||
+        'da' ||
+        'de' ||
+        'el' ||
+        'es' ||
+        'et' ||
+        'fi' ||
+        'fr' ||
+        'hu' ||
+        'id' ||
+        'it' ||
+        'ja' ||
+        'ko' ||
+        'lt' ||
+        'lv' ||
+        'nl' ||
+        'pl' ||
+        'ro' ||
+        'ru' ||
+        'sk' ||
+        'sv' ||
+        'tr' ||
+        'uk' =>
+          target.toUpperCase(),
         _ => null,
       };
 
@@ -173,11 +208,17 @@ class DeepLTranslator extends _LineTranslator {
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final code = languageCode(target);
     if (code == null) throw TranslationException(tr('DeepL does not support this language'));
-    final body = [for (final line in lines) 'text=${Uri.encodeQueryComponent(line)}', 'target_lang=$code'].join('&');
+    final body = [
+      for (final line in lines) 'text=${Uri.encodeQueryComponent(line)}',
+      'target_lang=$code'
+    ].join('&');
     final reply = await _post(
       client,
       endpoint,
-      {'Authorization': 'DeepL-Auth-Key ${key.trim()}', 'Content-Type': 'application/x-www-form-urlencoded'},
+      {
+        'Authorization': 'DeepL-Auth-Key ${key.trim()}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       body,
       {403: tr('The DeepL key is not valid'), 456: tr('The DeepL quota for this month is used up')},
       const Duration(seconds: 30),
@@ -185,7 +226,10 @@ class DeepLTranslator extends _LineTranslator {
     final data = _decode(reply);
     if (data is Map && data['translations'] is List) {
       final list = data['translations'] as List;
-      return [for (final item in list) if (item is Map && item['text'] is String) item['text'] as String];
+      return [
+        for (final item in list)
+          if (item is Map && item['text'] is String) item['text'] as String
+      ];
     }
     throw _unrecognized();
   }
@@ -220,8 +264,10 @@ class MicrosoftTranslator extends _LineTranslator {
     // 2026. It takes the texts as a JSON array of strings, needs no token,
     // and detects the source itself (a `from` of auto is refused).
     final uri = free
-        ? Uri.https('edge.microsoft.com', '/translate/translatetext', {'to': languageCode(target), 'isEnterpriseClient': 'false'})
-        : Uri.https('api.cognitive.microsofttranslator.com', '/translate', {'api-version': '3.0', 'to': languageCode(target)});
+        ? Uri.https('edge.microsoft.com', '/translate/translatetext',
+            {'to': languageCode(target), 'isEnterpriseClient': 'false'})
+        : Uri.https('api.cognitive.microsofttranslator.com', '/translate',
+            {'api-version': '3.0', 'to': languageCode(target)});
     final headers = {
       if (free) 'User-Agent': edgeUserAgent else 'Ocp-Apim-Subscription-Key': key.trim(),
       if (!free && region.trim().isNotEmpty) 'Ocp-Apim-Subscription-Region': region.trim(),
@@ -231,7 +277,11 @@ class MicrosoftTranslator extends _LineTranslator {
       client,
       uri,
       headers,
-      jsonEncode(free ? lines : [for (final line in lines) {'Text': line}]),
+      jsonEncode(free
+          ? lines
+          : [
+              for (final line in lines) {'Text': line}
+            ]),
       {401: tr('The Microsoft Translator key is not valid')},
       const Duration(seconds: 30),
     );
@@ -241,7 +291,8 @@ class MicrosoftTranslator extends _LineTranslator {
   }
 
   /// A browser's, which the keyless address asks for.
-  static const edgeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0';
+  static const edgeUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0';
 
   /// The translated texts of a reply: Translator v3's
   /// `[{"translations": [{"text": …}]}, …]`, or plain strings.
@@ -254,7 +305,10 @@ class MicrosoftTranslator extends _LineTranslator {
         continue;
       }
       final translations = item is Map ? item['translations'] : null;
-      if (translations is List && translations.isNotEmpty && translations.first is Map && (translations.first as Map)['text'] is String) {
+      if (translations is List &&
+          translations.isNotEmpty &&
+          translations.first is Map &&
+          (translations.first as Map)['text'] is String) {
         out.add((translations.first as Map)['text'] as String);
       } else if (item is Map && item['text'] is String) {
         out.add(item['text'] as String);
@@ -290,8 +344,15 @@ class DeepLXTranslator extends _LineTranslator {
       final reply = await _post(
         client,
         endpoint,
-        {'Content-Type': 'application/json', if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'},
-        jsonEncode({'text': text, 'source_lang': 'auto', 'target_lang': code == 'ZH-HANS' || code == 'ZH-HANT' ? 'ZH' : code.split('-').first}),
+        {
+          'Content-Type': 'application/json',
+          if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'
+        },
+        jsonEncode({
+          'text': text,
+          'source_lang': 'auto',
+          'target_lang': code == 'ZH-HANS' || code == 'ZH-HANT' ? 'ZH' : code.split('-').first
+        }),
         {401: tr('The DeepLX key is invalid')},
         const Duration(seconds: 30),
       );
@@ -329,11 +390,20 @@ class BaiduTranslator extends _LineTranslator {
 
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
-    if (appId.trim().isEmpty) throw TranslationException(tr('Fill in the Baidu Translate APP ID in Settings first'));
+    if (appId.trim().isEmpty) {
+      throw TranslationException(tr('Fill in the Baidu Translate APP ID in Settings first'));
+    }
     final query = lines.join('\n');
     final salt = '${DateTime.now().millisecondsSinceEpoch}';
     final sign = md5.convert(utf8.encode('${appId.trim()}$query$salt${key.trim()}')).toString();
-    final body = {'q': query, 'from': 'auto', 'to': languageCode(target), 'appid': appId.trim(), 'salt': salt, 'sign': sign};
+    final body = {
+      'q': query,
+      'from': 'auto',
+      'to': languageCode(target),
+      'appid': appId.trim(),
+      'salt': salt,
+      'sign': sign
+    };
     final reply = await _post(
       client,
       Uri.https('fanyi-api.baidu.com', '/api/trans/vip/translate'),
@@ -353,7 +423,10 @@ class BaiduTranslator extends _LineTranslator {
       });
     }
     if (data is Map && data['trans_result'] is List) {
-      return [for (final item in data['trans_result'] as List) if (item is Map && item['dst'] is String) item['dst'] as String];
+      return [
+        for (final item in data['trans_result'] as List)
+          if (item is Map && item['dst'] is String) item['dst'] as String
+      ];
     }
     throw _unrecognized();
   }
@@ -406,9 +479,12 @@ class LibreTranslator extends _LineTranslator {
     final have = _languages[base];
     if (have != null) return have;
     final failed = _languagesFailed[base];
-    if (failed != null && DateTime.now().difference(failed) < const Duration(minutes: 10)) return null;
+    if (failed != null && DateTime.now().difference(failed) < const Duration(minutes: 10)) {
+      return null;
+    }
     try {
-      final response = await client.get(Uri.parse('$base/languages')).timeout(const Duration(seconds: 15));
+      final response =
+          await client.get(Uri.parse('$base/languages')).timeout(const Duration(seconds: 15));
       final data = response.statusCode == 200 ? jsonDecode(utf8.decode(response.bodyBytes)) : null;
       final codes = parseLanguages(data);
       if (codes != null && codes.isNotEmpty) return _languages[base] = codes;
@@ -445,7 +521,9 @@ class LibreTranslator extends _LineTranslator {
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final uri = endpoint;
     final code = await codeFor(target);
-    if (code == null) throw TranslationException(tr('{0} does not support this language', ['LibreTranslate']));
+    if (code == null) {
+      throw TranslationException(tr('{0} does not support this language', ['LibreTranslate']));
+    }
     final body = {
       'q': lines,
       'source': 'auto',
@@ -453,7 +531,8 @@ class LibreTranslator extends _LineTranslator {
       'format': 'text',
       if (key.trim().isNotEmpty) 'api_key': key.trim(),
     };
-    final reply = await _post(client, uri, {'Content-Type': 'application/json'}, jsonEncode(body), const {}, const Duration(seconds: 30));
+    final reply = await _post(client, uri, {'Content-Type': 'application/json'}, jsonEncode(body),
+        const {}, const Duration(seconds: 30));
     final data = _decode(reply);
     if (data is Map) {
       final result = data['translatedText'];
@@ -514,9 +593,13 @@ class MyMemoryTranslator extends _CachedTranslator {
   @override
   Future<String> translateUncached(String text, String target) async {
     if (coolingDown) throw TranslationException.busy();
-    if (utf8.encode(text).length > textBytes) throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    if (utf8.encode(text).length > textBytes) {
+      throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    }
     final pieces = piecesOf(text);
-    if (pieces == null) throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    if (pieces == null) {
+      throw TranslationException(tr('This text is too long for {0}', ['MyMemory']));
+    }
     final out = <String>[];
     // Lines that end up in one request stay joined; the rest keep their breaks.
     for (final piece in pieces) {
@@ -527,22 +610,35 @@ class MyMemoryTranslator extends _CachedTranslator {
 
   Future<String> _one(String text, String target) async {
     final email = _email().trim();
-    final uri = Uri.https('api.mymemory.translated.net', '/get', {'q': text, 'langpair': 'autodetect|${languageCode(target)}', if (email.contains('@')) 'de': email});
+    final uri = Uri.https('api.mymemory.translated.net', '/get', {
+      'q': text,
+      'langpair': 'autodetect|${languageCode(target)}',
+      if (email.contains('@')) 'de': email
+    });
     final http.Response response;
     try {
       response = await client.get(uri).timeout(const Duration(seconds: 20));
     } catch (_) {
       throw TranslationException(tr('Translation failed. Check your network or proxy.'));
     }
-    final data = response.statusCode == 200 || response.statusCode == 429 || response.statusCode == 403 ? _decode(utf8.decode(response.bodyBytes)) : null;
+    final data =
+        response.statusCode == 200 || response.statusCode == 429 || response.statusCode == 403
+            ? _decode(utf8.decode(response.bodyBytes))
+            : null;
     if (data is! Map) {
       if (response.statusCode == 429) _usedUp();
-      throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+      throw TranslationException(
+          tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
     }
     final status = '${data['responseStatus']}';
     final details = '${data['responseDetails'] ?? ''}';
-    if (data['quotaFinished'] == true || status == '429' || details.toUpperCase().contains('USED ALL AVAILABLE FREE TRANSLATIONS')) _usedUp();
-    final translated = data['responseData'] is Map ? (data['responseData'] as Map)['translatedText'] : null;
+    if (data['quotaFinished'] == true ||
+        status == '429' ||
+        details.toUpperCase().contains('USED ALL AVAILABLE FREE TRANSLATIONS')) {
+      _usedUp();
+    }
+    final translated =
+        data['responseData'] is Map ? (data['responseData'] as Map)['translatedText'] : null;
     if (status != '200' || translated is! String) {
       throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
     }
@@ -570,8 +666,10 @@ class AiTone {
     AiTone('neutral', 'Neutral tone', 'Use a neutral, plain tone.'),
     AiTone('casual', 'Casual', 'Use a casual, spoken tone, as people talk.'),
     AiTone('formal', 'Formal', 'Use a formal, polite tone.'),
-    AiTone('literal', 'Literal', 'Stay as close to the original wording as the target language allows.'),
-    AiTone('idiomatic', 'Idiomatic', 'Convey the meaning freely with idiomatic expressions rather than the original wording.'),
+    AiTone('literal', 'Literal',
+        'Stay as close to the original wording as the target language allows.'),
+    AiTone('idiomatic', 'Idiomatic',
+        'Convey the meaning freely with idiomatic expressions rather than the original wording.'),
     AiTone('technical', 'Technical', 'Use precise technical terminology.'),
     AiTone('academic', 'Academic', 'Use an academic, precise register.'),
     AiTone('literary', 'Literary', 'Use a literary, expressive style.'),
@@ -586,7 +684,9 @@ class AiTranslator extends _CachedTranslator {
   AiTranslator(
     super.client, {
     required this.baseUrl,
-    required this.model, required this.prompt, this.key = '',
+    required this.model,
+    required this.prompt,
+    this.key = '',
     this.tone = '',
     this.glossary = '',
     this.temperature = 0.2,
@@ -597,11 +697,14 @@ class AiTranslator extends _CachedTranslator {
   final String key;
   final String model;
   final String prompt;
+
   /// [AiTone.instruction], added to the system prompt.
   final String tone;
+
   /// Terms and their translations, one `原文=译文` per line.
   final String glossary;
   final double temperature;
+
   /// How many lines before each request are sent along as context (for
   /// subtitles, the earlier cues), to be read but not translated.
   final int contextLines;
@@ -616,10 +719,12 @@ class AiTranslator extends _CachedTranslator {
     AiPreset('openai', 'OpenAI', 'https://api.openai.com/v1', 'gpt-4o-mini'),
     AiPreset('deepseek', 'DeepSeek', 'https://api.deepseek.com/v1', 'deepseek-chat'),
     AiPreset('anthropic', 'Anthropic Claude', 'https://api.anthropic.com/v1', 'claude-haiku-5-5'),
-    AiPreset('gemini', 'Google Gemini', 'https://generativelanguage.googleapis.com/v1beta/openai', 'gemini-2.5-flash'),
+    AiPreset('gemini', 'Google Gemini', 'https://generativelanguage.googleapis.com/v1beta/openai',
+        'gemini-2.5-flash'),
     AiPreset('qwen', 'Qwen', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'qwen-plus'),
     AiPreset('zhipu', 'Zhipu GLM', 'https://open.bigmodel.cn/api/paas/v4', 'glm-4-flash'),
-    AiPreset('siliconflow', 'SiliconFlow', 'https://api.siliconflow.cn/v1', 'Qwen/Qwen2.5-7B-Instruct'),
+    AiPreset(
+        'siliconflow', 'SiliconFlow', 'https://api.siliconflow.cn/v1', 'Qwen/Qwen2.5-7B-Instruct'),
     AiPreset('openrouter', 'OpenRouter', 'https://openrouter.ai/api/v1', 'openai/gpt-4o-mini'),
     AiPreset('ollama', 'Ollama (this computer)', 'http://localhost:11434/v1', 'qwen2.5'),
     AiPreset('custom', 'Custom', '', ''),
@@ -651,12 +756,16 @@ class AiTranslator extends _CachedTranslator {
   Future<String> translateUncached(String text, String target) async {
     final lines = text.split('\n');
     final out = List<String>.of(lines);
-    final indexes = [for (var i = 0; i < lines.length; i++) if (lines[i].trim().isNotEmpty) i];
+    final indexes = [
+      for (var i = 0; i < lines.length; i++)
+        if (lines[i].trim().isNotEmpty) i
+    ];
     var start = 0;
     while (start < indexes.length) {
       var end = start;
       var length = 0;
-      while (end < indexes.length && (end == start || length + lines[indexes[end]].length + 1 <= requestLength)) {
+      while (end < indexes.length &&
+          (end == start || length + lines[indexes[end]].length + 1 <= requestLength)) {
         length += lines[indexes[end]].length + 1;
         end++;
       }
@@ -677,17 +786,25 @@ class AiTranslator extends _CachedTranslator {
     if (text.trim().isEmpty) return text;
     final lines = text.split('\n');
     final out = List<String>.of(lines);
-    final indexes = [for (var i = 0; i < lines.length; i++) if (lines[i].trim().isNotEmpty) i];
-    final result = await _translatePiece([for (final i in indexes) lines[i]], target, before.sublist(before.length > contextLines ? before.length - contextLines : 0));
+    final indexes = [
+      for (var i = 0; i < lines.length; i++)
+        if (lines[i].trim().isNotEmpty) i
+    ];
+    final result = await _translatePiece([for (final i in indexes) lines[i]], target,
+        before.sublist(before.length > contextLines ? before.length - contextLines : 0));
     for (var k = 0; k < indexes.length; k++) {
       out[indexes[k]] = result[k];
     }
     return out.join('\n');
   }
 
-  Future<List<String>> _translatePiece(List<String> lines, String target, [List<String>? given]) async {
+  Future<List<String>> _translatePiece(List<String> lines, String target,
+      [List<String>? given]) async {
     final input = lines.join('\n');
-    final context = given ?? (contextLines <= 0 ? const <String>[] : _recent.sublist(_recent.length > contextLines ? _recent.length - contextLines : 0));
+    final context = given ??
+        (contextLines <= 0
+            ? const <String>[]
+            : _recent.sublist(_recent.length > contextLines ? _recent.length - contextLines : 0));
     if (given == null && contextLines > 0) {
       final recent = [..._recent, ...lines];
       _recent = recent.sublist(recent.length > contextLines ? recent.length - contextLines : 0);
@@ -701,20 +818,24 @@ class AiTranslator extends _CachedTranslator {
     }
     final first = _split(await _ask(input, lines.length, target, null, context));
     if (first.length == lines.length) return first;
-    final second = _split(await _ask(input, lines.length, target, 'Return exactly ${lines.length} lines.', context));
+    final second = _split(
+        await _ask(input, lines.length, target, 'Return exactly ${lines.length} lines.', context));
     if (second.length == lines.length) return second;
-    throw TranslationException(tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
+    throw TranslationException(
+        tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
   }
 
   /// How Chinese reads well, added to the built-in prompts when the
   /// translation is into Chinese.
-  static const chineseStyle = 'In the Chinese, put a space between Chinese characters and Latin letters or digits; '
+  static const chineseStyle =
+      'In the Chinese, put a space between Chinese characters and Latin letters or digits; '
       'address the listener as 你, not 您, unless the original is formal; leave out filler words such as um, uh and you know; '
       'and keep well-known English terms, product names and brand names in English. '
       'Read the whole sentence a line belongs to before choosing its words, and write natural Chinese, not English word order.';
 
   /// Replaces the line rule of a prompt when lines go as JSON segments.
-  static const segmentRule = 'The user sends a JSON object {"segments": [{"id": "1", "text": "..."}]}: each text is one subtitle line. '
+  static const segmentRule =
+      'The user sends a JSON object {"segments": [{"id": "1", "text": "..."}]}: each text is one subtitle line. '
       'Translate each with the lines around it in mind, as part of the sentence it belongs to, but keep the segments apart: '
       'do not merge, split, leave out or reorder them. Reply with only a JSON object {"segments": [{"id": "1", "text": "..."}]}, '
       'every id copied exactly and only the texts translated, with no code fence or remark.';
@@ -724,11 +845,16 @@ class AiTranslator extends _CachedTranslator {
   String systemPrompt(String target, int count, List<String> context, [String text = '']) {
     final terms = glossaryFor(text);
     final parts = [
-      prompt.replaceAll('{target}', TranslationLanguage.byCode(target).englishName).replaceAll('{lines}', '$count'),
-      if (target.toLowerCase().startsWith('zh') && promptPresets.any((p) => p.text == prompt)) chineseStyle,
+      prompt
+          .replaceAll('{target}', TranslationLanguage.byCode(target).englishName)
+          .replaceAll('{lines}', '$count'),
+      if (target.toLowerCase().startsWith('zh') && promptPresets.any((p) => p.text == prompt))
+        chineseStyle,
       if (tone.isNotEmpty) tone,
-      if (terms.isNotEmpty) 'Always translate these terms as given (original = translation):\n${terms.join('\n')}',
-      if (context.isNotEmpty) 'For context only, these lines came just before; do not translate or repeat them:\n${context.join('\n')}',
+      if (terms.isNotEmpty)
+        'Always translate these terms as given (original = translation):\n${terms.join('\n')}',
+      if (context.isNotEmpty)
+        'For context only, these lines came just before; do not translate or repeat them:\n${context.join('\n')}',
     ];
     return parts.join('\n\n');
   }
@@ -759,7 +885,9 @@ class AiTranslator extends _CachedTranslator {
       {
         'role': 'user',
         'content': jsonEncode({
-          'segments': [for (final (i, line) in lines.indexed) {'id': '${i + 1}', 'text': line}],
+          'segments': [
+            for (final (i, line) in lines.indexed) {'id': '${i + 1}', 'text': line}
+          ],
         }),
       },
     ], temperature, const Duration(seconds: 60));
@@ -781,13 +909,15 @@ class AiTranslator extends _CachedTranslator {
     if (segments is! List) return null;
     final byId = <String, String>{
       for (final s in segments)
-        if (s is Map && s['text'] is String) '${s['id']}': (s['text'] as String).replaceAll('\n', ' ').trim(),
+        if (s is Map && s['text'] is String)
+          '${s['id']}': (s['text'] as String).replaceAll('\n', ' ').trim(),
     };
     final out = [for (var i = 1; i <= count; i++) byId['$i']];
     return out.contains(null) ? null : out.cast<String>();
   }
 
-  Future<String> _ask(String input, int count, String target, String? note, List<String> context) => _chat([
+  Future<String> _ask(String input, int count, String target, String? note, List<String> context) =>
+      _chat([
         {'role': 'system', 'content': systemPrompt(target, count, context, input)},
         {'role': 'user', 'content': input},
         if (note != null) {'role': 'user', 'content': note},
@@ -799,7 +929,8 @@ class AiTranslator extends _CachedTranslator {
         {'role': 'user', 'content': user},
       ], temperature, const Duration(seconds: 120));
 
-  Future<String> _chat(List<Map<String, String>> messages, double temperature, Duration timeout) async {
+  Future<String> _chat(
+      List<Map<String, String>> messages, double temperature, Duration timeout) async {
     final uri = aiEndpoint(baseUrl, 'chat/completions');
     if (uri == null) {
       throw TranslationException(tr('The AI endpoint address or model name is wrong'));
@@ -813,7 +944,10 @@ class AiTranslator extends _CachedTranslator {
         if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}',
       },
       jsonEncode(body),
-      {401: tr('The AI API key is not valid'), 404: tr('The AI endpoint address or model name is wrong')},
+      {
+        401: tr('The AI API key is not valid'),
+        404: tr('The AI endpoint address or model name is wrong')
+      },
       timeout,
     );
     final data = _decode(reply);
@@ -832,29 +966,43 @@ class AiTranslator extends _CachedTranslator {
   static Uri? aiEndpoint(String baseUrl, String path) {
     final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse('$base/$path');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) return null;
-    if (uri.scheme == 'http' && !isLocalHost(uri.host)) return uri.replace(scheme: 'https', port: uri.hasPort && uri.port != 80 ? uri.port : 443);
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
+      return null;
+    }
+    if (uri.scheme == 'http' && !isLocalHost(uri.host)) {
+      return uri.replace(scheme: 'https', port: uri.hasPort && uri.port != 80 ? uri.port : 443);
+    }
     return uri;
   }
 
   /// The models [baseUrl] lists at `/models`, for picking one.
   static Future<List<String>> listModels(http.Client client, String baseUrl, String key) async {
     final uri = aiEndpoint(baseUrl, 'models');
-    if (uri == null) throw TranslationException(tr('The AI endpoint address or model name is wrong'));
+    if (uri == null) {
+      throw TranslationException(tr('The AI endpoint address or model name is wrong'));
+    }
     final http.Response response;
     try {
-      response = await client.get(uri, headers: {if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'}).timeout(const Duration(seconds: 20));
+      response = await client.get(uri, headers: {
+        if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'
+      }).timeout(const Duration(seconds: 20));
     } catch (_) {
       throw TranslationException(tr('Translation failed. Check your network or proxy.'));
     }
     if (response.statusCode == 401) throw TranslationException(tr('The AI API key is not valid'));
-    if (response.statusCode != 200) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+    if (response.statusCode != 200) {
+      throw TranslationException(
+          tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+    }
     final data = _decode(utf8.decode(response.bodyBytes));
     final list = data is Map ? data['data'] ?? data['models'] : data;
     if (list is! List) throw _unrecognized();
     final ids = <String>{
       for (final item in list)
-        if (item is Map && item['id'] is String) item['id'] as String else if (item is Map && item['name'] is String) (item['name'] as String).replaceFirst('models/', ''),
+        if (item is Map && item['id'] is String)
+          item['id'] as String
+        else if (item is Map && item['name'] is String)
+          (item['name'] as String).replaceFirst('models/', ''),
     }.toList()
       ..sort();
     return ids;
@@ -880,8 +1028,10 @@ class AiTranslator extends _CachedTranslator {
 class TranslationConfig {
   factory TranslationConfig.fromJson(Object? json) {
     if (json is! Map) return const TranslationConfig();
-    String text(String name, String fallback) => json[name] is String ? json[name] as String : fallback;
-    final service = TranslationService.values.firstWhere((s) => s.name == json['service'], orElse: () => TranslationService.google);
+    String text(String name, String fallback) =>
+        json[name] is String ? json[name] as String : fallback;
+    final service = TranslationService.values
+        .firstWhere((s) => s.name == json['service'], orElse: () => TranslationService.google);
     final aiPreset = text('aiPreset', 'openai');
     final promptPreset = text('promptPreset', 'subtitle');
     final temperature = json['aiTemperature'];
@@ -895,7 +1045,10 @@ class TranslationConfig {
       aiPreset: AiTranslator.aiPresets.any((p) => p.id == aiPreset) ? aiPreset : 'openai',
       aiBaseUrl: text('aiBaseUrl', ''),
       aiModel: text('aiModel', ''),
-      promptPreset: promptPreset == 'custom' || AiTranslator.promptPresets.any((p) => p.id == promptPreset) ? promptPreset : 'subtitle',
+      promptPreset:
+          promptPreset == 'custom' || AiTranslator.promptPresets.any((p) => p.id == promptPreset)
+              ? promptPreset
+              : 'subtitle',
       customPrompt: text('customPrompt', ''),
       aiTone: AiTone.byId(text('aiTone', 'default')).id,
       aiGlossary: text('aiGlossary', ''),
@@ -937,13 +1090,17 @@ class TranslationConfig {
   final String aiModel;
   final String promptPreset;
   final String customPrompt;
+
   /// An [AiTone.id].
   final String aiTone;
+
   /// One `原文=译文` per line.
   final String aiGlossary;
   final double aiTemperature;
+
   /// Earlier subtitle lines sent along as context, 0 for none.
   final int aiContext;
+
   /// 语音识别: a [SpeechPreset.id], and the address and model typed over it.
   final String speechPreset;
   final String speechBaseUrl;
@@ -951,19 +1108,25 @@ class TranslationConfig {
 
   SpeechPreset get speech => SpeechPreset.byId(speechPreset);
 
-  String get effectiveSpeechBaseUrl => speechBaseUrl.trim().isNotEmpty ? speechBaseUrl.trim() : speech.baseUrl;
+  String get effectiveSpeechBaseUrl =>
+      speechBaseUrl.trim().isNotEmpty ? speechBaseUrl.trim() : speech.baseUrl;
 
-  String get effectiveSpeechModel => speechModel.trim().isNotEmpty ? speechModel.trim() : speech.model;
+  String get effectiveSpeechModel =>
+      speechModel.trim().isNotEmpty ? speechModel.trim() : speech.model;
 
-  AiPreset get _aiPreset => AiTranslator.aiPresets.firstWhere((p) => p.id == aiPreset, orElse: () => AiTranslator.aiPresets.first);
+  AiPreset get _aiPreset => AiTranslator.aiPresets
+      .firstWhere((p) => p.id == aiPreset, orElse: () => AiTranslator.aiPresets.first);
 
-  String get effectiveAiBaseUrl => aiBaseUrl.trim().isNotEmpty ? aiBaseUrl.trim() : _aiPreset.baseUrl;
+  String get effectiveAiBaseUrl =>
+      aiBaseUrl.trim().isNotEmpty ? aiBaseUrl.trim() : _aiPreset.baseUrl;
 
   String get effectiveAiModel => aiModel.trim().isNotEmpty ? aiModel.trim() : _aiPreset.model;
 
   String get effectivePrompt {
     if (promptPreset == 'custom' && customPrompt.trim().isNotEmpty) return customPrompt;
-    return AiTranslator.promptPresets.firstWhere((p) => p.id == promptPreset, orElse: () => AiTranslator.promptPresets.first).text;
+    return AiTranslator.promptPresets
+        .firstWhere((p) => p.id == promptPreset, orElse: () => AiTranslator.promptPresets.first)
+        .text;
   }
 
   TranslationConfig copyWith({
@@ -1026,13 +1189,16 @@ class TranslationConfig {
       };
 
   List<Object?> get _fields => [
-        service, libreServer, microsoftRegion, deeplxServer, baiduAppId, aiPreset, aiBaseUrl, aiModel, //
+        service, libreServer, microsoftRegion, deeplxServer, baiduAppId, aiPreset, aiBaseUrl,
+        aiModel, //
         promptPreset, customPrompt, aiTone, aiGlossary, aiTemperature, aiContext,
       ];
 
   /// Names the service and every setting that changes its answers, so
   /// cached translations are kept apart.
-  String get cacheScope => jsonEncode(service == TranslationService.google ? ['google'] : _fields.map((f) => f is TranslationService ? f.name : f).toList());
+  String get cacheScope => jsonEncode(service == TranslationService.google
+      ? ['google']
+      : _fields.map((f) => f is TranslationService ? f.name : f).toList());
 
   /// Translation settings and the 语音识别 ones, which change no translation.
   List<Object?> get _all => [..._fields, speechPreset, speechBaseUrl, speechModel];
@@ -1146,29 +1312,38 @@ bool _isLocalUrl(String url) {
 /// The translator [config] asks for, with its secret from [keys] (by
 /// [TranslationService.name]). Google's is [fallback], which MyMemory
 /// leaves subtitles to (see [TranslationService.subtitlesOnGoogle]).
-Translator translatorFor(TranslationConfig config, Map<String, String> keys, http.Client client, {required Translator fallback}) {
+Translator translatorFor(TranslationConfig config, Map<String, String> keys, http.Client client,
+    {required Translator fallback}) {
   final service = config.service;
-  final key = (service == TranslationService.ai ? aiKeyFor(config, keys) : keys[service.name] ?? '').trim();
+  final key =
+      (service == TranslationService.ai ? aiKeyFor(config, keys) : keys[service.name] ?? '').trim();
   switch (service) {
     case TranslationService.google:
     case TranslationService.mymemory:
       return fallback;
     case TranslationService.deepl:
-      if (key.isEmpty) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      if (key.isEmpty) {
+        return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      }
       return DeepLTranslator(client, key: key);
     case TranslationService.microsoft:
       return MicrosoftTranslator(client, key: key, region: config.microsoftRegion);
     case TranslationService.deeplx:
       return DeepLXTranslator(client, server: config.deeplxServer, key: key);
     case TranslationService.baidu:
-      if (key.isEmpty) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      if (key.isEmpty) {
+        return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      }
       return BaiduTranslator(client, appId: config.baiduAppId, key: key);
     case TranslationService.libre:
       return LibreTranslator(client, server: config.libreServer, key: key);
     case TranslationService.ai:
       final baseUrl = config.effectiveAiBaseUrl;
-      final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
-      if (key.isEmpty && !keyOptional) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      final keyOptional =
+          config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
+      if (key.isEmpty && !keyOptional) {
+        return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
+      }
       return AiTranslator(
         client,
         baseUrl: baseUrl,
@@ -1188,9 +1363,13 @@ Translator translatorFor(TranslationConfig config, Map<String, String> keys, htt
 AiTranslator? aiServiceFor(TranslationConfig config, Map<String, String> keys, http.Client client) {
   final key = aiKeyFor(config, keys);
   final baseUrl = config.effectiveAiBaseUrl;
-  final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
-  if (key.isEmpty && !keyOptional || baseUrl.isEmpty || config.effectiveAiModel.isEmpty) return null;
-  return AiTranslator(client, baseUrl: baseUrl, key: key, model: config.effectiveAiModel, prompt: config.effectivePrompt);
+  final keyOptional =
+      config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
+  if (key.isEmpty && !keyOptional || baseUrl.isEmpty || config.effectiveAiModel.isEmpty) {
+    return null;
+  }
+  return AiTranslator(client,
+      baseUrl: baseUrl, key: key, model: config.effectiveAiModel, prompt: config.effectivePrompt);
 }
 
 /// A 语音识别 service with an OpenAI-compatible `/audio/transcriptions`
@@ -1201,12 +1380,15 @@ class SpeechPreset {
   final String label;
   final String baseUrl;
   final String model;
+
   /// The AI 接口 preset whose key works here too.
   final String? sameKeyAs;
 
   static const all = [
-    SpeechPreset('groq', 'Groq (Whisper, free tier)', 'https://api.groq.com/openai/v1', 'whisper-large-v3-turbo'),
-    SpeechPreset('openai', 'OpenAI (Whisper)', 'https://api.openai.com/v1', 'whisper-1', sameKeyAs: 'openai'),
+    SpeechPreset('groq', 'Groq (Whisper, free tier)', 'https://api.groq.com/openai/v1',
+        'whisper-large-v3-turbo'),
+    SpeechPreset('openai', 'OpenAI (Whisper)', 'https://api.openai.com/v1', 'whisper-1',
+        sameKeyAs: 'openai'),
     SpeechPreset('custom', 'Custom (OpenAI-compatible)', '', 'whisper-1'),
   ];
 
@@ -1245,10 +1427,14 @@ String aiKeyFor(TranslationConfig config, Map<String, String> keys) {
 Map<String, String> migrateKeyHosts(TranslationConfig config, Map<String, String> keys) {
   const ai = 'ai', speech = 'speech';
   if (!keys.containsKey(ai) && !keys.containsKey(speech)) return keys;
-  final next = {...keys}..remove(ai)..remove(speech);
+  final next = {...keys}
+    ..remove(ai)
+    ..remove(speech);
   final aiName = aiKeyName(config), speechName = speechKeyName(config);
   if (keys[ai] != null && aiName.isNotEmpty) next.putIfAbsent(aiName, () => keys[ai]!);
-  if (keys[speech] != null && speechName.isNotEmpty) next.putIfAbsent(speechName, () => keys[speech]!);
+  if (keys[speech] != null && speechName.isNotEmpty) {
+    next.putIfAbsent(speechName, () => keys[speech]!);
+  }
   return next;
 }
 
@@ -1264,7 +1450,9 @@ String speechKeyFor(TranslationConfig config, Map<String, String> keys) {
 /// Whether 语音识别 has what it needs to be asked.
 bool speechReady(TranslationConfig config, Map<String, String> keys) {
   final url = config.effectiveSpeechBaseUrl;
-  return url.isNotEmpty && config.effectiveSpeechModel.isNotEmpty && (speechKeyFor(config, keys).isNotEmpty || _isLocalUrl(url));
+  return url.isNotEmpty &&
+      config.effectiveSpeechModel.isNotEmpty &&
+      (speechKeyFor(config, keys).isNotEmpty || _isLocalUrl(url));
 }
 
 /// How many characters of text to hand [translator] at a time.
@@ -1272,6 +1460,10 @@ int chunkLengthOf(Translator translator) {
   if (translator is CachingTranslator) return chunkLengthOf(translator.inner);
   if (translator is AiTranslator) return 3000;
   if (translator is DeepLXTranslator || translator is BaiduTranslator) return 2000;
-  if (translator is DeepLTranslator || translator is MicrosoftTranslator || translator is LibreTranslator) return 5000;
+  if (translator is DeepLTranslator ||
+      translator is MicrosoftTranslator ||
+      translator is LibreTranslator) {
+    return 5000;
+  }
   return GoogleTranslator.chunkLength;
 }

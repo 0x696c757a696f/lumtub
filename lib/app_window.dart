@@ -10,13 +10,16 @@ import 'kwin_keep_above.dart';
 
 /// The picture-in-picture window's ratio for a video [aspect] (width over
 /// height): 16:9 when unknown, and never extreme.
-double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clamp(0.4, 3.0) : 16 / 9;
+double pipAspectOf(double aspect) =>
+    aspect.isFinite && aspect > 0 ? aspect.clamp(0.4, 3.0) : 16 / 9;
 
 /// The picture-in-picture picture's size in logical pixels: [shortSide] on
 /// its short side, the other side from [aspect].
 ({double width, double height}) pipSizeFor(double aspect, {double shortSide = 280}) {
   final a = pipAspectOf(aspect);
-  return a >= 1 ? (width: shortSide * a, height: shortSide) : (width: shortSide, height: shortSide / a);
+  return a >= 1
+      ? (width: shortSide * a, height: shortSide)
+      : (width: shortSide, height: shortSide / a);
 }
 
 /// The main window's always-on-top state and the picture-in-picture window,
@@ -40,11 +43,13 @@ class AppWindow {
 
   /// Whether this is a Linux Wayland desktop, whichever way the window
   /// draws on it.
-  static bool get waylandDesktop => Platform.isLinux && (Platform.environment['WAYLAND_DISPLAY'] ?? '').isNotEmpty;
+  static bool get waylandDesktop =>
+      Platform.isLinux && (Platform.environment['WAYLAND_DISPLAY'] ?? '').isNotEmpty;
 
   /// The marker the runner reads at start (linux/runner/main.cc) to draw
   /// the window through XWayland.
   static File x11Marker(Directory data) => File('${data.path}/x11-mode');
+
   /// Whether the desktop keeps the window on top for Lumtub, as KWin does
   /// for its script, so nothing need be said about Wayland.
   static bool get keepsAboveOnWayland => onWayland && KWinKeepAbove.available;
@@ -64,7 +69,9 @@ class AppWindow {
   static final _user32 = Platform.isWindows ? DynamicLibrary.open('user32.dll') : null;
   static final _kernel32 = Platform.isWindows ? DynamicLibrary.open('kernel32.dll') : null;
   static final _dwmapi = Platform.isWindows ? DynamicLibrary.open('dwmapi.dll') : null;
-  static final _dwmSetWindowAttribute = _dwmapi?.lookupFunction<Int32 Function(IntPtr, Uint32, Pointer<Uint32>, Uint32), int Function(int, int, Pointer<Uint32>, int)>('DwmSetWindowAttribute');
+  static final _dwmSetWindowAttribute = _dwmapi?.lookupFunction<
+      Int32 Function(IntPtr, Uint32, Pointer<Uint32>, Uint32),
+      int Function(int, int, Pointer<Uint32>, int)>('DwmSetWindowAttribute');
 
   /// Windows 11 draws a thin border around every window; picture in picture
   /// has none. Ignored on Windows 10, which has no such border.
@@ -79,30 +86,57 @@ class AppWindow {
 
   static const _dwmwaBorderColor = 34, _dwmColorDefault = 0xFFFFFFFF, _dwmColorNone = 0xFFFFFFFE;
 
-  static final _findWindowEx = _user32?.lookupFunction<IntPtr Function(IntPtr, IntPtr, Pointer<Utf16>, Pointer<Utf16>), int Function(int, int, Pointer<Utf16>, Pointer<Utf16>)>('FindWindowExW');
-  static final _getWindowThreadProcessId = _user32?.lookupFunction<Uint32 Function(IntPtr, Pointer<Uint32>), int Function(int, Pointer<Uint32>)>('GetWindowThreadProcessId');
-  static final _getCurrentProcessId = _kernel32?.lookupFunction<Uint32 Function(), int Function()>('GetCurrentProcessId');
-  static final _setWindowPos = _user32?.lookupFunction<Int32 Function(IntPtr, IntPtr, Int32, Int32, Int32, Int32, Uint32), int Function(int, int, int, int, int, int, int)>('SetWindowPos');
-  static final _getWindowRect = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_Rect>), int Function(int, Pointer<_Rect>)>('GetWindowRect');
-  static final _isZoomed = _user32?.lookupFunction<Int32 Function(IntPtr), int Function(int)>('IsZoomed');
-  static final _showWindow = _user32?.lookupFunction<Int32 Function(IntPtr, Int32), int Function(int, int)>('ShowWindow');
-  static final _monitorFromWindow = _user32?.lookupFunction<IntPtr Function(IntPtr, Uint32), int Function(int, int)>('MonitorFromWindow');
-  static final _getMonitorInfo = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_MonitorInfo>), int Function(int, Pointer<_MonitorInfo>)>('GetMonitorInfoW');
-  static final _getDpiForWindow = _user32?.lookupFunction<Uint32 Function(IntPtr), int Function(int)>('GetDpiForWindow');
-  static final _setProp = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<Utf16>, IntPtr), int Function(int, Pointer<Utf16>, int)>('SetPropW');
-  static final _getClientRect = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_Rect>), int Function(int, Pointer<_Rect>)>('GetClientRect');
-  static final _getWindowLongPtr = _user32?.lookupFunction<IntPtr Function(IntPtr, Int32), int Function(int, int)>('GetWindowLongPtrW');
-  static final _setWindowLongPtr = _user32?.lookupFunction<IntPtr Function(IntPtr, Int32, IntPtr), int Function(int, int, int)>('SetWindowLongPtrW');
-  static final _sendMessage = _user32?.lookupFunction<IntPtr Function(IntPtr, Uint32, IntPtr, IntPtr), int Function(int, int, int, int)>('SendMessageW');
-  static final _releaseCapture = _user32?.lookupFunction<Int32 Function(), int Function()>('ReleaseCapture');
-  static final _removeProp = _user32?.lookupFunction<IntPtr Function(IntPtr, Pointer<Utf16>), int Function(int, Pointer<Utf16>)>('RemovePropW');
+  static final _findWindowEx = _user32?.lookupFunction<
+      IntPtr Function(IntPtr, IntPtr, Pointer<Utf16>, Pointer<Utf16>),
+      int Function(int, int, Pointer<Utf16>, Pointer<Utf16>)>('FindWindowExW');
+  static final _getWindowThreadProcessId = _user32?.lookupFunction<
+      Uint32 Function(IntPtr, Pointer<Uint32>),
+      int Function(int, Pointer<Uint32>)>('GetWindowThreadProcessId');
+  static final _getCurrentProcessId =
+      _kernel32?.lookupFunction<Uint32 Function(), int Function()>('GetCurrentProcessId');
+  static final _setWindowPos = _user32?.lookupFunction<
+      Int32 Function(IntPtr, IntPtr, Int32, Int32, Int32, Int32, Uint32),
+      int Function(int, int, int, int, int, int, int)>('SetWindowPos');
+  static final _getWindowRect = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_Rect>),
+      int Function(int, Pointer<_Rect>)>('GetWindowRect');
+  static final _isZoomed =
+      _user32?.lookupFunction<Int32 Function(IntPtr), int Function(int)>('IsZoomed');
+  static final _showWindow =
+      _user32?.lookupFunction<Int32 Function(IntPtr, Int32), int Function(int, int)>('ShowWindow');
+  static final _monitorFromWindow =
+      _user32?.lookupFunction<IntPtr Function(IntPtr, Uint32), int Function(int, int)>(
+          'MonitorFromWindow');
+  static final _getMonitorInfo = _user32?.lookupFunction<
+      Int32 Function(IntPtr, Pointer<_MonitorInfo>),
+      int Function(int, Pointer<_MonitorInfo>)>('GetMonitorInfoW');
+  static final _getDpiForWindow =
+      _user32?.lookupFunction<Uint32 Function(IntPtr), int Function(int)>('GetDpiForWindow');
+  static final _setProp = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<Utf16>, IntPtr),
+      int Function(int, Pointer<Utf16>, int)>('SetPropW');
+  static final _getClientRect = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_Rect>),
+      int Function(int, Pointer<_Rect>)>('GetClientRect');
+  static final _getWindowLongPtr = _user32
+      ?.lookupFunction<IntPtr Function(IntPtr, Int32), int Function(int, int)>('GetWindowLongPtrW');
+  static final _setWindowLongPtr =
+      _user32?.lookupFunction<IntPtr Function(IntPtr, Int32, IntPtr), int Function(int, int, int)>(
+          'SetWindowLongPtrW');
+  static final _sendMessage = _user32?.lookupFunction<
+      IntPtr Function(IntPtr, Uint32, IntPtr, IntPtr),
+      int Function(int, int, int, int)>('SendMessageW');
+  static final _releaseCapture =
+      _user32?.lookupFunction<Int32 Function(), int Function()>('ReleaseCapture');
+  static final _removeProp = _user32?.lookupFunction<IntPtr Function(IntPtr, Pointer<Utf16>),
+      int Function(int, Pointer<Utf16>)>('RemovePropW');
 
   static const _topmost = -1, _notTopmost = -2;
   static const _noSize = 0x1, _noMove = 0x2, _noActivate = 0x10;
   static const _noZOrder = 0x4, _frameChanged = 0x20;
   static const _restore = 9, _maximize = 3;
   static const _gwlStyle = -16;
-  static const _wsCaption = 0xC00000, _wsMaximizeBox = 0x10000, _wsMinimizeBox = 0x20000, _wsSysMenu = 0x80000;
+  static const _wsCaption = 0xC00000,
+      _wsMaximizeBox = 0x10000,
+      _wsMinimizeBox = 0x20000,
+      _wsSysMenu = 0x80000;
   static const _wmNcLButtonDown = 0xA1, _htCaption = 2, _htBottomRight = 17;
 
   static int? _handle;
@@ -152,7 +186,10 @@ class AppWindow {
   /// 0xAARRGGBB as a Win32 COLORREF, 0x00BBGGRR.
   static int _colorRef(int argb) => ((argb & 0xFF) << 16) | (argb & 0xFF00) | ((argb >> 16) & 0xFF);
 
-  static const _dwmwaUseImmersiveDarkMode = 20, _dwmwaCaptionColor = 35, _dwmwaTextColor = 36, _dwmwaColorDefault = 0xFFFFFFFF;
+  static const _dwmwaUseImmersiveDarkMode = 20,
+      _dwmwaCaptionColor = 35,
+      _dwmwaTextColor = 36,
+      _dwmwaColorDefault = 0xFFFFFFFF;
 
   /// Keeps the window above the others, or lets it go back among them.
   static bool setTopmost(bool on) {
@@ -162,7 +199,9 @@ class AppWindow {
     }
     final window = handle;
     if (window == null) return false;
-    return _setWindowPos!(window, on ? _topmost : _notTopmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate) != 0;
+    return _setWindowPos!(
+            window, on ? _topmost : _notTopmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate) !=
+        0;
   }
 
   static ({int left, int top, int width, int height, bool maximized, int style})? _before;
@@ -195,13 +234,21 @@ class AppWindow {
       if (maximized) _showWindow!(window, _restore);
       if (_getWindowRect!(window, rect) == 0) return false;
       final style = _getWindowLongPtr!(window, _gwlStyle);
-      _before = (left: rect.ref.left, top: rect.ref.top, width: rect.ref.right - rect.ref.left, height: rect.ref.bottom - rect.ref.top, maximized: maximized, style: style);
+      _before = (
+        left: rect.ref.left,
+        top: rect.ref.top,
+        width: rect.ref.right - rect.ref.left,
+        height: rect.ref.bottom - rect.ref.top,
+        maximized: maximized,
+        style: style
+      );
       if (_getMonitorInfo!(_monitorFromWindow!(window, 2), monitor) == 0) return false;
       final scale = _scaleOf(window);
       // The ratio and this marker are read by the runner; placement is not
       // saved while it is on, so the next launch opens at the usual size.
       _setProp!(window, name, (pipAspectOf(aspect) * 1000).round());
-      _setWindowLongPtr!(window, _gwlStyle, style & ~(_wsCaption | _wsMaximizeBox | _wsMinimizeBox | _wsSysMenu));
+      _setWindowLongPtr!(
+          window, _gwlStyle, style & ~(_wsCaption | _wsMaximizeBox | _wsMinimizeBox | _wsSysMenu));
       _setWindowPos!(window, _topmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate | _frameChanged);
       _setBorder(window, visible: false);
       final (:width, :height) = pipSizeFor(aspect, shortSide: shortSide);
@@ -238,7 +285,15 @@ class AppWindow {
       _setProp!(window, name, (pipAspectOf(aspect) * 1000).round());
       final (:extraWidth, :extraHeight) = _frameOf(window, rect, client);
       final width = client.ref.right - client.ref.left;
-      return _setWindowPos!(window, 0, 0, 0, width + extraWidth, (width / pipAspectOf(aspect)).round() + extraHeight, _noMove | _noActivate | _noZOrder) != 0;
+      return _setWindowPos!(
+              window,
+              0,
+              0,
+              0,
+              width + extraWidth,
+              (width / pipAspectOf(aspect)).round() + extraHeight,
+              _noMove | _noActivate | _noZOrder) !=
+          0;
     } finally {
       calloc.free(rect);
       calloc.free(client);
@@ -247,7 +302,8 @@ class AppWindow {
   }
 
   /// Frame size around the client area, of the window now.
-  static ({int extraWidth, int extraHeight}) _frameOf(int window, Pointer<_Rect> rect, Pointer<_Rect> client) {
+  static ({int extraWidth, int extraHeight}) _frameOf(
+      int window, Pointer<_Rect> rect, Pointer<_Rect> client) {
     _getWindowRect!(window, rect);
     _getClientRect!(window, client);
     return (
@@ -289,12 +345,18 @@ class AppWindow {
     final name = _pipProperty.toNativeUtf16();
     try {
       if (_getWindowRect!(window, rect) != 0 && _getClientRect!(window, client) != 0) {
-        _lastPip = (left: rect.ref.left, top: rect.ref.top, width: (client.ref.right - client.ref.left) / _scaleOf(window));
+        _lastPip = (
+          left: rect.ref.left,
+          top: rect.ref.top,
+          width: (client.ref.right - client.ref.left) / _scaleOf(window)
+        );
       }
       _removeProp!(window, name);
       _setWindowLongPtr!(window, _gwlStyle, before.style);
       _setBorder(window, visible: true);
-      final ok = _setWindowPos!(window, keepOnTop ? _topmost : _notTopmost, before.left, before.top, before.width, before.height, _frameChanged) != 0;
+      final ok = _setWindowPos!(window, keepOnTop ? _topmost : _notTopmost, before.left, before.top,
+              before.width, before.height, _frameChanged) !=
+          0;
       if (before.maximized) _showWindow!(window, _maximize);
       return ok;
     } finally {

@@ -11,7 +11,10 @@ extension SettingsActions on AppController {
       unawaited(writeLogsOff(next.logLevel == LogLevel.off));
       logInfo('Log level ${next.logLevel.name}');
       // libmpv's own notes follow at once, not after a restart.
-      if (player?.platform case final NativePlayer native) unawaited(native.requestLogMessages(next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
+      if (player?.platform case final NativePlayer native) {
+        unawaited(native.requestLogMessages(
+            next.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn));
+      }
     }
     if (service) _useTranslator();
     translationSetup.value = _translationSetupNow();
@@ -65,12 +68,16 @@ extension SettingsActions on AppController {
   Future<void> _loadTranslationKeys() async {
     final saved = await _translationKeyFile?.read();
     if (saved == null) return;
-    final loaded = {for (final MapEntry(:key, :value) in saved.entries) if (value is String && value.isNotEmpty) key: value};
+    final loaded = {
+      for (final MapEntry(:key, :value) in saved.entries)
+        if (value is String && value.isNotEmpty) key: value
+    };
     // The single key older versions kept belongs to the host it is sent to now.
     translationKeys = migrateKeyHosts(preferences.translation, loaded);
     _useTranslator();
     _update(() {});
-    if (translationKeys.length != loaded.length || !translationKeys.keys.every(loaded.containsKey)) {
+    if (translationKeys.length != loaded.length ||
+        !translationKeys.keys.every(loaded.containsKey)) {
       try {
         await _translationKeyFile?.write(translationKeys);
       } catch (e) {
@@ -80,9 +87,11 @@ extension SettingsActions on AppController {
   }
 
   void _useTranslator() {
-    final inner = translatorFor(preferences.translation, translationKeys, _http, fallback: _googleFirst);
+    final inner =
+        translatorFor(preferences.translation, translationKeys, _http, fallback: _googleFirst);
     // A language model may join or split lines, so it gets each text alone.
-    translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope, batch: inner is! AiTranslator);
+    translator = CachingTranslator(inner, _translationCache, preferences.translation.cacheScope,
+        batch: inner is! AiTranslator);
     textTranslator = _textTranslatorOf(translator);
     translationSetup.value = _translationSetupNow();
     _configureTitles();
@@ -90,7 +99,8 @@ extension SettingsActions on AppController {
   }
 
   /// Saves the API key of [service]; an empty one removes it.
-  Future<void> saveTranslationKey(TranslationService service, String key) => saveApiKey(service.name, key);
+  Future<void> saveTranslationKey(TranslationService service, String key) =>
+      saveApiKey(service.name, key);
 
   /// Saves the API key kept under [name] (a [TranslationService.name], or
   /// [aiKeyName] and [speechKeyName], which are kept per host); an empty one
@@ -114,25 +124,33 @@ extension SettingsActions on AppController {
   /// The models the chosen AI endpoint lists.
   Future<List<String>> listAiModels() {
     final config = preferences.translation;
-    return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, aiKeyFor(config, translationKeys));
+    return AiTranslator.listModels(
+        _http, config.effectiveAiBaseUrl, aiKeyFor(config, translationKeys));
   }
 
   /// A one-line answer from the AI interface, to check it works whichever
   /// service translates.
   Future<String> testAi() async {
     final ai = aiServiceFor(preferences.translation, translationKeys, _http);
-    if (ai == null) throw TranslationException(tr('Fill in the AI interface address, model and key first'));
-    final answer = await ai.complete('Answer in one short sentence.', 'Say hello and name the model you are.');
+    if (ai == null) {
+      throw TranslationException(tr('Fill in the AI interface address, model and key first'));
+    }
+    final answer =
+        await ai.complete('Answer in one short sentence.', 'Say hello and name the model you are.');
     return answer.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
   }
 
   /// A short sentence put through the chosen service, to check it works.
-  Future<String> testTranslation() => (translator is CachingTranslator ? (translator as CachingTranslator).inner : translator).translate('Subtitles and comments can be translated here.', preferences.translateTarget);
+  Future<String> testTranslation() =>
+      (translator is CachingTranslator ? (translator as CachingTranslator).inner : translator)
+          .translate('Subtitles and comments can be translated here.', preferences.translateTarget);
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;
-    unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
-    _notice(tr('Blocked "{0}". You can unblock it in Settings › Privacy', [channel.name.isEmpty ? channel.id : channel.name]));
+    unawaited(savePreferences(
+        preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
+    _notice(tr('Blocked "{0}". You can unblock it in Settings › Privacy',
+        [channel.name.isEmpty ? channel.id : channel.name]));
   }
 
   /// Blocks a channel the user typed in: a link or id with its `UC…` id,
@@ -142,26 +160,35 @@ extension SettingsActions on AppController {
     if (typed.isEmpty) return null;
     final id = RegExp(r'UC[\w-]{22}').firstMatch(typed)?[0];
     if (id != null) {
-      if (!preferences.isBlocked(id)) unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, ChannelRef(id, '')])));
+      if (!preferences.isBlocked(id)) {
+        unawaited(savePreferences(preferences
+            .copyWith(blockedChannels: [...preferences.blockedChannels, ChannelRef(id, '')])));
+      }
       return id;
     }
-    if (!preferences.isBlockedName(typed)) unawaited(savePreferences(preferences.copyWith(blockedChannelNames: [...preferences.blockedChannelNames, typed])));
+    if (!preferences.isBlockedName(typed)) {
+      unawaited(savePreferences(
+          preferences.copyWith(blockedChannelNames: [...preferences.blockedChannelNames, typed])));
+    }
     return typed;
   }
 
-  void unblockChannelName(String name) =>
-      unawaited(savePreferences(preferences.copyWith(blockedChannelNames: preferences.blockedChannelNames.where((n) => n != name).toList())));
+  void unblockChannelName(String name) => unawaited(savePreferences(preferences.copyWith(
+      blockedChannelNames: preferences.blockedChannelNames.where((n) => n != name).toList())));
 
   /// Stops or resumes recommending [channel]'s videos.
   void setRecommendChannel(ChannelRef channel, bool recommend) {
     final rest = preferences.unrecommendedChannels.where((c) => c.id != channel.id).toList();
-    unawaited(savePreferences(preferences.copyWith(unrecommendedChannels: recommend ? rest : [...rest, channel])));
+    unawaited(savePreferences(
+        preferences.copyWith(unrecommendedChannels: recommend ? rest : [...rest, channel])));
     final name = channel.name.isEmpty ? channel.id : channel.name;
-    _notice(recommend ? tr('{0} can be recommended again', [name]) : tr("{0} won't be recommended any more; search and follows are unaffected", [name]));
+    _notice(recommend
+        ? tr('{0} can be recommended again', [name])
+        : tr("{0} won't be recommended any more; search and follows are unaffected", [name]));
   }
 
-  void unblockChannel(String id) =>
-      unawaited(savePreferences(preferences.copyWith(blockedChannels: preferences.blockedChannels.where((c) => c.id != id).toList())));
+  void unblockChannel(String id) => unawaited(savePreferences(preferences.copyWith(
+      blockedChannels: preferences.blockedChannels.where((c) => c.id != id).toList())));
 
   void clearProgress() {
     library?.clearProgress();
@@ -184,18 +211,19 @@ extension SettingsActions on AppController {
   Future<Uint8List> exportSettings() {
     final backup = library?.backup();
     final data = {
-        'app': 'Lumtub',
-        'version': 2,
-        'exported': DateTime.now().toIso8601String(),
-        'player': settings.toJson()
-          ..remove('cachePath')
-          ..remove('cacheLimitGb')
-          ..remove('audioDevice')
-          ..remove('decoderResults'),
-        'appearance': appearance.toJson(),
-        'preferences': preferences.toJson(),
-      };
-    return Isolate.run(() => utf8.encode(const JsonEncoder.withIndent('  ').convert({...data, if (backup != null) 'library': backup.toJson()})));
+      'app': 'Lumtub',
+      'version': 2,
+      'exported': DateTime.now().toIso8601String(),
+      'player': settings.toJson()
+        ..remove('cachePath')
+        ..remove('cacheLimitGb')
+        ..remove('audioDevice')
+        ..remove('decoderResults'),
+      'appearance': appearance.toJson(),
+      'preferences': preferences.toJson(),
+    };
+    return Isolate.run(() => utf8.encode(const JsonEncoder.withIndent('  ')
+        .convert({...data, if (backup != null) 'library': backup.toJson()})));
   }
 
   /// Applies settings exported by [exportSettings] and adds the library
@@ -225,14 +253,18 @@ extension SettingsActions on AppController {
     await saveAppearance(AppearanceSettings.fromJson(data['appearance']));
     await savePreferences(AppPreferences.fromJson(data['preferences']));
     final merge = library?.restoreBackup(backup) ?? const LibraryMerge();
-    logInfo('Settings imported; ${merge.channels} channels, ${merge.videos} videos and ${merge.playlists} playlists added');
+    logInfo(
+        'Settings imported; ${merge.channels} channels, ${merge.videos} videos and ${merge.playlists} playlists added');
     return merge;
   }
 
   /// Restores every default except this computer's cache folder and
   /// decoder results.
   Future<void> resetSettings() async {
-    await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
+    await saveSettings(PlayerSettings(
+        cachePath: settings.cachePath,
+        cacheLimitGb: settings.cacheLimitGb,
+        decoderResults: settings.decoderResults));
     await saveAppearance(const AppearanceSettings());
     await savePreferences(const AppPreferences());
     _notice(tr('Default settings restored.'));
@@ -244,7 +276,8 @@ extension SettingsActions on AppController {
     _update(() => appearance = next);
     // The text size slider saves at every step; only the last one is written.
     _appearanceSaveTimer?.cancel();
-    _appearanceSaveTimer = Timer(const Duration(milliseconds: 500), () => unawaited(_writeAppearance()));
+    _appearanceSaveTimer =
+        Timer(const Duration(milliseconds: 500), () => unawaited(_writeAppearance()));
   }
 
   /// Writes the appearance now if a save is still waiting for its delay.
@@ -295,10 +328,13 @@ extension SettingsActions on AppController {
         next.interpolation != oldSettings.interpolation ||
         next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
         next.directRendering != oldSettings.directRendering;
-    if (next.upscaling != oldSettings.upscaling) await UpscaleShaders.prepare(directories?.data, next.upscaling);
+    if (next.upscaling != oldSettings.upscaling) {
+      await UpscaleShaders.prepare(directories?.data, next.upscaling);
+    }
     // Lighter scaling set for a busy GPU is not in the settings: its
     // options are set back with the ones that changed.
-    final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: oldSettings, lightened: _lightRendering != null);
+    final ignoredOptions = await PlayerOptionApplicator.apply(player, next,
+        previous: oldSettings, lightened: _lightRendering != null);
     _applied = next;
     _lightRendering = null;
     _iosPipSubtitles(next.pipSubtitles);
@@ -307,14 +343,22 @@ extension SettingsActions on AppController {
     _update(() => settings = next);
     _sendPipSubtitles();
     _optionsApplied(player);
-    if (next.skipSilence != oldSettings.skipSilence || next.audioFilter != oldSettings.audioFilter) unawaited(_syncSilenceSkipping(player));
+    if (next.skipSilence != oldSettings.skipSilence ||
+        next.audioFilter != oldSettings.audioFilter) {
+      unawaited(_syncSilenceSkipping(player));
+    }
     // The audio session is opened with the audio output: opened again now.
     if (next.mixWithOthers != oldSettings.mixWithOthers && player.platform is NativePlayer) {
-      unawaited((player.platform! as NativePlayer).command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e')));
+      unawaited((player.platform! as NativePlayer).command(['ao-reload']).catchError(
+          (Object e) => logDebug(() => 'Could not reopen the audio output: $e')));
     }
-    if (next.volumeBalance != oldSettings.volumeBalance || next.audioFilter != oldSettings.audioFilter) unawaited(_syncVolumeBalance(player));
+    if (next.volumeBalance != oldSettings.volumeBalance ||
+        next.audioFilter != oldSettings.audioFilter) {
+      unawaited(_syncVolumeBalance(player));
+    }
     // The video playing skips by the new SponsorBlock choice too.
-    if (next.sponsorBlock != oldSettings.sponsorBlock || !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
+    if (next.sponsorBlock != oldSettings.sponsorBlock ||
+        !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
       _update(() => _segments = const []);
       final item = playing;
       if (next.sponsorBlock && item != null) unawaited(_loadSegments(item, _playSerial));
@@ -337,10 +381,12 @@ extension SettingsActions on AppController {
       }
       status = ignoredOptions.isEmpty
           ? tr('Player settings saved{0}', [
-              _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
+              _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) &&
+                      videoController != null
                   ? tr('; zero-copy DXVA2 takes effect after restarting Lumtub.')
                   : requiresNextVideo
-                      ? tr('; decoding and frame interpolation changes take effect on the next video.')
+                      ? tr(
+                          '; decoding and frame interpolation changes take effect on the next video.')
                       : tr('.')
             ])
           : tr('Saved; not supported by this libmpv: {0}.', [ignoredOptions.join(', ')]);
@@ -378,7 +424,8 @@ extension SettingsActions on AppController {
 
   /// Moves the managed cache under [selectedFolder]. [confirmMigrate] asks
   /// whether existing cache folders should move with it.
-  Future<void> changeCacheLocation(String selectedFolder, Future<bool?> Function(String targetPath) confirmMigrate) async {
+  Future<void> changeCacheLocation(
+      String selectedFolder, Future<bool?> Function(String targetPath) confirmMigrate) async {
     final manager = _cacheManager;
     if (directories == null || manager == null) return;
     final target = Directory('$selectedFolder${Platform.pathSeparator}LumtubCache');
@@ -397,7 +444,8 @@ extension SettingsActions on AppController {
         await saveSettings(next);
       }
       _update(() => cacheBytes = 0);
-      _notice(tr("Cache location saved. yt-dlp's cache will use the new location on the next search."));
+      _notice(
+          tr("Cache location saved. yt-dlp's cache will use the new location on the next search."));
     } on FileSystemException catch (error) {
       _notice(tr('New cache location unavailable, still using the original: {0}', [error.message]));
     }
@@ -405,10 +453,12 @@ extension SettingsActions on AppController {
 
   /// Clears the cache folders with no download starting meanwhile; while
   /// one runs, the folders it uses are kept.
-  Future<({int freed, int skipped, bool keptForDownloads})> _clearCacheFolders(CacheManager manager) async {
+  Future<({int freed, int skipped, bool keptForDownloads})> _clearCacheFolders(
+      CacheManager manager) async {
     Future<({int freed, int skipped, bool keptForDownloads})> clear() async {
       final busy = downloads?.working ?? false;
-      final (:freed, :skipped) = await manager.clear(settings, keep: busy ? CacheManager.downloadFolders : const {});
+      final (:freed, :skipped) =
+          await manager.clear(settings, keep: busy ? CacheManager.downloadFolders : const {});
       return (freed: freed, skipped: skipped, keptForDownloads: busy);
     }
 
@@ -418,17 +468,22 @@ extension SettingsActions on AppController {
   Future<void> clearCache() async {
     final manager = _cacheManager;
     if (manager == null) return;
-    if (!ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
+    if (!ensureNotPlaying(
+        tr("The cache can't be cleared during playback. Go back to the list first."))) {
+      return;
+    }
     try {
       await (_translationCache.clear(), _titleCache.clear()).wait;
       final (:freed, :skipped, :keptForDownloads) = await _clearCacheFolders(manager);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
       _notice(keptForDownloads
-          ? tr("Cleared {0} of cache; yt-dlp's cache was kept while downloads are running.", [formatBytes(freed)])
+          ? tr("Cleared {0} of cache; yt-dlp's cache was kept while downloads are running.",
+              [formatBytes(freed)])
           : skipped == 0
               ? tr('Cleared {0} of cache.', [formatBytes(freed)])
-              : tr('Cleared {0} of cache; {1} files in use were left for next time.', [formatBytes(freed), skipped]));
+              : tr('Cleared {0} of cache; {1} files in use were left for next time.',
+                  [formatBytes(freed), skipped]));
     } on FileSystemException catch (error) {
       logError('Could not clear the cache', error);
       _notice(tr('Could not clear the cache: {0}', [error.message]));
@@ -441,7 +496,17 @@ extension SettingsActions on AppController {
   Future<void> _clearLookupFiles() async {
     final folder = directories?.cache.path;
     if (folder == null) return;
-    for (final name in const ['heard_languages_2.json', 'text_languages.json', 'video_facts.json', 'channel_avatars.json', 'portrait_thumbnails.json', 'emoji_pictures.json', 'ai_labels.json', 'ai_channels.json', 'catholic_channels.json']) {
+    for (final name in const [
+      'heard_languages_2.json',
+      'text_languages.json',
+      'video_facts.json',
+      'channel_avatars.json',
+      'portrait_thumbnails.json',
+      'emoji_pictures.json',
+      'ai_labels.json',
+      'ai_channels.json',
+      'catholic_channels.json'
+    ]) {
       try {
         final file = File('$folder${Platform.pathSeparator}$name');
         if (await file.exists()) await file.delete();
@@ -454,7 +519,11 @@ extension SettingsActions on AppController {
   /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
   /// playlists and followed channels are never touched here.
   Future<void> clearLocalData(Set<LocalData> kinds) async {
-    if (kinds.contains(LocalData.cache) && !ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
+    if (kinds.contains(LocalData.cache) &&
+        !ensureNotPlaying(
+            tr("The cache can't be cleared during playback. Go back to the list first."))) {
+      return;
+    }
     logInfo('Clearing local data: ${kinds.map((k) => k.name).join(', ')}');
     for (final kind in LocalData.values.where(kinds.contains)) {
       try {
@@ -487,7 +556,10 @@ extension SettingsActions on AppController {
             _useTranslator();
             await _translationKeyFile?.delete();
           case LocalData.settings:
-            await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
+            await saveSettings(PlayerSettings(
+                cachePath: settings.cachePath,
+                cacheLimitGb: settings.cacheLimitGb,
+                decoderResults: settings.decoderResults));
             await saveAppearance(const AppearanceSettings());
             await savePreferences(const AppPreferences());
             channelPlayback?.clear();

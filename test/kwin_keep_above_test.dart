@@ -4,7 +4,8 @@ import 'package:lumtub/kwin_keep_above.dart';
 void main() {
   test('the KWin script sets keepAbove on this process\'s windows in KWin 5 and 6', () {
     final script = KWinKeepAbove.script(4242, true);
-    expect(script, contains('workspace.windowList ? workspace.windowList() : workspace.clientList()'));
+    expect(
+        script, contains('workspace.windowList ? workspace.windowList() : workspace.clientList()'));
     expect(script, contains('window.pid === 4242'));
     expect(script, contains('window.keepAbove = true'));
     expect(KWinKeepAbove.script(1, false), contains('window.keepAbove = false'));

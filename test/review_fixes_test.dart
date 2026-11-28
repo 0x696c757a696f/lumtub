@@ -20,7 +20,8 @@ void main() {
   group('Chromecast framing', () {
     test('a negative or oversized length is a format error', () {
       // Field 1, length-delimited, whose length varint is ten bytes: 2^63 - 1 and 2^64 - 1.
-      final negative = Uint8List.fromList([0x0A, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x41]);
+      final negative = Uint8List.fromList(
+          [0x0A, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x41]);
       expect(() => decodeCastMessage(negative), throwsFormatException);
       final huge = Uint8List.fromList([0x0A, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x41]);
       expect(() => decodeCastMessage(huge), throwsFormatException);
@@ -30,16 +31,20 @@ void main() {
   });
 
   group('DLNA', () {
-    const xml = '''<root><URLBase>http://10.0.0.9:80/</URLBase><device><friendlyName>TV</friendlyName><UDN>uuid:1</UDN><serviceList>
+    const xml =
+        '''<root><URLBase>http://10.0.0.9:80/</URLBase><device><friendlyName>TV</friendlyName><UDN>uuid:1</UDN><serviceList>
 <service><serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType><controlURL>/ok</controlURL></service>
 <service><serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType><controlURL>http://169.254.169.254/latest</controlURL></service>
 </serviceList></device></root>''';
 
     test('control addresses stay on the host that sent the description', () {
-      final description = parseDeviceDescription(xml, Uri.parse('http://192.168.1.20:8080/desc.xml'));
+      final description =
+          parseDeviceDescription(xml, Uri.parse('http://192.168.1.20:8080/desc.xml'));
       // The foreign URLBase is ignored and the absolute foreign address dropped.
-      expect(description.services.map((s) => s.controlUrl.toString()), ['http://192.168.1.20:8080/ok']);
-      final same = parseDeviceDescription(xml.replaceAll('10.0.0.9:80', '192.168.1.20:8080'), Uri.parse('http://192.168.1.20:8080/desc.xml'));
+      expect(description.services.map((s) => s.controlUrl.toString()),
+          ['http://192.168.1.20:8080/ok']);
+      final same = parseDeviceDescription(xml.replaceAll('10.0.0.9:80', '192.168.1.20:8080'),
+          Uri.parse('http://192.168.1.20:8080/desc.xml'));
       expect(same.services.single.controlUrl.host, '192.168.1.20');
     });
 
@@ -63,7 +68,8 @@ void main() {
     expect(Uri.parse(two.vtt).pathSegments.first, isNot(path.first));
     final client = HttpClient();
     addTearDown(client.close);
-    final guess = await (await client.getUrl(Uri.parse(one.vtt).replace(path: '/sub1.vtt'))).close();
+    final guess =
+        await (await client.getUrl(Uri.parse(one.vtt).replace(path: '/sub1.vtt'))).close();
     expect(guess.statusCode, 404);
     await guess.drain<void>();
   });
@@ -107,28 +113,54 @@ void main() {
       const keys = {'ai@api.openai.com': 'sk-1'};
       expect(aiKeyFor(openai, keys), 'sk-1');
       expect(aiKeyFor(const TranslationConfig(aiPreset: 'deepseek'), keys), '');
-      expect(aiKeyFor(const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://API.OpenAI.com:8443/v1'), keys), '');
-      expect(aiKeyFor(const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://API.OpenAI.com/v1'), keys), 'sk-1');
-      expect(aiKeyFor(const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://evil.example/v1'), keys), '');
-      expect(aiServiceFor(const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://evil.example/v1', aiModel: 'm'), keys, _client), isNotNull, reason: 'custom endpoints may run without a key, but get none');
+      expect(
+          aiKeyFor(
+              const TranslationConfig(
+                  aiPreset: 'custom', aiBaseUrl: 'https://API.OpenAI.com:8443/v1'),
+              keys),
+          '');
+      expect(
+          aiKeyFor(
+              const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://API.OpenAI.com/v1'),
+              keys),
+          'sk-1');
+      expect(
+          aiKeyFor(
+              const TranslationConfig(aiPreset: 'custom', aiBaseUrl: 'https://evil.example/v1'),
+              keys),
+          '');
+      expect(
+          aiServiceFor(
+              const TranslationConfig(
+                  aiPreset: 'custom', aiBaseUrl: 'https://evil.example/v1', aiModel: 'm'),
+              keys,
+              _client),
+          isNotNull,
+          reason: 'custom endpoints may run without a key, but get none');
     });
 
     test('the old single key moves to the host it was saved for', () {
-      final migrated = migrateKeyHosts(openai, const {'ai': 'sk-old', 'speech': 'gsk', 'deepl': 'd'});
+      final migrated =
+          migrateKeyHosts(openai, const {'ai': 'sk-old', 'speech': 'gsk', 'deepl': 'd'});
       expect(migrated, {'ai@api.openai.com': 'sk-old', 'speech@api.groq.com': 'gsk', 'deepl': 'd'});
       expect(aiKeyFor(openai, migrated), 'sk-old');
       expect(migrateKeyHosts(openai, migrated), same(migrated));
       // Without an address the key is not kept for a host it cannot be tied to.
-      expect(migrateKeyHosts(const TranslationConfig(aiPreset: 'custom'), const {'ai': 'x'}), isEmpty);
+      expect(
+          migrateKeyHosts(const TranslationConfig(aiPreset: 'custom'), const {'ai': 'x'}), isEmpty);
     });
 
     test('speech uses its own key for its host, else the AI key of that host', () {
       const config = TranslationConfig(speechPreset: 'openai');
       expect(speechKeyFor(config, const {'ai@api.openai.com': 'sk'}), 'sk');
-      expect(speechKeyFor(config, const {'ai@api.openai.com': 'sk', 'speech@api.openai.com': 'own'}), 'own');
+      expect(
+          speechKeyFor(config, const {'ai@api.openai.com': 'sk', 'speech@api.openai.com': 'own'}),
+          'own');
       expect(speechKeyFor(config, const {'speech@api.groq.com': 'gsk'}), '');
-      const custom = TranslationConfig(speechPreset: 'custom', speechBaseUrl: 'https://asr.example/v1');
-      expect(speechKeyFor(custom, const {'speech@api.groq.com': 'gsk', 'ai@api.openai.com': 'sk'}), '');
+      const custom =
+          TranslationConfig(speechPreset: 'custom', speechBaseUrl: 'https://asr.example/v1');
+      expect(speechKeyFor(custom, const {'speech@api.groq.com': 'gsk', 'ai@api.openai.com': 'sk'}),
+          '');
       expect(speechKeyFor(custom, const {'speech@asr.example': 'k'}), 'k');
     });
   });
@@ -136,7 +168,10 @@ void main() {
   test('a package that fails its check before installing is deleted and not started', () async {
     final dir = await Directory.systemTemp.createTemp('lumtub_updater');
     addTearDown(() => dir.delete(recursive: true));
-    final updater = AppUpdater(client: _client, directory: dir, download: (asset, into, onProgress) async => throw UnimplementedError());
+    final updater = AppUpdater(
+        client: _client,
+        directory: dir,
+        download: (asset, into, onProgress) async => throw UnimplementedError());
     final package = File('${dir.path}/Lumtub-setup.exe')..writeAsBytesSync([1, 2, 3]);
     updater.ready = package;
     expect(await updater.install(), isFalse);
@@ -164,7 +199,8 @@ void main() {
     });
 
     test('yt-dlp gets the login through the environment, not its arguments', () {
-      final (args, env) = NetworkProxy.hideCredentials(['--proxy', 'socks5h://u:p@h:1', '--', 'url'], {'A': 'b'});
+      final (args, env) =
+          NetworkProxy.hideCredentials(['--proxy', 'socks5h://u:p@h:1', '--', 'url'], {'A': 'b'});
       expect(args, ['--', 'url']);
       expect(env!['ALL_PROXY'], 'socks5h://u:p@h:1');
       expect(env['HTTPS_PROXY'], 'socks5h://u:p@h:1');
@@ -180,17 +216,36 @@ void main() {
     for (final ok in ['a.png', 'img/a.png', 'fonts/My Font.ttf']) {
       expect(Skin.insideFolder(ok), isTrue, reason: ok);
     }
-    for (final bad in ['', '../a.png', 'a/../../b', '/etc/passwd', r'..\a.png', r'C:\x.png', 'C:/x.png', 'a//b', './a']) {
+    for (final bad in [
+      '',
+      '../a.png',
+      'a/../../b',
+      '/etc/passwd',
+      r'..\a.png',
+      r'C:\x.png',
+      'C:/x.png',
+      'a//b',
+      './a'
+    ]) {
       expect(Skin.insideFolder(bad), isFalse, reason: bad);
     }
   });
 
   test('a media host that resolves into the network is not public', () async {
-    Future<List<InternetAddress>> lookup(String host) async => [InternetAddress(host == 'rebind.example' ? '192.168.1.5' : host == 'meta.example' ? '169.254.169.254' : '93.184.216.34')];
+    Future<List<InternetAddress>> lookup(String host) async => [
+          InternetAddress(host == 'rebind.example'
+              ? '192.168.1.5'
+              : host == 'meta.example'
+                  ? '169.254.169.254'
+                  : '93.184.216.34')
+        ];
     expect(await resolvesToPublicAddress('rebind.example', lookup: lookup), isFalse);
     expect(await resolvesToPublicAddress('meta.example', lookup: lookup), isFalse);
     expect(await resolvesToPublicAddress('fine.example', lookup: lookup), isTrue);
-    expect(await resolvesToPublicAddress('gone.example', lookup: (_) async => throw const SocketException('no')), isTrue);
+    expect(
+        await resolvesToPublicAddress('gone.example',
+            lookup: (_) async => throw const SocketException('no')),
+        isTrue);
   });
 }
 

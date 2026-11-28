@@ -17,16 +17,19 @@ enum DownloadContainer {
   final String _label;
   String get label => tr(_label);
 
-  static DownloadContainer byName(Object? name) => values.where((c) => c.name == name).firstOrNull ?? auto;
+  static DownloadContainer byName(Object? name) =>
+      values.where((c) => c.name == name).firstOrNull ?? auto;
 }
 
 /// The container a video and audio pair goes into, and why a wanted one
 /// does not work.
 class ContainerPlan {
   const ContainerPlan(this.container, this.audio, {this.problem});
+
   /// Never [DownloadContainer.auto].
   final DownloadContainer container;
   final DownloadAudioFormat? audio;
+
   /// Why [wanted] cannot hold the streams without re-encoding, for display.
   final String? problem;
 }
@@ -46,10 +49,18 @@ String? _problem(Object? problem) => switch (problem) {
 /// with Opus or Vorbis. [wanted] auto takes MP4 for H.264 with AAC, WebM
 /// when everything fits it, else MKV. Streams are only ever copied, never
 /// re-encoded.
-ContainerPlan planContainer(DownloadContainer wanted, VideoCodec video, List<DownloadAudioFormat> audioBest) {
+ContainerPlan planContainer(
+    DownloadContainer wanted, VideoCodec video, List<DownloadAudioFormat> audioBest) {
   final core = NativeCore.instance;
-  final json = jsonEncode({'container': wanted.name, 'codec': video.name, 'audio': DownloadFormats(const [], audioBest).toJson()['audio']});
-  final answer = core == null ? null : jsonDecode(core.take(core.withText(json, core.downloadContainer)) ?? 'null') as Map<String, dynamic>?;
+  final json = jsonEncode({
+    'container': wanted.name,
+    'codec': video.name,
+    'audio': DownloadFormats(const [], audioBest).toJson()['audio']
+  });
+  final answer = core == null
+      ? null
+      : jsonDecode(core.take(core.withText(json, core.downloadContainer)) ?? 'null')
+          as Map<String, dynamic>?;
   if (answer == null) return ContainerPlan(DownloadContainer.mkv, audioBest.firstOrNull);
   final audio = (answer['audio'] as Map?)?['id'];
   return ContainerPlan(
@@ -71,7 +82,8 @@ class SubtitlePick {
   bool matches(SubtitleOption option) => option.language == language && option.kind == kind;
 
   @override
-  bool operator ==(Object other) => other is SubtitlePick && other.language == language && other.kind == kind;
+  bool operator ==(Object other) =>
+      other is SubtitlePick && other.language == language && other.kind == kind;
 
   @override
   int get hashCode => Object.hash(language, kind);
@@ -112,8 +124,13 @@ class DownloadSubtitles {
 
   static DownloadSubtitles? fromJson(Object? raw) {
     if (raw is! Map) return null;
-    final tracks = [for (final t in raw['tracks'] is List ? raw['tracks'] as List : const []) SubtitlePick.fromJson(t)].whereType<SubtitlePick>().toList();
-    final pair = raw['bilingual'] is List && (raw['bilingual'] as List).length == 2 ? raw['bilingual'] as List : null;
+    final tracks = [
+      for (final t in raw['tracks'] is List ? raw['tracks'] as List : const [])
+        SubtitlePick.fromJson(t)
+    ].whereType<SubtitlePick>().toList();
+    final pair = raw['bilingual'] is List && (raw['bilingual'] as List).length == 2
+        ? raw['bilingual'] as List
+        : null;
     return DownloadSubtitles(
       tracks: tracks,
       top: pair == null ? null : SubtitlePick.fromJson(pair[0]),
@@ -138,15 +155,19 @@ class DownloadSelection {
   });
 
   final bool audioOnly;
+
   /// The codec and height of the stream picked, null for audio only.
   final VideoCodec? codec;
   final int? height;
   final String? videoId;
   final String? audioId;
+
   /// Never [DownloadContainer.auto].
   final DownloadContainer container;
+
   /// Bytes in all, when known.
   final int? size;
+
   /// The subtitles picked; null for a selection made before they could be,
   /// which takes those of the subtitle settings.
   final DownloadSubtitles? subtitles;
@@ -159,13 +180,16 @@ class DownloadSelection {
         height: height,
         videoId: videoId,
         audioId: audioId,
-        container: !subtitles.isEmpty && container == DownloadContainer.webm ? DownloadContainer.mkv : container,
+        container: !subtitles.isEmpty && container == DownloadContainer.webm
+            ? DownloadContainer.mkv
+            : container,
         size: size,
         subtitles: audioOnly ? null : subtitles,
       );
 
   /// What the downloads list shows, such as `VP9 · 1080p · MP4`.
-  String get label => audioOnly ? tr('Audio only') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
+  String get label =>
+      audioOnly ? tr('Audio only') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
 
   /// Whether a video and an audio stream are joined.
   bool get needsMerge => !audioOnly && videoId != null && audioId != null;
@@ -220,6 +244,7 @@ class DownloadSelection {
 class DownloadPlan {
   const DownloadPlan(this.selection, {this.problem});
   final DownloadSelection? selection;
+
   /// Why the wanted container cannot be used with the streams; null when
   /// there is a selection, or nothing to select.
   final String? problem;
@@ -228,19 +253,32 @@ class DownloadPlan {
 /// Builds the selection for [codec] (null: any), [height] (the nearest
 /// offered) and [container] from [formats]; for [audioOnly] the best m4a
 /// track, else the best track. Worked out by lumtub_core.
-DownloadPlan planDownload(DownloadFormats formats, {VideoCodec? codec, int? height, DownloadContainer container = DownloadContainer.auto, bool audioOnly = false}) {
-  final plan = formats.choose(codec: codec, height: height, container: container.name, audioOnly: audioOnly)['plan'] as Map<String, dynamic>? ?? const {};
-  final selection = plan['selection'] == null ? null : DownloadSelection.fromJson(plan['selection']);
+DownloadPlan planDownload(DownloadFormats formats,
+    {VideoCodec? codec,
+    int? height,
+    DownloadContainer container = DownloadContainer.auto,
+    bool audioOnly = false}) {
+  final plan = formats.choose(
+          codec: codec,
+          height: height,
+          container: container.name,
+          audioOnly: audioOnly)['plan'] as Map<String, dynamic>? ??
+      const {};
+  final selection =
+      plan['selection'] == null ? null : DownloadSelection.fromJson(plan['selection']);
   return DownloadPlan(selection, problem: _problem(plan['problem']));
 }
 
 /// The dialog's last choices, offered again next time.
 class DownloadDefaults {
-  const DownloadDefaults({this.codec = auto, this.height, this.container = DownloadContainer.auto, this.subtitles});
+  const DownloadDefaults(
+      {this.codec = auto, this.height, this.container = DownloadContainer.auto, this.subtitles});
+
   /// `auto`, [audioOnly], or a [VideoCodec] name.
   final String codec;
   final int? height;
   final DownloadContainer container;
+
   /// The subtitles picked last; null before any were.
   final DownloadSubtitles? subtitles;
 

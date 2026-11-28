@@ -15,7 +15,9 @@ class WatchProgress {
   final Duration position;
   final Duration duration;
 
-  double get fraction => duration > Duration.zero ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0) : 0;
+  double get fraction => duration > Duration.zero
+      ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
+      : 0;
 
   /// Watched to the credits.
   bool get finished => fraction >= 0.95;
@@ -30,6 +32,7 @@ class IdList<T> extends ListBase<T> {
   IdList(this._idOf);
   final String Function(T) _idOf;
   final _items = <T>[];
+
   /// How many entries have each id.
   final _ids = <String, int>{};
 
@@ -126,12 +129,14 @@ class IdList<T> extends ListBase<T> {
 }
 
 class LocalPlaylist {
-  LocalPlaylist({required this.id, required this.name, List<VideoItem>? items}) : items = IdList<VideoItem>((item) => item.id)..addAll(items ?? const []);
+  LocalPlaylist({required this.id, required this.name, List<VideoItem>? items})
+      : items = IdList<VideoItem>((item) => item.id)..addAll(items ?? const []);
   final String id;
   String name;
   final IdList<VideoItem> items;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'items': items.map((item) => item.toJson()).toList()};
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'name': name, 'items': items.map((item) => item.toJson()).toList()};
 }
 
 /// 订阅分组: a name and the followed channels in it, by id.
@@ -161,7 +166,12 @@ class LibraryMerge {
 /// the YouTube account's playlists, watch progress and live marks belong to
 /// this computer and are left out.
 class LibraryBackup {
-  const LibraryBackup({this.channels = const [], this.groups = const [], this.favorites = const [], this.watchLater = const [], this.playlists = const []});
+  const LibraryBackup(
+      {this.channels = const [],
+      this.groups = const [],
+      this.favorites = const [],
+      this.watchLater = const [],
+      this.playlists = const []});
   final List<ChannelRef> channels;
   final List<(String name, Set<String> channels)> groups;
   final List<VideoItem> favorites;
@@ -170,7 +180,9 @@ class LibraryBackup {
 
   Map<String, dynamic> toJson() => {
         'channels': channels.map((channel) => channel.toJson()).toList(),
-        'groups': [for (final (name, ids) in groups) {'name': name, 'channels': ids.toList()}],
+        'groups': [
+          for (final (name, ids) in groups) {'name': name, 'channels': ids.toList()}
+        ],
         'favorites': favorites.map((item) => item.toJson()).toList(),
         'watchLater': watchLater.map((item) => item.toJson()).toList(),
         'playlists': playlists.map((playlist) => playlist.toJson()).toList(),
@@ -182,18 +194,34 @@ class LibraryBackup {
     if (raw is! Map) return const LibraryBackup();
     List<Object?> list(Object? value) => value is List ? value : const [];
     return LibraryBackup(
-      channels: [for (final value in list(raw['channels'])) if (ChannelRef.fromJson(value) case final channel?) channel],
+      channels: [
+        for (final value in list(raw['channels']))
+          if (ChannelRef.fromJson(value) case final channel?) channel
+      ],
       groups: [
         for (final value in list(raw['groups']))
-          if (value is Map && value['name'] is String && (value['name'] as String).trim().isNotEmpty)
-            ((value['name'] as String).trim(), {for (final id in list(value['channels'])) if (id is String) id}),
+          if (value is Map &&
+              value['name'] is String &&
+              (value['name'] as String).trim().isNotEmpty)
+            (
+              (value['name'] as String).trim(),
+              {
+                for (final id in list(value['channels']))
+                  if (id is String) id
+              }
+            ),
       ],
       favorites: LibraryStore._items(raw['favorites']),
       watchLater: LibraryStore._items(raw['watchLater']),
       playlists: [
         for (final value in list(raw['playlists']))
-          if (value is Map && value['id'] is String && !(value['id'] as String).startsWith(remotePlaylistPrefix))
-            LocalPlaylist(id: value['id'] as String, name: value['name']?.toString() ?? '', items: LibraryStore._items(value['items'])),
+          if (value is Map &&
+              value['id'] is String &&
+              !(value['id'] as String).startsWith(remotePlaylistPrefix))
+            LocalPlaylist(
+                id: value['id'] as String,
+                name: value['name']?.toString() ?? '',
+                items: LibraryStore._items(value['items'])),
       ],
     );
   }
@@ -213,19 +241,30 @@ class LibraryStore {
   final File file;
   LocalDb? _db;
 
-  static const _lists = ['favorites', 'watchLater', 'playlists', 'channels', 'groups', 'live', 'progress'];
+  static const _lists = [
+    'favorites',
+    'watchLater',
+    'playlists',
+    'channels',
+    'groups',
+    'live',
+    'progress'
+  ];
   static const _playlistList = 'playlist:';
+
   /// The playlists' item lists in the database at the last read or write.
   final _playlistLists = <String>{};
 
   static const _maxProgress = 500;
 
   final favorites = IdList<VideoItem>((item) => item.id);
+
   /// 稍后观看, newest first.
   final watchLater = IdList<VideoItem>((item) => item.id);
   final playlists = <LocalPlaylist>[];
   final channels = IdList<ChannelRef>((channel) => channel.id);
   final channelGroups = <ChannelGroup>[];
+
   /// Followed channels' videos that were live or about to go live at the
   /// last look, by video id: the channel's id and `is_live` or
   /// `is_upcoming`. Shown at once on the next launch, then checked again.
@@ -268,7 +307,10 @@ class LibraryStore {
     watchLater.addAll(_items([for (final (_, body) in list('watchLater')) body]));
     for (final (id, body) in list('playlists')) {
       final name = body is Map ? body['name']?.toString() : null;
-      playlists.add(LocalPlaylist(id: id, name: name ?? tr('Playlist'), items: _items([for (final (_, item) in list('$_playlistList$id')) item])));
+      playlists.add(LocalPlaylist(
+          id: id,
+          name: name ?? tr('Playlist'),
+          items: _items([for (final (_, item) in list('$_playlistList$id')) item])));
     }
     _playlistLists.addAll(lists.keys.where((name) => name.startsWith(_playlistList)));
     for (final (_, body) in list('channels')) {
@@ -277,10 +319,16 @@ class LibraryStore {
     }
     for (final (name, body) in list('groups')) {
       if (name.trim().isEmpty) continue;
-      channelGroups.add(ChannelGroup(name.trim(), {for (final id in body is List ? body : const []) if (id is String) id}));
+      channelGroups.add(ChannelGroup(name.trim(), {
+        for (final id in body is List ? body : const [])
+          if (id is String) id
+      }));
     }
     for (final (id, body) in list('live')) {
-      if (body is List && body.length == 2 && body[0] is String && (body[1] == 'is_live' || body[1] == 'is_upcoming')) {
+      if (body is List &&
+          body.length == 2 &&
+          body[0] is String &&
+          (body[1] == 'is_live' || body[1] == 'is_upcoming')) {
         liveVideos[id] = (body[0] as String, body[1] as String);
       }
     }
@@ -297,12 +345,24 @@ class LibraryStore {
     final items = <String, List<(String, String)>>{
       'favorites': [for (final item in favorites) (item.id, encodedItem(item))],
       'watchLater': [for (final item in watchLater) (item.id, encodedItem(item))],
-      'playlists': [for (final playlist in playlists) (playlist.id, jsonEncode({'name': playlist.name}))],
-      for (final playlist in playlists) '$_playlistList${playlist.id}': [for (final item in playlist.items) (item.id, encodedItem(item))],
+      'playlists': [
+        for (final playlist in playlists) (playlist.id, jsonEncode({'name': playlist.name}))
+      ],
+      for (final playlist in playlists)
+        '$_playlistList${playlist.id}': [
+          for (final item in playlist.items) (item.id, encodedItem(item))
+        ],
       'channels': [for (final channel in channels) (channel.id, jsonEncode(channel.toJson()))],
-      'groups': [for (final group in channelGroups) (group.name, jsonEncode(group.channels.toList()))],
-      'live': [for (final MapEntry(:key, :value) in liveVideos.entries) (key, jsonEncode([value.$1, value.$2]))],
-      'progress': [for (final MapEntry(:key, :value) in _progress.entries) (key, '[${value.$1},${value.$2}]')],
+      'groups': [
+        for (final group in channelGroups) (group.name, jsonEncode(group.channels.toList()))
+      ],
+      'live': [
+        for (final MapEntry(:key, :value) in liveVideos.entries)
+          (key, jsonEncode([value.$1, value.$2]))
+      ],
+      'progress': [
+        for (final MapEntry(:key, :value) in _progress.entries) (key, '[${value.$1},${value.$2}]')
+      ],
     };
     final gone = _playlistLists.where((name) => !items.containsKey(name)).toList();
     await db.write(items, drop: gone, meta: const {'library': '1'});
@@ -320,21 +380,35 @@ class LibraryStore {
       watchLater.addAll(_items(data['watchLater']));
       for (final raw in data['playlists'] is List ? data['playlists'] as List : const []) {
         if (raw is! Map || raw['id'] is! String) continue;
-        playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? tr('Playlist'), items: _items(raw['items'])));
+        playlists.add(LocalPlaylist(
+            id: raw['id'] as String,
+            name: raw['name']?.toString() ?? tr('Playlist'),
+            items: _items(raw['items'])));
       }
       for (final raw in data['channels'] is List ? data['channels'] as List : const []) {
         final channel = ChannelRef.fromJson(raw);
         if (channel != null && !channels.containsId(channel.id)) channels.add(channel);
       }
       for (final raw in data['groups'] is List ? data['groups'] as List : const []) {
-        if (raw is! Map || raw['name'] is! String || (raw['name'] as String).trim().isEmpty) continue;
-        final ids = raw['channels'] is List ? {for (final id in raw['channels'] as List) if (id is String) id} : <String>{};
+        if (raw is! Map || raw['name'] is! String || (raw['name'] as String).trim().isEmpty) {
+          continue;
+        }
+        final ids = raw['channels'] is List
+            ? {
+                for (final id in raw['channels'] as List)
+                  if (id is String) id
+              }
+            : <String>{};
         channelGroups.add(ChannelGroup((raw['name'] as String).trim(), ids));
       }
       final live = data['live'];
       if (live is Map) {
         for (final MapEntry(:key, :value) in live.entries) {
-          if (key is String && value is List && value.length == 2 && value[0] is String && (value[1] == 'is_live' || value[1] == 'is_upcoming')) {
+          if (key is String &&
+              value is List &&
+              value.length == 2 &&
+              value[0] is String &&
+              (value[1] == 'is_live' || value[1] == 'is_upcoming')) {
             liveVideos[key] = (value[0] as String, value[1] as String);
           }
         }
@@ -344,7 +418,8 @@ class LibraryStore {
         for (final entry in progress.entries) {
           final value = entry.value;
           if (value is List && value.length >= 2 && value[0] is num && value[1] is num) {
-            _progress[entry.key.toString()] = ((value[0] as num).toInt(), (value[1] as num).toInt());
+            _progress[entry.key.toString()] =
+                ((value[0] as num).toInt(), (value[1] as num).toInt());
           }
         }
         finishedVersion++;
@@ -384,7 +459,8 @@ class LibraryStore {
         watchLater: List.of(watchLater),
         playlists: [
           for (final playlist in playlists)
-            if (!playlist.id.startsWith(remotePlaylistPrefix)) LocalPlaylist(id: playlist.id, name: playlist.name, items: List.of(playlist.items)),
+            if (!playlist.id.startsWith(remotePlaylistPrefix))
+              LocalPlaylist(id: playlist.id, name: playlist.name, items: List.of(playlist.items)),
         ],
       );
 
@@ -445,8 +521,12 @@ class LibraryStore {
         'playlists': playlists.map((playlist) => playlist.toJson()).toList(),
         'channels': channels.map((channel) => channel.toJson()).toList(),
         'groups': channelGroups.map((group) => group.toJson()).toList(),
-        'live': {for (final MapEntry(:key, :value) in liveVideos.entries) key: [value.$1, value.$2]},
-        'progress': {for (final entry in _progress.entries) entry.key: [entry.value.$1, entry.value.$2]},
+        'live': {
+          for (final MapEntry(:key, :value) in liveVideos.entries) key: [value.$1, value.$2]
+        },
+        'progress': {
+          for (final entry in _progress.entries) entry.key: [entry.value.$1, entry.value.$2]
+        },
       };
 
   /// Writes to a temporary file first so a crash never leaves half a file.
@@ -480,7 +560,9 @@ class LibraryStore {
 
   WatchProgress? progressOf(String id) {
     final value = _progress[id];
-    return value == null ? null : WatchProgress(Duration(seconds: value.$1), Duration(seconds: value.$2));
+    return value == null
+        ? null
+        : WatchProgress(Duration(seconds: value.$1), Duration(seconds: value.$2));
   }
 
   /// Remembers where [id] stopped. A finished video is kept as watched to
@@ -531,7 +613,9 @@ class LibraryStore {
   }
 
   LocalPlaylist createPlaylist(String name) {
-    final playlist = LocalPlaylist(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: name.trim().isEmpty ? tr('Untitled playlist') : name.trim());
+    final playlist = LocalPlaylist(
+        id: DateTime.now().microsecondsSinceEpoch.toRadixString(36),
+        name: name.trim().isEmpty ? tr('Untitled playlist') : name.trim());
     playlists.add(playlist);
     return playlist;
   }

@@ -4,11 +4,13 @@ Each language follows Google's published guide for it, or the guide Google
 points to for that language. This page says which guide applies, what is
 checked by machine, and where Lumtub reads a guide in its own way. Rust has
 its own page, [RUST-STYLE.md](RUST-STYLE.md). The rules in
-[SECURE-CODING.md](SECURE-CODING.md) come first wherever they meet.
+[SECURE-CODING.md](SECURE-CODING.md) come first wherever they meet. What a change must
+meet beyond style (performance, network, design, usability and more) is in
+[REQUIREMENTS.md](REQUIREMENTS.md).
 
 | Code | Guide | Checked by |
 | --- | --- | --- |
-| Dart and Flutter (`lib/`, `test/`) | [Effective Dart][dart] | `flutter analyze` with `analysis_options.yaml` |
+| Dart and Flutter (`lib/`, `test/`) | [Effective Dart][dart] | `flutter analyze` and `dart format` with `analysis_options.yaml` |
 | Rust (`native/lumtub_core`, `website/`) | [Google's Rust style guide][rust] | rustfmt, clippy ([RUST-STYLE.md](RUST-STYLE.md)) |
 | C++ (Windows and Linux runners) | [Google C++ Style Guide][cpp] | clang-format with `.clang-format` |
 | Kotlin (`android/`) | [Android Kotlin style guide][kotlin] | review; `.editorconfig` for editors and ktlint |
@@ -33,17 +35,22 @@ its own page, [RUST-STYLE.md](RUST-STYLE.md). The rules in
   messages are in English. Chinese may follow the English, such as an
   interface name in brackets (`Shuffles the home feed (换一批)`), but never
   stands alone. Text in other languages appears only as data: what a
-  parser reads and the strings the interface shows (those live in
-  `assets/l10n`).
+  parser reads, test fixtures, licence texts as their authors wrote them,
+  and the strings the interface shows (those live in `assets/l10n`).
 - **Comments say what the code does not:** why, the limits, what outside
   data can do. Full sentences.
-- **No author or tool lines** in code, commits or pull requests.
+- **No author or tool lines** in code, commits or pull requests. Licence
+  and copyright notices that a licence requires stay.
+- **Line ends and paths.** Shell and Python files keep LF
+  (`.gitattributes`). Code never assumes a case-insensitive file system,
+  and paths shown to the user use the platform's separator.
 - **Outside data never crashes the app.** Check its type and size before use
   (SECURE-CODING rule 13); a wrong value is skipped or reported, not cast
   blindly.
 - **Performance is part of correctness.** Say the complexity of work that
-  grows with outside data and keep it linear or `n log n`; nothing slow or
-  blocking on the UI thread.
+  grows with outside data and keep it linear or `n log n`, or bound its
+  input and say why (REQUIREMENTS.md section 7); nothing slow or blocking
+  on the UI thread.
 
 ## Dart and Flutter
 
@@ -65,12 +72,15 @@ Checks fails on any finding.
   first, no positional `bool` parameters, super parameters, no redundant
   arguments or parentheses.
 - Doc comments use `///` and refer to names in scope with `[name]`.
-- **Formatting:** `dart format` is not run over the repository: its 80
-  columns would rewrap almost every file. Keep to the style of the file
-  being edited. New files may be formatted with
-  `dart format --page-width 160`.
-- Widgets: split a `build` method that no longer fits on a screen into
-  widgets, not helper methods; `const` constructors for widgets that take
+- **Formatting:** `dart format lib test`, 100 columns (`formatter` in
+  `analysis_options.yaml`); Checks fails on any change it would make. The
+  commit that formatted every file is in `.git-blame-ignore-revs`.
+- `BuildContext` is not used after an `await` unless `mounted` was checked
+  (`use_build_context_synchronously`, from `flutter_lints`).
+- `unawaited(...)` only says nothing waits: the future still handles its
+  own errors and is cancelled by its owner.
+- Widgets: split a `build` method by responsibility and rebuild boundary
+  into widgets, not helper methods; `const` constructors for widgets that take
   no changing values.
 
 ## C++ (Windows and Linux runners)
@@ -113,8 +123,19 @@ The Google Swift Style Guide: 100 columns, two-space indent,
 ## Python
 
 Google's Python style, checked by Ruff (`ruff.toml`) in Checks › Scripts:
-pycodestyle, pyflakes, bugbear, import order, naming, newer syntax and
-Ruff's own rules. Files are formatted with `ruff format`, 100 columns.
+pycodestyle, pyflakes, bugbear, import order, naming, newer syntax,
+shadowed builtins, catch-all excepts, a set of security checks (`exec`,
+`eval`, pickle, unsafe YAML, `shell=True`, weak hashes) and Ruff's own
+rules. Files are formatted with `ruff format`.
+
+Where Lumtub differs from Google's guide, on purpose:
+
+- **100 columns, not 80**, the same as the Rust and Kotlin code.
+- **No docstring or annotation checks** (Ruff `D`, `ANN`) and no type
+  checker yet: the Python is scripts and one runner, not a library.
+  Functions others call still get a docstring.
+- **`from module import name`** is allowed for standard library names;
+  Ruff does not check Google's modules-only import rule.
 
 - Scripts that read outside data (`.github/scripts`, the yt-dlp runner)
   check its type before use, like the Dart code.
@@ -145,10 +166,17 @@ actionlint (which runs ShellCheck) for every workflow step.
 
 Google's JavaScript style, checked by ESLint (`@eslint/js` recommended
 rules plus Google's: `const` by default, `let` when reassigned, never
-`var`; `===`; no thrown literals). ESLint's versions are locked in
-`.github/lint/package-lock.json`.
+`var`; one variable per declaration; braces except for a one-line `if`
+with no `else` (Google 4.1.1); `===`, with `== null` allowed; no thrown
+literals; no `eval`, `new Function` or changes to built-in prototypes).
+ESLint's versions are locked in `.github/lint/package-lock.json`.
+
+Google has frozen its JavaScript guide and points to its TypeScript guide.
+The license server is small and runs as plain JavaScript on Cloudflare, so
+it stays on the JavaScript guide; a rewrite would move it to TypeScript.
 
 - Two-space indent, single quotes, semicolons, as the files already are.
+  No formatter checks them yet.
 - The license server checks every field of a request before use and
   never trusts a webhook without its signature.
 

@@ -25,94 +25,191 @@ typedef Joined = ({String? path, String? error, List<(Duration, Duration)> cut})
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
   NativeCore._(this.library)
-      : tasteNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_taste_new'),
-        tasteFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_taste_free')),
-        tasteFree = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_taste_free'),
-        tasteAffinity = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_affinity'),
-        tasteMatch = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_match'),
-        tasteInterest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_interest'),
-        tasteTop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Bool, Uint32), Pointer<Utf8> Function(Pointer<Void>, bool, int)>('lumtub_taste_top'),
-        titleWords = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_title_words'),
-        recommend = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_recommend'),
-        formatPolicy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_format_policy'),
-        downloadFormats = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_formats'),
-        downloadChoose = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_choose'),
-        downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
-        updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
-        updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
-        updateLaunch = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_launch'),
-        updateVerify = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_verify'),
-        redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
-        subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
-        _captionLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_caption_lines'),
-        _searchSuggestions = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_search_suggestions'),
-        _relayVideo = library.lookupFunction<Pointer<Utf8> Function(Bool, Pointer<Uint8>, Size), Pointer<Utf8> Function(bool, Pointer<Uint8>, int)>('lumtub_relay_video'),
-        _vttPlan = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_plan'),
-        _vttCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_cues'),
-        _vttSplit = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_split'),
-        _captionTranslationLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_caption_translation_lines'),
-        _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
-        _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
-        _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
-        _channelLengths = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_lengths'),
-        _playlistMoves = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_playlist_moves'),
-        _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
-        _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
+      : tasteNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size),
+            Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_taste_new'),
+        tasteFinalizer =
+            NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_taste_free')),
+        tasteFree =
+            library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>(
+                'lumtub_taste_free'),
+        tasteAffinity = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size),
+            double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_affinity'),
+        tasteMatch = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size),
+            double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_match'),
+        tasteInterest = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_interest'),
+        tasteTop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Bool, Uint32),
+            Pointer<Utf8> Function(Pointer<Void>, bool, int)>('lumtub_taste_top'),
+        titleWords = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_title_words'),
+        recommend = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_recommend'),
+        formatPolicy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_format_policy'),
+        downloadFormats = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_formats'),
+        downloadChoose = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_choose'),
+        downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
+        updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
+        updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
+        updateLaunch = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_launch'),
+        updateVerify = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_verify'),
+        redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
+        subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
+        _captionLines = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_caption_lines'),
+        _searchSuggestions = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_search_suggestions'),
+        _relayVideo = library.lookupFunction<Pointer<Utf8> Function(Bool, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(bool, Pointer<Uint8>, int)>('lumtub_relay_video'),
+        _vttPlan = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_plan'),
+        _vttCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_cues'),
+        _vttSplit = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vtt_split'),
+        _captionTranslationLines = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(
+                Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_caption_translation_lines'),
+        _looksLike = library.lookupFunction<
+            Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+            bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
+        _resolved = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
+        _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
+        _channelLengths = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_channel_lengths'),
+        _playlistMoves = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_playlist_moves'),
+        _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
+        _quickInfo = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
         _castStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_cast_start'),
-        _castRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cast_register'),
-        _castLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_cast_log'),
-        _castExpired = library.lookupFunction<Bool Function(), bool Function()>('lumtub_cast_expired'),
-        _castRenew = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_cast_renew'),
-        hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
-        sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
-        dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
-        fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
-        _vaultSeal = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_seal'),
-        _vaultOpen = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_open'),
-        youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
-        spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
-        aiLabel = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_label'),
-        aiChannels = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_channels'),
-        youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
-        youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
-        liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
-        youtubeListing = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_listing'),
-        hwDecoders = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_hw_decoders'),
-        blockLists = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_in'),
-        blockListsTake = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_take'),
-        systemProxy = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_system_proxy'),
-        pacProxy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_pac_proxy'),
-        relayStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_relay_start'),
-        relayRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_relay_register'),
-        relayLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_relay_log'),
-        socksStart = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_socks_start'),
-        socksPort = library.lookupFunction<Uint16 Function(Pointer<Void>), int Function(Pointer<Void>)>('lumtub_socks_port'),
-        socksToken = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>), Pointer<Utf8> Function(Pointer<Void>)>('lumtub_socks_token'),
-        socksClose = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_socks_close'),
-        youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
-        titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
-        looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
-        isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
-        blocksNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_blocks_new'),
-        blocksFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_blocks_free')),
-        blocksMatch = library.lookupFunction<Bool Function(Pointer<Void>, Pointer<Uint8>, Size), bool Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_blocks_match'),
-        _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
-        danmakuNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_danmaku_new'),
-        danmakuAdd = library.lookupFunction<Uint32 Function(Pointer<Void>, Pointer<Uint8>, Size), int Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_danmaku_add'),
-        danmakuFrame = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Double, Bool), Pointer<Utf8> Function(Pointer<Void>, double, bool)>('lumtub_danmaku_frame'),
-        danmakuVisible = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Double, Double, Bool), Pointer<Utf8> Function(Pointer<Void>, double, double, bool)>('lumtub_danmaku_visible'),
-        danmakuFree = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_danmaku_free'),
-        _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
-        _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
-        _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close'),
-        _background = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_background'),
-        _efficiencyMode = library.lookupFunction<Bool Function(Bool), bool Function(bool)>('lumtub_efficiency_mode');
+        _castRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cast_register'),
+        _castLog = library
+            .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_cast_log'),
+        _castExpired =
+            library.lookupFunction<Bool Function(), bool Function()>('lumtub_cast_expired'),
+        _castRenew = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size),
+            int Function(Pointer<Uint8>, int)>('lumtub_cast_renew'),
+        hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
+        sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
+        dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
+        fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
+        _vaultSeal = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_seal'),
+        _vaultOpen = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_open'),
+        youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
+        spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
+        aiLabel = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_label'),
+        aiChannels = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_channels'),
+        youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
+        youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
+        liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
+        youtubeListing = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_listing'),
+        hwDecoders = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
+            'lumtub_hw_decoders'),
+        blockLists = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_in'),
+        blockListsTake = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_take'),
+        systemProxy = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
+            'lumtub_system_proxy'),
+        pacProxy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_pac_proxy'),
+        relayStart =
+            library.lookupFunction<Uint16 Function(), int Function()>('lumtub_relay_start'),
+        relayRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_relay_register'),
+        relayLog = library
+            .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_relay_log'),
+        socksStart = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size),
+            Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_socks_start'),
+        socksPort =
+            library.lookupFunction<Uint16 Function(Pointer<Void>), int Function(Pointer<Void>)>(
+                'lumtub_socks_port'),
+        socksToken = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>),
+            Pointer<Utf8> Function(Pointer<Void>)>('lumtub_socks_token'),
+        socksClose =
+            library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>(
+                'lumtub_socks_close'),
+        youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+            Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
+        titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size),
+            int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
+        looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size),
+            bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
+        isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size),
+            bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
+        blocksNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size),
+            Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_blocks_new'),
+        blocksFinalizer =
+            NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_blocks_free')),
+        blocksMatch = library.lookupFunction<Bool Function(Pointer<Void>, Pointer<Uint8>, Size),
+            bool Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_blocks_match'),
+        _stringFree =
+            library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>(
+                'lumtub_string_free'),
+        danmakuNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size),
+            Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_danmaku_new'),
+        danmakuAdd = library.lookupFunction<Uint32 Function(Pointer<Void>, Pointer<Uint8>, Size),
+            int Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_danmaku_add'),
+        danmakuFrame = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Double, Bool),
+            Pointer<Utf8> Function(Pointer<Void>, double, bool)>('lumtub_danmaku_frame'),
+        danmakuVisible = library.lookupFunction<
+            Pointer<Utf8> Function(Pointer<Void>, Double, Double, Bool),
+            Pointer<Utf8> Function(Pointer<Void>, double, double, bool)>('lumtub_danmaku_visible'),
+        danmakuFree =
+            library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>(
+                'lumtub_danmaku_free'),
+        _adopt =
+            library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
+        _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>(
+            'lumtub_tree_kill'),
+        _close =
+            library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close'),
+        _background =
+            library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>(
+                'lumtub_tree_background'),
+        _efficiencyMode = library
+            .lookupFunction<Bool Function(Bool), bool Function(bool)>('lumtub_efficiency_mode');
 
   /// The loaded core, for bindings kept beside their own feature.
   final DynamicLibrary library;
   final Pointer<Void> Function(Pointer<Uint8> json, int length) tasteNew;
+
   /// Frees a taste once Dart no longer holds it.
   final NativeFinalizer tasteFinalizer;
+
   /// Frees a taste at once; the finalizer must be detached first.
   final void Function(Pointer<Void> taste) tasteFree;
   final double Function(Pointer<Void> taste, Pointer<Uint8> key, int length) tasteAffinity;
@@ -130,10 +227,13 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateLaunch;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateVerify;
   final Pointer<Utf8> Function(Pointer<Uint8> message, int length) redact;
+
   /// A WebVTT or SRT file's lines as JSON `[[start_ms, end_ms, "text"], …]`.
   final Pointer<Utf8> Function(Pointer<Uint8> source, int length) subtitleCues;
   final Pointer<Utf8> Function(Pointer<Uint8> source, int length) _captionLines;
-  final Pointer<Utf8> Function(Pointer<Uint8> original, int length, Pointer<Uint8> translated, int translatedLength) _captionTranslationLines;
+  final Pointer<Utf8> Function(
+          Pointer<Uint8> original, int length, Pointer<Uint8> translated, int translatedLength)
+      _captionTranslationLines;
 
   /// The lines automatic captions [vtt] show in, as JSON
   /// `[[start_ms, end_ms, sentence, "text"], …]` (native/lumtub_core/src/caption_lines.rs).
@@ -141,8 +241,8 @@ class NativeCore {
 
   /// YouTube's translation [translated] of automatic captions [original] in
   /// the original's lines, as [captionLines] gives.
-  String? captionTranslationLines(String original, String translated) =>
-      take(withText(original, (o, ol) => withText(translated, (t, tl) => _captionTranslationLines(o, ol, t, tl))));
+  String? captionTranslationLines(String original, String translated) => take(withText(original,
+      (o, ol) => withText(translated, (t, tl) => _captionTranslationLines(o, ol, t, tl))));
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) _searchSuggestions;
 
   /// The suggestions in an answer of YouTube's completion service, as a
@@ -155,7 +255,8 @@ class NativeCore {
   /// JSON `{"video": [[address, codec, height, bitrate, container, video only]…],
   /// "audio", "muxed", "live", "proxyUrl"?, "error"?}`; null when it is not
   /// a JSON object (native/lumtub_core/src/relay_video.rs).
-  String? relayVideo(bool invidious, List<int> body) => take(withBytes(body, (b, l) => _relayVideo(invidious, b, l)));
+  String? relayVideo(bool invidious, List<int> body) =>
+      take(withBytes(body, (b, l) => _relayVideo(invidious, b, l)));
 
   final Pointer<Utf8> Function(Pointer<Uint8> vtt, int length) _vttPlan;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _vttCues;
@@ -172,11 +273,14 @@ class NativeCore {
   /// Translations cut like the lines they go beside, for [json]
   /// `[[text, [weight…]]…]`, as JSON `[[piece…]…]`.
   String? vttSplit(String json) => take(withText(json, _vttSplit));
-  final bool Function(Pointer<Uint8> source, int length, Pointer<Uint8> target, int targetLength) _looksLike;
+  final bool Function(Pointer<Uint8> source, int length, Pointer<Uint8> target, int targetLength)
+      _looksLike;
 
   /// Whether [source] looks to be in [target] already, from its script.
-  bool looksLike(String source, String target) => withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
-  final Pointer<Utf8> Function(Pointer<Uint8> info, int length, Pointer<Uint8> ask, int askLength) _resolved;
+  bool looksLike(String source, String target) =>
+      withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
+  final Pointer<Utf8> Function(Pointer<Uint8> info, int length, Pointer<Uint8> ask, int askLength)
+      _resolved;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _edl;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _playlistMoves;
 
@@ -187,7 +291,8 @@ class NativeCore {
 
   /// What yt-dlp's answer [info] offers for the rules in [ask], as JSON
   /// (native/lumtub_core/src/resolved.rs).
-  String? resolved(String info, String ask) => take(withText(info, (i, il) => withText(ask, (a, al) => _resolved(i, il, a, al))));
+  String? resolved(String info, String ask) =>
+      take(withText(info, (i, il) => withText(ask, (a, al) => _resolved(i, il, a, al))));
 
   /// An mpv EDL address playing [addresses] as one video.
   String? edl(List<String> addresses) => take(withText(jsonEncode(addresses), _edl));
@@ -196,21 +301,30 @@ class NativeCore {
   /// playlist's entries ([current]: video id and setVideoId, in YouTube's
   /// order) into the order of [wanted], moving the fewest entries; at most
   /// [perRequest] moves in each list.
-  List<List<Object?>> playlistMoves(List<(String video, String set)> current, List<String> wanted, {int perRequest = 100}) {
+  List<List<Object?>> playlistMoves(List<(String video, String set)> current, List<String> wanted,
+      {int perRequest = 100}) {
     final answer = take(withText(
       jsonEncode({
-        'current': [for (final (video, set) in current) {'video': video, 'set': set}],
+        'current': [
+          for (final (video, set) in current) {'video': video, 'set': set}
+        ],
         'wanted': wanted,
         'per_request': perRequest,
       }),
       _playlistMoves,
     ));
     final lists = answer == null ? null : jsonDecode(answer);
-    return [if (lists is List) for (final list in lists) if (list is List) list];
+    return [
+      if (lists is List)
+        for (final list in lists)
+          if (list is List) list
+    ];
   }
 
   final Pointer<Utf8> Function(Pointer<Uint8> id, int length) _quickRequest;
-  final Pointer<Utf8> Function(Pointer<Uint8> player, int playerLength, Pointer<Uint8> settings, int settingsLength) _quickInfo;
+  final Pointer<Utf8> Function(
+          Pointer<Uint8> player, int playerLength, Pointer<Uint8> settings, int settingsLength)
+      _quickInfo;
 
   /// The `/player` request (`body` and `headers`) for a quick start of
   /// [videoId] (native/lumtub_core/src/quick.rs).
@@ -219,7 +333,8 @@ class NativeCore {
   /// yt-dlp's answer, as playback reads it, for the `/player` answer
   /// [player] and the format policy [settings]; null when the video cannot
   /// be started that way.
-  String? quickInfo(String player, String settings) => take(withText(player, (p, pl) => withText(settings, (s, sl) => _quickInfo(p, pl, s, sl))));
+  String? quickInfo(String player, String settings) =>
+      take(withText(player, (p, pl) => withText(settings, (s, sl) => _quickInfo(p, pl, s, sl))));
 
   final int Function() _castStart;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _castRegister;
@@ -232,8 +347,11 @@ class NativeCore {
   bool castExpired() => _castExpired();
 
   /// Replaces cast stream addresses, `{old: new}`; how many streams took one.
-  int castRenew(Map<String, String> addresses) =>
-      withText(jsonEncode([for (final e in addresses.entries) {'old': e.key, 'new': e.value}]), _castRenew);
+  int castRenew(Map<String, String> addresses) => withText(
+      jsonEncode([
+        for (final e in addresses.entries) {'old': e.key, 'new': e.value}
+      ]),
+      _castRenew);
 
   /// Starts the server that streams videos to TVs on the local network
   /// (native/lumtub_core/src/cast.rs) once; its port, or 0.
@@ -246,6 +364,7 @@ class NativeCore {
 
   /// The cast server's log lines since the last call, as a JSON array.
   String? castLog() => take(_castLog());
+
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
@@ -261,68 +380,93 @@ class NativeCore {
 
   /// What [vaultSeal] sealed into [hex]; null when it does not open.
   String? vaultOpen(String hex) => take(withText(hex, _vaultOpen));
+
   /// Related videos and localized text of a YouTube `/next` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
+
   /// The spoken language and own title of a YouTube `/player` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) spokenLanguage;
+
   /// Whether a YouTube `/next` response labels the video as made with AI.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) aiLabel;
+
   /// The channel ids and handles of KillSlop's AI channel list.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) aiChannels;
+
   /// A page of a YouTube comments response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeComments;
+
   /// Posts of a browse response or a posts tab's HTML.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubePosts;
+
   /// Chat items of yt-dlp `live_chat` lines.
   final Pointer<Utf8> Function(Pointer<Uint8> lines, int length) liveChat;
+
   /// Entries and next token of a YouTube search or browse response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeListing;
+
   /// The graphics adapter and the tallest picture it decodes per codec.
   final Pointer<Utf8> Function() hwDecoders;
+
   /// The block lists in use, as JSON `{version, built, downloaded, lists}`:
   /// a newer signed download in the folder of `{folder}`, else those under
   /// lists/ the library was built with (native/lumtub_core/src/lists_update.rs).
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) blockLists;
+
   /// Checks a downloaded lists.json `{file, signature, folder}` and keeps it
   /// when newer: `{version, lists, records, newer}` or `{error}`.
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) blockListsTake;
+
   /// Windows' proxy setting as JSON `{enabled, server, pac}`; null elsewhere.
   final Pointer<Utf8> Function() systemProxy;
+
   /// The proxy a PAC script names, as JSON `{proxy}` or `{error}`; blocks
   /// while the script is fetched.
   final Pointer<Utf8> Function(Pointer<Uint8> url, int length) pacProxy;
+
   /// Starts the chunked relay (native/lumtub_core/src/relay.rs) once; its
   /// port, or 0.
   final int Function() relayStart;
+
   /// The relay's loopback address for a stream, or null.
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) relayRegister;
+
   /// The relay's log lines since the last call, as a JSON array.
   final Pointer<Utf8> Function() relayLog;
+
   /// Starts a SOCKS bridge (native/lumtub_core/src/socks.rs); null when the
   /// URL is not a SOCKS proxy or it cannot listen.
   final Pointer<Void> Function(Pointer<Uint8> url, int length) socksStart;
   final int Function(Pointer<Void> bridge) socksPort;
+
   /// The password a bridge asks its clients for.
   final Pointer<Utf8> Function(Pointer<Void> bridge) socksToken;
+
   /// Stops a bridge and frees it.
   final void Function(Pointer<Void> bridge) socksClose;
+
   /// The comment section token of a community post's HTML.
   final Pointer<Utf8> Function(Pointer<Uint8> html, int length) youtubePostComments;
+
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;
   final bool Function(Pointer<Uint8> json, int length) isShort;
   final Pointer<Void> Function(Pointer<Uint8> json, int length) blocksNew;
+
   /// Frees block lists once Dart no longer holds them.
   final NativeFinalizer blocksFinalizer;
   final bool Function(Pointer<Void> blocks, Pointer<Uint8> json, int length) blocksMatch;
   final void Function(Pointer<Utf8>) _stringFree;
+
   /// 弹幕 laid out in Rust (see native/lumtub_core/src/danmaku.rs).
   final Pointer<Void> Function(Pointer<Uint8> settings, int length) danmakuNew;
   final int Function(Pointer<Void> danmaku, Pointer<Uint8> messages, int length) danmakuAdd;
   final Pointer<Utf8> Function(Pointer<Void> danmaku, double nowMs, bool forget) danmakuFrame;
+
   /// The messages on screen at some moment from fromMs to toMs.
-  final Pointer<Utf8> Function(Pointer<Void> danmaku, double fromMs, double toMs, bool forget) danmakuVisible;
+  final Pointer<Utf8> Function(Pointer<Void> danmaku, double fromMs, double toMs, bool forget)
+      danmakuVisible;
   final void Function(Pointer<Void> danmaku) danmakuFree;
   final int Function(int pid) _adopt;
   final bool Function(int job, int pid) _background;
@@ -371,11 +515,14 @@ class NativeCore {
   /// then the take) as one WAV file at [out]: how many seconds it is, or
   /// why it could not. It reads and writes files, so run it on another
   /// isolate.
-  static ({double? seconds, String? error}) micJoin(List<Map<String, Object>> parts, String out, {double gap = 0.8}) {
+  static ({double? seconds, String? error}) micJoin(List<Map<String, Object>> parts, String out,
+      {double gap = 0.8}) {
     final core = instance;
     if (core == null) return (seconds: null, error: 'the Lumtub core is missing');
     final call = core._micJoin;
-    final answer = jsonDecode(core.take(core.withText(jsonEncode({'parts': parts, 'gap': gap, 'out': out}), call)) ?? '{}') as Map;
+    final answer = jsonDecode(
+        core.take(core.withText(jsonEncode({'parts': parts, 'gap': gap, 'out': out}), call)) ??
+            '{}') as Map;
     return (seconds: (answer['seconds'] as num?)?.toDouble(), error: answer['error']?.toString());
   }
 
@@ -406,17 +553,24 @@ class NativeCore {
 
   static String? _path;
 
-  static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
+  static String get fileName => Platform.isWindows
+      ? 'lumtub_core.dll'
+      : Platform.isMacOS
+          ? 'liblumtub_core.dylib'
+          : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
-  static String get missingMessage => tr('This install is incomplete: {0} is missing, so recommendations and blocking are off and quality uses the defaults. Please reinstall Lumtub.', [fileName]);
+  static String get missingMessage => tr(
+      'This install is incomplete: {0} is missing, so recommendations and blocking are off and quality uses the defaults. Please reinstall Lumtub.',
+      [fileName]);
 
   static NativeCore? _load() {
     // Android loads it by name from the APK's lib/<abi>/.
     if (Platform.isAndroid) {
       try {
         final core = NativeCore._(DynamicLibrary.open(fileName));
-        AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        AppLog.nativeRedact =
+            (message) => core.take(core.withText(message, core.redact)) ?? message;
         return core;
       } catch (e) {
         logWarn('Could not load $fileName: $e');
@@ -429,15 +583,18 @@ class NativeCore {
       // The Linux bundle keeps its libraries in lib/.
       if (Platform.isLinux) '${File(Platform.resolvedExecutable).parent.path}/lib/$fileName',
       // The macOS app keeps it in Contents/Frameworks.
-      if (Platform.isMacOS) '${File(Platform.resolvedExecutable).parent.parent.path}/Frameworks/$fileName',
+      if (Platform.isMacOS)
+        '${File(Platform.resolvedExecutable).parent.parent.path}/Frameworks/$fileName',
       // The iOS app keeps it as a framework in Frameworks, next to the program.
-      if (Platform.isIOS) '${File(Platform.resolvedExecutable).parent.path}/Frameworks/LumtubCore.framework/LumtubCore',
+      if (Platform.isIOS)
+        '${File(Platform.resolvedExecutable).parent.path}/Frameworks/LumtubCore.framework/LumtubCore',
     ];
     for (final path in paths) {
       if (!File(path).existsSync()) continue;
       try {
         final core = NativeCore._(DynamicLibrary.open(path));
-        AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        AppLog.nativeRedact =
+            (message) => core.take(core.withText(message, core.redact)) ?? message;
         _path = File(path).absolute.path;
         return core;
       } catch (e) {
@@ -467,7 +624,8 @@ class NativeCore {
     final core = instance;
     if (core == null) return null;
     try {
-      return (core._processCpu ??= core.library.lookupFunction<Uint64 Function(), int Function()>('lumtub_process_cpu_ms'))();
+      return (core._processCpu ??= core.library
+          .lookupFunction<Uint64 Function(), int Function()>('lumtub_process_cpu_ms'))();
     } on ArgumentError {
       return null;
     }
@@ -481,8 +639,12 @@ class NativeCore {
   /// rite. Null when nothing changes or without a core that has it.
   String? churchWords(String text, {required int variant, String original = ''}) {
     try {
-      final call = _churchWords ??= library.lookupFunction<Pointer<Utf8> Function(Uint32, Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_church_words');
-      return take(withText(text, (t, tl) => withText(original, (o, ol) => call(variant, t, tl, o, ol))));
+      final call = _churchWords ??= library.lookupFunction<
+          Pointer<Utf8> Function(Uint32, Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(
+              int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_church_words');
+      return take(
+          withText(text, (t, tl) => withText(original, (o, ol) => call(variant, t, tl, o, ol))));
     } on ArgumentError {
       return null;
     }
@@ -500,17 +662,24 @@ class NativeCore {
     final core = instance;
     if (core == null) return (path: null, error: 'lumtub_core is missing', cut: none);
     try {
-      final call = core._join ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
+      final call = core._join ??= core.library.lookupFunction<
+          Pointer<Utf8> Function(Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
       final answer = core.take(core.withText(jsonEncode(request), call));
       final map = answer == null ? null : jsonDecode(answer);
       if (map is Map && map['path'] is String) {
         final cut = [
           for (final c in (map['cut'] as List? ?? const []).whereType<List<Object?>>())
-            if (c case [final int from, final int to]) (Duration(milliseconds: from), Duration(milliseconds: to)),
+            if (c case [final int from, final int to])
+              (Duration(milliseconds: from), Duration(milliseconds: to)),
         ];
         return (path: map['path'] as String, error: null, cut: cut);
       }
-      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined', cut: none);
+      return (
+        path: null,
+        error: map is Map ? '${map['error']}' : 'the files could not be joined',
+        cut: none
+      );
     } on ArgumentError {
       return (path: null, error: 'lumtub_core is too old to join files', cut: none);
     } on FormatException {
@@ -521,15 +690,25 @@ class NativeCore {
   /// [audio] (WebM or fragmented MP4) cut into parts of about [every],
   /// named [stem] plus a number, by copying whole clusters or fragments;
   /// each part's file and start, or why not. Run it on another isolate.
-  static ({List<({String path, double start})>? parts, String? error}) cutAudio(String audio, String stem, Duration every) {
+  static ({List<({String path, double start})>? parts, String? error}) cutAudio(
+      String audio, String stem, Duration every) {
     final core = instance;
     if (core == null) return (parts: null, error: 'lumtub_core is missing');
     try {
-      final call = core._cutAudio ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cut_audio');
-      final answer = core.take(core.withText(jsonEncode({'input': audio, 'stem': stem, 'every': every.inMilliseconds / 1000}), call));
+      final call = core._cutAudio ??= core.library.lookupFunction<
+          Pointer<Utf8> Function(Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cut_audio');
+      final answer = core.take(core.withText(
+          jsonEncode({'input': audio, 'stem': stem, 'every': every.inMilliseconds / 1000}), call));
       final map = answer == null ? null : jsonDecode(answer);
       if (map is Map && map['parts'] is List) {
-        return (parts: [for (final p in (map['parts'] as List).cast<Map<String, dynamic>>()) (path: p['path'] as String, start: (p['start'] as num).toDouble())], error: null);
+        return (
+          parts: [
+            for (final p in (map['parts'] as List).cast<Map<String, dynamic>>())
+              (path: p['path'] as String, start: (p['start'] as num).toDouble())
+          ],
+          error: null
+        );
       }
       return (parts: null, error: map is Map ? '${map['error']}' : 'the audio could not be cut');
     } on ArgumentError {
@@ -543,7 +722,8 @@ class NativeCore {
   static List<TlsSeen> tlsSeen() {
     final core = instance;
     if (core == null || !core.library.providesSymbol('lumtub_tls_seen')) return const [];
-    final seen = core.library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_tls_seen');
+    final seen = core.library
+        .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_tls_seen');
     try {
       final list = jsonDecode(core.take(seen()) ?? '[]') as List;
       return [for (final entry in list.whereType<Map<Object?, Object?>>()) TlsSeen.fromJson(entry)];
@@ -557,7 +737,8 @@ class NativeCore {
   static String? rootsPem(String roots) {
     final core = instance;
     if (core == null || !core.library.providesSymbol('lumtub_roots_pem')) return null;
-    final pem = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_roots_pem');
+    final pem = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_roots_pem');
     return core.withBytes(utf8.encode(roots), (p, n) => core.take(pem(p, n)));
   }
 
@@ -576,11 +757,25 @@ class NativeCore {
   /// Starts recording a live stream's [video] and [audio] addresses (of
   /// numbered fragments) into `stem.live-video.part` and
   /// `stem.live-audio.part`; the recording's id, or why not.
-  ({int? id, String? error}) recordStart({required String video, required String audio, required String stem, String? userAgent, String? proxy}) {
-    Map<String, Object?> target(String url) => {'url': url, 'size': 0, if (userAgent != null) 'user_agent': userAgent, if (proxy != null) 'proxy': proxy, 'live': 'record'};
+  ({int? id, String? error}) recordStart(
+      {required String video,
+      required String audio,
+      required String stem,
+      String? userAgent,
+      String? proxy}) {
+    Map<String, Object?> target(String url) => {
+          'url': url,
+          'size': 0,
+          if (userAgent != null) 'user_agent': userAgent,
+          if (proxy != null) 'proxy': proxy,
+          'live': 'record'
+        };
     final call = _recordStart;
-    final map = _answer(take(withText(jsonEncode({'video': target(video), 'audio': target(audio), 'stem': stem}), call)));
-    return map['id'] is int ? (id: map['id'] as int, error: null) : (id: null, error: '${map['error'] ?? 'the recording could not start'}');
+    final map = _answer(take(withText(
+        jsonEncode({'video': target(video), 'audio': target(audio), 'stem': stem}), call)));
+    return map['id'] is int
+        ? (id: map['id'] as int, error: null)
+        : (id: null, error: '${map['error'] ?? 'the recording could not start'}');
   }
 
   /// How recording [id] goes: `bytes`, `seconds`, `running`, `renew` (an
@@ -606,22 +801,37 @@ class NativeCore {
     final error = core._answer(core.take(call(id)))['error'];
     return error == null ? null : '$error';
   }
+
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _cutAudio;
   // Looked up once, when first used: a core without them still loads.
-  late final _setLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_set_language');
-  late final _micStart = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_mic_start');
-  late final _micStop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_stop');
-  late final _micJoin = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_join');
-  late final _ankiPackage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_anki_package');
-  late final _recordStart = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
-  late final _recordState = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_state');
-  late final _recordRenew = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
-  late final _recordStop = library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>('lumtub_record_stop');
+  late final _setLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_set_language');
+  late final _micStart = library
+      .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_mic_start');
+  late final _micStop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_stop');
+  late final _micJoin = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_mic_join');
+  late final _ankiPackage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_anki_package');
+  late final _recordStart = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_record_start');
+  late final _recordState =
+      library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>(
+          'lumtub_record_state');
+  late final _recordRenew = library.lookupFunction<Bool Function(Pointer<Uint8>, Size),
+      bool Function(Pointer<Uint8>, int)>('lumtub_record_renew');
+  late final _recordStop =
+      library.lookupFunction<Pointer<Utf8> Function(Uint64), Pointer<Utf8> Function(int)>(
+          'lumtub_record_stop');
+
   /// For learning/video_words.dart, on its own isolate.
-  late final wordCoverage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_word_coverage');
+  late final wordCoverage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_word_coverage');
 
   /// Calls [call] with [text] as UTF-8 in native memory.
-  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
+  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) =>
+      withBytes(utf8.encode(text), call);
 
   /// Calls [call] with UTF-8 [bytes] in native memory, such as a response
   /// body as it came, so a megabyte page is not decoded and encoded again.
@@ -658,9 +868,12 @@ class ProcessTree implements Process {
   /// Starts [executable] like [Process.start] and puts it in its own tree.
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
-  static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
+  static Future<Process> start(String executable, List<String> arguments,
+      {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
     if (isYtDlp(executable)) arguments = [...ytDlpIsolation, ...familyArguments, ...arguments];
-    if (IosPython.runs(executable)) return IosPython.current!.start(executable, arguments, environment);
+    if (IosPython.runs(executable)) {
+      return IosPython.current!.start(executable, arguments, environment);
+    }
     // Its own HTTPS follows 证书来源 and 抗量子加密 (lib/yt_dlp_tls.dart).
     if (isYtDlp(executable)) {
       arguments = YtDlpTls.withPlugin(arguments, ytDlpIsolation.length);
@@ -668,13 +881,22 @@ class ProcessTree implements Process {
       // On computers the core's QuickJS solves YouTube's challenges; Deno,
       // still passed with --js-runtimes, takes over where it cannot.
       if (JsChallengePlugin.desktop case (final folder, final core)) {
-        arguments = [...arguments.take(ytDlpIsolation.length), '--plugin-dirs', folder, ...arguments.skip(ytDlpIsolation.length)];
+        arguments = [
+          ...arguments.take(ytDlpIsolation.length),
+          '--plugin-dirs',
+          folder,
+          ...arguments.skip(ytDlpIsolation.length)
+        ];
         environment = {...environment, 'LUMTUB_CORE': core};
       }
     }
     (arguments, environment) = NetworkProxy.hideCredentials(arguments, environment);
-    if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
-    final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);
+    if (AndroidPython.runs(executable)) {
+      (executable, arguments, environment) =
+          AndroidPython.current!.command(executable, arguments, environment);
+    }
+    final process = await Process.start(executable, arguments,
+        environment: environment, workingDirectory: workingDirectory);
     final tree = adopt(process);
     if (background && tree is ProcessTree) NativeCore.instance?._background(tree._job, process.pid);
     return tree;
@@ -702,7 +924,8 @@ class ProcessTree implements Process {
   }
 
   /// The family a bot check switched to, while it holds.
-  static String? get switchedFamily => _family != null && DateTime.now().isBefore(_familyUntil) ? _family : null;
+  static String? get switchedFamily =>
+      _family != null && DateTime.now().isBefore(_familyUntil) ? _family : null;
 
   /// What each yt-dlp run is told about the address family.
   static List<String> get familyArguments => switch (switchedFamily) {
@@ -758,7 +981,8 @@ class ProcessTree implements Process {
 
 /// The key exchange one host's TLS last agreed on.
 class TlsSeen {
-  const TlsSeen({required this.host, required this.group, required this.postQuantum, required this.at});
+  const TlsSeen(
+      {required this.host, required this.group, required this.postQuantum, required this.at});
 
   factory TlsSeen.fromJson(Map<Object?, Object?> json) => TlsSeen(
         host: json['host']?.toString() ?? '',
@@ -768,6 +992,7 @@ class TlsSeen {
       );
 
   final String host;
+
   /// X25519MLKEM768, X25519, P-256… or TLS 1.2, which has no post-quantum exchange.
   final String group;
   final bool postQuantum;

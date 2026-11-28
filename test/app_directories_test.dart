@@ -26,7 +26,8 @@ void main() {
     final temp = await Directory.systemTemp.createTemp('lumtub_atomic');
     addTearDown(() => temp.delete(recursive: true));
     final file = File('${temp.path}${Platform.pathSeparator}known.json');
-    await Future.wait([for (var i = 0; i < 20; i++) writeFileAtomic(file, '{"n":$i,"pad":"${'x' * 100000}"}')]);
+    await Future.wait(
+        [for (var i = 0; i < 20; i++) writeFileAtomic(file, '{"n":$i,"pad":"${'x' * 100000}"}')]);
     expect(await file.readAsString(), startsWith('{"n":19,'));
     expect(temp.listSync().map((e) => e.uri.pathSegments.last), ['known.json']);
   });
@@ -35,10 +36,14 @@ void main() {
     final temp = await Directory.systemTemp.createTemp('lumtub_dirs');
     addTearDown(() => temp.delete(recursive: true));
     final sep = Platform.pathSeparator;
-    final portable = await AppDirectories.create(environment: {'LUMTUB_HOME': '${temp.path}${sep}userdata', 'LOCALAPPDATA': '${temp.path}${sep}local'});
+    final portable = await AppDirectories.create(environment: {
+      'LUMTUB_HOME': '${temp.path}${sep}userdata',
+      'LOCALAPPDATA': '${temp.path}${sep}local'
+    });
     expect(portable.logs.path, '${temp.path}${sep}userdata${sep}logs');
     expect(portable.logs.existsSync(), isTrue);
-    final installed = await AppDirectories.create(environment: {'LOCALAPPDATA': '${temp.path}${sep}local'});
+    final installed =
+        await AppDirectories.create(environment: {'LOCALAPPDATA': '${temp.path}${sep}local'});
     expect(installed.root.path, '${temp.path}${sep}local${sep}Lumtub');
   });
 }

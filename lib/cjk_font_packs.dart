@@ -17,7 +17,11 @@ class CjkFontPacks {
   CjkFontPacks._();
 
   /// The pack for each set of character forms (see cjkFormOf).
-  static const ids = {'ja': 'fonts-noto-sans-jp', 'ko': 'fonts-noto-sans-kr', 'zh-Hant': 'fonts-noto-sans-tc'};
+  static const ids = {
+    'ja': 'fonts-noto-sans-jp',
+    'ko': 'fonts-noto-sans-kr',
+    'zh-Hant': 'fonts-noto-sans-tc'
+  };
 
   /// The family inside each pack's font, under which Flutter loads it too.
   static const families = {'ja': 'Noto Sans JP', 'ko': 'Noto Sans KR', 'zh-Hant': 'Noto Sans TC'};
@@ -44,7 +48,8 @@ class CjkFontPacks {
     if (_known[forms] case final known?) return known;
     var has = true;
     try {
-      final result = await Process.run('fc-list', [':lang=${_fontconfigLanguages[forms]}', 'family']);
+      final result =
+          await Process.run('fc-list', [':lang=${_fontconfigLanguages[forms]}', 'family']);
       has = result.exitCode != 0 || '${result.stdout}'.trim().isNotEmpty;
     } catch (e) {
       logDebug(() => 'Could not ask fontconfig for $forms fonts: $e');

@@ -109,13 +109,17 @@ class _SlowCastDevice extends _FakeCastDevice {
 void main() {
   group('DLNA parsing', () {
     test('reads an SSDP reply', () {
-      final found = parseSsdpResponse('HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nLOCATION: http://192.168.1.20:8080/desc.xml\r\nST: urn:schemas-upnp-org:device:MediaRenderer:1\r\nUSN: uuid:1234::urn:schemas-upnp-org:device:MediaRenderer:1\r\n\r\n');
+      final found = parseSsdpResponse(
+          'HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nLOCATION: http://192.168.1.20:8080/desc.xml\r\nST: urn:schemas-upnp-org:device:MediaRenderer:1\r\nUSN: uuid:1234::urn:schemas-upnp-org:device:MediaRenderer:1\r\n\r\n');
       expect(found?.location.toString(), 'http://192.168.1.20:8080/desc.xml');
       expect(found?.st, contains('MediaRenderer'));
       expect(found?.usn, startsWith('uuid:1234'));
       expect(parseSsdpResponse('HTTP/1.1 500 Error\r\n\r\n'), isNull);
       expect(parseSsdpResponse('HTTP/1.1 200 OK\r\nST: x\r\n\r\n'), isNull);
-      expect(ssdpSearchRequest(), allOf(contains('M-SEARCH * HTTP/1.1'), contains('ST: $mediaRendererType'), endsWith('\r\n\r\n')));
+      expect(
+          ssdpSearchRequest(),
+          allOf(contains('M-SEARCH * HTTP/1.1'), contains('ST: $mediaRendererType'),
+              endsWith('\r\n\r\n')));
     });
 
     test('asks a device only at the address it answered from', () {
@@ -138,7 +142,8 @@ void main() {
       final client = HttpClient();
       addTearDown(() => client.close(force: true));
       Future<String> read(int size) async {
-        final request = await client.getUrl(Uri.parse('http://127.0.0.1:${server.port}/?size=$size'));
+        final request =
+            await client.getUrl(Uri.parse('http://127.0.0.1:${server.port}/?size=$size'));
         return readDeviceReply(await request.close(), limit: 1000);
       }
 
@@ -147,30 +152,46 @@ void main() {
     });
 
     test('reads a device description', () {
-      final d = parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml'));
+      final d =
+          parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml'));
       expect(d.name, 'Living Room & TV');
       expect(d.udn, 'uuid:1234-abcd');
       expect(d.services, hasLength(2));
       expect(d.avTransport?.type, 'urn:schemas-upnp-org:service:AVTransport:1');
-      expect(d.avTransport?.controlUrl.toString(), 'http://192.168.1.20:8080/upnp/control/AVTransport');
+      expect(d.avTransport?.controlUrl.toString(),
+          'http://192.168.1.20:8080/upnp/control/AVTransport');
       // Without URLBase the description's own address is the base.
-      final relative = parseDeviceDescription(_description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), ''), Uri.parse('http://10.0.0.5:49152/dev/desc.xml'));
-      expect(relative.avTransport?.controlUrl.toString(), 'http://10.0.0.5:49152/upnp/control/AVTransport');
+      final relative = parseDeviceDescription(
+          _description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), ''),
+          Uri.parse('http://10.0.0.5:49152/dev/desc.xml'));
+      expect(relative.avTransport?.controlUrl.toString(),
+          'http://10.0.0.5:49152/upnp/control/AVTransport');
       // Lebo (乐播) receivers give a bare "_urn:…" path.
       final lebo = parseDeviceDescription(
-          _description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), '').replaceAll('/upnp/control/AVTransport', '_urn:schemas-upnp-org:service:AVTransport_control'),
+          _description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), '').replaceAll(
+              '/upnp/control/AVTransport', '_urn:schemas-upnp-org:service:AVTransport_control'),
           Uri.parse('http://10.0.0.6:49152/description.xml'));
-      expect(lebo.avTransport?.controlUrl.toString(), 'http://10.0.0.6:49152/_urn:schemas-upnp-org:service:AVTransport_control');
+      expect(lebo.avTransport?.controlUrl.toString(),
+          'http://10.0.0.6:49152/_urn:schemas-upnp-org:service:AVTransport_control');
     });
 
     test('keeps the cast format chosen for each device', () {
-      final saved = AppPreferences.fromJson(jsonDecode(jsonEncode(const AppPreferences(castFormats: {'uuid:tv': 'mp4', 'uuid:phone': 'hls'}).toJson())) as Map<String, dynamic>);
+      final saved = AppPreferences.fromJson(jsonDecode(jsonEncode(
+              const AppPreferences(castFormats: {'uuid:tv': 'mp4', 'uuid:phone': 'hls'}).toJson()))
+          as Map<String, dynamic>);
       expect(saved.castFormats, {'uuid:tv': 'mp4', 'uuid:phone': 'hls'});
-      expect(AppPreferences.fromJson({'castFormats': {'a': 'webm', 'b': 'ts', 'c': 'mkv'}}).castFormats, {'b': 'ts', 'c': 'mkv'});
+      expect(
+          AppPreferences.fromJson({
+            'castFormats': {'a': 'webm', 'b': 'ts', 'c': 'mkv'}
+          }).castFormats,
+          {'b': 'ts', 'c': 'mkv'});
     });
 
     test('tells renderers on Apple devices from TVs', () {
-      expect(parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml')).apple, isFalse);
+      expect(
+          parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml'))
+              .apple,
+          isFalse);
       expect(looksApple('iPhone - Nero Receiver'), isTrue);
       expect(looksApple('电视助手: iPhone'), isTrue);
       expect(looksApple('Living room Mac mini'), isTrue);
@@ -180,22 +201,29 @@ void main() {
     });
 
     test('builds a SOAP envelope with escaped arguments', () {
-      final body = soapEnvelope('urn:schemas-upnp-org:service:AVTransport:1', 'SetAVTransportURI', {'InstanceID': '0', 'CurrentURI': 'http://x/v?a=1&b=2'});
-      expect(body, contains('<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'));
+      final body = soapEnvelope('urn:schemas-upnp-org:service:AVTransport:1', 'SetAVTransportURI',
+          {'InstanceID': '0', 'CurrentURI': 'http://x/v?a=1&b=2'});
+      expect(body,
+          contains('<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'));
       expect(body, contains('<InstanceID>0</InstanceID>'));
       expect(body, contains('<CurrentURI>http://x/v?a=1&amp;b=2</CurrentURI>'));
       expect(body, endsWith('</s:Envelope>'));
     });
 
     test('parses SOAP responses and faults', () {
-      const ok = '<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetPositionInfoResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><Track>1</Track><TrackDuration>0:03:25</TrackDuration><TrackMetaData>&lt;DIDL-Lite&gt;&lt;/DIDL-Lite&gt;</TrackMetaData><RelTime>0:01:02</RelTime><AbsTime/></u:GetPositionInfoResponse></s:Body></s:Envelope>';
+      const ok =
+          '<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetPositionInfoResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><Track>1</Track><TrackDuration>0:03:25</TrackDuration><TrackMetaData>&lt;DIDL-Lite&gt;&lt;/DIDL-Lite&gt;</TrackMetaData><RelTime>0:01:02</RelTime><AbsTime/></u:GetPositionInfoResponse></s:Body></s:Envelope>';
       final map = parseSoapResponse(ok);
       expect(map['RelTime'], '0:01:02');
       expect(map['TrackDuration'], '0:03:25');
       expect(map['TrackMetaData'], '<DIDL-Lite></DIDL-Lite>');
       expect(map['AbsTime'], '');
-      const fault = '<s:Envelope xmlns:s="x"><s:Body><s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring><detail><UPnPError><errorCode>701</errorCode><errorDescription>Transition not available</errorDescription></UPnPError></detail></s:Fault></s:Body></s:Envelope>';
-      expect(() => parseSoapResponse(fault), throwsA(isA<CastException>().having((e) => e.message, 'message', 'UPnP 701: Transition not available')));
+      const fault =
+          '<s:Envelope xmlns:s="x"><s:Body><s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring><detail><UPnPError><errorCode>701</errorCode><errorDescription>Transition not available</errorDescription></UPnPError></detail></s:Fault></s:Body></s:Envelope>';
+      expect(
+          () => parseSoapResponse(fault),
+          throwsA(isA<CastException>()
+              .having((e) => e.message, 'message', 'UPnP 701: Transition not available')));
     });
 
     test('formats DIDL-Lite and times', () {
@@ -204,7 +232,8 @@ void main() {
       expect(didl, contains('http-get:*:video/mp4:'));
       expect(didl, contains('>http://x/v?a=1&amp;b=2</res>'));
       expect(formatUpnpTime(const Duration(hours: 1, minutes: 2, seconds: 3)), '1:02:03');
-      expect(parseUpnpTime('00:01:23.500'), const Duration(minutes: 1, seconds: 23, milliseconds: 500));
+      expect(parseUpnpTime('00:01:23.500'),
+          const Duration(minutes: 1, seconds: 23, milliseconds: 500));
       expect(parseUpnpTime('NOT_IMPLEMENTED'), isNull);
       expect(dlnaState('PAUSED_PLAYBACK'), CastState.paused);
       expect(dlnaState('NO_MEDIA_PRESENT'), CastState.stopped);
@@ -228,17 +257,26 @@ void main() {
       };
       request.response
         ..headers.contentType = ContentType('text', 'xml', charset: 'utf-8')
-        ..write('<s:Envelope xmlns:s="x"><s:Body><u:${name}Response xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">$out</u:${name}Response></s:Body></s:Envelope>');
+        ..write(
+            '<s:Envelope xmlns:s="x"><s:Body><u:${name}Response xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">$out</u:${name}Response></s:Body></s:Envelope>');
       await request.response.close();
     });
-    final device = DlnaDevice(name: 'TV', id: 'uuid:1', serviceType: 'urn:schemas-upnp-org:service:AVTransport:1', controlUrl: Uri.parse('http://127.0.0.1:${server.port}/ctl'));
+    final device = DlnaDevice(
+        name: 'TV',
+        id: 'uuid:1',
+        serviceType: 'urn:schemas-upnp-org:service:AVTransport:1',
+        controlUrl: Uri.parse('http://127.0.0.1:${server.port}/ctl'));
     await device.load(const CastMedia(url: 'http://v/x.mp4', title: 'Title'));
-    expect(actions, ['"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"', '"urn:schemas-upnp-org:service:AVTransport:1#Play"']);
+    expect(actions, [
+      '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"',
+      '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+    ]);
     expect(bodies.first, contains('<CurrentURI>http://v/x.mp4</CurrentURI>'));
     expect(bodies.first, contains('&lt;dc:title&gt;Title&lt;/dc:title&gt;'));
     await device.pause();
     await device.seek(const Duration(seconds: 90));
-    expect(bodies.last, allOf(contains('<Unit>REL_TIME</Unit>'), contains('<Target>0:01:30</Target>')));
+    expect(bodies.last,
+        allOf(contains('<Unit>REL_TIME</Unit>'), contains('<Target>0:01:30</Target>')));
     final status = await device.status();
     expect(status?.state, CastState.playing);
     expect(status?.position, const Duration(seconds: 42));
@@ -271,9 +309,13 @@ void main() {
       // Passed on by an mDNS reflector from the network next door.
       final reflected = MdnsCollector().add(_mdnsPacket(), from: InternetAddress('192.168.1.5'));
       expect(reflected.single.host.address, '192.168.1.77');
-      for (final address in [[8, 8, 8, 8], [127, 0, 0, 1]]) {
+      for (final address in [
+        [8, 8, 8, 8],
+        [127, 0, 0, 1]
+      ]) {
         final other = MdnsCollector();
-        expect(other.add(_mdnsPacket(address: address), from: InternetAddress('192.168.1.5')), isEmpty);
+        expect(other.add(_mdnsPacket(address: address), from: InternetAddress('192.168.1.5')),
+            isEmpty);
         expect(other.services, isEmpty);
       }
     });
@@ -288,7 +330,11 @@ void main() {
   });
 
   group('CastMessage', () {
-    const message = CastMessage(source: 'sender-0', destination: 'receiver-0', namespace: castConnectionNamespace, payload: '{"type":"CONNECT"}');
+    const message = CastMessage(
+        source: 'sender-0',
+        destination: 'receiver-0',
+        namespace: castConnectionNamespace,
+        payload: '{"type":"CONNECT"}');
 
     test('encodes the fields in protobuf order', () {
       final bytes = encodeCastMessage(message);
@@ -306,7 +352,8 @@ void main() {
       expect(decoded.destination, 'receiver-0');
       expect(decoded.namespace, castConnectionNamespace);
       expect(decoded.json, {'type': 'CONNECT'});
-      final long = CastMessage(source: 'a', destination: 'b', namespace: 'c', payload: jsonEncode({'t': 'é' * 300}));
+      final long = CastMessage(
+          source: 'a', destination: 'b', namespace: 'c', payload: jsonEncode({'t': 'é' * 300}));
       expect(decodeCastMessage(encodeCastMessage(long)).payload, long.payload);
     });
 
@@ -333,11 +380,20 @@ void main() {
       }, defaultMediaReceiverId);
       expect(app?.transportId, 'web-5');
       expect(app?.sessionId, 'abc');
-      expect(parseReceiverApp({'status': {'applications': <Object?>[]}}, defaultMediaReceiverId), isNull);
+      expect(
+          parseReceiverApp({
+            'status': {'applications': <Object?>[]}
+          }, defaultMediaReceiverId),
+          isNull);
       final media = parseMediaStatus({
         'type': 'MEDIA_STATUS',
         'status': [
-          {'mediaSessionId': 3, 'playerState': 'PAUSED', 'currentTime': 12.5, 'media': {'duration': 200.0}},
+          {
+            'mediaSessionId': 3,
+            'playerState': 'PAUSED',
+            'currentTime': 12.5,
+            'media': {'duration': 200.0}
+          },
         ],
       });
       expect(media?.sessionId, 3);
@@ -355,7 +411,11 @@ void main() {
     server.listen((socket) {
       final reader = CastFrameReader();
       void reply(String namespace, String source, Map<String, Object?> payload) =>
-          socket.add(frameCastMessage(CastMessage(source: source, destination: 'sender-0', namespace: namespace, payload: jsonEncode(payload))));
+          socket.add(frameCastMessage(CastMessage(
+              source: source,
+              destination: 'sender-0',
+              namespace: namespace,
+              payload: jsonEncode(payload))));
       socket.listen((data) {
         for (final m in reader.add(data)) {
           received.add(m);
@@ -368,7 +428,11 @@ void main() {
                 'requestId': id,
                 'status': {
                   'applications': [
-                    {'appId': defaultMediaReceiverId, 'transportId': 'web-1', 'sessionId': 'sess-1'},
+                    {
+                      'appId': defaultMediaReceiverId,
+                      'transportId': 'web-1',
+                      'sessionId': 'sess-1'
+                    },
                   ],
                 },
               });
@@ -377,7 +441,12 @@ void main() {
                 'type': 'MEDIA_STATUS',
                 'requestId': id,
                 'status': [
-                  {'mediaSessionId': 7, 'playerState': 'BUFFERING', 'currentTime': 5.0, 'media': {'duration': 100.0}},
+                  {
+                    'mediaSessionId': 7,
+                    'playerState': 'BUFFERING',
+                    'currentTime': 5.0,
+                    'media': {'duration': 100.0}
+                  },
                 ],
               });
             case 'GET_STATUS':
@@ -389,9 +458,11 @@ void main() {
                 ],
               });
             case 'PLAY' || 'PAUSE' || 'SEEK':
-              reply(castMediaNamespace, 'web-1', {'type': 'MEDIA_STATUS', 'requestId': id, 'status': []});
+              reply(castMediaNamespace, 'web-1',
+                  {'type': 'MEDIA_STATUS', 'requestId': id, 'status': []});
             case 'STOP':
-              reply(castReceiverNamespace, 'receiver-0', {'type': 'RECEIVER_STATUS', 'requestId': id, 'status': {}});
+              reply(castReceiverNamespace, 'receiver-0',
+                  {'type': 'RECEIVER_STATUS', 'requestId': id, 'status': {}});
           }
         }
       });
@@ -403,7 +474,8 @@ void main() {
       port: server.port,
       connector: Socket.connect,
     );
-    await device.load(const CastMedia(url: 'http://v/x.mp4', title: 'My video', start: Duration(seconds: 5)));
+    await device.load(
+        const CastMedia(url: 'http://v/x.mp4', title: 'My video', start: Duration(seconds: 5)));
     final load = received.firstWhere((m) => m.json!['type'] == 'LOAD');
     expect(load.destination, 'web-1');
     expect(load.namespace, castMediaNamespace);
@@ -427,13 +499,31 @@ void main() {
     expect(seek.json!['mediaSessionId'], 7);
     expect(seek.json!['currentTime'], 30.0);
     await device.stop();
-    expect(received.any((m) => m.json!['type'] == 'STOP' && m.json!['sessionId'] == 'sess-1'), isTrue);
+    expect(
+        received.any((m) => m.json!['type'] == 'STOP' && m.json!['sessionId'] == 'sess-1'), isTrue);
     await expectLater(device.pause(), throwsA(isA<CastException>()));
   });
 
   group('what to cast', () {
-    Map<String, dynamic> format(String id, {int? height, String v = 'avc1.4d401e', String a = 'mp4a.40.2', String ext = 'mp4', Object? fragments, String protocol = 'https', num tbr = 500}) =>
-        {'format_id': id, 'url': 'https://v/$id', 'height': height, 'vcodec': v, 'acodec': a, 'ext': ext, 'protocol': protocol, 'tbr': tbr, 'fragments': fragments};
+    Map<String, dynamic> format(String id,
+            {int? height,
+            String v = 'avc1.4d401e',
+            String a = 'mp4a.40.2',
+            String ext = 'mp4',
+            Object? fragments,
+            String protocol = 'https',
+            num tbr = 500}) =>
+        {
+          'format_id': id,
+          'url': 'https://v/$id',
+          'height': height,
+          'vcodec': v,
+          'acodec': a,
+          'ext': ext,
+          'protocol': protocol,
+          'tbr': tbr,
+          'fragments': fragments
+        };
 
     test('picks the best progressive mp4 with sound from yt-dlp', () {
       final info = {
@@ -450,12 +540,27 @@ void main() {
       };
       expect(castSourceFromYtDlp(info)?.url, 'https://v/22');
       expect(castSourceFromYtDlp(info)?.height, 720);
-      expect(castSourceFromYtDlp({'formats': [format('webm', height: 720, ext: 'webm')]}), isNull);
+      expect(
+          castSourceFromYtDlp({
+            'formats': [format('webm', height: 720, ext: 'webm')]
+          }),
+          isNull);
       expect(castSourceFromYtDlp({}), isNull);
     });
 
     test('what to cast joins the best picture up to the cast quality with the main sound', () {
-      Map<String, dynamic> f(String id, {String v = 'none', String a = 'none', int? h, int fps = 30, String ext = 'mp4', num? size = 1000, int lang = -1, int abr = 0, String note = '', int clen = 1000}) => {
+      Map<String, dynamic> f(String id,
+              {String v = 'none',
+              String a = 'none',
+              int? h,
+              int fps = 30,
+              String ext = 'mp4',
+              num? size = 1000,
+              int lang = -1,
+              int abr = 0,
+              String note = '',
+              int clen = 1000}) =>
+          {
             'format_id': id,
             'url': 'https://g/$id?clen=$clen',
             'protocol': 'https',
@@ -490,7 +595,8 @@ void main() {
       expect(split.video, startsWith('https://g/299?'));
       expect((split.fps, split.codec, split.fitsTransportStream), (60, 'h264', true));
       final uhd = castSplitFromYtDlp(info, maxHeight: 2160)!;
-      expect((uhd.video.split('?').first, uhd.codec, uhd.fitsTransportStream), ('https://g/315', 'vp9', false));
+      expect((uhd.video.split('?').first, uhd.codec, uhd.fitsTransportStream),
+          ('https://g/315', 'vp9', false));
       expect(castSplitFromYtDlp(info, maxHeight: 4320)!.codec, 'av1');
       final qhd = castSplitFromYtDlp(info, maxHeight: 1440)!;
       expect((qhd.height, qhd.codec, qhd.videoFormat), (1440, 'h264', '264'));
@@ -503,31 +609,82 @@ void main() {
           {'format_id': '140', 'url': 'https://g/140?new'},
         ],
       })!;
-      expect((renewed.video, renewed.audio, renewed.videoFormat), ('https://g/299?expire=2000000000', 'https://g/140?new', '299'));
+      expect((renewed.video, renewed.audio, renewed.videoFormat),
+          ('https://g/299?expire=2000000000', 'https://g/140?new', '299'));
       expect(renewed.expires, DateTime.fromMillisecondsSinceEpoch(2000000000 * 1000));
-      expect(split.renewedFrom({'formats': [{'format_id': '299', 'url': 'https://x'}]}), isNull);
+      expect(
+          split.renewedFrom({
+            'formats': [
+              {'format_id': '299', 'url': 'https://x'}
+            ]
+          }),
+          isNull);
       expect(split.audio, startsWith('https://g/140?'));
       expect((split.height, split.videoSize, split.audioSize), (1080, 1000, 1000));
       // The size can come from the address alone.
-      final bare = castSplitFromYtDlp({'formats': [f('136', v: 'avc1.4d401f', h: 720, size: null, clen: 5000), f('140', a: 'mp4a.40.2', ext: 'm4a', abr: 129)]})!;
+      final bare = castSplitFromYtDlp({
+        'formats': [
+          f('136', v: 'avc1.4d401f', h: 720, size: null, clen: 5000),
+          f('140', a: 'mp4a.40.2', ext: 'm4a', abr: 129)
+        ]
+      })!;
       expect((bare.height, bare.videoSize), (720, 5000));
-      expect(castSplitFromYtDlp({'formats': [f('137', v: 'avc1.640028', h: 1080)]}), isNull);
+      expect(
+          castSplitFromYtDlp({
+            'formats': [f('137', v: 'avc1.640028', h: 1080)]
+          }),
+          isNull);
     });
 
     test('skips muxed streams in a disabled codec', () {
-      final info = {'formats': [format('22', height: 720), format('av1mux', height: 1080, v: 'av01.0.08M.08')]};
+      final info = {
+        'formats': [format('22', height: 720), format('av1mux', height: 1080, v: 'av01.0.08M.08')]
+      };
       expect(castSourceFromYtDlp(info)?.url, 'https://v/22');
-      expect(castSourceFromYtDlp(info, settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264}))?.url, 'https://v/av1mux');
-      expect(castSourceFromYtDlp({'formats': [format('22', height: 720)]}, settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264})), isNull);
+      expect(
+          castSourceFromYtDlp(info,
+              settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264}))?.url,
+          'https://v/av1mux');
+      expect(
+          castSourceFromYtDlp({
+            'formats': [format('22', height: 720)]
+          }, settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264})),
+          isNull);
     });
 
     test('picks a muxed stream from Piped and Invidious answers', () {
       final piped = PipedVideo.fromJson('https://p', {
         'videoStreams': [
-          {'url': 'https://p/v1080', 'codec': 'avc1.640028', 'height': 1080, 'videoOnly': true, 'mimeType': 'video/mp4'},
-          {'url': 'https://p/m360', 'codec': 'avc1.42001E', 'height': 360, 'videoOnly': false, 'mimeType': 'video/mp4', 'bitrate': 500000},
-          {'url': 'https://p/m720', 'codec': 'avc1.64001F', 'height': 720, 'videoOnly': false, 'mimeType': 'video/mp4', 'bitrate': 900000},
-          {'url': 'https://p/mwebm', 'codec': 'vp9', 'height': 1080, 'videoOnly': false, 'mimeType': 'video/webm'},
+          {
+            'url': 'https://p/v1080',
+            'codec': 'avc1.640028',
+            'height': 1080,
+            'videoOnly': true,
+            'mimeType': 'video/mp4'
+          },
+          {
+            'url': 'https://p/m360',
+            'codec': 'avc1.42001E',
+            'height': 360,
+            'videoOnly': false,
+            'mimeType': 'video/mp4',
+            'bitrate': 500000
+          },
+          {
+            'url': 'https://p/m720',
+            'codec': 'avc1.64001F',
+            'height': 720,
+            'videoOnly': false,
+            'mimeType': 'video/mp4',
+            'bitrate': 900000
+          },
+          {
+            'url': 'https://p/mwebm',
+            'codec': 'vp9',
+            'height': 1080,
+            'videoOnly': false,
+            'mimeType': 'video/webm'
+          },
         ],
         'audioStreams': <Object?>[],
       });
@@ -536,7 +693,12 @@ void main() {
       final invidious = parseInvidiousVideo('https://inv.example', {
         'adaptiveFormats': <Object?>[],
         'formatStreams': [
-          {'url': '/videoplayback?id=1', 'type': 'video/mp4; codecs="avc1.64001F, mp4a.40.2"', 'size': '1280x720', 'qualityLabel': '720p'},
+          {
+            'url': '/videoplayback?id=1',
+            'type': 'video/mp4; codecs="avc1.64001F, mp4a.40.2"',
+            'size': '1280x720',
+            'qualityLabel': '720p'
+          },
         ],
       });
       expect(castSourceFromRelay(invidious)?.url, 'https://inv.example/videoplayback?id=1');
@@ -549,7 +711,9 @@ void main() {
       final device = _FakeCastDevice();
       final controller = CastController();
       addTearDown(controller.dispose);
-      await controller.start(device, const CastMedia(url: 'http://v', title: 'T', start: Duration(seconds: 3)), videoId: 'abc');
+      await controller.start(
+          device, const CastMedia(url: 'http://v', title: 'T', start: Duration(seconds: 3)),
+          videoId: 'abc');
       expect(controller.active, isTrue);
       expect(controller.status?.position, const Duration(seconds: 3));
       await controller.togglePlay();
@@ -595,14 +759,20 @@ void main() {
       final controller = CastController();
       addTearDown(controller.dispose);
       late CastMedia Function(Duration) joined;
-      joined = (at) => CastMedia(url: 'http://lan/${at.inSeconds}.ts', title: 'T', offset: at - const Duration(seconds: 2), duration: const Duration(minutes: 5), restart: (at) async => joined(at));
+      joined = (at) => CastMedia(
+          url: 'http://lan/${at.inSeconds}.ts',
+          title: 'T',
+          offset: at - const Duration(seconds: 2),
+          duration: const Duration(minutes: 5),
+          restart: (at) async => joined(at));
       await controller.start(device, joined(const Duration(seconds: 10)));
       expect(controller.status?.position, const Duration(seconds: 8));
       expect(controller.status?.duration, const Duration(minutes: 5));
       await controller.seek(const Duration(seconds: 60));
       expect(device.calls, ['load http://lan/10.ts', 'load http://lan/60.ts']);
       expect(controller.status?.position, const Duration(seconds: 58));
-      device.next = const CastStatus(state: CastState.playing, position: Duration(seconds: 3), duration: Duration(seconds: 9));
+      device.next = const CastStatus(
+          state: CastState.playing, position: Duration(seconds: 3), duration: Duration(seconds: 9));
       for (var i = 0; i < 50 && controller.status?.position != const Duration(seconds: 61); i++) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
@@ -613,7 +783,8 @@ void main() {
     test('a failed load leaves no session and reports the message', () async {
       final controller = CastController();
       addTearDown(controller.dispose);
-      await expectLater(controller.start(_FailingDevice(), const CastMedia(url: 'u', title: 't')), throwsA(isA<CastException>()));
+      await expectLater(controller.start(_FailingDevice(), const CastMedia(url: 'u', title: 't')),
+          throwsA(isA<CastException>()));
       expect(controller.active, isFalse);
     });
   });

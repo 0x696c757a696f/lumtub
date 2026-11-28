@@ -16,7 +16,8 @@ void main() {
   final d = JapaneseDictionary.parse(_sample);
 
   test('a word in kana finds the kanji word people mean, not the first read alike', () {
-    final alike = JapaneseDictionary.parse('一敗\tいっぱい\tvs\tone defeat\t1\n一杯|一盃\tいっぱい\t\tone cup\\nfull\\na lot\t1\n');
+    final alike = JapaneseDictionary.parse(
+        '一敗\tいっぱい\tvs\tone defeat\t1\n一杯|一盃\tいっぱい\t\tone cup\\nfull\\na lot\t1\n');
     expect(alike.lookup('いっぱい').first.headword, '一杯');
     expect(alike.lookup('一敗').first.headword, '一敗');
   });

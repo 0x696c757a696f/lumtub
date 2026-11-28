@@ -8,7 +8,9 @@ void main() {
   const left = 200.0;
   const width = 400.0;
 
-  Widget area(String page, int? index, {TextDirection direction = TextDirection.ltr, bool slides = true, FocusNode? focus}) => Directionality(
+  Widget area(String page, int? index,
+          {TextDirection direction = TextDirection.ltr, bool slides = true, FocusNode? focus}) =>
+      Directionality(
         textDirection: direction,
         child: Center(
           child: SizedBox(
@@ -18,15 +20,19 @@ void main() {
               pageKey: page,
               index: index,
               slides: slides,
-              child: Focus(focusNode: page == 'home' ? focus : null, child: SizedBox.expand(key: ValueKey('page $page'))),
+              child: Focus(
+                  focusNode: page == 'home' ? focus : null,
+                  child: SizedBox.expand(key: ValueKey('page $page'))),
             ),
           ),
         ),
       );
 
-  double x(WidgetTester tester, String page) => tester.getTopLeft(find.byKey(ValueKey('page $page'))).dx;
+  double x(WidgetTester tester, String page) =>
+      tester.getTopLeft(find.byKey(ValueKey('page $page'))).dx;
 
-  testWidgets('a later tab comes in from the end side, the old page leaving to the start', (tester) async {
+  testWidgets('a later tab comes in from the end side, the old page leaving to the start',
+      (tester) async {
     await tester.pumpWidget(area('home', 0));
     await tester.pumpWidget(area('library', 3));
     await tester.pump(const Duration(milliseconds: 40));
@@ -65,12 +71,15 @@ void main() {
     focus.requestFocus();
     await tester.pump();
     expect(focus.hasFocus, isTrue);
-    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page home')))).enabled, isTrue);
+    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page home')))).enabled,
+        isTrue);
 
     await tester.pumpWidget(area('explore', 1, focus: focus));
     await tester.pump(const Duration(milliseconds: 40));
-    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page home')))).enabled, isFalse);
-    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page explore')))).enabled, isTrue);
+    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page home')))).enabled,
+        isFalse);
+    expect(TickerMode.valuesOf(tester.element(find.byKey(const ValueKey('page explore')))).enabled,
+        isTrue);
     expect(focus.hasFocus, isFalse);
     await tester.pump(Ease.move);
   });

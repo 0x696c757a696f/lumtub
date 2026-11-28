@@ -23,7 +23,11 @@ Future<String?> channelIdOfHandle(http.Client client, String handle) async {
           headers: YoutubeWeb.apiHeaders(),
           body: jsonEncode({
             'context': {
-              'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en'},
+              'client': {
+                'clientName': 'WEB',
+                'clientVersion': YoutubeWeb.clientVersion,
+                'hl': 'en'
+              },
             },
             'url': handleUrl(name),
           }),
@@ -41,7 +45,8 @@ Future<String?> channelIdOfHandle(http.Client client, String handle) async {
 
 /// The page address of [handle]: the `@` as it is, the rest encoded, as
 /// YouTube links it; `%40name` names no channel.
-String handleUrl(String handle) => 'https://www.youtube.com/@${Uri.encodeComponent(handle.substring(1))}';
+String handleUrl(String handle) =>
+    'https://www.youtube.com/@${Uri.encodeComponent(handle.substring(1))}';
 
 /// The channel id in a `navigation/resolve_url` answer.
 String? browseIdOfResolved(Object? answer) {

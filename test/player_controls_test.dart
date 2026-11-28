@@ -62,7 +62,8 @@ class FakePlayer implements Player {
   final _rate = StreamController<double>.broadcast();
 
   @override
-  PlayerState state = const PlayerState(duration: Duration(minutes: 10), position: Duration(minutes: 1), height: 1080, width: 1920);
+  PlayerState state = const PlayerState(
+      duration: Duration(minutes: 10), position: Duration(minutes: 1), height: 1080, width: 1920);
 
   @override
   late final PlayerStream stream;
@@ -112,7 +113,8 @@ class FakePlayer implements Player {
 
   /// Ends the streams once a test is over.
   Future<void> close() async {
-    await Future.wait([_playing.close(), _completed.close(), _position.close(), _volume.close(), _rate.close()]);
+    await Future.wait(
+        [_playing.close(), _completed.close(), _position.close(), _volume.close(), _rate.close()]);
   }
 
   @override
@@ -129,7 +131,11 @@ void main() {
     controller = AppController();
     player = FakePlayer();
     controller.player = player;
-    controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    controller.playing = const VideoItem(
+        id: 'dQw4w9WgXcQ',
+        title: '测试视频标题',
+        channel: 'Channel',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
 
   tearDown(() => player.close());
@@ -140,7 +146,10 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+      home: Scaffold(
+          body: ColoredBox(
+              color: Colors.black,
+              child: PlayerControls(player: player, state: null, controller: controller))),
     ));
     await tester.pump();
   }
@@ -155,7 +164,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("a phone's small player has play in its one-row bar, as phone video apps do, and nothing in the middle", (tester) async {
+  testWidgets(
+      "a phone's small player has play in its one-row bar, as phone video apps do, and nothing in the middle",
+      (tester) async {
     debugTouchFirst = true;
     addTearDown(() => debugTouchFirst = null);
     tester.view.physicalSize = const Size(412, 232);
@@ -163,7 +174,10 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+      home: Scaffold(
+          body: ColoredBox(
+              color: Colors.black,
+              child: PlayerControls(player: player, state: null, controller: controller))),
     ));
     await tester.pump();
     expect(byTooltip('Previous video'), findsNothing);
@@ -185,7 +199,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a locked study shows what the learning pack puts there, and line tools stay', (tester) async {
+  testWidgets('a locked study shows what the learning pack puts there, and line tools stay',
+      (tester) async {
     studyUnlocked = (_) => false;
     studyLockedView = (context, c) => const Text('buy it');
     addTearDown(() {
@@ -215,7 +230,9 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Scaffold(body: ColoredBox(color: Colors.black, child: PipControls(controller: controller, player: player))),
+      home: Scaffold(
+          body: ColoredBox(
+              color: Colors.black, child: PipControls(controller: controller, player: player))),
     ));
     await tester.pump();
     expect(find.text('测试视频标题'), findsOneWidget);
@@ -236,9 +253,18 @@ void main() {
     setLanguage(AppLanguage.zhHans);
     addTearDown(() => setLanguage(AppLanguage.en));
     controller.details = const VideoDetails(title: '测试视频标题', channel: '频道', subtitles: [
-      SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en'),
-      SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic),
-      SubtitleOption(language: 'fr', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en&tlang=fr', kind: SubtitleKind.translated),
+      SubtitleOption(
+          language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en'),
+      SubtitleOption(
+          language: 'ja',
+          name: '',
+          url: 'https://yt.example/api/timedtext?v=1&lang=ja',
+          kind: SubtitleKind.automatic),
+      SubtitleOption(
+          language: 'fr',
+          name: '',
+          url: 'https://yt.example/api/timedtext?v=1&lang=en&tlang=fr',
+          kind: SubtitleKind.translated),
     ]);
     controller.settings = controller.settings.copyWith(subtitleLanguage: SubtitleLanguage.zh);
     tester.view.physicalSize = const Size(1280, 720);
@@ -246,7 +272,10 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+      home: Scaffold(
+          body: ColoredBox(
+              color: Colors.black,
+              child: PlayerControls(player: player, state: null, controller: controller))),
     ));
     await tester.pump();
     await tester.tap(byTooltip('字幕'));
@@ -277,7 +306,8 @@ void main() {
     await pump(tester);
     await tester.tap(byTooltip('More settings'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Subtitle list'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(find.text('Subtitle list'), 200,
+        scrollable: find.byType(Scrollable).last);
     await tester.ensureVisible(find.text('Subtitle list'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Subtitle list'));
@@ -331,11 +361,14 @@ void main() {
     expect(player.state.playing, before);
   });
 
-  testWidgets('a control reached with the keyboard has focus and a name, Enter activates it and Space still plays or pauses', (tester) async {
+  testWidgets(
+      'a control reached with the keyboard has focus and a name, Enter activates it and Space still plays or pauses',
+      (tester) async {
     final semantics = tester.ensureSemantics();
     await pump(tester);
     expect(find.bySemanticsLabel('Play (Space)'), findsWidgets);
-    final ring = find.descendant(of: byTooltip('Play (Space)'), matching: find.byType(AnimatedContainer));
+    final ring =
+        find.descendant(of: byTooltip('Play (Space)'), matching: find.byType(AnimatedContainer));
     expect(ring, findsOneWidget);
     var focused = false;
     for (var i = 0; i < 40 && !focused; i++) {
@@ -355,7 +388,9 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('a TV remote plays with OK, seeks with left and right and walks the bar with the arrows', (tester) async {
+  testWidgets(
+      'a TV remote plays with OK, seeks with left and right and walks the bar with the arrows',
+      (tester) async {
     Device.tv = true;
     addTearDown(() => Device.tv = false);
     await pump(tester);
@@ -424,8 +459,17 @@ void main() {
     await pump(tester);
     await tester.tap(byTooltip('More settings'));
     await tester.pumpAndSettle();
-    final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
-    for (final item in ['Keep window on top', 'Listen only', 'SponsorBlock', 'Playback info', 'Mirror', 'Quality', 'Aspect ratio']) {
+    final panel =
+        find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
+    for (final item in [
+      'Keep window on top',
+      'Listen only',
+      'SponsorBlock',
+      'Playback info',
+      'Mirror',
+      'Quality',
+      'Aspect ratio'
+    ]) {
       expect(find.text(item), findsWidgets, reason: item);
     }
     await tester.scrollUntilVisible(find.text('30 min'), 60, scrollable: panel);
@@ -440,7 +484,14 @@ void main() {
     await tester.tap(find.text('Off'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNull);
-    for (final item in ['Playback strategy', 'Disabled video codecs', 'Subtitles', 'Screenshot (S)', 'Reload video', 'Keyboard shortcuts']) {
+    for (final item in [
+      'Playback strategy',
+      'Disabled video codecs',
+      'Subtitles',
+      'Screenshot (S)',
+      'Reload video',
+      'Keyboard shortcuts'
+    ]) {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
       expect(find.text(item), findsWidgets, reason: item);
     }
@@ -455,8 +506,12 @@ void main() {
     expect(controller.preferences.wheelGesture, WheelGesture.off);
     player.state = player.state.copyWith(volume: 50);
     final controls = tester.getRect(find.byType(PlayerControls));
-    for (final position in [controls.centerRight - const Offset(100, 0), controls.centerLeft + const Offset(100, 0)]) {
-      tester.binding.handlePointerEvent(PointerScrollEvent(position: position, scrollDelta: const Offset(0, -100)));
+    for (final position in [
+      controls.centerRight - const Offset(100, 0),
+      controls.centerLeft + const Offset(100, 0)
+    ]) {
+      tester.binding.handlePointerEvent(
+          PointerScrollEvent(position: position, scrollDelta: const Offset(0, -100)));
       await tester.pump();
     }
     expect(player.state.volume, 50);
@@ -466,32 +521,44 @@ void main() {
   });
 
   testWidgets('the wheel does what the setting says', (tester) async {
-    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.volume));
+    await controller
+        .savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.volume));
     await pump(tester);
     player.state = player.state.copyWith(volume: 50);
     final controls = tester.getRect(find.byType(PlayerControls));
-    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerLeft + const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    tester.binding.handlePointerEvent(PointerScrollEvent(
+        position: controls.centerLeft + const Offset(100, 0), scrollDelta: const Offset(0, -100)));
     await tester.pump();
     expect(player.state.volume, greaterThan(50), reason: 'volume on either side');
     expect(controller.brightness, 0);
-    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.brightness));
+    await controller
+        .savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.brightness));
     await tester.pump();
-    tester.binding.handlePointerEvent(PointerScrollEvent(timeStamp: const Duration(seconds: 1), position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    tester.binding.handlePointerEvent(PointerScrollEvent(
+        timeStamp: const Duration(seconds: 1),
+        position: controls.centerRight - const Offset(100, 0),
+        scrollDelta: const Offset(0, -100)));
     await tester.pump();
     expect(controller.brightness, 5, reason: 'brightness on either side');
     await tester.pump(const Duration(seconds: 2));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('split, the wheel sets brightness on the left and volume on the right', (tester) async {
-    await controller.savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.split));
+  testWidgets('split, the wheel sets brightness on the left and volume on the right',
+      (tester) async {
+    await controller
+        .savePreferences(controller.preferences.copyWith(wheelGesture: WheelGesture.split));
     await pump(tester);
     player.state = player.state.copyWith(volume: 50);
     final controls = tester.getRect(find.byType(PlayerControls));
-    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    tester.binding.handlePointerEvent(PointerScrollEvent(
+        position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
     await tester.pump();
     expect(player.state.volume, greaterThan(50));
-    tester.binding.handlePointerEvent(PointerScrollEvent(timeStamp: const Duration(seconds: 1), position: controls.centerLeft + const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    tester.binding.handlePointerEvent(PointerScrollEvent(
+        timeStamp: const Duration(seconds: 1),
+        position: controls.centerLeft + const Offset(100, 0),
+        scrollDelta: const Offset(0, -100)));
     await tester.pump();
     expect(controller.brightness, 5);
     await tester.pump(const Duration(seconds: 2));
@@ -503,7 +570,8 @@ void main() {
     player.state = player.state.copyWith(volume: 50, rate: 1);
     final controls = tester.getRect(find.byType(PlayerControls));
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    tester.binding.handlePointerEvent(PointerScrollEvent(
+        position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
     await tester.pump();
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     expect(player.state.rate, greaterThan(1));
@@ -512,13 +580,19 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a long press held while the video changes gives the next one its speed back', (tester) async {
+  testWidgets('a long press held while the video changes gives the next one its speed back',
+      (tester) async {
     await pump(tester);
     player.state = player.state.copyWith(playing: true, rate: 1);
-    final gesture = await tester.startGesture(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
+    final gesture = await tester
+        .startGesture(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
     await tester.pump(const Duration(milliseconds: 700));
     expect(player.state.rate, 2);
-    controller.playing = const VideoItem(id: 'jNQXAC9IVRw', title: 'Next', channel: 'Channel', url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw');
+    controller.playing = const VideoItem(
+        id: 'jNQXAC9IVRw',
+        title: 'Next',
+        channel: 'Channel',
+        url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw');
     controller.notifyListeners();
     await tester.pump();
     expect(player.state.rate, 1);
@@ -559,7 +633,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a finger: a tap shows or hides the controls, a double tap anywhere pauses, a sideways slide seeks', (tester) async {
+  testWidgets(
+      'a finger: a tap shows or hides the controls, a double tap anywhere pauses, a sideways slide seeks',
+      (tester) async {
     await pump(tester);
     final rect = tester.getRect(find.byType(PlayerControls));
     final playing = player.state.playing;
@@ -584,7 +660,8 @@ void main() {
     await finger.up();
     await tester.pump(const Duration(milliseconds: 100));
     expect(player.seeks.length, seeks + 1);
-    expect(player.seeks.last, greaterThan(const Duration(minutes: 1, seconds: 30)), reason: 'a quarter of the width is about 45 s of the 3 minutes it spans');
+    expect(player.seeks.last, greaterThan(const Duration(minutes: 1, seconds: 30)),
+        reason: 'a quarter of the width is about 45 s of the 3 minutes it spans');
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });
@@ -596,7 +673,8 @@ void main() {
     expect(controller.loopB, isNull);
     player.state = player.state.copyWith(position: const Duration(seconds: 10));
     await controller.markLoop();
-    expect((controller.loopA, controller.loopB), (const Duration(seconds: 10), const Duration(seconds: 30)));
+    expect((controller.loopA, controller.loopB),
+        (const Duration(seconds: 10), const Duration(seconds: 30)));
     expect(player.seeks.last, const Duration(seconds: 10));
     await controller.markLoop();
     expect((controller.loopA, controller.loopB), (null, null));

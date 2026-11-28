@@ -12,17 +12,24 @@ void main() {
     lightsOff.value = true;
     await tester.pumpWidget(MaterialApp(
       home: Stack(children: [
-        Positioned.fill(child: GestureDetector(onTap: () => taps.add('page'), child: const ColoredBox(color: Colors.white))),
+        Positioned.fill(
+            child: GestureDetector(
+                onTap: () => taps.add('page'), child: const ColoredBox(color: Colors.white))),
         Positioned(
           left: 100,
           top: 100,
           width: 320,
           height: 180,
-          child: GestureDetector(key: lightsOffHole, onTap: () => taps.add('player'), child: const ColoredBox(color: Colors.black)),
+          child: GestureDetector(
+              key: lightsOffHole,
+              onTap: () => taps.add('player'),
+              child: const ColoredBox(color: Colors.black)),
         ),
-        Positioned.fill(child: ValueListenableBuilder(
+        Positioned.fill(
+            child: ValueListenableBuilder(
           valueListenable: lightsOff,
-          builder: (context, off, _) => off ? const LightsOffLayer(dim: .85) : const SizedBox.shrink(),
+          builder: (context, off, _) =>
+              off ? const LightsOffLayer(dim: .85) : const SizedBox.shrink(),
         )),
       ]),
     ));
@@ -50,15 +57,22 @@ void main() {
     lightsOff.value = true;
     await tester.pumpWidget(MaterialApp(
       home: Stack(children: [
-        Positioned(left: 100, top: 100, width: 320, height: 180, child: ColoredBox(key: lightsOffHole, color: Colors.black)),
-        Positioned.fill(child: ValueListenableBuilder(
+        Positioned(
+            left: 100,
+            top: 100,
+            width: 320,
+            height: 180,
+            child: ColoredBox(key: lightsOffHole, color: Colors.black)),
+        Positioned.fill(
+            child: ValueListenableBuilder(
           valueListenable: lightsOff,
           builder: (context, off, _) => LightsOffLayer(visible: off, dim: .85),
         )),
       ]),
     ));
     await tester.pumpAndSettle();
-    Finder dark() => find.descendant(of: find.byType(LightsOffLayer), matching: find.byType(CustomPaint));
+    Finder dark() =>
+        find.descendant(of: find.byType(LightsOffLayer), matching: find.byType(CustomPaint));
     expect(dark(), findsOneWidget);
     lightsOff.value = false;
     await tester.pump();
@@ -68,7 +82,7 @@ void main() {
     expect(dark(), findsNothing);
   });
 
-    test('the hole follows the player box', () {
+  test('the hole follows the player box', () {
     expect(holeRect(GlobalKey(), null), isNull);
   });
 
@@ -83,7 +97,8 @@ void main() {
   });
 
   test('关灯 preferences are saved and kept in range', () {
-    final prefs = AppPreferences.fromJson(const AppPreferences().copyWith(autoLightsOff: true, lightsOffDim: 70).toJson());
+    final prefs = AppPreferences.fromJson(
+        const AppPreferences().copyWith(autoLightsOff: true, lightsOffDim: 70).toJson());
     expect(prefs.autoLightsOff, isTrue);
     expect(prefs.lightsOffDim, 70);
     expect(AppPreferences.fromJson(const {'lightsOffDim': 10}).lightsOffDim, 50);

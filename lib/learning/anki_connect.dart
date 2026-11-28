@@ -38,14 +38,18 @@ class AnkiConnect {
     final http.Response response;
     try {
       response = await _client
-          .post(_address, headers: {'Content-Type': 'application/json'}, body: jsonEncode({'action': action, 'version': 6, 'params': params}))
+          .post(_address,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'action': action, 'version': 6, 'params': params}))
           .timeout(const Duration(seconds: 30));
     } on SocketException {
       throw const AnkiException(true);
     } on http.ClientException {
       throw const AnkiException(true);
     }
-    if (response.statusCode != 200 || response.bodyBytes.length > 4 << 20) throw AnkiException(false, 'AnkiConnect HTTP ${response.statusCode}');
+    if (response.statusCode != 200 || response.bodyBytes.length > 4 << 20) {
+      throw AnkiException(false, 'AnkiConnect HTTP ${response.statusCode}');
+    }
     final answer = jsonDecode(utf8.decode(response.bodyBytes));
     if (answer is! Map) throw const AnkiException(false, 'AnkiConnect answered oddly');
     if (answer['error'] case final String error) throw AnkiException(false, error);
@@ -73,11 +77,16 @@ class AnkiConnect {
     final fields = await _call('modelFieldNames', {'modelName': AnkiCard.modelName});
     if (fields is! List) throw const AnkiException(false, 'The Lumtub note type has no fields');
     for (final (i, field) in AnkiCard.fields.indexed) {
-      if (!fields.contains(field)) await _call('modelFieldAdd', {'modelName': AnkiCard.modelName, 'fieldName': field, 'index': i});
+      if (!fields.contains(field)) {
+        await _call(
+            'modelFieldAdd', {'modelName': AnkiCard.modelName, 'fieldName': field, 'index': i});
+      }
     }
     final styling = await _call('modelStyling', {'modelName': AnkiCard.modelName});
     final css = styling is Map ? styling['css'] : null;
-    if (css is String && css != AnkiCard.css && css.startsWith(AnkiCard.styleMarker.substring(0, 21))) {
+    if (css is String &&
+        css != AnkiCard.css &&
+        css.startsWith(AnkiCard.styleMarker.substring(0, 21))) {
       await _call('updateModelStyling', {
         'model': {'name': AnkiCard.modelName, 'css': AnkiCard.css},
       });
@@ -97,7 +106,8 @@ class AnkiConnect {
 
   /// Sends [words]; the number added. Words already in the deck are left.
   /// [picture] gives the picture of a video, when there is one.
-  Future<int> send(List<VocabularyWord> words, VocabularyBook book, {String deck = AnkiCard.deckName, AnkiPicture? picture}) async {
+  Future<int> send(List<VocabularyWord> words, VocabularyBook book,
+      {String deck = AnkiCard.deckName, AnkiPicture? picture}) async {
     if (words.isEmpty) return 0;
     await _call('version');
     await _call('createDeck', {'deck': deck});
@@ -113,28 +123,43 @@ class AnkiConnect {
         },
     ];
     final can = await _call('canAddNotes', {'notes': notes});
-    final fresh = [for (final (i, note) in notes.indexed) if (can is List && i < can.length && can[i] == true) (words[i], note)];
+    final fresh = [
+      for (final (i, note) in notes.indexed)
+        if (can is List && i < can.length && can[i] == true) (words[i], note)
+    ];
     if (fresh.isEmpty) return 0;
     // Sounds are read only for the words Anki does not have yet.
     for (final (w, note) in fresh) {
       final sound = book.soundOf(w.key);
       if (!await sound.exists()) continue;
       note['audio'] = [
-        {'data': base64Encode(await sound.readAsBytes()), 'filename': AnkiCard.soundName(w), 'fields': ['Audio']},
+        {
+          'data': base64Encode(await sound.readAsBytes()),
+          'filename': AnkiCard.soundName(w),
+          'fields': ['Audio']
+        },
       ];
     }
     if (picture != null) {
       final pictures = <String, AnkiPictureFile?>{};
       for (final (w, note) in fresh) {
         if (w.videoId.isEmpty) continue;
-        final file = pictures.containsKey(w.videoId) ? pictures[w.videoId] : pictures[w.videoId] = await picture(w.videoId);
+        final file = pictures.containsKey(w.videoId)
+            ? pictures[w.videoId]
+            : pictures[w.videoId] = await picture(w.videoId);
         if (file == null) continue;
         note['picture'] = [
-          {'data': base64Encode(file.bytes), 'filename': AnkiCard.pictureName(w.videoId, webp: file.webp), 'fields': ['Picture']},
+          {
+            'data': base64Encode(file.bytes),
+            'filename': AnkiCard.pictureName(w.videoId, webp: file.webp),
+            'fields': ['Picture']
+          },
         ];
       }
     }
-    final added = await _call('addNotes', {'notes': [for (final (_, note) in fresh) note]});
+    final added = await _call('addNotes', {
+      'notes': [for (final (_, note) in fresh) note]
+    });
     return added is List ? added.where((id) => id != null).length : 0;
   }
 

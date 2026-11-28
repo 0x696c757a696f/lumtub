@@ -13,6 +13,7 @@ class SunTimes {
 
   final double latitude;
   final double longitude;
+
   /// The IANA zone the place came from, none when only the UTC offset was known.
   final String? zone;
 
@@ -34,8 +35,16 @@ class SunTimes {
   /// process to start; until it answers, the UTC offset decides.
   static Future<void> _readWindowsZone() async {
     try {
-      final result = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', r'HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation', '/v', 'TimeZoneKeyName']).timeout(const Duration(seconds: 10));
-      final name = RegExp(r'TimeZoneKeyName\s+REG_SZ\s+(.+)').firstMatch('${result.stdout}')?.group(1)?.trim();
+      final result = await Process.run(windowsProgram(r'System32\reg.exe'), [
+        'query',
+        r'HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation',
+        '/v',
+        'TimeZoneKeyName'
+      ]).timeout(const Duration(seconds: 10));
+      final name = RegExp(r'TimeZoneKeyName\s+REG_SZ\s+(.+)')
+          .firstMatch('${result.stdout}')
+          ?.group(1)
+          ?.trim();
       final zone = name == null ? null : windowsZones[name];
       if (zone != null && zoneCoordinates.containsKey(zone)) _here = _fromZone(zone);
     } catch (_) {
@@ -79,14 +88,20 @@ class SunTimes {
     final n = (julian - 2451545.0 + 0.0008).roundToDouble();
     final meanNoon = n - longitude / 360;
     final anomaly = (357.5291 + 0.98560028 * meanNoon) % 360;
-    final centre = 1.9148 * sin(anomaly * rad) + 0.02 * sin(2 * anomaly * rad) + 0.0003 * sin(3 * anomaly * rad);
+    final centre = 1.9148 * sin(anomaly * rad) +
+        0.02 * sin(2 * anomaly * rad) +
+        0.0003 * sin(3 * anomaly * rad);
     final ecliptic = (anomaly + centre + 180 + 102.9372) % 360;
-    final transit = 2451545.0 + meanNoon + 0.0053 * sin(anomaly * rad) - 0.0069 * sin(2 * ecliptic * rad);
+    final transit =
+        2451545.0 + meanNoon + 0.0053 * sin(anomaly * rad) - 0.0069 * sin(2 * ecliptic * rad);
     final declination = asin(sin(ecliptic * rad) * sin(23.4397 * rad));
-    final cosHour = (sin(-0.833 * rad) - sin(latitude * rad) * sin(declination)) / (cos(latitude * rad) * cos(declination));
+    final cosHour = (sin(-0.833 * rad) - sin(latitude * rad) * sin(declination)) /
+        (cos(latitude * rad) * cos(declination));
     if (cosHour.abs() > 1) return null;
     final hour = acos(cosHour) / rad / 360;
-    DateTime local(double j) => DateTime.fromMillisecondsSinceEpoch(((j - 2440587.5) * 86400000).round(), isUtc: true).toLocal();
+    DateTime local(double j) =>
+        DateTime.fromMillisecondsSinceEpoch(((j - 2440587.5) * 86400000).round(), isUtc: true)
+            .toLocal();
     return (local(transit - hour), local(transit + hour));
   }
 
@@ -103,7 +118,9 @@ class SunTimes {
     final declination = asin(sin(tilt) * sin(longitudeOfSun));
     final sidereal = (18.697374558 + 24.06570982441908 * d) * 15 * rad;
     final hourAngle = sidereal + longitude * rad - ascension;
-    return asin(sin(latitude * rad) * sin(declination) + cos(latitude * rad) * cos(declination) * cos(hourAngle)) / rad;
+    return asin(sin(latitude * rad) * sin(declination) +
+            cos(latitude * rad) * cos(declination) * cos(hourAngle)) /
+        rad;
   }
 
   /// How far into the night [now] is, 0 by day to 1 by night, by the

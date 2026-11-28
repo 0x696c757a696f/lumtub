@@ -12,7 +12,8 @@ String levelTestFile(String language) => '$language-leveltest.tsv.gz';
 /// One word of the test: a real word of [level], or a made-up one shaped
 /// like the real words of [level].
 class LevelTestItem {
-  const LevelTestItem({required this.real, required this.level, required this.text, this.traditional});
+  const LevelTestItem(
+      {required this.real, required this.level, required this.text, this.traditional});
   final bool real;
   final int level;
   final String text;
@@ -20,7 +21,8 @@ class LevelTestItem {
   /// The Chinese item in traditional characters.
   final String? traditional;
 
-  String shown({bool traditionalChinese = false}) => traditionalChinese && traditional != null ? traditional! : text;
+  String shown({bool traditionalChinese = false}) =>
+      traditionalChinese && traditional != null ? traditional! : text;
 }
 
 /// Every item one language's test can draw from.
@@ -34,7 +36,11 @@ class LevelTestBank {
   /// native speakers.
   bool get beta => language != 'zh';
 
-  List<int> get levels => ({for (final i in items) if (i.real) i.level}.toList()..sort());
+  List<int> get levels => ({
+        for (final i in items)
+          if (i.real) i.level
+      }.toList()
+        ..sort());
 
   /// Reads a `<lang>-leveltest.tsv.gz` text: `w|n<TAB>level<TAB>text[<TAB>traditional]`
   /// lines. Lines it does not understand are skipped.
@@ -48,17 +54,21 @@ class LevelTestBank {
       final word = parts[2].trim();
       if (level == null || level < 1 || level > 9 || word.isEmpty || word.length > 40) continue;
       final traditional = parts.length > 3 && parts[3].trim().isNotEmpty ? parts[3].trim() : null;
-      items.add(LevelTestItem(real: parts[0] == 'w', level: level, text: word, traditional: traditional));
+      items.add(
+          LevelTestItem(real: parts[0] == 'w', level: level, text: word, traditional: traditional));
     }
     return LevelTestBank._(language, items);
   }
 
-  static LevelTestBank fromBytes(String language, Uint8List gzipped) => parse(language, utf8.decode(gzip.decode(gzipped), allowMalformed: true));
+  static LevelTestBank fromBytes(String language, Uint8List gzipped) =>
+      parse(language, utf8.decode(gzip.decode(gzipped), allowMalformed: true));
 
   /// Whether there is enough to draw a test from.
   bool get usable {
     final levels = this.levels;
-    return levels.length >= 3 && levels.every((l) => items.where((i) => i.real && i.level == l).length >= 4) && items.any((i) => !i.real);
+    return levels.length >= 3 &&
+        levels.every((l) => items.where((i) => i.real && i.level == l).length >= 4) &&
+        items.any((i) => !i.real);
   }
 
   /// One test: about [words] real words spread evenly over the levels and
@@ -71,7 +81,8 @@ class LevelTestBank {
     final perLevel = max(4, (words / levels.length).ceil());
     final usedChars = <int>{};
     final han = language == 'zh' || language == 'ja';
-    bool fresh(LevelTestItem item) => !han || item.text.runes.every((r) => r < 0x4e00 || !usedChars.contains(r));
+    bool fresh(LevelTestItem item) =>
+        !han || item.text.runes.every((r) => r < 0x4e00 || !usedChars.contains(r));
     void use(LevelTestItem item) {
       if (han) usedChars.addAll(item.text.runes.where((r) => r >= 0x4e00));
     }
@@ -109,7 +120,9 @@ class LevelTestBank {
   /// length elsewhere.
   String shapeOf(String word) {
     if (language == 'zh') return '';
-    if (language == 'ja') return word.runes.any((r) => r >= 0x4e00 && r <= 0x9fff) ? 'kanji' : 'kana';
+    if (language == 'ja') {
+      return word.runes.any((r) => r >= 0x4e00 && r <= 0x9fff) ? 'kanji' : 'kana';
+    }
     if (language == 'ko') return '${word.length}';
     final n = word.length;
     return n <= 4 ? 's' : (n <= 6 ? 'm' : (n <= 8 ? 'l' : 'xl'));
@@ -119,7 +132,14 @@ class LevelTestBank {
 /// How a test went, scored the Ghent way: saying yes to made-up words
 /// takes from the yeses to real ones.
 class LevelTestResult {
-  LevelTestResult._({required this.language, required this.known, required this.level, required this.falseAlarms, required this.score, required this.realCount, required this.madeCount});
+  LevelTestResult._(
+      {required this.language,
+      required this.known,
+      required this.level,
+      required this.falseAlarms,
+      required this.score,
+      required this.realCount,
+      required this.madeCount});
 
   final String language;
 
@@ -168,7 +188,17 @@ class LevelTestResult {
       if (known[l]! >= each && sum / (i + 1) >= upTo) level = l;
     }
     final hits = reals.where((a) => a.$2).length;
-    final ghent = reals.isEmpty ? 0.0 : ((hits - (made.isEmpty ? 0 : reals.length / made.length) * falseYes) / reals.length).clamp(0.0, 1.0);
-    return LevelTestResult._(language: language, known: known, level: level, falseAlarms: f, score: ghent, realCount: reals.length, madeCount: made.length);
+    final ghent = reals.isEmpty
+        ? 0.0
+        : ((hits - (made.isEmpty ? 0 : reals.length / made.length) * falseYes) / reals.length)
+            .clamp(0.0, 1.0);
+    return LevelTestResult._(
+        language: language,
+        known: known,
+        level: level,
+        falseAlarms: f,
+        score: ghent,
+        realCount: reals.length,
+        madeCount: made.length);
   }
 }

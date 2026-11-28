@@ -25,12 +25,18 @@ class WebAccountApi implements AccountApi {
   @override
   Future<({String name, String? avatar, String? likes})> me() async {
     final answer = await signIn.post('account/accounts_list', const {});
-    final data = answer == null || answer.status != 200 ? null : jsonDecode(utf8.decode(answer.body, allowMalformed: true));
-    final account = data == null ? null : _find(data, 'accountItem') ?? _find(data, 'activeAccountHeaderRenderer');
+    final data = answer == null || answer.status != 200
+        ? null
+        : jsonDecode(utf8.decode(answer.body, allowMalformed: true));
+    final account = data == null
+        ? null
+        : _find(data, 'accountItem') ?? _find(data, 'activeAccountHeaderRenderer');
     final name = account is Map ? _text(account['accountName']) : null;
     final photo = account is Map ? account['accountPhoto'] : null;
     final pictures = photo is Map ? photo['thumbnails'] : null;
-    final picture = pictures is List && pictures.isNotEmpty && pictures.last is Map ? '${(pictures.last as Map)['url'] ?? ''}' : '';
+    final picture = pictures is List && pictures.isNotEmpty && pictures.last is Map
+        ? '${(pictures.last as Map)['url'] ?? ''}'
+        : '';
     return (
       name: name ?? tr('YouTube account'),
       avatar: picture.startsWith('https://') ? picture : null,
@@ -43,7 +49,8 @@ class WebAccountApi implements AccountApi {
 
   @override
   Future<List<RemotePlaylist>> playlists() async => [
-        for (final list in await feed.accountPlaylists()) RemotePlaylist(list.id, list.title, list.count ?? 0),
+        for (final list in await feed.accountPlaylists())
+          RemotePlaylist(list.id, list.title, list.count ?? 0),
       ];
 
   @override
@@ -55,29 +62,32 @@ class WebAccountApi implements AccountApi {
     final answer = await signIn.post('next', {'videoId': videoId});
     if (answer == null || answer.status != 200) return VideoRating.none;
     final facts = await viewerOf(answer.body);
-    return VideoRating.values.where((r) => r.name == facts?['rating']).firstOrNull ?? VideoRating.none;
+    return VideoRating.values.where((r) => r.name == facts?['rating']).firstOrNull ??
+        VideoRating.none;
   }
 
   @override
   Future<void> rate(String videoId, VideoRating rating) => _send(
-        switch (rating) {
-          VideoRating.like => 'like/like',
-          VideoRating.dislike => 'like/dislike',
-          VideoRating.none => 'like/removelike',
-        },
-        {'target': {'videoId': videoId}},
-        'a rating');
+      switch (rating) {
+        VideoRating.like => 'like/like',
+        VideoRating.dislike => 'like/dislike',
+        VideoRating.none => 'like/removelike',
+      },
+      {
+        'target': {'videoId': videoId}
+      },
+      'a rating');
 
   @override
   Future<void> addToPlaylist(String playlistId, String videoId) => _send(
-        'browse/edit_playlist',
-        {
-          'playlistId': playlistId,
-          'actions': [
-            {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': videoId},
-          ],
-        },
-        'a playlist change');
+      'browse/edit_playlist',
+      {
+        'playlistId': playlistId,
+        'actions': [
+          {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': videoId},
+        ],
+      },
+      'a playlist change');
 
   /// How many changes go in one `browse/edit_playlist` request.
   static const perRequest = 100;
@@ -91,7 +101,8 @@ class WebAccountApi implements AccountApi {
         {
           'playlistId': playlistId,
           'actions': [
-            for (final id in videoIds.skip(from).take(perRequest)) {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': id},
+            for (final id in videoIds.skip(from).take(perRequest))
+              {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': id},
           ],
         },
         'a playlist change',
@@ -110,7 +121,8 @@ class WebAccountApi implements AccountApi {
     final requests = core.playlistMoves(current, videoIds);
     var moved = 0;
     for (final actions in requests) {
-      await _send('browse/edit_playlist', {'playlistId': playlistId, 'actions': actions}, 'a playlist change');
+      await _send('browse/edit_playlist', {'playlistId': playlistId, 'actions': actions},
+          'a playlist change');
       moved += actions.length;
     }
     return moved;
@@ -118,29 +130,44 @@ class WebAccountApi implements AccountApi {
 
   @override
   Future<RemotePlaylist> createPlaylist(String title) async {
-    final data = await _send('playlist/create', {'title': title, 'privacyStatus': 'PRIVATE'}, 'a new playlist');
+    final data = await _send(
+        'playlist/create', {'title': title, 'privacyStatus': 'PRIVATE'}, 'a new playlist');
     final id = data is Map ? data['playlistId'] : null;
     if (id is! String || id.isEmpty) throw StateError(tr('YouTube did not make the playlist'));
     return RemotePlaylist(id, title, 0);
   }
 
   @override
-  Future<void> subscribe(String channelId) =>
-      _send('subscription/subscribe', {'channelIds': [channelId], 'params': subscribeParams}, 'a subscription');
+  Future<void> subscribe(String channelId) => _send(
+      'subscription/subscribe',
+      {
+        'channelIds': [channelId],
+        'params': subscribeParams
+      },
+      'a subscription');
 
   @override
-  Future<void> unsubscribe(String channelId) =>
-      _send('subscription/unsubscribe', {'channelIds': [channelId], 'params': unsubscribeParams}, 'an unsubscription');
+  Future<void> unsubscribe(String channelId) => _send(
+      'subscription/unsubscribe',
+      {
+        'channelIds': [channelId],
+        'params': unsubscribeParams
+      },
+      'an unsubscription');
 
   /// Writes [text] in the comment box [params] names: a video's, from its
   /// comments page, or a comment's reply box.
   Future<void> comment(String params, String text, {bool reply = false}) => reply
-      ? _send('comment/create_comment_reply', {'replyText': text, 'createReplyParams': params}, 'a reply')
-      : _send('comment/create_comment', {'commentText': text, 'createCommentParams': params}, 'a comment');
+      ? _send('comment/create_comment_reply', {'replyText': text, 'createReplyParams': params},
+          'a reply')
+      : _send('comment/create_comment', {'commentText': text, 'createCommentParams': params},
+          'a comment');
 
   Future<Object?> _send(String endpoint, Map<String, Object?> body, String what) async {
     final answer = await signIn.post(endpoint, body, ask: true);
-    if (answer == null) throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    if (answer == null) {
+      throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    }
     final text = utf8.decode(answer.body, allowMalformed: true);
     if (answer.status != 200) {
       throw StateError(answer.status >= 400 && answer.status < 500

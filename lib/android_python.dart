@@ -60,11 +60,13 @@ class AndroidPython {
   }
 
   /// Whether [executable] is a yt-dlp to run with Python.
-  static bool runs(String executable) => current != null && (executable.endsWith('/yt-dlp') || executable.endsWith('/yt-dlp-bundled'));
+  static bool runs(String executable) =>
+      current != null && (executable.endsWith('/yt-dlp') || executable.endsWith('/yt-dlp-bundled'));
 
   /// The program, arguments and environment that start [script] with
   /// [arguments] and [environment].
-  (String, List<String>, Map<String, String>) command(String script, List<String> arguments, Map<String, String>? environment) {
+  (String, List<String>, Map<String, String>) command(
+      String script, List<String> arguments, Map<String, String>? environment) {
     // Lumtub's plugin folder goes after --no-plugin-dirs, which would
     // otherwise clear it.
     final lead = arguments.takeWhile(ProcessTree.ytDlpIsolation.contains).length;

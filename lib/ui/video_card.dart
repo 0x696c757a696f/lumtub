@@ -39,7 +39,8 @@ import 'theme.dart';
 /// on the thumbnail, as Bilibili shows them.
 /// The text grows with [textScale] (the app's text size, Android's font
 /// size and a TV's larger text); the padding round it does not.
-double _cardInfoHeight(double textScale, bool compact) => compact ? 10 + 60 * textScale : 14 + 62 * textScale;
+double _cardInfoHeight(double textScale, bool compact) =>
+    compact ? 10 + 60 * textScale : 14 + 62 * textScale;
 
 /// Whether video cards are drawn compact here: a skin that puts cards on a
 /// surface of its own keeps them full size.
@@ -73,9 +74,12 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
     switch ((thumbnails, frame)) {
       // Without the cache folder still within the download limits.
       (null, null) => CachedThumbnail(url, null),
-      (null, final frame?) => CachedThumbnail(frame.toString(), null, fallback: CachedThumbnail(url, null)),
+      (null, final frame?) =>
+        CachedThumbnail(frame.toString(), null, fallback: CachedThumbnail(url, null)),
       (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
-      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
+      (final dir?, final frame?) => CachedThumbnail(frame.toString(),
+          CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'),
+          fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
     },
   );
 }
@@ -107,12 +111,14 @@ String spokenVideo(BuildContext context, VideoItem item, {String? reason, String
   return spokenParts([
     spokenTitle(titleFor(item)),
     if (item.isLive) tr('Live now') else if (item.isUpcoming) tr('Upcoming live'),
-    if (item.isUpcoming && item.scheduledStart != null) tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
+    if (item.isUpcoming && item.scheduledStart != null)
+      tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
     if (item.membersOnly) tr('Members only'),
     item.channel,
     MetaLine.viewsOf(item),
     MetaLine.ageOf(item),
-    if (!item.isLive && !item.isUpcoming && item.durationLabel.isNotEmpty) tr('Length {0}', [item.durationLabel]),
+    if (!item.isLive && !item.isUpcoming && item.durationLabel.isNotEmpty)
+      tr('Length {0}', [item.durationLabel]),
     if (progress != null && progress >= 0.02) tr('{0}% watched', [(progress * 100).round()]),
     if (watched != null) tr('Watched {0}', [watched]),
     if (reason != null && reason.isNotEmpty) FeedReason.read(reason).$2,
@@ -126,7 +132,9 @@ String spokenTitle(String title) {
   if (translation == null) return title;
   final mode = titleTranslations.mode;
   if (!mode.bilingual) return translation;
-  return mode == TitleTranslation.translationFirst ? '$translation, $title' : '$title, $translation';
+  return mode == TitleTranslation.translationFirst
+      ? '$translation, $title'
+      : '$title, $translation';
 }
 
 /// Rebuilds a card when its title's translation arrives, so the screen
@@ -158,7 +166,8 @@ mixin SpokenTitle<T extends StatefulWidget> on State<T> {
 
 /// The menu a card opens with a right click or a long press, as an action
 /// the screen reader offers on the card.
-Map<CustomSemanticsAction, VoidCallback> menuAction(VoidCallback open) => {CustomSemanticsAction(label: tr('More')): open};
+Map<CustomSemanticsAction, VoidCallback> menuAction(VoidCallback open) =>
+    {CustomSemanticsAction(label: tr('More')): open};
 
 /// Column count and card height for a grid [width] wide.
 /// The watched line under a history card.
@@ -166,18 +175,31 @@ const _reasonHeight = 20.0;
 
 /// [padding] is the space a skin leaves round each video card; [compact]
 /// is whether the cards are drawn compact ([videoCardsCompact]).
-({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0, double textScale = 1, bool? compact}) {
+({int columns, double itemHeight}) gridLayoutFor(double width,
+    {double padding = 0, double textScale = 1, bool? compact}) {
   // A TV is seen from across the room, so its few pixels across still fit
   // three or four cards a row, as TV video apps show them.
   final base = Device.tv ? min(videoCardMinWidth, 200.0) : videoCardMinWidth;
   // On a phone the chosen width already fills the screen, so compact cards
   // go two to a row there, as Bilibili's home shows them.
-  final narrowest = !compactCards ? base : width < _phoneGridWidth ? min(base * _compactWidth, _phoneCompactWidth) : base * _compactWidth;
+  final narrowest = !compactCards
+      ? base
+      : width < _phoneGridWidth
+          ? min(base * _compactWidth, _phoneCompactWidth)
+          : base * _compactWidth;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
   final isCompact = compact ?? compactCards;
-  final ownLine = channelOwnLine(itemWidth - 2 * padding - _infoInset(isCompact)) ? _channelLineHeight * textScale : 0.0;
-  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight(textScale, isCompact) + ownLine + 2 * padding);
+  final ownLine = channelOwnLine(itemWidth - 2 * padding - _infoInset(isCompact))
+      ? _channelLineHeight * textScale
+      : 0.0;
+  return (
+    columns: columns,
+    itemHeight: (itemWidth - 2 * padding) * 9 / 16 +
+        _cardInfoHeight(textScale, isCompact) +
+        ownLine +
+        2 * padding
+  );
 }
 
 /// The line a channel has to itself on a narrow card.
@@ -192,7 +214,8 @@ double _infoInset(bool compact) => compact ? 16 : 4;
 bool channelOwnLine(double width) => width < 220;
 
 /// The space the current skin leaves round each video card.
-double skinCardPadding(BuildContext context) => context.skin?.videoCard == null ? 0 : context.skin!.videoCardPadding;
+double skinCardPadding(BuildContext context) =>
+    context.skin?.videoCard == null ? 0 : context.skin!.videoCardPadding;
 
 /// Makes the app's library actions (favorites, playlists, channels, watch
 /// progress) available to every card below it without passing them down.
@@ -200,7 +223,8 @@ class VideoActions extends InheritedWidget {
   const VideoActions({super.key, required this.controller, required super.child});
   final AppController controller;
 
-  static AppController? of(BuildContext context) => context.getInheritedWidgetOfExactType<VideoActions>()?.controller;
+  static AppController? of(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<VideoActions>()?.controller;
 
   // Cards rebuild with their pages whenever the controller notifies.
   @override
@@ -210,21 +234,36 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched, this.layout, this.numberOf});
+  const SliverVideoGrid(
+      {super.key,
+      required this.items,
+      required this.onOpen,
+      this.thumbnails,
+      this.onRemove,
+      this.removeLabel,
+      this.reasons,
+      this.watched,
+      this.layout,
+      this.numberOf});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
+
   /// Adds a "remove" entry to each card's menu, for playlists.
   final void Function(VideoItem item)? onRemove;
   final String? removeLabel;
+
   /// Why each card is there, by video id ([FeedReason]), shown as a tag
   /// before its channel.
   final Map<String, String>? reasons;
+
   /// When each video was watched, by id, as a line under its card.
   final Map<String, String>? watched;
+
   /// Shown in place of the chosen [videoLayout], such as a playlist's rows
   /// on a phone.
   final VideoLayout? layout;
+
   /// The number shown before each row, such as its place in a playlist.
   final int Function(int index)? numberOf;
 
@@ -232,54 +271,59 @@ class SliverVideoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final shown = layout ?? videoLayout;
     // Room for the watched line only when some card has one.
-    final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
+    final watched = this.watched != null && items.any((item) => this.watched![item.id] != null)
+        ? this.watched
+        : null;
     // Room for the reason line only when some card has a reason.
     final reasoned = reasons != null && items.any((item) => (reasons![item.id] ?? '').isNotEmpty);
     return SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: shown != VideoLayout.grid
-            ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(shown, MediaQuery.textScalerOf(context)) + (watched == null ? 0 : _reasonHeight),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => VideoRow(
-                    key: ValueKey(items[i].id),
-                    item: items[i],
-                    layout: shown,
-                    thumbnails: thumbnails,
-                    onOpen: () => onOpen(items[i]),
-                    onRemove: onRemove == null ? null : () => onRemove!(items[i]),
-                    removeLabel: removeLabel,
-                    reason: reasons == null ? null : reasons![items[i].id] ?? '',
-                    watched: watched?[items[i].id],
-                    number: numberOf?.call(i),
-                  ),
-                  childCount: items.length,
+      padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+      sliver: shown != VideoLayout.grid
+          ? SliverFixedExtentList(
+              itemExtent: VideoRow.heightFor(shown, MediaQuery.textScalerOf(context)) +
+                  (watched == null ? 0 : _reasonHeight),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => VideoRow(
+                  key: ValueKey(items[i].id),
+                  item: items[i],
+                  layout: shown,
+                  thumbnails: thumbnails,
+                  onOpen: () => onOpen(items[i]),
+                  onRemove: onRemove == null ? null : () => onRemove!(items[i]),
+                  removeLabel: removeLabel,
+                  reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                  watched: watched?[items[i].id],
+                  number: numberOf?.call(i),
                 ),
-              )
-            : SliverGrid(
-            gridDelegate: VideoGridDelegate(
-              padding: skinCardPadding(context),
-              textScale: cardTextScale(context),
-              compact: videoCardsCompact(context),
-              extra: ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) * _reasonHeight * cardTextScale(context),
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, i) => VideoCard(
-                // A card's hover and preview state never passes to another
-                // video when the list changes under it.
-                key: ValueKey(items[i].id),
-                item: items[i],
-                thumbnails: thumbnails,
-                onOpen: () => onOpen(items[i]),
-                onRemove: onRemove == null ? null : () => onRemove!(items[i]),
-                removeLabel: removeLabel,
-                reason: reasons == null ? null : reasons![items[i].id] ?? '',
-                watched: watched?[items[i].id],
+                childCount: items.length,
               ),
-              childCount: items.length,
+            )
+          : SliverGrid(
+              gridDelegate: VideoGridDelegate(
+                padding: skinCardPadding(context),
+                textScale: cardTextScale(context),
+                compact: videoCardsCompact(context),
+                extra: ((watched == null ? 0 : 1) + (reasoned ? 1 : 0)) *
+                    _reasonHeight *
+                    cardTextScale(context),
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => VideoCard(
+                  // A card's hover and preview state never passes to another
+                  // video when the list changes under it.
+                  key: ValueKey(items[i].id),
+                  item: items[i],
+                  thumbnails: thumbnails,
+                  onOpen: () => onOpen(items[i]),
+                  onRemove: onRemove == null ? null : () => onRemove!(items[i]),
+                  removeLabel: removeLabel,
+                  reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                  watched: watched?[items[i].id],
+                ),
+                childCount: items.length,
+              ),
             ),
-          ),
-      );
+    );
   }
 }
 
@@ -288,17 +332,20 @@ class SliverVideoGrid extends StatelessWidget {
 /// card shown with it, on each frame the list scrolls, as the scroll offset
 /// is part of a sliver's constraints.
 class VideoGridDelegate extends SliverGridDelegate {
-  const VideoGridDelegate({this.padding = 0, this.textScale = 1, this.compact, this.extra = 0, this.rowGap});
+  const VideoGridDelegate(
+      {this.padding = 0, this.textScale = 1, this.compact, this.extra = 0, this.rowGap});
   final double padding;
   final double textScale;
   final bool? compact;
+
   /// Added to each card's height, for lines under it.
   final double extra;
   final double? rowGap;
 
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {
-    final layout = gridLayoutFor(constraints.crossAxisExtent, padding: padding, textScale: textScale, compact: compact);
+    final layout = gridLayoutFor(constraints.crossAxisExtent,
+        padding: padding, textScale: textScale, compact: compact);
     return SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: layout.columns,
       mainAxisSpacing: rowGap ?? _gridRowGap,
@@ -322,7 +369,8 @@ class _WatchedLabels extends UnmodifiableMapBase<String, String> {
   final Map<String, DateTime> _times;
 
   @override
-  String? operator [](Object? key) => switch (_times[key]) { final at? => formatAgo(at), null => null };
+  String? operator [](Object? key) =>
+      switch (_times[key]) { final at? => formatAgo(at), null => null };
 
   @override
   Iterable<String> get keys => _times.keys;
@@ -341,13 +389,16 @@ String aboutOf(VideoItem item) => '${item.channel}\n${item.description ?? ''}';
 /// as set, once it has been on screen a moment; the tooltip then holds the
 /// original. Only this widget rebuilds when its translation comes.
 class TitleText extends StatefulWidget {
-  const TitleText(this.text, {super.key, required this.maxLines, required this.style, this.about = '', this.video});
+  const TitleText(this.text,
+      {super.key, required this.maxLines, required this.style, this.about = '', this.video});
 
   final String text;
+
   /// What else is known of what the title names (its channel, its
   /// description), so a Catholic one is translated into Chinese in the
   /// Church's wording ([ChurchWording]).
   final String about;
+
   /// The video the title is of, when it is one: a video of a channel known
   /// to be Catholic is Catholic whatever its title says.
   final VideoItem? video;
@@ -398,6 +449,7 @@ class _TitleTextState extends State<TitleText> {
         child.visitChildren(find);
       }
     }
+
     context.findRenderObject()?.visitChildren(find);
     final cut = paragraph?.didExceedMaxLines ?? false;
     if (cut != _cut) setState(() => _cut = cut);
@@ -405,29 +457,43 @@ class _TitleTextState extends State<TitleText> {
 
   ChurchRite? _rite() {
     final video = widget.video;
-    return ChurchWording.riteOf('${widget.text}\n${widget.about}') ?? (video == null ? null : ChurchWording.riteOfVideo(video));
+    return ChurchWording.riteOf('${widget.text}\n${widget.about}') ??
+        (video == null ? null : ChurchWording.riteOfVideo(video));
   }
 
   @override
   Widget build(BuildContext context) {
     final found = titleTranslations.lookup(widget.text);
-    final translation = found == null ? null : ChurchWording.apply(found, titleTranslations.target, rite: _rite(), original: widget.text);
+    final translation = found == null
+        ? null
+        : ChurchWording.apply(found, titleTranslations.target,
+            rite: _rite(), original: widget.text);
     final mode = titleTranslations.mode;
     final Widget child;
     final String message;
     if (translation == null) {
-      child = Text(widget.text, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
+      child = Text(widget.text,
+          maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
       message = _cut ? widget.text : '';
     } else if (mode.bilingual && widget.maxLines >= 2) {
-      final second = widget.style.copyWith(fontWeight: FontWeight.w400, color: widget.style.color?.withValues(alpha: 0.62));
+      final second = widget.style.copyWith(
+          fontWeight: FontWeight.w400, color: widget.style.color?.withValues(alpha: 0.62));
       final first = mode == TitleTranslation.translationFirst;
-      child = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(first ? translation : widget.text, maxLines: widget.maxLines - 1, overflow: TextOverflow.ellipsis, style: widget.style),
-        Text(first ? widget.text : translation, maxLines: 1, overflow: TextOverflow.ellipsis, style: second),
-      ]);
+      child = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(first ? translation : widget.text,
+                maxLines: widget.maxLines - 1,
+                overflow: TextOverflow.ellipsis,
+                style: widget.style),
+            Text(first ? widget.text : translation,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: second),
+          ]);
       message = '$translation\n${widget.text}';
     } else {
-      child = Text(translation, maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
+      child = Text(translation,
+          maxLines: widget.maxLines, overflow: TextOverflow.ellipsis, style: widget.style);
       message = widget.text;
     }
     return MouseRegion(
@@ -446,7 +512,17 @@ class _TitleTextState extends State<TitleText> {
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
 class VideoRow extends StatelessWidget {
-  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched, this.number});
+  const VideoRow(
+      {super.key,
+      required this.item,
+      required this.layout,
+      required this.onOpen,
+      this.thumbnails,
+      this.onRemove,
+      this.removeLabel,
+      this.reason,
+      this.watched,
+      this.number});
   final VideoItem item;
   final VideoLayout layout;
   final VoidCallback onOpen;
@@ -455,6 +531,7 @@ class VideoRow extends StatelessWidget {
   final String? removeLabel;
   final String? reason;
   final String? watched;
+
   /// Its place in the list, shown before it.
   final int? number;
 
@@ -462,11 +539,16 @@ class VideoRow extends StatelessWidget {
 
   /// The row's height: the picture's, or with larger text that of the
   /// title's two lines, the channel and the views.
-  static double heightFor(VideoLayout layout, [TextScaler scaler = TextScaler.noScaling]) => layout == VideoLayout.text
-      ? 60.0
-      : max(_thumbWidth * 9 / 16, scaler.scale(14 * 1.38) * 2 + Space.xs + scaler.scale(12 * 1.4) * 2) + Space.s * 2;
+  static double heightFor(VideoLayout layout, [TextScaler scaler = TextScaler.noScaling]) =>
+      layout == VideoLayout.text
+          ? 60.0
+          : max(_thumbWidth * 9 / 16,
+                  scaler.scale(14 * 1.38) * 2 + Space.xs + scaler.scale(12 * 1.4) * 2) +
+              Space.s * 2;
 
-  void _menu(BuildContext context, Offset position) => unawaited(showVideoMenu(context, item, position, onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
+  void _menu(BuildContext context, Offset position) =>
+      unawaited(showVideoMenu(context, item, position,
+          onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
 
   @override
   Widget build(BuildContext context) => WithVideoFacts(item, builder: _build);
@@ -474,9 +556,16 @@ class VideoRow extends StatelessWidget {
   Widget _build(BuildContext context, VideoItem item) {
     final colors = context.colors;
     final text = layout == VideoLayout.text;
-    final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
-    final meta = MetaLine.of(item, extra: text && status == null && item.durationLabel.isNotEmpty ? item.durationLabel : null, style: TextStyle(fontSize: 12, color: colors.outline));
-    return PressScale(child: InkWell(
+    final status = item.isLive
+        ? tr('Live now')
+        : item.isUpcoming
+            ? tr('Upcoming live')
+            : null;
+    final meta = MetaLine.of(item,
+        extra: text && status == null && item.durationLabel.isNotEmpty ? item.durationLabel : null,
+        style: TextStyle(fontSize: 12, color: colors.outline));
+    return PressScale(
+        child: InkWell(
       borderRadius: AppStyle.controlRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => _menu(context, details.globalPosition),
@@ -485,73 +574,111 @@ class VideoRow extends StatelessWidget {
         _menu(context, _centreOf(context));
       },
       child: SpokenAs(
-        label: spokenVideo(context, item, reason: reason, watched: watched),
-        actions: menuAction(() => _menu(context, _centreOf(context))),
-        child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (number case final number?)
-            SizedBox(
-              width: 28,
-              height: text ? 20 : _thumbWidth * 9 / 16,
-              child: Center(child: Text('$number', maxLines: 1, style: TextStyle(fontSize: 12, color: colors.outline, fontFeatures: const [FontFeature.tabularFigures()]))),
-            ),
-          if (!text) ...[
-            SizedBox(
-              width: _thumbWidth,
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: ClipRRect(
-                  borderRadius: AppStyle.controlRadius,
-                  child: Stack(fit: StackFit.expand, children: [
-                    Image(
-                      color: context.pictureWarmth,
-                      colorBlendMode: BlendMode.multiply,
-                      image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
-                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
-                    ),
-                    if (status != null)
-                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
-                    else if (item.durationLabel.isNotEmpty)
-                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                    if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
-                    PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
-                    _ProgressBar(item: item),
-                  ]),
+          label: spokenVideo(context, item, reason: reason, watched: watched),
+          actions: menuAction(() => _menu(context, _centreOf(context))),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (number case final number?)
+                SizedBox(
+                  width: 28,
+                  height: text ? 20 : _thumbWidth * 9 / 16,
+                  child: Center(
+                      child: Text('$number',
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: colors.outline,
+                              fontFeatures: const [FontFeature.tabularFigures()]))),
                 ),
-              ),
-            ),
-            const SizedBox(width: Space.m),
-          ],
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: text ? 1 : 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
-            const SizedBox(height: Space.xs),
-            // Beside a picture the channel has a line of its own and the
-            // views and age the next, so neither is cut to a few letters
-            // in a phone-wide row.
-            if (!text && meta.lead.isNotEmpty) Text(meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style),
-            Row(children: [
-              if (text && status != null) ...[
-                Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: item.isLive ? const Color(0xFFCC0000) : colors.primary)),
-                const SizedBox(width: Space.s),
+              if (!text) ...[
+                SizedBox(
+                  width: _thumbWidth,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: ClipRRect(
+                      borderRadius: AppStyle.controlRadius,
+                      child: Stack(fit: StackFit.expand, children: [
+                        Image(
+                          color: context.pictureWarmth,
+                          colorBlendMode: BlendMode.multiply,
+                          image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                          frameBuilder: (context, child, frame, sync) => fadeInFrame(
+                              child, frame, sync,
+                              under: ColoredBox(color: colors.surfaceContainerHighest)),
+                          errorBuilder: (context, _, __) =>
+                              ColoredBox(color: colors.surfaceContainerHighest),
+                        ),
+                        if (status != null)
+                          PositionedDirectional(
+                              end: 4,
+                              bottom: 4,
+                              child: DurationBadge(status,
+                                  color: item.isLive ? const Color(0xFFCC0000) : null))
+                        else if (item.durationLabel.isNotEmpty)
+                          PositionedDirectional(
+                              end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                        if (item.membersOnly)
+                          const PositionedDirectional(
+                              start: 4, bottom: 4, child: MembersOnlyBadge()),
+                        PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
+                        _ProgressBar(item: item),
+                      ]),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: Space.m),
               ],
-              if (text && item.membersOnly) ...[
-                Text(tr('Members only'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
-                const SizedBox(width: Space.s),
-              ],
-              if (reason case final reason? when reason.isNotEmpty) ...[
-                ReasonTag(reason),
-                const SizedBox(width: 6),
-              ],
-              Expanded(child: text ? meta : Text(meta.tail, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style)),
+              Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                TitleText(titleFor(item),
+                    about: aboutOf(item),
+                    video: item,
+                    maxLines: text ? 1 : 2,
+                    style: TextStyle(
+                        fontSize: 14,
+                        height: 1.38,
+                        fontWeight: FontWeight.w500,
+                        color: colors.onSurface)),
+                const SizedBox(height: Space.xs),
+                // Beside a picture the channel has a line of its own and the
+                // views and age the next, so neither is cut to a few letters
+                // in a phone-wide row.
+                if (!text && meta.lead.isNotEmpty)
+                  Text(meta.lead, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style),
+                Row(children: [
+                  if (text && status != null) ...[
+                    Text(status,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: item.isLive ? const Color(0xFFCC0000) : colors.primary)),
+                    const SizedBox(width: Space.s),
+                  ],
+                  if (text && item.membersOnly) ...[
+                    Text(tr('Members only'),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
+                    const SizedBox(width: Space.s),
+                  ],
+                  if (reason case final reason? when reason.isNotEmpty) ...[
+                    ReasonTag(reason),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                      child: text
+                          ? meta
+                          : Text(meta.tail,
+                              maxLines: 1, overflow: TextOverflow.ellipsis, style: meta.style)),
+                ]),
+                if (watched case final watched?)
+                  Padding(
+                      padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
+              ])),
             ]),
-            if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
-          ])),
-        ]),
-      )),
+          )),
     ));
   }
 }
@@ -567,7 +694,9 @@ class SliverPlaylistGrid extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverGrid(
           gridDelegate: VideoGridDelegate(textScale: cardTextScale(context)),
-          delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
+          delegate: SliverChildBuilderDelegate(
+              (context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])),
+              childCount: items.length),
         ),
       );
 }
@@ -582,7 +711,8 @@ class PlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final cover = item.thumbnail;
-    return PressScale(child: Card(
+    return PressScale(
+        child: Card(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
       clipBehavior: Clip.none,
@@ -590,48 +720,74 @@ class PlaylistCard extends StatelessWidget {
         borderRadius: AppStyle.cardRadius,
         onTap: onOpen,
         child: SpokenAs(
-          label: spokenParts([item.title, tr('Playlist'), item.channel, if (item.count != null) tr('{0} videos', [item.count])]),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: ClipRRect(
-              borderRadius: AppStyle.thumbnailRadius,
-              child: Stack(fit: StackFit.expand, children: [
-                if (cover != null)
-                  LayoutBuilder(builder: (context, box) => Image(
-                    color: context.pictureWarmth,
-                    colorBlendMode: BlendMode.multiply,
-                    image: ResizeImage.resizeIfNeeded(thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480), null, CachedThumbnail(cover, null)),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
-                  ))
-                else
-                  ColoredBox(color: colors.surfaceContainerHighest),
-                PositionedDirectional(
-                  end: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 96,
-                  child: ColoredBox(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(AppIcons.playlist, color: Colors.white, size: 28),
-                      if (item.count != null) Text(tr('{0} videos', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                    ]),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-          Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Flexible(child: TitleText(item.title, about: item.channel, maxLines: 2, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
-              const SizedBox(height: Space.xs),
-              Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            label: spokenParts([
+              item.title,
+              tr('Playlist'),
+              item.channel,
+              if (item.count != null) tr('{0} videos', [item.count])
             ]),
-          )),
-        ])),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ClipRRect(
+                  borderRadius: AppStyle.thumbnailRadius,
+                  child: Stack(fit: StackFit.expand, children: [
+                    if (cover != null)
+                      LayoutBuilder(
+                          builder: (context, box) => Image(
+                                color: context.pictureWarmth,
+                                colorBlendMode: BlendMode.multiply,
+                                image: ResizeImage.resizeIfNeeded(
+                                    thumbnailDecodeWidth(
+                                        box.maxWidth, MediaQuery.devicePixelRatioOf(context),
+                                        largest: 480),
+                                    null,
+                                    CachedThumbnail(cover, null)),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stack) =>
+                                    ColoredBox(color: colors.surfaceContainerHighest),
+                              ))
+                    else
+                      ColoredBox(color: colors.surfaceContainerHighest),
+                    PositionedDirectional(
+                      end: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 96,
+                      child: ColoredBox(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(AppIcons.playlist, color: Colors.white, size: 28),
+                          if (item.count != null)
+                            Text(tr('{0} videos', [item.count]),
+                                style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        ]),
+                      ),
+                    ),
+                  ]),
+                ),
+              ),
+              Expanded(
+                  child: Padding(
+                padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Flexible(
+                      child: TitleText(item.title,
+                          about: item.channel,
+                          maxLines: 2,
+                          style: TextStyle(
+                              fontSize: 14,
+                              height: 1.38,
+                              fontWeight: FontWeight.w500,
+                              color: colors.onSurface))),
+                  const SizedBox(height: Space.xs),
+                  Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: colors.outline)),
+                ]),
+              )),
+            ])),
       ),
     ));
   }
@@ -648,17 +804,24 @@ class SliverSkeletonGrid extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverToBoxAdapter(child: LayoutBuilder(builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final layout = gridLayoutFor(width, padding: skinCardPadding(context), textScale: cardTextScale(context), compact: videoCardsCompact(context));
-          return DelayedReveal(child: Skeleton(child: SizedBox(
+          final layout = gridLayoutFor(width,
+              padding: skinCardPadding(context),
+              textScale: cardTextScale(context),
+              compact: videoCardsCompact(context));
+          return DelayedReveal(
+              child: Skeleton(
+                  child: SizedBox(
             width: width,
             child: Wrap(
               spacing: gridGap,
               runSpacing: _gridRowGap,
-              children: List.generate(layout.columns * rows, (_) => SizedBox(
-                width: (width - gridGap * (layout.columns - 1)) / layout.columns - 0.01,
-                height: layout.itemHeight,
-                child: const _CardSkeleton(),
-              )),
+              children: List.generate(
+                  layout.columns * rows,
+                  (_) => SizedBox(
+                        width: (width - gridGap * (layout.columns - 1)) / layout.columns - 0.01,
+                        height: layout.itemHeight,
+                        child: const _CardSkeleton(),
+                      )),
             ),
           )));
         })),
@@ -669,7 +832,8 @@ class _CardSkeleton extends StatelessWidget {
   const _CardSkeleton();
 
   @override
-  Widget build(BuildContext context) => const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget build(BuildContext context) =>
+      const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         AspectRatio(aspectRatio: 16 / 9, child: SkeletonBox(radius: AppStyle.radius)),
         SizedBox(height: 12),
         SkeletonBox(height: 14),
@@ -689,15 +853,26 @@ abstract final class ReturnFocus {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
+  const VideoCard(
+      {super.key,
+      required this.item,
+      required this.onOpen,
+      this.thumbnails,
+      this.onRemove,
+      this.removeLabel,
+      this.reason,
+      this.watched});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
   final VoidCallback? onRemove;
+
   /// The menu entry for [onRemove]; 从此列表移除 unless given.
   final String? removeLabel;
+
   /// Why the card is recommended; null leaves the line out.
   final String? reason;
+
   /// When the video was watched, shown on its picture.
   final String? watched;
 
@@ -715,6 +890,7 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
   /// follows the pointer at once.
   final _lit = ValueNotifier(false);
   bool get _hovered => _lit.value;
+
   /// Reached with the keyboard: it shows its actions as a pointer resting
   /// on it would, with an outline to show where focus is, but does not
   /// prefetch or preview.
@@ -722,6 +898,7 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
   bool _pointer = false;
   Timer? _prefetch;
   Timer? _preview;
+
   /// Which of YouTube's three frames from the video (1–3) the hover preview
   /// shows; 0 while it shows the thumbnail.
   int _frame = 0;
@@ -776,7 +953,10 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
       (_held = moving).addStatusListener(_routeSettled);
       return;
     }
-    if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
+    if (!widget.item.membersOnly) {
+      _prefetch = Timer(const Duration(milliseconds: 700),
+          () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
+    }
     // Previews are frames to decode and draw: none while frames run late.
     if (widget.item.isLive || widget.item.isUpcoming || FramePressure.on) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
@@ -804,15 +984,21 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
   /// The menu, at the card's middle when opened from the keyboard.
   void _menu([Offset? at]) {
     final box = context.findRenderObject() as RenderBox?;
-    final position = at ?? (box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero)));
-    unawaited(showVideoMenu(context, widget.item, position, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel));
+    final position =
+        at ?? (box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero)));
+    unawaited(showVideoMenu(context, widget.item, position,
+        onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel));
   }
 
   ImageProvider _frameImage(VideoItem item, int frame) {
     final url = 'https://i.ytimg.com/vi/${item.id}/mq$frame.jpg';
     final dir = widget.thumbnails;
     // mq frames are 320 wide; decoding them larger gains nothing.
-    return ResizeImage.resizeIfNeeded(320, null, CachedThumbnail(url, dir == null ? null : CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
+    return ResizeImage.resizeIfNeeded(
+        320,
+        null,
+        CachedThumbnail(
+            url, dir == null ? null : CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
   }
 
   final _focusNode = FocusNode();
@@ -821,7 +1007,8 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
   void initState() {
     super.initState();
     deArrow.addListener(_branded);
-    if (ReturnFocus.video == widget.item.id && FocusManager.instance.highlightMode == FocusHighlightMode.traditional) {
+    if (ReturnFocus.video == widget.item.id &&
+        FocusManager.instance.highlightMode == FocusHighlightMode.traditional) {
       ReturnFocus.video = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _focusNode.requestFocus();
@@ -841,7 +1028,8 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
     if (mounted && _branding != _brandingNow()) setState(() {});
   }
 
-  (String, Uri?) _brandingNow() => (deArrow.titleOf(widget.item.id, widget.item.title), deArrow.thumbnailOf(widget.item.id));
+  (String, Uri?) _brandingNow() =>
+      (deArrow.titleOf(widget.item.id, widget.item.title), deArrow.thumbnailOf(widget.item.id));
   (String, Uri?)? _branding;
 
   @override
@@ -888,136 +1076,225 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
           _menu(_centreOf(context));
         },
         child: SpokenAs(
-          label: spokenVideo(context, item, reason: widget.reason, watched: widget.watched),
-          actions: menuAction(() => _menu(_centreOf(context))),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: ClipRRect(
-              borderRadius: compact ? BorderRadius.zero : context.thumbnailRadius,
-              child: Stack(fit: StackFit.expand, children: [
-                // Its own layer: zooming on hover repaints only the picture.
-                RepaintBoundary(child: ValueListenableBuilder(
-                  valueListenable: _lit,
-                  builder: (context, lit, picture) => AnimatedScale(
-                    scale: lit ? 1.04 : 1,
-                    duration: Motion.of(Ease.fade),
-                    curve: Ease.curve,
-                    child: picture,
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, box) => Image(
-                      color: context.pictureWarmth,
-                      colorBlendMode: BlendMode.multiply,
-                      image: thumbnailFor(item, widget.thumbnails, width: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
-                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(AppIcons.televisionSimple, size: 40, color: colors.outline)),
+            label: spokenVideo(context, item, reason: widget.reason, watched: widget.watched),
+            actions: menuAction(() => _menu(_centreOf(context))),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ClipRRect(
+                  borderRadius: compact ? BorderRadius.zero : context.thumbnailRadius,
+                  child: Stack(fit: StackFit.expand, children: [
+                    // Its own layer: zooming on hover repaints only the picture.
+                    RepaintBoundary(
+                        child: ValueListenableBuilder(
+                      valueListenable: _lit,
+                      builder: (context, lit, picture) => AnimatedScale(
+                        scale: lit ? 1.04 : 1,
+                        duration: Motion.of(Ease.fade),
+                        curve: Ease.curve,
+                        child: picture,
+                      ),
+                      child: LayoutBuilder(
+                        builder: (context, box) => Image(
+                          color: context.pictureWarmth,
+                          colorBlendMode: BlendMode.multiply,
+                          image: thumbnailFor(item, widget.thumbnails,
+                              width: thumbnailDecodeWidth(
+                                  box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                          frameBuilder: (context, child, frame, sync) => fadeInFrame(
+                              child, frame, sync,
+                              under: ColoredBox(color: colors.surfaceContainerHighest)),
+                          errorBuilder: (context, _, __) => ColoredBox(
+                              color: colors.surfaceContainerHighest,
+                              child:
+                                  Icon(AppIcons.televisionSimple, size: 40, color: colors.outline)),
+                        ),
+                      ),
+                    )),
+                    if (_frame > 0) ...[
+                      AnimatedSwitcher(
+                        duration: Motion.of(const Duration(milliseconds: 250)),
+                        switchInCurve: Ease.out,
+                        switchOutCurve: Ease.out,
+                        child: Image(
+                          color: context.pictureWarmth,
+                          colorBlendMode: BlendMode.multiply,
+                          // The frames are cached on disk like thumbnails, so
+                          // hovering the same card again reads no network.
+                          image: _frameImage(item, _frame),
+                          key: ValueKey(_frame),
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                          width: double.infinity,
+                          height: double.infinity,
+                          // Shown only once loaded, over the thumbnail.
+                          frameBuilder: (context, child, frame, sync) =>
+                              sync || frame != null ? child : const SizedBox.shrink(),
+                          errorBuilder: (context, _, __) => const SizedBox.shrink(),
+                        ),
+                      ),
+                      Positioned(
+                          left: 8,
+                          right: 8,
+                          top: 8,
+                          child: Row(children: [
+                            for (var i = 1; i <= 3; i++)
+                              Expanded(
+                                  child: Container(
+                                height: 3,
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                decoration: BoxDecoration(
+                                    color: i <= _frame ? Colors.white : Colors.white38,
+                                    borderRadius: BorderRadius.circular(2)),
+                              )),
+                          ])),
+                    ],
+                    // Views over a shade at the foot of the picture, the length
+                    // at its end; the age goes with the channel below, where a
+                    // narrow card can't cut it off.
+                    if (views != null)
+                      const Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 48,
+                          child: IgnorePointer(
+                              child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0x00000000), Color(0x8C000000), Color(0xBF000000)],
+                                stops: [0, 0.6, 1]),
+                          )))),
+                    if (views != null)
+                      PositionedDirectional(
+                          start: 8,
+                          end: 80,
+                          bottom: 7,
+                          child: Text(
+                            views,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                shadows: [Shadow(offset: Offset(0, 1), color: Color(0x80000000))]),
+                          )),
+                    if (item.isLive || item.isUpcoming)
+                      PositionedDirectional(
+                          end: 8,
+                          bottom: 6,
+                          child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'),
+                              color: item.isLive ? const Color(0xFFCC0000) : null))
+                    else if (item.durationLabel.isNotEmpty)
+                      PositionedDirectional(
+                          end: 8,
+                          bottom: 6,
+                          child: DurationBadge(item.durationLabel, onShade: views != null)),
+                    if (item.membersOnly)
+                      const PositionedDirectional(start: 8, top: 8, child: MembersOnlyBadge()),
+                    PositionedDirectional(
+                        start: 8, top: item.membersOnly ? 34 : 8, child: DifficultyBadge(item.id)),
+                    _ProgressBar(item: item),
+                    ValueListenableBuilder(
+                      valueListenable: _lit,
+                      builder: (context, lit, _) => lit
+                          ? PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item))
+                          : const SizedBox.shrink(),
                     ),
-                  ),
-                )),
-                if (_frame > 0) ...[
-                  AnimatedSwitcher(
-                    duration: Motion.of(const Duration(milliseconds: 250)),
-                    switchInCurve: Ease.out,
-                    switchOutCurve: Ease.out,
-                    child: Image(
-                      color: context.pictureWarmth,
-                      colorBlendMode: BlendMode.multiply,
-                      // The frames are cached on disk like thumbnails, so
-                      // hovering the same card again reads no network.
-                      image: _frameImage(item, _frame),
-                      key: ValueKey(_frame),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      width: double.infinity,
-                      height: double.infinity,
-                      // Shown only once loaded, over the thumbnail.
-                      frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : const SizedBox.shrink(),
-                      errorBuilder: (context, _, __) => const SizedBox.shrink(),
-                    ),
-                  ),
-                  Positioned(left: 8, right: 8, top: 8, child: Row(children: [
-                    for (var i = 1; i <= 3; i++)
-                      Expanded(child: Container(
-                        height: 3,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(color: i <= _frame ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(2)),
-                      )),
-                  ])),
-                ],
-                // Views over a shade at the foot of the picture, the length
-                // at its end; the age goes with the channel below, where a
-                // narrow card can't cut it off.
-                if (views != null)
-                  const Positioned(left: 0, right: 0, bottom: 0, height: 48, child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x00000000), Color(0x8C000000), Color(0xBF000000)], stops: [0, 0.6, 1]),
-                  )))),
-                if (views != null)
-                  PositionedDirectional(start: 8, end: 80, bottom: 7, child: Text(
-                    views,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, shadows: [Shadow(offset: Offset(0, 1), color: Color(0x80000000))]),
-                  )),
-                if (item.isLive || item.isUpcoming)
-                  PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
-                else if (item.durationLabel.isNotEmpty)
-                  PositionedDirectional(end: 8, bottom: 6, child: DurationBadge(item.durationLabel, onShade: views != null)),
-                if (item.membersOnly) const PositionedDirectional(start: 8, top: 8, child: MembersOnlyBadge()),
-                PositionedDirectional(start: 8, top: item.membersOnly ? 34 : 8, child: DifficultyBadge(item.id)),
-                _ProgressBar(item: item),
-                ValueListenableBuilder(
-                  valueListenable: _lit,
-                  builder: (context, lit, _) => lit ? PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item)) : const SizedBox.shrink(),
+                  ]),
                 ),
-              ]),
-            ),
-          ),
-          Expanded(child: Padding(
-            padding: compact ? const EdgeInsets.fromLTRB(8, 6, 8, 4) : const EdgeInsets.fromLTRB(2, 10, 2, 4),
-            // The channel line keeps to the card's foot, however long the
-            // title, so a row of cards lines up.
-            child: LayoutBuilder(builder: (context, box) {
-              final ownLine = channelOwnLine(box.maxWidth);
-              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Align(alignment: AlignmentDirectional.topStart, child: TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: 2, style: TextStyle(fontSize: compact ? 13 : 14, height: compact ? 1.32 : 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)))),
-              // Why it is here, on a line of its own so it reads whole.
-              if (widget.reason case final reason? when reason.isNotEmpty)
-                SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
-              // Whose it is, and its menu. On a card too narrow for both,
-              // the channel has a line of its own above the date, so its
-              // name reads whole; the two lines sit together, the menu
-              // beside them, and the date's line stays when a live has
-              // none, so the channels of a row line up.
-              SizedBox(
-                height: 24 + (ownLine ? _channelLineHeight * cardTextScale(context) : 0),
-                child: Row(children: [
-                  Expanded(child: ownLine
-                      ? Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle.copyWith(color: colors.onSurfaceVariant, height: 1.3)),
-                          Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle.copyWith(height: 1.3)),
-                        ])
-                      : MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle, leadColor: colors.onSurfaceVariant)),
-                  Builder(builder: (context) => touchFirst || Device.tv
-                      ? IconButton(
-                          tooltip: tr('More (Menu key)'),
-                          onPressed: () => _menu(_centreOf(context)),
-                          icon: Icon(AppIcons.dotsThreeVertical, size: touchFirst ? 18 : 16, color: colors.outline),
-                          padding: EdgeInsets.zero,
-                          // Wider for a finger; the row's height stays.
-                          constraints: BoxConstraints.tightFor(width: touchFirst ? 40 : 24, height: 24),
-                          visualDensity: VisualDensity.compact,
-                        )
-                      : CardMenuDots(onPressed: () => _menu(_centreOf(context)), color: colors.outline)),
-                ]),
               ),
-              if (widget.watched case final watched?) SizedBox(height: _reasonHeight * cardTextScale(context), child: WatchedLine(watched)),
-            ]);
-            }),
-          )),
-        ])),
+              Expanded(
+                  child: Padding(
+                padding: compact
+                    ? const EdgeInsets.fromLTRB(8, 6, 8, 4)
+                    : const EdgeInsets.fromLTRB(2, 10, 2, 4),
+                // The channel line keeps to the card's foot, however long the
+                // title, so a row of cards lines up.
+                child: LayoutBuilder(builder: (context, box) {
+                  final ownLine = channelOwnLine(box.maxWidth);
+                  return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                        child: Align(
+                            alignment: AlignmentDirectional.topStart,
+                            child: TitleText(titleFor(item),
+                                about: aboutOf(item),
+                                video: item,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: compact ? 13 : 14,
+                                    height: compact ? 1.32 : 1.38,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.onSurface)))),
+                    // Why it is here, on a line of its own so it reads whole.
+                    if (widget.reason case final reason? when reason.isNotEmpty)
+                      SizedBox(
+                          height: _reasonHeight * cardTextScale(context),
+                          child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: ReasonTag(reason, wide: true))),
+                    // Whose it is, and its menu. On a card too narrow for both,
+                    // the channel has a line of its own above the date, so its
+                    // name reads whole; the two lines sit together, the menu
+                    // beside them, and the date's line stays when a live has
+                    // none, so the channels of a row line up.
+                    SizedBox(
+                      height: 24 + (ownLine ? _channelLineHeight * cardTextScale(context) : 0),
+                      child: Row(children: [
+                        Expanded(
+                            child: ownLine
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                        Text(item.channel.isEmpty ? tr('YouTube') : item.channel,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            style: metaStyle.copyWith(
+                                                color: colors.onSurfaceVariant, height: 1.3)),
+                                        Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            style: metaStyle.copyWith(height: 1.3)),
+                                      ])
+                                : MetaLine(
+                                    lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead,
+                                    tail: MetaLine.ageOf(item) ?? '',
+                                    style: metaStyle,
+                                    leadColor: colors.onSurfaceVariant)),
+                        Builder(
+                            builder: (context) => touchFirst || Device.tv
+                                ? IconButton(
+                                    tooltip: tr('More (Menu key)'),
+                                    onPressed: () => _menu(_centreOf(context)),
+                                    icon: Icon(AppIcons.dotsThreeVertical,
+                                        size: touchFirst ? 18 : 16, color: colors.outline),
+                                    padding: EdgeInsets.zero,
+                                    // Wider for a finger; the row's height stays.
+                                    constraints: BoxConstraints.tightFor(
+                                        width: touchFirst ? 40 : 24, height: 24),
+                                    visualDensity: VisualDensity.compact,
+                                  )
+                                : CardMenuDots(
+                                    onPressed: () => _menu(_centreOf(context)),
+                                    color: colors.outline)),
+                      ]),
+                    ),
+                    if (widget.watched case final watched?)
+                      SizedBox(
+                          height: _reasonHeight * cardTextScale(context),
+                          child: WatchedLine(watched)),
+                  ]);
+                }),
+              )),
+            ])),
       ),
     );
     return CallbackShortcuts(
@@ -1025,7 +1302,8 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
         const SingleActivator(LogicalKeyboardKey.contextMenu): _menu,
         const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
       },
-      child: PressScale(child: Stack(children: [
+      child: PressScale(
+          child: Stack(children: [
         if (skin?.videoCard case final surface?)
           ValueListenableBuilder(
             valueListenable: _lit,
@@ -1040,7 +1318,10 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
         else
           card,
         if (_focused)
-          Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
+          Positioned.fill(
+              child: IgnorePointer(
+                  child: DecoratedBox(
+                      decoration: BoxDecoration(
             borderRadius: AppStyle.cardRadius,
             border: Border.all(color: colors.primary, width: 2),
           )))),
@@ -1083,7 +1364,9 @@ class _CardMenuDotsState extends State<CardMenuDots> {
                 width: 24,
                 height: 24,
                 child: DecoratedBox(
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: _over ? widget.color.withValues(alpha: 0.16) : null),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _over ? widget.color.withValues(alpha: 0.16) : null),
                   child: Icon(AppIcons.dotsThreeVertical, size: 16, color: widget.color),
                 ),
               ),
@@ -1121,15 +1404,19 @@ class _QuickActionsState extends State<_QuickActions> {
                 customBorder: const CircleBorder(),
                 canRequestFocus: false,
                 onTap: onPressed,
-                child: Padding(padding: const EdgeInsets.all(4), child: Icon(icon, size: 18, color: Colors.white)),
+                child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(icon, size: 18, color: Colors.white)),
               ),
             ),
           ),
         );
-    void notice(String text) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
+    void notice(String text) => ScaffoldMessenger.maybeOf(context)
+        ?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
     return Row(mainAxisSize: MainAxisSize.min, children: [
       if (library != null)
-        button(later ? AppIcons.clockFill : AppIcons.clock, later ? tr('Remove from Watch later') : tr('Watch later'), () {
+        button(later ? AppIcons.clockFill : AppIcons.clock,
+            later ? tr('Remove from Watch later') : tr('Watch later'), () {
           final added = library.toggleWatchLater(item);
           setState(() {});
           notice(added ? tr('Added to Watch later') : tr('Removed from Watch later'));
@@ -1201,15 +1488,32 @@ class DurationBadge extends StatelessWidget {
       return Padding(
         // Its foot level with the views'.
         padding: const EdgeInsets.only(bottom: 1),
-        child: Text(label, style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()], shadows: _shadow)),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                fontFamily: skin?.monoFont,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                shadows: _shadow)),
       );
     }
     final text = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      child: Text(label, style: TextStyle(fontSize: 12, color: surface != null ? skin!.durationText ?? Colors.white : Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()])),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 12,
+              color: surface != null ? skin!.durationText ?? Colors.white : Colors.white,
+              fontWeight: FontWeight.w500,
+              fontFamily: skin?.monoFont,
+              fontFeatures: const [FontFeature.tabularFigures()])),
     );
     if (surface != null) return SkinBox(surface: surface, radius: 4, child: text);
-    return DecoratedBox(decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)), child: text);
+    return DecoratedBox(
+        decoration: BoxDecoration(
+            color: color ?? Colors.black.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(4)),
+        child: text);
   }
 }
 
@@ -1217,6 +1521,7 @@ class DurationBadge extends StatelessWidget {
 /// that a long channel name never pushes it out.
 class WatchedLine extends StatelessWidget {
   const WatchedLine(this.when, {super.key});
+
   /// "2 hours ago", or the day as YouTube's history names it.
   final String when;
 
@@ -1226,7 +1531,12 @@ class WatchedLine extends StatelessWidget {
     return Row(children: [
       Icon(AppIcons.clockCounterClockwise, size: 12, color: color),
       const SizedBox(width: 4),
-      Expanded(child: Text(tr('Watched {0}', [when]), maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: TextStyle(fontSize: 12, color: color))),
+      Expanded(
+          child: Text(tr('Watched {0}', [when]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: TextStyle(fontSize: 12, color: color))),
     ]);
   }
 }
@@ -1243,7 +1553,12 @@ class DifficultyBadge extends StatelessWidget {
         builder: (context, _) {
           final controller = VideoActions.of(context);
           final known = videoDifficulty.knownOf(id);
-          if (known == null || controller == null || !controller.learningOn || !controller.learning.unlocked) return const SizedBox.shrink();
+          if (known == null ||
+              controller == null ||
+              !controller.learningOn ||
+              !controller.learning.unlocked) {
+            return const SizedBox.shrink();
+          }
           final (label, color) = switch (VideoWords.levelFor(known)) {
             VideoLevel.easy => (tr('Easy'), const Color(0xFF2E7D32)),
             VideoLevel.right => (tr('Just right'), const Color(0xFF1565C0)),
@@ -1306,7 +1621,8 @@ class _CompactVideoTileState extends State<CompactVideoTile> with SpokenTitle {
     if (mounted && _branding != _brandingNow()) setState(() {});
   }
 
-  (String, Uri?) _brandingNow() => (deArrow.titleOf(item.id, item.title), deArrow.thumbnailOf(item.id));
+  (String, Uri?) _brandingNow() =>
+      (deArrow.titleOf(item.id, item.title), deArrow.thumbnailOf(item.id));
   (String, Uri?)? _branding;
 
   @override
@@ -1316,60 +1632,94 @@ class _CompactVideoTileState extends State<CompactVideoTile> with SpokenTitle {
     followSpokenTitle();
     _branding = _brandingNow();
     final colors = context.colors;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
-    return PressScale(child: InkWell(
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null
+        ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)])
+        : null;
+    return PressScale(
+        child: InkWell(
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
-      onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
+      onSecondaryTapUp: (details) =>
+          showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
       onLongPress: () {
         Haptics.menu();
         unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen));
       },
       child: SpokenAs(
-        label: spokenVideo(context, item),
-        actions: menuAction(() => unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen))),
-        child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SizedBox(
-            width: 152,
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Stack(fit: StackFit.expand, children: [
-                  Image(
-                    color: context.pictureWarmth,
-                    colorBlendMode: BlendMode.multiply,
-                    image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
-                    fit: BoxFit.cover,
-                    frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
-                    errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
+          label: spokenVideo(context, item),
+          actions: menuAction(
+              () => unawaited(showVideoMenu(context, item, _centreOf(context), onOpen: onOpen))),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(
+                width: 152,
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(fit: StackFit.expand, children: [
+                      Image(
+                        color: context.pictureWarmth,
+                        colorBlendMode: BlendMode.multiply,
+                        image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
+                        fit: BoxFit.cover,
+                        frameBuilder: (context, child, frame, sync) => fadeInFrame(
+                            child, frame, sync,
+                            under: ColoredBox(color: colors.surfaceContainerHighest)),
+                        errorBuilder: (context, _, __) =>
+                            ColoredBox(color: colors.surfaceContainerHighest),
+                      ),
+                      if (item.isLive || item.isUpcoming)
+                        PositionedDirectional(
+                            end: 4,
+                            bottom: 4,
+                            child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'),
+                                color: item.isLive ? const Color(0xFFCC0000) : null))
+                      else if (item.durationLabel.isNotEmpty)
+                        PositionedDirectional(
+                            end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                      if (item.membersOnly)
+                        const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
+                      PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
+                      _ProgressBar(item: item),
+                    ]),
                   ),
-                  if (item.isLive || item.isUpcoming)
-                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
-                  else if (item.durationLabel.isNotEmpty)
-                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                  if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
-                    PositionedDirectional(start: 4, top: 4, child: DifficultyBadge(item.id)),
-                  _ProgressBar(item: item),
-                ]),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TitleText(titleFor(item), about: aboutOf(item), video: item, maxLines: 2, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
-            const SizedBox(height: 4),
-            if (upcomingStart != null)
-              Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
-            Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
-            // Views and age, so choosing what to watch next needs no hover.
-            if (MetaLine.of(item, style: const TextStyle()).tail case final facts when facts.isNotEmpty)
-              Text(facts, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
-          ])),
-        ]),
-      )),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                TitleText(titleFor(item),
+                    about: aboutOf(item),
+                    video: item,
+                    maxLines: 2,
+                    style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        fontWeight: FontWeight.w500,
+                        color: colors.onSurface)),
+                const SizedBox(height: 4),
+                if (upcomingStart != null)
+                  Text(upcomingStart,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
+                Text(item.channel.isEmpty ? tr('YouTube') : item.channel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: colors.outline)),
+                // Views and age, so choosing what to watch next needs no hover.
+                if (MetaLine.of(item, style: const TextStyle()).tail case final facts
+                    when facts.isNotEmpty)
+                  Text(facts,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: colors.outline)),
+              ])),
+            ]),
+          )),
     ));
   }
 }
@@ -1387,12 +1737,17 @@ class _ProgressBar extends StatelessWidget {
       left: 0,
       right: 0,
       bottom: 0,
-      child: LinearProgressIndicator(value: progress.fraction, minHeight: 3, backgroundColor: Colors.black45, color: context.colors.primary),
+      child: LinearProgressIndicator(
+          value: progress.fraction,
+          minHeight: 3,
+          backgroundColor: Colors.black45,
+          color: context.colors.primary),
     );
   }
 }
 
-Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position, {required VoidCallback onOpen, VoidCallback? onRemove, String? removeLabel}) async {
+Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position,
+    {required VoidCallback onOpen, VoidCallback? onRemove, String? removeLabel}) async {
   final controller = VideoActions.of(context);
   final library = controller?.library;
   final channel = item.channelRef;
@@ -1404,7 +1759,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
   final rows = <SheetChoice<String>>[];
   PopupMenuEntry<String> entry(String value, IconData icon, String label) {
     rows.add((value: value, icon: icon, label: label, selected: false));
-    return PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
+    return PopupMenuItem(
+        value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
   }
 
   PopupMenuEntry<String> divider() {
@@ -1413,48 +1769,58 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
   }
 
   final items = <PopupMenuEntry<String>>[
-      entry('play', AppIcons.playFill, tr('Play')),
-      if (library != null) ...[
-        entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart, favorite ? tr('Remove from favorites') : tr('Favorites')),
-        entry('later', later ? AppIcons.clockFill : AppIcons.clock, later ? tr('Remove from Watch later') : tr('Watch later')),
-        entry('playlist', AppIcons.listPlus, tr('Add to playlist…')),
-      ],
-      if (controller != null) ...[
-        entry('queueNext', AppIcons.playlist, tr('Play next')),
-        entry('queueLast', AppIcons.queue, tr('Add to play queue')),
-      ],
-      if (controller?.account?.active ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
-      if (controller != null) entry('channel', AppIcons.userCircle, tr('View channel')),
-      if (controller != null && channel != null) ...[
-        if (controller.preferences.isUnrecommended(channel.id))
-          entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
-        else
-          entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
-        entry('block', AppIcons.prohibitFill, tr('Block this channel')),
-      ],
-      if (onRemove != null)
-        removeLabel == null
-            ? entry('remove', AppIcons.minusCircle, tr('Remove from this list'))
-            : entry('remove', AppIcons.thumbsDown, removeLabel),
-      divider(),
-      if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('Downloads')),
-      if (item.isLive && (controller?.downloads?.canRecord ?? false)) entry('download', AppIcons.radioButton, tr('Record the live stream')),
-      entry('copy', AppIcons.link, tr('Copy link')),
-      entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
+    entry('play', AppIcons.playFill, tr('Play')),
+    if (library != null) ...[
+      entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart,
+          favorite ? tr('Remove from favorites') : tr('Favorites')),
+      entry('later', later ? AppIcons.clockFill : AppIcons.clock,
+          later ? tr('Remove from Watch later') : tr('Watch later')),
+      entry('playlist', AppIcons.listPlus, tr('Add to playlist…')),
+    ],
+    if (controller != null) ...[
+      entry('queueNext', AppIcons.playlist, tr('Play next')),
+      entry('queueLast', AppIcons.queue, tr('Add to play queue')),
+    ],
+    if (controller?.account?.active ?? false)
+      entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
+    if (controller != null) entry('channel', AppIcons.userCircle, tr('View channel')),
+    if (controller != null && channel != null) ...[
+      if (controller.preferences.isUnrecommended(channel.id))
+        entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
+      else
+        entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
+      entry('block', AppIcons.prohibitFill, tr('Block this channel')),
+    ],
+    if (onRemove != null)
+      removeLabel == null
+          ? entry('remove', AppIcons.minusCircle, tr('Remove from this list'))
+          : entry('remove', AppIcons.thumbsDown, removeLabel),
+    divider(),
+    if (controller?.downloads != null && !item.isLive)
+      entry('download', AppIcons.downloadSimple, tr('Downloads')),
+    if (item.isLive && (controller?.downloads?.canRecord ?? false))
+      entry('download', AppIcons.radioButton, tr('Record the live stream')),
+    entry('copy', AppIcons.link, tr('Copy link')),
+    entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
   ];
   final choice = phone
       ? await pickFromSheet<String>(context, rows, title: titleFor(item))
-      : await showMenu<String>(context: context, position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size), items: items);
+      : await showMenu<String>(
+          context: context,
+          position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
+          items: items);
   if (!context.mounted) return;
   switch (choice) {
     case 'play':
       onOpen();
     case 'favorite':
       final added = library!.toggleFavorite(item);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Favorited') : tr('Removed from favorites'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(added ? tr('Favorited') : tr('Removed from favorites'))));
     case 'later':
       final added = library!.toggleWatchLater(item);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Added to Watch later') : tr('Removed from Watch later'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(added ? tr('Added to Watch later') : tr('Removed from Watch later'))));
     case 'queueNext':
       controller!.queueNext(item);
     case 'queueLast':
@@ -1482,7 +1848,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
 
 /// Lets the user pick one of the account's YouTube playlists for [item],
 /// or create a private one.
-Future<void> showSaveToYoutube(BuildContext context, AppController controller, VideoItem item) async {
+Future<void> showSaveToYoutube(
+    BuildContext context, AppController controller, VideoItem item) async {
   final account = controller.account;
   if (account == null) return;
   final playlists = account.remotePlaylists();
@@ -1496,18 +1863,26 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
           future: playlists,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
+              return const Padding(
+                  padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
             }
             final list = snapshot.data ?? const <RemotePlaylist>[];
             return Column(mainAxisSize: MainAxisSize.min, children: [
               for (final playlist in list)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(context, playlist),
-                  child: ListTile(dense: true, leading: Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} videos', [playlist.count]))),
+                  child: ListTile(
+                      dense: true,
+                      leading: Icon(AppIcons.playlist),
+                      title: Text(playlist.title),
+                      subtitle: Text(tr('{0} videos', [playlist.count]))),
                 ),
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, create),
-                child: ListTile(dense: true, leading: Icon(AppIcons.plus), title: Text(tr('New private playlist…'))),
+                child: ListTile(
+                    dense: true,
+                    leading: Icon(AppIcons.plus),
+                    title: Text(tr('New private playlist…'))),
               ),
             ]);
           },
@@ -1517,12 +1892,14 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
   );
   if (!context.mounted || choice == null) return;
   if (choice is RemotePlaylist) return account.saveToPlaylist(item, playlist: choice);
-  final title = await promptText(context, title: tr('New YouTube playlist'), hint: tr('Playlist name'), confirm: tr('Create and save'));
+  final title = await promptText(context,
+      title: tr('New YouTube playlist'), hint: tr('Playlist name'), confirm: tr('Create and save'));
   if (title != null && title.trim().isNotEmpty) await account.saveToPlaylist(item, newTitle: title);
 }
 
 /// Lets the user pick a playlist for [item], or create one.
-Future<void> showAddToPlaylist(BuildContext context, AppController controller, VideoItem item) async {
+Future<void> showAddToPlaylist(
+    BuildContext context, AppController controller, VideoItem item) async {
   final library = controller.library;
   if (library == null) return;
   const create = '\u0000new';
@@ -1534,7 +1911,10 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
         for (final playlist in controller.orderedPlaylists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
-            child: ListTile(leading: Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} videos', [playlist.items.length]))),
+            child: ListTile(
+                leading: Icon(AppIcons.playlist),
+                title: Text(playlist.name),
+                subtitle: Text(tr('{0} videos', [playlist.items.length]))),
           ),
         SimpleDialogOption(
           onPressed: () => Navigator.pop(context, create),
@@ -1544,19 +1924,25 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
     ),
   );
   if (choice == null || !context.mounted) return;
-  final playlist = choice == create ? await _createPlaylist(context, controller) : library.playlist(choice);
+  final playlist =
+      choice == create ? await _createPlaylist(context, controller) : library.playlist(choice);
   if (playlist == null || !context.mounted) return;
   final added = library.addToPlaylist(playlist, item);
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Added to "{0}"', [playlist.name]) : tr('This video is already in "{0}"', [playlist.name]))));
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(added
+          ? tr('Added to "{0}"', [playlist.name])
+          : tr('This video is already in "{0}"', [playlist.name]))));
 }
 
 Future<LocalPlaylist?> _createPlaylist(BuildContext context, AppController controller) async {
-  final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
+  final name = await promptText(context,
+      title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
   return name == null ? null : controller.library?.createPlaylist(name);
 }
 
 /// Asks for one line of text; null when cancelled.
-Future<String?> promptText(BuildContext context, {required String title, required String hint, required String confirm, String initial = ''}) {
+Future<String?> promptText(BuildContext context,
+    {required String title, required String hint, required String confirm, String initial = ''}) {
   final text = TextEditingController(text: initial);
   return showDialog<String>(
     context: context,
@@ -1585,19 +1971,23 @@ Offset _centreOf(BuildContext context) {
 /// A video's channel, then its views and upload date, on one line: a long
 /// channel name is shortened first, so the views and date stay in sight.
 class MetaLine extends StatelessWidget {
-  const MetaLine({super.key, required this.lead, required this.tail, required this.style, this.leadColor});
+  const MetaLine(
+      {super.key, required this.lead, required this.tail, required this.style, this.leadColor});
 
   factory MetaLine.of(VideoItem item, {required TextStyle style, String? extra}) {
     final upcomingStart = startOf(item);
     return MetaLine(
-      lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
+      lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel]
+          .join(' · '),
       tail: [viewsOf(item), ageOf(item), extra].nonNulls.join(' · '),
       style: style,
     );
   }
 
   /// When an upcoming live starts.
-  static String? startOf(VideoItem item) => item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+  static String? startOf(VideoItem item) => item.isUpcoming && item.scheduledStart != null
+      ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)])
+      : null;
 
   /// "1.2K views", or watching for a live.
   static String? viewsOf(VideoItem item) => switch (item.audience) {
@@ -1638,7 +2028,12 @@ class MetaLine extends StatelessWidget {
     final key = (text, style, scaler, direction);
     var width = _widths.remove(key);
     if (width == null) {
-      final painter = TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: direction, textScaler: scaler)..layout();
+      final painter = TextPainter(
+          text: TextSpan(text: text, style: style),
+          maxLines: 1,
+          textDirection: direction,
+          textScaler: scaler)
+        ..layout();
       width = painter.width;
       painter.dispose();
       if (_widths.length >= 1024) _widths.remove(_widths.keys.first);
@@ -1650,7 +2045,8 @@ class MetaLine extends StatelessWidget {
   /// a word, with the ellipsis right after the last letter kept: cut at a
   /// word, a name like "Yinuo Li 李一諾" lost its last word and left a gap
   /// as wide as it before the date.
-  static String fit(String lead, double room, TextStyle style, TextScaler scaler, TextDirection direction) {
+  static String fit(
+      String lead, double room, TextStyle style, TextScaler scaler, TextDirection direction) {
     if (_width(lead, style, scaler, direction) <= room) return lead;
     final key = (lead, room.floor(), style, scaler, direction);
     if (_fitted[key] case final known?) return known;
@@ -1678,8 +2074,17 @@ class MetaLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
-    if (tail.isEmpty) return Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style.copyWith(color: leadColor));
-    if (lead.isEmpty) return Text(tail, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    if (tail.isEmpty) {
+      return Text(lead,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          style: style.copyWith(color: leadColor));
+    }
+    if (lead.isEmpty) {
+      return Text(tail,
+          maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    }
     final full = DefaultTextStyle.of(context).style.merge(style);
     final direction = Directionality.of(context);
     final scaler = MediaQuery.textScalerOf(context);
@@ -1691,7 +2096,10 @@ class MetaLine extends StatelessWidget {
       final tailWidth = min(_width(after, full, scaler, direction), box.maxWidth * 2 / 3);
       final name = fit(lead, max(0, box.maxWidth - tailWidth - 0.5), full, scaler, direction);
       return Text.rich(
-        TextSpan(children: [TextSpan(text: name, style: TextStyle(color: leadColor)), TextSpan(text: after)]),
+        TextSpan(children: [
+          TextSpan(text: name, style: TextStyle(color: leadColor)),
+          TextSpan(text: after)
+        ]),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         softWrap: false,
@@ -1720,10 +2128,15 @@ class ReasonTag extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: wide ? double.infinity : 120),
         child: DecoratedBox(
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(4)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            child: Text(wide ? text : kind?.label ?? text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
+            child: Text(wide ? text : kind?.label ?? text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 11, height: 1.3, fontWeight: FontWeight.w500, color: color)),
           ),
         ),
       ),

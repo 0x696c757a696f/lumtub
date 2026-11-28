@@ -8,11 +8,13 @@ void main() {
           body: Center(
             child: SizedBox(
               width: width,
-              child: PageHeader('观看历史', subtitle: '5 个视频 · 仅保存在这台设备上', trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                TextButton(onPressed: () {}, child: const Text('观看统计')),
-                TextButton(onPressed: () {}, child: const Text('选择')),
-                TextButton(onPressed: () {}, child: const Text('清空')),
-              ])),
+              child: PageHeader('观看历史',
+                  subtitle: '5 个视频 · 仅保存在这台设备上',
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    TextButton(onPressed: () {}, child: const Text('观看统计')),
+                    TextButton(onPressed: () {}, child: const Text('选择')),
+                    TextButton(onPressed: () {}, child: const Text('清空')),
+                  ])),
             ),
           ),
         ),
@@ -20,7 +22,8 @@ void main() {
 
   testWidgets('on a phone the buttons go under the title instead of squeezing it', (tester) async {
     await tester.pumpWidget(header(390));
-    expect(tester.getTopLeft(find.text('选择')).dy, greaterThan(tester.getBottomLeft(find.text('5 个视频 · 仅保存在这台设备上')).dy));
+    expect(tester.getTopLeft(find.text('选择')).dy,
+        greaterThan(tester.getBottomLeft(find.text('5 个视频 · 仅保存在这台设备上')).dy));
     expect(tester.takeException(), isNull);
   });
 
@@ -29,7 +32,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(header(1000));
-    expect(tester.getTopLeft(find.text('选择')).dx, greaterThan(tester.getTopRight(find.text('观看历史')).dx));
-    expect(tester.getBottomLeft(find.text('选择')).dy, lessThanOrEqualTo(tester.getBottomLeft(find.text('5 个视频 · 仅保存在这台设备上')).dy + 12));
+    expect(tester.getTopLeft(find.text('选择')).dx,
+        greaterThan(tester.getTopRight(find.text('观看历史')).dx));
+    expect(tester.getBottomLeft(find.text('选择')).dy,
+        lessThanOrEqualTo(tester.getBottomLeft(find.text('5 个视频 · 仅保存在这台设备上')).dy + 12));
   });
 }

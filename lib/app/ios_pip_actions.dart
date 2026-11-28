@@ -56,7 +56,11 @@ extension IosPipActions on AppController {
     final state = player.state;
     final live = playing?.isLive ?? false;
     final rate = state.rate;
-    if (!force && state.playing == sync.playing && rate == sync.rate && state.duration == sync.duration && live == sync.live) {
+    if (!force &&
+        state.playing == sync.playing &&
+        rate == sync.rate &&
+        state.duration == sync.duration &&
+        live == sync.live) {
       // The window's clock runs on by itself: only a jump needs telling.
       final elapsed = DateTime.now().difference(sync.sentAt);
       final expected = sync.position + (sync.playing ? elapsed * rate : Duration.zero);
@@ -70,7 +74,12 @@ extension IosPipActions on AppController {
       ..duration = state.duration
       ..live = live;
     try {
-      await IosVideoLayer.update(position: state.position, duration: state.duration, playing: state.playing, rate: rate, live: live);
+      await IosVideoLayer.update(
+          position: state.position,
+          duration: state.duration,
+          playing: state.playing,
+          rate: rate,
+          live: live);
     } catch (e) {
       logDebug(() => 'Could not update picture in picture: $e');
     }
@@ -80,7 +89,8 @@ extension IosPipActions on AppController {
   /// while a video plays on the watch page).
   void setIosAutoPip(bool on) {
     _iosAutoPip = on;
-    unawaited(IosVideoLayer.setAuto(on).catchError((Object e) => logDebug(() => 'Could not arm picture in picture: $e')));
+    unawaited(IosVideoLayer.setAuto(on)
+        .catchError((Object e) => logDebug(() => 'Could not arm picture in picture: $e')));
   }
 
   /// The 画中画 button: iOS's floating window.
@@ -100,7 +110,8 @@ extension IosPipActions on AppController {
 
   void _onIosPipEvent(IosPipEvent event, double? seconds, String? error) {
     final player = this.player;
-    logInfo('Picture in picture: ${event.name}${seconds == null ? '' : ' ${seconds.toStringAsFixed(0)} s'}${error == null ? '' : ' ($error)'}');
+    logInfo(
+        'Picture in picture: ${event.name}${seconds == null ? '' : ' ${seconds.toStringAsFixed(0)} s'}${error == null ? '' : ' ($error)'}');
     if (player == null) return;
     switch (event) {
       case IosPipEvent.play:
@@ -126,7 +137,9 @@ extension IosPipActions on AppController {
     _sendPipSubtitles();
     if (IosVideoLayer.active.value || !_windowHidden) return;
     final restored = _iosPip?.restoredAt;
-    if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) return;
+    if (restored != null && DateTime.now().difference(restored) < const Duration(seconds: 3)) {
+      return;
+    }
     unawaited(setBackgroundAudioOnly(true));
   }
 
@@ -144,7 +157,11 @@ extension IosPipActions on AppController {
   void _sendPipSubtitles([List<String>? lines]) {
     if (!Platform.isIOS) return;
     final player = this.player;
-    final wanted = player != null && IosVideoLayer.active.value && !libassDraws && !subtitlesOff && settings.pipSubtitles;
+    final wanted = player != null &&
+        IosVideoLayer.active.value &&
+        !libassDraws &&
+        !subtitlesOff &&
+        settings.pipSubtitles;
     final shown = lines ?? player?.state.subtitle ?? const [];
     final main = wanted && shown.isNotEmpty ? shown.first.trim() : '';
     final second = wanted && shown.length > 1 && secondarySubtitle != null ? shown[1].trim() : '';
@@ -152,7 +169,23 @@ extension IosPipActions on AppController {
     final s = settings;
     final key = main.isEmpty && second.isEmpty
         ? ''
-        : [main, second, aspect, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, s.subtitleBold, s.subtitleBackground, s.subtitleBorder, s.subtitlePosition].join('|');
+        : [
+            main,
+            second,
+            aspect,
+            s.subtitleFont,
+            s.subtitleScale,
+            s.subtitleColor,
+            s.subtitleOpacity,
+            s.secondaryFont,
+            s.secondaryScale,
+            s.secondaryColor,
+            s.secondaryOpacity,
+            s.subtitleBold,
+            s.subtitleBackground,
+            s.subtitleBorder,
+            s.subtitlePosition
+          ].join('|');
     if (key == _pipSubtitlesSent) return;
     _pipSubtitlesSent = key;
     // At the height the window's frames are made (720 lines), in the
@@ -160,7 +193,9 @@ extension IosPipActions on AppController {
     final canvas = Size(720 * aspect.clamp(0.3, 4.0), 720);
     final unit = max(12.0, min(canvas.height, canvas.width * 0.75) * 0.0533) / 32;
     final outline = s.subtitleBackground ? 0.0 : LibassLook.outlineFor(s.subtitleBorder) * unit;
-    Map<String, Object?> line(String text, String font, double scale, int color, double opacity, String language) => {
+    Map<String, Object?> line(
+            String text, String font, double scale, int color, double opacity, String language) =>
+        {
           'text': text,
           'font': font,
           'size': 32 * scale * unit,
@@ -173,8 +208,12 @@ extension IosPipActions on AppController {
     final sent = key.isEmpty
         ? const <Map<String, Object?>>[]
         : [
-            if (second.isNotEmpty) line(second, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity, secondSubtitleLanguage),
-            if (main.isNotEmpty) line(main, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity, mainSubtitleLanguage),
+            if (second.isNotEmpty)
+              line(second, s.secondaryFont, s.secondaryScale, s.secondaryColor, s.secondaryOpacity,
+                  secondSubtitleLanguage),
+            if (main.isNotEmpty)
+              line(main, s.subtitleFont, s.subtitleScale, s.subtitleColor, s.subtitleOpacity,
+                  mainSubtitleLanguage),
           ];
     unawaited(IosVideoLayer.setSubtitles(
       sent,
@@ -182,6 +221,7 @@ extension IosPipActions on AppController {
       canvasHeight: canvas.height,
       bottom: canvas.height * s.subtitlePosition.clamp(0, 100) / 100 - canvas.height * 0.03,
       spacing: 6 * unit,
-    ).catchError((Object e) => logDebug(() => 'Could not send the picture-in-picture subtitles: $e')));
+    ).catchError(
+        (Object e) => logDebug(() => 'Could not send the picture-in-picture subtitles: $e')));
   }
 }

@@ -37,8 +37,10 @@ class AnimatedVisibility extends StatefulWidget {
   State<AnimatedVisibility> createState() => _AnimatedVisibilityState();
 }
 
-class _AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this, duration: AnimatedVisibility.duration, value: widget.visible ? 1 : 0);
+class _AnimatedVisibilityState extends State<AnimatedVisibility>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+      vsync: this, duration: AnimatedVisibility.duration, value: widget.visible ? 1 : 0);
   late final Animation<double> _progress = CurvedAnimation(parent: _controller, curve: Ease.curve);
   Widget? _last;
 
@@ -86,7 +88,9 @@ class _AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTick
       animation: _controller,
       child: child,
       builder: (context, child) {
-        if (child == null || (!widget.visible && _controller.isDismissed)) return const SizedBox.shrink();
+        if (child == null || (!widget.visible && _controller.isDismissed)) {
+          return const SizedBox.shrink();
+        }
         final t = _progress.value;
         final away = (1 - t) * widget._from * (rtl ? -1 : 1);
         return ClipRect(

@@ -15,6 +15,7 @@ import 'map_limited.dart';
 abstract class RelayServers {
   RelayServers(this.client, this.name);
   final http.Client client;
+
   /// For log lines, such as `Piped`.
   final String name;
 
@@ -48,7 +49,9 @@ abstract class RelayServers {
     final response = await client.send(request);
     final body = StreamIterator(response.stream);
     try {
-      return (response.statusCode == 206 || response.statusCode == 200) && await body.moveNext() && body.current.isNotEmpty;
+      return (response.statusCode == 206 || response.statusCode == 200) &&
+          await body.moveNext() &&
+          body.current.isNotEmpty;
     } finally {
       await body.cancel();
     }
@@ -71,6 +74,7 @@ abstract class RelayServers {
   Future<List<String>>? _ranking;
   final _timings = <String, int>{};
   final _tried = <String>{};
+
   /// The fastest server of the last measurement, probed first next time.
   String? _lastGood;
 
@@ -92,7 +96,11 @@ abstract class RelayServers {
   /// Servers to try, fastest first, re-measured every few hours.
   Future<List<String>> servers() {
     final ranked = _ranked;
-    if (ranked != null && ranked.isNotEmpty && DateTime.now().difference(_rankedAt) < const Duration(hours: 3)) return Future.value(ranked);
+    if (ranked != null &&
+        ranked.isNotEmpty &&
+        DateTime.now().difference(_rankedAt) < const Duration(hours: 3)) {
+      return Future.value(ranked);
+    }
     return _ranking ??= _rank().whenComplete(() => _ranking = null);
   }
 
@@ -108,13 +116,16 @@ abstract class RelayServers {
   /// server answers, the new list is all there is, so it is waited for.
   Future<List<String>> _rank() async {
     await _loadCatalog();
-    final update = DateTime.now().difference(_catalogAt) > const Duration(days: 1) ? updateCatalog() : Future.value(catalog);
+    final update = DateTime.now().difference(_catalogAt) > const Duration(days: 1)
+        ? updateCatalog()
+        : Future.value(catalog);
     _timings.clear();
     _tried.clear();
     final before = catalog;
     final measuring = _measure(before);
     // After the known servers, so no more than [probeConcurrency] probes run at once.
-    final others = (update, measuring).wait.then((r) => _measure(r.$1.where((s) => !before.contains(s))));
+    final others =
+        (update, measuring).wait.then((r) => _measure(r.$1.where((s) => !before.contains(s))));
     await measuring;
     if (_timings.isEmpty) {
       await others;
@@ -154,7 +165,11 @@ abstract class RelayServers {
   Future<void> _writeCatalog() async {
     try {
       await catalogFile?.parent.create(recursive: true);
-      await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog, if (_lastGood != null) 'last': _lastGood}));
+      await catalogFile?.writeAsString(jsonEncode({
+        'updated': _catalogAt.toIso8601String(),
+        'servers': _catalog,
+        if (_lastGood != null) 'last': _lastGood
+      }));
     } catch (e) {
       logWarn('Could not save the $name server list: $e');
     }
@@ -188,7 +203,9 @@ abstract class RelayServers {
     return mapLimited(list, probeConcurrency, (server) async {
       final watch = Stopwatch()..start();
       try {
-        if (await plays(server).timeout(const Duration(seconds: 10))) _timings[server] = watch.elapsedMilliseconds;
+        if (await plays(server).timeout(const Duration(seconds: 10))) {
+          _timings[server] = watch.elapsedMilliseconds;
+        }
       } catch (e) {
         logDebug(() => 'Relay health check failed: $e');
       }
@@ -198,7 +215,9 @@ abstract class RelayServers {
 
   List<String> _publish() {
     final ranked = _timings.keys.toList()..sort((a, b) => _timings[a]!.compareTo(_timings[b]!));
-    logDebug(() => ranked.isEmpty ? 'No $name server could be reached' : '$name servers by speed: ${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join(', ')}');
+    logDebug(() => ranked.isEmpty
+        ? 'No $name server could be reached'
+        : '$name servers by speed: ${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join(', ')}');
     _ranked = ranked;
     _rankedAt = DateTime.now();
     if (ranked.isNotEmpty && ranked.first != _lastGood) {

@@ -20,18 +20,34 @@ void main() {
     final controller = AppController();
     await tester.pumpWidget(LumtubApp(controller: controller));
     await tester.pump();
-    final videos = [for (var i = 0; i < 120; i++) VideoItem(id: 'abcdefg${'$i'.padLeft(4, '0')}', title: 'Video $i', channel: 'X', url: 'https://youtu.be/x')];
+    final videos = [
+      for (var i = 0; i < 120; i++)
+        VideoItem(
+            id: 'abcdefg${'$i'.padLeft(4, '0')}',
+            title: 'Video $i',
+            channel: 'X',
+            url: 'https://youtu.be/x')
+    ];
     controller
       ..ready = true
       ..channel = const ChannelRef('UCx', 'X')
-      ..channelVideos = (VideoListLoader(() => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])), pageSize: 120)..loadMore());
+      ..channelVideos = (VideoListLoader(
+          () =>
+              Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])),
+          pageSize: 120)
+        ..loadMore());
     controller.navigate(PageMode.channel);
     for (var i = 0; i < 10; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
-    final list = tester.state<ScrollableState>(find.descendant(of: find.byKey(const PageStorageKey('list')), matching: find.byType(Scrollable)).first).position;
+    final list = tester
+        .state<ScrollableState>(find
+            .descendant(
+                of: find.byKey(const PageStorageKey('list')), matching: find.byType(Scrollable))
+            .first)
+        .position;
     expect(list.pixels, 0);
     await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
     for (var i = 0; i < 10; i++) {

@@ -6,22 +6,27 @@ import 'package:material_ui/material_ui.dart';
 
 import 'tooltip_finder.dart';
 
-Future<List<int>> _show(WidgetTester tester, {required int count, int selected = 0, double width = 400}) async {
+Future<List<int>> _show(WidgetTester tester,
+    {required int count, int selected = 0, double width = 400}) async {
   tester.view.physicalSize = Size(width, 600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final picked = <int>[];
-  await tester.pumpWidget(MaterialApp(home: Scaffold(body: CustomScrollView(slivers: [
+  await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+          body: CustomScrollView(slivers: [
     const SliverToBoxAdapter(child: SizedBox(height: 300)),
-    SliverToBoxAdapter(child: StatefulBuilder(builder: (context, setState) => ChipStrip(
-      title: 'Topics',
-      choices: [for (var i = 0; i < count; i++) (label: 'Chip $i', icon: null)],
-      selected: selected,
-      onSelected: (i) => setState(() {
-        picked.add(i);
-        selected = i;
-      }),
-    ))),
+    SliverToBoxAdapter(
+        child: StatefulBuilder(
+            builder: (context, setState) => ChipStrip(
+                  title: 'Topics',
+                  choices: [for (var i = 0; i < count; i++) (label: 'Chip $i', icon: null)],
+                  selected: selected,
+                  onSelected: (i) => setState(() {
+                    picked.add(i);
+                    selected = i;
+                  }),
+                ))),
     const SliverToBoxAdapter(child: SizedBox(height: 1000)),
   ]))));
   for (var i = 0; i < 4; i++) {
@@ -30,7 +35,11 @@ Future<List<int>> _show(WidgetTester tester, {required int count, int selected =
   return picked;
 }
 
-double _pageOffset(WidgetTester tester) => tester.state<ScrollableState>(find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down)).position.pixels;
+double _pageOffset(WidgetTester tester) => tester
+    .state<ScrollableState>(
+        find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down))
+    .position
+    .pixels;
 
 void main() {
   tearDown(() => debugTouchFirst = null);
@@ -40,7 +49,8 @@ void main() {
     expect(byTooltip('Show all'), findsNothing);
   });
 
-  testWidgets('a long row stays one line, keeps the selected chip in view without moving the page', (tester) async {
+  testWidgets('a long row stays one line, keeps the selected chip in view without moving the page',
+      (tester) async {
     await _show(tester, count: 30, selected: 20);
     expect(byTooltip('Show all'), findsOneWidget);
     final rect = tester.getRect(find.text('Chip 20'));
@@ -50,11 +60,14 @@ void main() {
     expect(_pageOffset(tester), 0);
   });
 
-  testWidgets('Show all lists every choice; picking one selects it and scrolls to it', (tester) async {
+  testWidgets('Show all lists every choice; picking one selects it and scrolls to it',
+      (tester) async {
     final picked = await _show(tester, count: 30);
     await tester.tap(byTooltip('Show all'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.widgetWithText(MenuItemButton, 'Chip 25'), 100, scrollable: find.descendant(of: find.byType(MenuAnchor), matching: find.byType(Scrollable)).last);
+    await tester.scrollUntilVisible(find.widgetWithText(MenuItemButton, 'Chip 25'), 100,
+        scrollable:
+            find.descendant(of: find.byType(MenuAnchor), matching: find.byType(Scrollable)).last);
     await tester.tap(find.widgetWithText(MenuItemButton, 'Chip 25'));
     await tester.pumpAndSettle();
     expect(picked, [25]);

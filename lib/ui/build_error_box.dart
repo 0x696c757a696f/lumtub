@@ -46,7 +46,10 @@ class BuildErrorBox extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant, decoration: TextDecoration.none),
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: colors.onSurfaceVariant,
+                      decoration: TextDecoration.none),
                 ),
               ),
             ),

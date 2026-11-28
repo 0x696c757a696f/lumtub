@@ -18,13 +18,20 @@ Map<String, Object?> _text(String id, String text) => {
       },
     };
 
-Map<String, Object?> _chat({List<Object?> actions = const [], String? next, bool header = false, String? restricted}) => {
+Map<String, Object?> _chat(
+        {List<Object?> actions = const [],
+        String? next,
+        bool header = false,
+        String? restricted}) =>
+    {
       'continuationContents': {
         'liveChatContinuation': {
           'actions': actions,
           if (next != null)
             'continuations': [
-              {'timedContinuationData': {'continuation': next, 'timeoutMs': 1}},
+              {
+                'timedContinuationData': {'continuation': next, 'timeoutMs': 1}
+              },
             ],
           if (header)
             'header': {
@@ -32,8 +39,20 @@ Map<String, Object?> _chat({List<Object?> actions = const [], String? next, bool
                 'viewSelector': {
                   'sortFilterSubMenuRenderer': {
                     'subMenuItems': [
-                      {'title': 'Top chat', 'selected': true, 'continuation': {'reloadContinuationData': {'continuation': 'top'}}},
-                      {'title': 'Live chat', 'selected': false, 'continuation': {'reloadContinuationData': {'continuation': 'all'}}},
+                      {
+                        'title': 'Top chat',
+                        'selected': true,
+                        'continuation': {
+                          'reloadContinuationData': {'continuation': 'top'}
+                        }
+                      },
+                      {
+                        'title': 'Live chat',
+                        'selected': false,
+                        'continuation': {
+                          'reloadContinuationData': {'continuation': 'all'}
+                        }
+                      },
                     ],
                   },
                 },
@@ -41,7 +60,9 @@ Map<String, Object?> _chat({List<Object?> actions = const [], String? next, bool
             },
           if (restricted != null)
             'actionPanel': {
-              'liveChatRestrictedParticipationRenderer': {'message': {'simpleText': restricted}},
+              'liveChatRestrictedParticipationRenderer': {
+                'message': {'simpleText': restricted}
+              },
             },
         },
       },
@@ -65,27 +86,53 @@ void main() {
                 'conversationBar': {
                   'liveChatRenderer': {
                     'continuations': [
-                      {'reloadContinuationData': {'continuation': 'start'}},
+                      {
+                        'reloadContinuationData': {'continuation': 'start'}
+                      },
                     ],
                   },
                 },
               },
             },
           },
-        (_, 'start') => _chat(actions: [_text('t1', 'top only')], next: 'top2', header: true, restricted: 'Members-only mode'),
-        (_, 'all') => _chat(actions: [_text('a1', 'first'), _text('a2', 'second')], next: 'all2', header: true),
+        (_, 'start') => _chat(
+            actions: [_text('t1', 'top only')],
+            next: 'top2',
+            header: true,
+            restricted: 'Members-only mode'),
+        (_, 'all') =>
+          _chat(actions: [_text('a1', 'first'), _text('a2', 'second')], next: 'all2', header: true),
         (_, 'all2') => _chat(actions: [
             _text('a3', 'third'),
-            {'markChatItemAsDeletedAction': {'targetItemId': 'a2'}},
+            {
+              'markChatItemAsDeletedAction': {'targetItemId': 'a2'}
+            },
           ]),
         _ => throw StateError('unexpected ${request.body}'),
       };
-      if (endpoint != 'next') expect((((body['context'] as Map<String, dynamic>)['client']) as Map<String, dynamic>)['visitorData'], 'v1');
+      if (endpoint != 'next') {
+        expect(
+            (((body['context'] as Map<String, dynamic>)['client'])
+                as Map<String, dynamic>)['visitorData'],
+            'v1');
+      }
       return http.Response(jsonEncode(answer), 200);
     });
     final batches = await LiveChatFeed(client).follow('abcdefghijk', ChatView.all).toList();
-    expect(asked, ['next abcdefghijk', 'live_chat/get_live_chat start', 'live_chat/get_live_chat all', 'live_chat/get_live_chat all2']);
-    expect([for (final b in batches) for (final m in b.messages) m.id], ['a1', 'a2', 'a3']);
+    expect(asked, [
+      'next abcdefghijk',
+      'live_chat/get_live_chat start',
+      'live_chat/get_live_chat all',
+      'live_chat/get_live_chat all2'
+    ]);
+    expect([
+      for (final b in batches)
+        for (final m in b.messages) m.id
+    ], [
+      'a1',
+      'a2',
+      'a3'
+    ]);
     expect(batches.first.view, ChatView.all);
     expect(batches.first.restricted, 'Members-only mode');
     expect(batches.last.removed, {'a2'});
@@ -104,7 +151,9 @@ void main() {
                   'liveChatRenderer': {
                     'isReplay': true,
                     'continuations': [
-                      {'reloadContinuationData': {'continuation': 'start'}},
+                      {
+                        'reloadContinuationData': {'continuation': 'start'}
+                      },
                     ],
                   },
                 },
@@ -114,9 +163,12 @@ void main() {
         'start' => {
             'continuationContents': {
               'liveChatContinuation': {
-                ...((_chat(header: true)['continuationContents']! as Map)['liveChatContinuation'] as Map),
+                ...((_chat(header: true)['continuationContents']! as Map)['liveChatContinuation']
+                    as Map),
                 'continuations': [
-                  {'liveChatReplayContinuationData': {'continuation': 'more'}},
+                  {
+                    'liveChatReplayContinuationData': {'continuation': 'more'}
+                  },
                 ],
                 'actions': [
                   {
@@ -142,11 +194,15 @@ void main() {
 
   test('a video without chat, a refused request and an oversized answer', () async {
     final none = MockClient((_) async => http.Response('{"contents": {}}', 200));
-    await expectLater(LiveChatFeed(none).follow('abcdefghijk', ChatView.top).toList(), throwsA(isA<NoLiveChat>()));
+    await expectLater(LiveChatFeed(none).follow('abcdefghijk', ChatView.top).toList(),
+        throwsA(isA<NoLiveChat>()));
     final refused = MockClient((_) async => http.Response('', 429));
-    await expectLater(LiveChatFeed(refused).follow('abcdefghijk', ChatView.top).toList(), throwsA(isA<http.ClientException>()));
-    final huge = MockClient.streaming((request, _) async => http.StreamedResponse(Stream.value(List.filled(LiveChatFeed.maxBytes + 1, 32)), 200));
-    await expectLater(LiveChatFeed(huge).follow('abcdefghijk', ChatView.top).toList(), throwsA(isA<http.ClientException>()));
+    await expectLater(LiveChatFeed(refused).follow('abcdefghijk', ChatView.top).toList(),
+        throwsA(isA<http.ClientException>()));
+    final huge = MockClient.streaming((request, _) async =>
+        http.StreamedResponse(Stream.value(List.filled(LiveChatFeed.maxBytes + 1, 32)), 200));
+    await expectLater(LiveChatFeed(huge).follow('abcdefghijk', ChatView.top).toList(),
+        throwsA(isA<http.ClientException>()));
   }, skip: skip);
 
   test('cancelling stops the requests', () async {
@@ -162,7 +218,9 @@ void main() {
                   'conversationBar': {
                     'liveChatRenderer': {
                       'continuations': [
-                        {'reloadContinuationData': {'continuation': 'start'}},
+                        {
+                          'reloadContinuationData': {'continuation': 'start'}
+                        },
                       ],
                     },
                   },
@@ -171,7 +229,8 @@ void main() {
             }),
             200);
       }
-      return http.Response(jsonEncode(_chat(actions: [_text('m$asked', 'x')], next: 'again$asked')), 200);
+      return http.Response(
+          jsonEncode(_chat(actions: [_text('m$asked', 'x')], next: 'again$asked')), 200);
     });
     final first = await LiveChatFeed(client).follow('abcdefghijk', ChatView.top).first;
     expect(first.messages.single.id, 'm2');

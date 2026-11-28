@@ -7,17 +7,24 @@ LevelTestBank _bank(String language, {int levels = 6, int real = 30, int made = 
   final lines = ['# lumtub level test v1'];
   for (var l = 1; l <= levels; l++) {
     for (var i = 0; i < real; i++) {
-      lines.add('w\t$l\t${language == 'zh' ? String.fromCharCodes([0x4e00 + l * 400 + i * 2, 0x4e01 + l * 400 + i * 2]) : 'real$l${'x' * (i % 5)}$i'}');
+      lines.add('w\t$l\t${language == 'zh' ? String.fromCharCodes([
+              0x4e00 + l * 400 + i * 2,
+              0x4e01 + l * 400 + i * 2
+            ]) : 'real$l${'x' * (i % 5)}$i'}');
     }
     for (var i = 0; i < made; i++) {
-      lines.add('n\t$l\t${language == 'zh' ? String.fromCharCodes([0x6000 + l * 200 + i * 2, 0x6001 + l * 200 + i * 2]) : 'made$l${'y' * (i % 5)}$i'}');
+      lines.add('n\t$l\t${language == 'zh' ? String.fromCharCodes([
+              0x6000 + l * 200 + i * 2,
+              0x6001 + l * 200 + i * 2
+            ]) : 'made$l${'y' * (i % 5)}$i'}');
     }
   }
   lines.addAll(['bad line', 'w\tx\tword', 'q\t1\tword', 'w\t12\tword']);
   return LevelTestBank.parse(language, lines.join('\n'));
 }
 
-List<(LevelTestItem, bool)> _answer(List<LevelTestItem> items, {required int knownUpTo, required bool yesToMade}) =>
+List<(LevelTestItem, bool)> _answer(List<LevelTestItem> items,
+        {required int knownUpTo, required bool yesToMade}) =>
     [for (final i in items) (i, i.real ? i.level <= knownUpTo : yesToMade)];
 
 void main() {
@@ -42,7 +49,8 @@ void main() {
     }
     expect(a.where((i) => !i.real).length, 24);
     expect(a.map((i) => i.text).toSet().length, a.length);
-    expect(a.map((i) => i.text).toSet().intersection(b.map((i) => i.text).toSet()).length, lessThan(a.length));
+    expect(a.map((i) => i.text).toSet().intersection(b.map((i) => i.text).toSet()).length,
+        lessThan(a.length));
   });
 
   test('Chinese draws never show a character twice', () {

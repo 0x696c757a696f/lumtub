@@ -22,7 +22,10 @@ class AppLanguage {
   /// The language's own name, the same in every language.
   String get nativeName => _nativeNames[tag] ?? tag;
   String get label => this == system ? tr('Follow system') : nativeName;
-  Locale? get locale => this == system ? null : Locale.fromSubtags(languageCode: tag.split('-').first, scriptCode: _script(tag), countryCode: _country(tag));
+  Locale? get locale => this == system
+      ? null
+      : Locale.fromSubtags(
+          languageCode: tag.split('-').first, scriptCode: _script(tag), countryCode: _country(tag));
   bool get isChinese => tag.startsWith('zh');
 
   /// [system] as one of [selectable]: the Windows language when it is one,
@@ -37,7 +40,8 @@ class AppLanguage {
       if (locale.scriptCode != null) '${locale.languageCode}-${locale.scriptCode}',
       // Windows may call Norwegian no rather than nb.
       if (locale.languageCode == 'no') 'nb',
-      if (locale.languageCode == 'zh' && const {'TW', 'HK', 'MO'}.contains(locale.countryCode)) 'zh-Hant',
+      if (locale.languageCode == 'zh' && const {'TW', 'HK', 'MO'}.contains(locale.countryCode))
+        'zh-Hant',
       locale.languageCode
     ]) {
       if (offered.where((l) => l.tag == candidate).firstOrNull case final match?) return match;
@@ -48,7 +52,8 @@ class AppLanguage {
   /// What can be chosen in settings: simplified Chinese, the source
   /// language English, and every other translation that covers at least
   /// [completeEnough] of the strings.
-  static List<AppLanguage> get selectable => [system, zhHans, en, for (final tag in _complete) AppLanguage(tag)];
+  static List<AppLanguage> get selectable =>
+      [system, zhHans, en, for (final tag in _complete) AppLanguage(tag)];
 
   static AppLanguage parse(Object? raw) {
     final tag = switch (raw) { 'zhHans' => 'zh-Hans', final String s => s, _ => null };
@@ -79,10 +84,13 @@ Future<void> loadTranslations([AssetBundle? bundle]) async {
   bundle ??= rootBundle;
   final manifest = await AssetManifest.loadFromAssetBundle(bundle);
   _translations.clear();
-  for (final path in manifest.listAssets().where((p) => p.startsWith('assets/l10n/') && p.endsWith('.json'))) {
+  for (final path
+      in manifest.listAssets().where((p) => p.startsWith('assets/l10n/') && p.endsWith('.json'))) {
     // Weblate may name a file zh_Hant as well as zh-Hant.
-    final tag = path.substring('assets/l10n/'.length, path.length - '.json'.length).replaceAll('_', '-');
-    final map = (jsonDecode(await bundle.loadString(path)) as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String));
+    final tag =
+        path.substring('assets/l10n/'.length, path.length - '.json'.length).replaceAll('_', '-');
+    final map = (jsonDecode(await bundle.loadString(path)) as Map<String, dynamic>)
+        .map((k, v) => MapEntry(k, v as String));
     _translations[tag] = {
       for (final e in map.entries)
         if (e.value.isNotEmpty) e.key: e.value
@@ -93,7 +101,11 @@ Future<void> loadTranslations([AssetBundle? bundle]) async {
   final source = _translations[AppLanguage.zhHans.tag] ?? const {};
   _complete = [
     for (final MapEntry(:key, :value) in _translations.entries)
-      if (key != AppLanguage.zhHans.tag && key != AppLanguage.en.tag && source.isNotEmpty && value.keys.where(source.containsKey).length >= source.length * completeEnough) key,
+      if (key != AppLanguage.zhHans.tag &&
+          key != AppLanguage.en.tag &&
+          source.isNotEmpty &&
+          value.keys.where(source.containsKey).length >= source.length * completeEnough)
+        key,
   ]..sort();
 }
 
@@ -111,7 +123,10 @@ void setLanguage(AppLanguage language) {
   _strings = switch (_current) {
     AppLanguage.en => const {},
     AppLanguage.zhHans => _translations[AppLanguage.zhHans.tag] ?? const {},
-    final l when l.isChinese => {...?_translations[AppLanguage.zhHans.tag], ...?_translations[l.tag]},
+    final l when l.isChinese => {
+        ...?_translations[AppLanguage.zhHans.tag],
+        ...?_translations[l.tag]
+      },
     final l => _translations[l.tag] ?? const {},
   };
 }
@@ -157,7 +172,10 @@ final _ascii = RegExp(r'^[\x00-\x7F]*$');
 /// [message] with the translations [tr] gave in it put back in English.
 String inEnglish(String message) {
   if (_english.isEmpty || _ascii.hasMatch(message)) return message;
-  final found = [for (final shown in _english.keys) if (message.contains(shown)) shown]..sort((a, b) => b.length.compareTo(a.length));
+  final found = [
+    for (final shown in _english.keys)
+      if (message.contains(shown)) shown
+  ]..sort((a, b) => b.length.compareTo(a.length));
   var out = message;
   for (final shown in found) {
     out = out.replaceAll(shown, _english[shown]!);
@@ -179,7 +197,11 @@ String _fill(String text, List<Object?> args) {
 final _placeholder = RegExp(r'\{(\d+)\}');
 
 String? _script(String tag) => tag.split('-').skip(1).where((p) => p.length == 4).firstOrNull;
-String? _country(String tag) => tag.split('-').skip(1).where((p) => p.length == 2 || p.length == 3 && int.tryParse(p) != null).firstOrNull;
+String? _country(String tag) => tag
+    .split('-')
+    .skip(1)
+    .where((p) => p.length == 2 || p.length == 3 && int.tryParse(p) != null)
+    .firstOrNull;
 
 /// Names of languages a translation may be added for, each in itself.
 const _nativeNames = {

@@ -10,7 +10,14 @@ import 'package:lumtub/native_core.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/youtube_related.dart';
 
-VideoItem video(String id, {String title = '', String channel = 'c', String? channelId, int? views, int? duration, DateTime? published}) => VideoItem(
+VideoItem video(String id,
+        {String title = '',
+        String channel = 'c',
+        String? channelId,
+        int? views,
+        int? duration,
+        DateTime? published}) =>
+    VideoItem(
       id: id.padRight(11, '_'),
       title: title,
       channel: channel,
@@ -25,7 +32,8 @@ void main() {
   group('TasteProfile', () {
     test('close frees at once, twice is harmless, and a closed profile knows nothing', () {
       if (NativeCore.instance == null) return;
-      final taste = TasteProfile.from(history: [video('a', channelId: 'UCgood', title: 'good things')]);
+      final taste =
+          TasteProfile.from(history: [video('a', channelId: 'UCgood', title: 'good things')]);
       expect(taste.channelAffinity(video('x', channelId: 'UCgood')), greaterThan(0));
       expect(taste.isClosed, isFalse);
       taste.close();
@@ -44,7 +52,8 @@ void main() {
       expect(taste.topChannels(1), ['UCgame']);
       expect(taste.channelAffinity(video('x', channelId: 'UCgame')), 1);
       expect(taste.channelAffinity(video('x', channelId: 'UCother')), 0);
-      expect(taste.titleMatch(video('x', title: '原神 4.0 前瞻')), greaterThan(taste.titleMatch(video('y', title: '红烧肉做法'))));
+      expect(taste.titleMatch(video('x', title: '原神 4.0 前瞻')),
+          greaterThan(taste.titleMatch(video('y', title: '红烧肉做法'))));
       expect(TasteProfile.titleWords('Official MV 原神'), {'原神'});
     });
   });
@@ -57,20 +66,32 @@ void main() {
     test('puts close matches first and skips what was watched or dismissed', () async {
       final notInterested = NotInterested(null);
       await notInterested.add(video('bad', channelId: 'UCbad'));
-      final ranked = recommend([
-        Candidate(video('cook', title: '家常菜', channelId: 'UCcook'), RecommendSource.topic),
-        Candidate(video('keys', title: '机械键盘 轴体 评测', channelId: 'UCkeys'), RecommendSource.related),
-        Candidate(video('h1', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
-        Candidate(video('bad', channelId: 'UCbad'), RecommendSource.related),
-      ], taste: taste, exclude: {video('h1').id}, notInterested: notInterested).map((r) => r.item).toList();
+      final ranked = recommend(
+              [
+                Candidate(video('cook', title: '家常菜', channelId: 'UCcook'), RecommendSource.topic),
+                Candidate(video('keys', title: '机械键盘 轴体 评测', channelId: 'UCkeys'),
+                    RecommendSource.related),
+                Candidate(
+                    video('h1', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
+                Candidate(video('bad', channelId: 'UCbad'), RecommendSource.related),
+              ],
+              taste: taste,
+              exclude: {video('h1').id},
+              notInterested: notInterested)
+          .map((r) => r.item)
+          .toList();
       expect(ranked.map((v) => v.id.replaceAll('_', '')), ['keys', 'cook']);
     });
 
     test('keeps one channel from filling the top', () {
       final ranked = recommend([
-        for (var i = 0; i < 10; i++) Candidate(video('k$i', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
-        for (var i = 0; i < 4; i++) Candidate(video('o$i', title: '别的', channelId: 'UCo$i'), RecommendSource.topic),
-      ], taste: taste, count: 8).map((r) => r.item).toList();
+        for (var i = 0; i < 10; i++)
+          Candidate(video('k$i', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
+        for (var i = 0; i < 4; i++)
+          Candidate(video('o$i', title: '别的', channelId: 'UCo$i'), RecommendSource.topic),
+      ], taste: taste, count: 8)
+          .map((r) => r.item)
+          .toList();
       final fromKeys = ranked.where((v) => v.channelId == 'UCkeys').length;
       expect(fromKeys, lessThan(8));
       expect(ranked.length, 8);
@@ -81,13 +102,18 @@ void main() {
         Candidate(video('twice', channelId: 'UCa'), RecommendSource.topic),
         Candidate(video('twice', channelId: 'UCa'), RecommendSource.channel),
         Candidate(video('once', channelId: 'UCb'), RecommendSource.channel),
-      ], taste: taste).map((r) => r.item).toList();
+      ], taste: taste)
+          .map((r) => r.item)
+          .toList();
       expect(ranked.length, 2);
       expect(ranked.first.id, video('twice').id);
     });
 
     test('a different seed changes the order a little, not the set', () {
-      final candidates = [for (var i = 0; i < 20; i++) Candidate(video('v$i', channelId: 'UC$i'), RecommendSource.topic)];
+      final candidates = [
+        for (var i = 0; i < 20; i++)
+          Candidate(video('v$i', channelId: 'UC$i'), RecommendSource.topic)
+      ];
       final a = recommend(candidates, taste: taste, seed: 1).map((r) => r.item).toList();
       final b = recommend(candidates, taste: taste, seed: 2).map((r) => r.item).toList();
       expect(a.map((v) => v.id).toSet(), b.map((v) => v.id).toSet());
@@ -114,7 +140,9 @@ void main() {
     test('overlapping saves leave the latest state and no temporary file', () async {
       final file = File('${dir.path}/not_interested.json');
       final store = NotInterested(file);
-      await Future.wait([for (final id in ['a', 'b', 'c']) store.add(video(id, channelId: 'UC$id'))]);
+      await Future.wait([
+        for (final id in ['a', 'b', 'c']) store.add(video(id, channelId: 'UC$id'))
+      ]);
       final loaded = NotInterested(file);
       await loaded.load();
       expect(loaded.videos, {video('a').id, video('b').id, video('c').id});
@@ -145,7 +173,10 @@ void main() {
         followed: const [ChannelRef('UCsub', 'Sub')],
         related: (id) async {
           asked.add('related $id');
-          return [video('rel', title: '机械键盘 推荐', channelId: 'UCother'), video('seen', channelId: 'UCkeys')];
+          return [
+            video('rel', title: '机械键盘 推荐', channelId: 'UCother'),
+            video('seen', channelId: 'UCkeys')
+          ];
         },
         channelUploads: (channel) async {
           asked.add('channel ${channel.id}');
@@ -219,7 +250,9 @@ void main() {
       }
 
       HomeFeedSources sources() => HomeFeedSources(
-            history: [for (var i = 0; i < 6; i++) video('h$i', title: 'topic $i', channelId: 'UC$i')],
+            history: [
+              for (var i = 0; i < 6; i++) video('h$i', title: 'topic $i', channelId: 'UC$i')
+            ],
             related: (_) => slow(),
             channelUploads: (_) => slow(),
             search: (_) => slow(),
@@ -344,7 +377,8 @@ void main() {
 
       final dismissed = NotInterested(null)..videos.add(video('a').id);
       final next = HomeFeed(dismissed, cacheFile: file);
-      await next.restore(filter: (items) => items.where((v) => v.channelId != 'UCblocked').toList());
+      await next.restore(
+          filter: (items) => items.where((v) => v.channelId != 'UCblocked').toList());
       expect(next.items.map((v) => v.id), [video('b').id]);
       expect(next.reasons[video('b').id], isNotNull);
     });
@@ -364,14 +398,21 @@ void main() {
                       'title': {'simpleText': '标题'},
                       'longBylineText': {
                         'runs': [
-                          {'text': 'Channel', 'navigationEndpoint': {'browseEndpoint': {'browseId': 'UCxxxxxxxxxxxxxxxxxxxxxx'}}},
+                          {
+                            'text': 'Channel',
+                            'navigationEndpoint': {
+                              'browseEndpoint': {'browseId': 'UCxxxxxxxxxxxxxxxxxxxxxx'}
+                            }
+                          },
                         ],
                       },
                       'lengthText': {'simpleText': '12:34'},
                       'viewCountText': {'simpleText': '12万次观看'},
                     },
                   },
-                  {'compactRadioRenderer': {'playlistId': 'RD123'}},
+                  {
+                    'compactRadioRenderer': {'playlistId': 'RD123'}
+                  },
                 ],
               },
             },
@@ -380,7 +421,8 @@ void main() {
       });
       expect(items, hasLength(1));
       final item = items.single;
-      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount), ('abcdefghijk', '标题', 'Channel', 'UCxxxxxxxxxxxxxxxxxxxxxx', 754, 120000));
+      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount),
+          ('abcdefghijk', '标题', 'Channel', 'UCxxxxxxxxxxxxxxxxxxxxxx', 754, 120000));
     });
 
     test('reads lockup view models and skips playlists', () {
@@ -395,7 +437,9 @@ void main() {
                   {
                     'thumbnailOverlayBadgeViewModel': {
                       'thumbnailBadges': [
-                        {'thumbnailBadgeViewModel': {'text': '1:02:03'}},
+                        {
+                          'thumbnailBadgeViewModel': {'text': '1:02:03'}
+                        },
                       ],
                     },
                   },
@@ -409,7 +453,11 @@ void main() {
                   'decoratedAvatarViewModel': {
                     'rendererContext': {
                       'commandContext': {
-                        'onTap': {'innertubeCommand': {'browseEndpoint': {'browseId': 'UCyyyyyyyyyyyyyyyyyyyyyy'}}},
+                        'onTap': {
+                          'innertubeCommand': {
+                            'browseEndpoint': {'browseId': 'UCyyyyyyyyyyyyyyyyyyyyyy'}
+                          }
+                        },
                       },
                     },
                   },
@@ -417,8 +465,23 @@ void main() {
                 'metadata': {
                   'contentMetadataViewModel': {
                     'metadataRows': [
-                      {'metadataParts': [{'text': {'content': 'Some Channel'}}]},
-                      {'metadataParts': [{'text': {'content': '3.4万次观看'}}, {'text': {'content': '2天前'}}]},
+                      {
+                        'metadataParts': [
+                          {
+                            'text': {'content': 'Some Channel'}
+                          }
+                        ]
+                      },
+                      {
+                        'metadataParts': [
+                          {
+                            'text': {'content': '3.4万次观看'}
+                          },
+                          {
+                            'text': {'content': '2天前'}
+                          }
+                        ]
+                      },
                     ],
                   },
                 },
@@ -426,18 +489,27 @@ void main() {
             },
           },
         },
-        {'lockupViewModel': {'contentId': 'PLxxxxxxxxx', 'contentType': 'LOCKUP_CONTENT_TYPE_PLAYLIST'}},
+        {
+          'lockupViewModel': {
+            'contentId': 'PLxxxxxxxxx',
+            'contentType': 'LOCKUP_CONTENT_TYPE_PLAYLIST'
+          }
+        },
       ]);
       expect(items, hasLength(1));
       final item = items.single;
-      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount), ('ABCDEFGHIJK', 'Lockup 标题', 'Some Channel', 'UCyyyyyyyyyyyyyyyyyyyyyy', 3723, 34000));
+      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount),
+          ('ABCDEFGHIJK', 'Lockup 标题', 'Some Channel', 'UCyyyyyyyyyyyyyyyyyyyyyy', 3723, 34000));
     });
   });
 
   group('taste details', () {
     test('a video left within seconds counts against its channel', () {
       final taste = TasteProfile.from(
-        history: [video('a', channelId: 'UCskip', title: '不喜欢'), video('b', channelId: 'UCgood', title: '喜欢')],
+        history: [
+          video('a', channelId: 'UCskip', title: '不喜欢'),
+          video('b', channelId: 'UCgood', title: '喜欢')
+        ],
         progressOf: (id) => id.startsWith('a')
             ? const WatchProgress(Duration(seconds: 5), Duration(minutes: 10))
             : const WatchProgress(Duration(minutes: 9), Duration(minutes: 10)),
@@ -463,7 +535,8 @@ void main() {
   });
 
   test('mixLanes follows the lanes\' shares and skips repeats', () {
-    List<Recommendation> lane(String prefix, int n) => [for (var i = 0; i < n; i++) Recommendation(video('$prefix$i'), prefix)];
+    List<Recommendation> lane(String prefix, int n) =>
+        [for (var i = 0; i < n; i++) Recommendation(video('$prefix$i'), prefix)];
     final lanes = {
       FeedLane.longTerm: lane('l', 50),
       FeedLane.recent: [Recommendation(video('l0'), 'dup'), ...lane('r', 50)],
@@ -485,12 +558,14 @@ void main() {
 
   test('HomeFeed scrolls on and follows the video just watched', () async {
     var n = 0;
-    Future<List<VideoItem>> related(String id) async => [for (var i = 0; i < 12; i++) video('x${n++}', title: '相关 $id', channelId: 'UC${n % 9}')];
+    Future<List<VideoItem>> related(String id) async =>
+        [for (var i = 0; i < 12; i++) video('x${n++}', title: '相关 $id', channelId: 'UC${n % 9}')];
     HomeFeedSources sources(List<VideoItem> history) => HomeFeedSources(
           history: history,
           related: related,
           channelUploads: (_) async => const [],
-          search: (_) async => [for (var i = 0; i < 10; i++) video('s${n++}', channelId: 'UCs${n % 7}')],
+          search: (_) async =>
+              [for (var i = 0; i < 10; i++) video('s${n++}', channelId: 'UCs${n % 7}')],
         );
     final feed = HomeFeed(NotInterested(null));
     final watched = [video('w1', title: '咖啡 拉花', channelId: 'UCcafe')];
@@ -503,6 +578,7 @@ void main() {
 
     final next = video('w2', title: '手冲 咖啡豆', channelId: 'UCbeans');
     await feed.learn(next, sources([next, ...watched]), skipped: false);
-    expect(FeedReason.read(feed.reasons[feed.items.first.id]!), (ReasonKind.nextUp, 'Just watched "手冲 咖啡豆", up next'));
+    expect(FeedReason.read(feed.reasons[feed.items.first.id]!),
+        (ReasonKind.nextUp, 'Just watched "手冲 咖啡豆", up next'));
   });
 }

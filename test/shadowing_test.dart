@@ -89,11 +89,14 @@ void main() {
   });
 
   test('a denied or missing microphone says why', () async {
-    await expectLater(Shadowing(folder, microphone: FakeMicrophone(allow: false)).start(), throwsA(isA<ShadowException>().having((e) => e.denied, 'denied', isTrue)));
+    await expectLater(Shadowing(folder, microphone: FakeMicrophone(allow: false)).start(),
+        throwsA(isA<ShadowException>().having((e) => e.denied, 'denied', isTrue)));
     final failing = Shadowing(folder, microphone: FakeMicrophone(fails: true));
     await expectLater(
       failing.start(),
-      throwsA(isA<ShadowException>().having((e) => e.denied, 'denied', isFalse).having((e) => e.detail, 'detail', contains('no input device'))),
+      throwsA(isA<ShadowException>()
+          .having((e) => e.denied, 'denied', isFalse)
+          .having((e) => e.detail, 'detail', contains('no input device'))),
     );
     expect(failing.recording, isFalse);
   });
@@ -115,7 +118,8 @@ void main() {
     expect(again!.file.path, firstTake.file.path);
     expect(again.file.lengthSync(), 44 + 40000);
     expect(again.original?.path, firstTake.original!.path);
-    expect(again.part, {'original': firstTake.original!.path, 'seconds': 2.4, 'take': again.file.path});
+    expect(again.part,
+        {'original': firstTake.original!.path, 'seconds': 2.4, 'take': again.file.path});
     expect([for (final take in shadowing.inOrder) take.line.text], ['Hello', 'Bye']);
     expect(shadowing.last, same(again));
   });
@@ -124,14 +128,33 @@ void main() {
     final keys = shortcutKeys(const {});
     const e = KeyCombo(LogicalKeyboardKey.keyE);
     expect(keys[PlayerAction.shadow], [e]);
-    expect([for (final MapEntry(:key, :value) in keys.entries) if (!key.page && value.contains(e)) key], [PlayerAction.shadow]);
+    expect([
+      for (final MapEntry(:key, :value) in keys.entries)
+        if (!key.page && value.contains(e)) key
+    ], [
+      PlayerAction.shadow
+    ]);
   });
 
   group('CSV of the subtitle list', () {
     test('times, both lines, and quoting where needed', () {
       final rows = <PairedCue>[
-        (cue: (start: const Duration(milliseconds: 1500), end: const Duration(seconds: 3), text: 'Hello, world'), second: '你好，世界'),
-        (cue: (start: const Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 4), end: const Duration(hours: 1, minutes: 2, seconds: 5), text: 'She said "hi"\nthen left'), second: null),
+        (
+          cue: (
+            start: const Duration(milliseconds: 1500),
+            end: const Duration(seconds: 3),
+            text: 'Hello, world'
+          ),
+          second: '你好，世界'
+        ),
+        (
+          cue: (
+            start: const Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 4),
+            end: const Duration(hours: 1, minutes: 2, seconds: 5),
+            text: 'She said "hi"\nthen left'
+          ),
+          second: null
+        ),
       ];
       final csv = pairedCuesCsv(rows);
       expect(csv.startsWith('﻿start,end,text,translation\r\n'), isTrue);

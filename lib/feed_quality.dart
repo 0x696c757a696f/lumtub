@@ -7,8 +7,10 @@ import 'native_core.dart';
 enum FeedLevel {
   /// Not touched.
   off,
+
   /// Ranked far down, so only strong matches show.
   reduce,
+
   /// Left out.
   drop;
 
@@ -53,7 +55,9 @@ bool isShort(VideoItem item) {
   if (core == null) return false;
   // Feeds rank and filter the same videos again on every refresh and rebuild.
   if (_shorts.length > 20000) _shorts.clear();
-  return _shorts[Object.hash(item.id, item.url, item.title, item.description, item.duration, item.isShortListing)] ??= _askCore(core, item);
+  return _shorts[Object.hash(
+          item.id, item.url, item.title, item.description, item.duration, item.isShortListing)] ??=
+      _askCore(core, item);
 }
 
 final _shorts = <int, bool>{};

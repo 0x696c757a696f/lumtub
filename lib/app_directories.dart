@@ -37,6 +37,7 @@ class AppDirectories {
   final Directory cache;
   final Directory components;
   final Directory logs;
+
   /// Skins the user added, one folder each (lib/skins/skin_library.dart).
   Directory get skins => Directory('${root.path}${Platform.pathSeparator}skins');
 
@@ -49,16 +50,17 @@ class AppDirectories {
     final root = Platform.isAndroid || Platform.isIOS
         ? await getApplicationSupportDirectory()
         : home != null && home.trim().isNotEmpty
-        ? Directory(home)
-        : Platform.isLinux && dataHome != null && dataHome.startsWith('/')
-        ? Directory('$dataHome/lumtub')
-        : Platform.isLinux && userHome != null && userHome.startsWith('/')
-        ? Directory('$userHome/.local/share/lumtub')
-        : Platform.isMacOS && userHome != null && userHome.startsWith('/')
-        ? Directory('$userHome/Library/Application Support/Lumtub')
-        : localAppData == null || localAppData.trim().isEmpty
-        ? Directory('${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}Lumtub')
-        : Directory('$localAppData${Platform.pathSeparator}Lumtub');
+            ? Directory(home)
+            : Platform.isLinux && dataHome != null && dataHome.startsWith('/')
+                ? Directory('$dataHome/lumtub')
+                : Platform.isLinux && userHome != null && userHome.startsWith('/')
+                    ? Directory('$userHome/.local/share/lumtub')
+                    : Platform.isMacOS && userHome != null && userHome.startsWith('/')
+                        ? Directory('$userHome/Library/Application Support/Lumtub')
+                        : localAppData == null || localAppData.trim().isEmpty
+                            ? Directory(
+                                '${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}Lumtub')
+                            : Directory('$localAppData${Platform.pathSeparator}Lumtub');
     final directories = AppDirectories.at(root);
     await directories.ensureExists();
     return directories;

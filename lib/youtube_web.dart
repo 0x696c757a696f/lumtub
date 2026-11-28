@@ -2,7 +2,8 @@
 /// Windows, the client yt-dlp imitates too. Services other than YouTube are
 /// told it is Lumtub.
 abstract final class YoutubeWeb {
-  static const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
+  static const userAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
 
   /// The website's InnerTube client version, as yt-dlp sends it; a page
   /// Lumtub read gives the current one.

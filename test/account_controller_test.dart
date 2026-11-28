@@ -46,7 +46,9 @@ void main() {
     final path = request.url.path;
     requests.add(path);
     if (request.method != 'GET' && path.startsWith('/youtube/')) {
-      writes.add('${request.method} ${path.substring('/youtube/v3/'.length)} ${request.url.query} ${request.body}'.trim());
+      writes.add(
+          '${request.method} ${path.substring('/youtube/v3/'.length)} ${request.url.query} ${request.body}'
+              .trim());
       return switch (path) {
         '/youtube/v3/playlists' => json({'id': 'PLnew'}),
         '/youtube/v3/commentThreads' => json({'id': 'Ugnew'}),
@@ -55,23 +57,65 @@ void main() {
     }
     switch (path) {
       case '/youtube/v3/videos/getRating':
-        return json({'items': [{'videoId': request.url.queryParameters['id'], 'rating': 'none'}]});
+        return json({
+          'items': [
+            {'videoId': request.url.queryParameters['id'], 'rating': 'none'}
+          ]
+        });
       case '/token':
-        return http.Response('{"access_token":"access","expires_in":3600,"refresh_token":"refresh-secret"}', 200);
+        return http.Response(
+            '{"access_token":"access","expires_in":3600,"refresh_token":"refresh-secret"}', 200);
       case '/revoke':
         revokedTokens.add(Uri.splitQueryString(request.body)['token']!);
         return http.Response('', 200);
       case '/youtube/v3/channels':
-        return json({'items': [{'snippet': {'title': '我的频道'}, 'contentDetails': {'relatedPlaylists': {'likes': 'LL'}}}]});
+        return json({
+          'items': [
+            {
+              'snippet': {'title': '我的频道'},
+              'contentDetails': {
+                'relatedPlaylists': {'likes': 'LL'}
+              }
+            }
+          ]
+        });
       case '/youtube/v3/subscriptions' when request.url.queryParameters.containsKey('forChannelId'):
-        return json({'items': [{'id': 'sub-1'}]});
+        return json({
+          'items': [
+            {'id': 'sub-1'}
+          ]
+        });
       case '/youtube/v3/subscriptions':
-        return json({'items': [{'snippet': {'title': 'Rick Astley', 'resourceId': {'channelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'}}}]});
+        return json({
+          'items': [
+            {
+              'snippet': {
+                'title': 'Rick Astley',
+                'resourceId': {'channelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'}
+              }
+            }
+          ]
+        });
       case '/youtube/v3/playlists':
-        return json({'items': [{'id': 'PL1', 'snippet': {'title': 'Music'}, 'contentDetails': {'itemCount': 1}}]});
+        return json({
+          'items': [
+            {
+              'id': 'PL1',
+              'snippet': {'title': 'Music'},
+              'contentDetails': {'itemCount': 1}
+            }
+          ]
+        });
       case '/youtube/v3/playlistItems':
         final id = request.url.queryParameters['playlistId'];
-        return json({'items': [{'snippet': {'title': '$id 视频', 'videoOwnerChannelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'}, 'contentDetails': {'videoId': id == 'LL' ? 'dQw4w9WgXcQ' : 'aaaaaaaaaaa'}}]});
+        return json({
+          'items': [
+            {
+              'snippet': {'title': '$id 视频', 'videoOwnerChannelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'},
+              'contentDetails': {'videoId': id == 'LL' ? 'dQw4w9WgXcQ' : 'aaaaaaaaaaa'}
+            }
+          ]
+        });
     }
     return http.Response('', 404);
   });
@@ -85,7 +129,10 @@ void main() {
         openBrowser: (uri) async {
           final redirect = Uri.parse(uri.queryParameters['redirect_uri']!);
           final client = HttpClient();
-          await (await (await client.getUrl(redirect.replace(queryParameters: {'code': 'c', 'state': uri.queryParameters['state']!}))).close()).drain<void>();
+          await (await (await client.getUrl(redirect.replace(
+                      queryParameters: {'code': 'c', 'state': uri.queryParameters['state']!})))
+                  .close())
+              .drain<void>();
           client.close();
         },
       );
@@ -105,7 +152,8 @@ void main() {
     }
     expect(account.error, isNull);
     expect(library.isFollowing('UCuAXFkgsw1L7xaCfnd5JJOw'), isTrue);
-    expect(library.playlists.map((p) => (p.id, p.name, p.items.single.id)), [('yt:LL', 'Liked videos', 'dQw4w9WgXcQ'), ('yt:PL1', 'Music', 'aaaaaaaaaaa')]);
+    expect(library.playlists.map((p) => (p.id, p.name, p.items.single.id)),
+        [('yt:LL', 'Liked videos', 'dQw4w9WgXcQ'), ('yt:PL1', 'Music', 'aaaaaaaaaaa')]);
     expect(notices.last, contains('1 new'));
 
     // The token on disk is encrypted, and comes back after a restart.
@@ -130,7 +178,8 @@ void main() {
   });
 
   test('a removed YouTube playlist is removed from the mirror', () {
-    library.mirrorRemotePlaylists({'PL1': (name: 'a', items: const []), 'PL2': (name: 'b', items: const [])});
+    library.mirrorRemotePlaylists(
+        {'PL1': (name: 'a', items: const []), 'PL2': (name: 'b', items: const [])});
     library.mirrorRemotePlaylists({'PL2': (name: 'b2', items: const [])});
     expect(library.playlists.map((p) => (p.id, p.name)), [('yt:PL2', 'b2')]);
   });
@@ -179,28 +228,35 @@ void main() {
       'DELETE subscriptions id=sub-1',
     ]);
     expect(library.playlists.firstWhere((p) => p.id == 'yt:PLnew').items.single.id, video.id);
-    expect(notices, containsAll(['Liked', 'Comment posted', 'Reply posted', 'Saved to YouTube playlist "稍后"']));
+    expect(notices,
+        containsAll(['Liked', 'Comment posted', 'Reply posted', 'Saved to YouTube playlist "稍后"']));
   });
 
   test('a read-only sign-in from an older version asks to sign in again', () async {
-    await SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector()).write({'refresh_token': 'old', 'name': 'n'});
+    await SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector())
+        .write({'refresh_token': 'old', 'name': 'n'});
     final notices = <String>[];
     final account = controller(notices);
     await account.load();
     expect(account.signedIn, isTrue);
     expect(account.canWrite, isFalse);
-    await account.rate(const VideoItem(id: 'bbbbbbbbbbb', title: '', channel: '', url: ''), VideoRating.like);
+    await account.rate(
+        const VideoItem(id: 'bbbbbbbbbbb', title: '', channel: '', url: ''), VideoRating.like);
     expect(writes, isEmpty);
     expect(notices.single, contains('Sign in to Google again'));
   });
 
   test('a sign-in Google no longer takes shows as signed out, saying so', () async {
-    await File('${dir.path}/google-client.json').writeAsString(jsonEncode(const OAuthClientConfig('1-a.apps.googleusercontent.com', 's').toJson()));
-    await SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector()).write({'refresh_token': 'stale', 'name': 'n', 'scope': youtubeScope});
+    await File('${dir.path}/google-client.json').writeAsString(
+        jsonEncode(const OAuthClientConfig('1-a.apps.googleusercontent.com', 's').toJson()));
+    await SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector())
+        .write({'refresh_token': 'stale', 'name': 'n', 'scope': youtubeScope});
     final account = AccountController(
       clientFile: File('${dir.path}/google-client.json'),
       credentials: SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector()),
-      client: MockClient((request) async => request.url.path == '/token' ? http.Response('{"error":"invalid_grant"}', 400) : http.Response('', 200)),
+      client: MockClient((request) async => request.url.path == '/token'
+          ? http.Response('{"error":"invalid_grant"}', 400)
+          : http.Response('', 200)),
       library: library,
       notice: (_) {},
     );

@@ -16,9 +16,11 @@ abstract final class AppStyle {
   static const pagePadding = Space.xl;
   static const radius = Radii.l;
   static const cardRadius = BorderRadius.all(Radius.circular(radius));
+
   /// Video cards are a picture and text on the page, so the picture is
   /// rounded on every corner.
   static const thumbnailRadius = BorderRadius.all(Radius.circular(radius));
+
   /// Buttons, fields, chips and list rows.
   static const controlRadius = BorderRadius.all(Radius.circular(Radii.m));
   static const topBarHeight = 60.0;
@@ -57,7 +59,11 @@ abstract final class Radii {
 /// Font sizes snap to these steps, each with its own line height.
 TextTheme _typeScale(TextTheme base) {
   TextStyle? step(TextStyle? style, double size, double line, {FontWeight? weight}) =>
-      style?.copyWith(fontSize: size, height: line / size, fontWeight: weight ?? style.fontWeight, letterSpacing: 0);
+      style?.copyWith(
+          fontSize: size,
+          height: line / size,
+          fontWeight: weight ?? style.fontWeight,
+          letterSpacing: 0);
   return base.copyWith(
     displayLarge: step(base.displayLarge, 48, 48),
     displayMedium: step(base.displayMedium, 36, 40),
@@ -97,12 +103,16 @@ abstract final class Neutral {
   static const n950 = Color(0xFF09090B);
 }
 
-ColorScheme _neutralScheme(ColorScheme tonal, Color accent, Brightness brightness, {required bool pureBlack}) {
+ColorScheme _neutralScheme(ColorScheme tonal, Color accent, Brightness brightness,
+    {required bool pureBlack}) {
   final dark = brightness == Brightness.dark;
   // The accent as chosen, not a toned-down variant of it; text on it is
   // black or white, whichever reads better.
-  final onAccent = ThemeData.estimateBrightnessForColor(accent) == Brightness.dark ? Neutral.white : Neutral.n950;
-  final accentWash = Color.alphaBlend(accent.withValues(alpha: dark ? 0.18 : 0.10), dark ? Neutral.n950 : Neutral.white);
+  final onAccent = ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
+      ? Neutral.white
+      : Neutral.n950;
+  final accentWash = Color.alphaBlend(
+      accent.withValues(alpha: dark ? 0.18 : 0.10), dark ? Neutral.n950 : Neutral.white);
   if (!dark) {
     return tonal.copyWith(
       primary: accent,
@@ -183,7 +193,8 @@ ThemeData buildAppTheme(
     brightness = skin.brightness;
     highContrast = false;
     final c = skin.colors;
-    final tones = PaletteTones(c.page, c.text, c.accent, card: c.card, indicator: c.selected, chrome: c.chrome, glow: c.tint);
+    final tones = PaletteTones(c.page, c.text, c.accent,
+        card: c.card, indicator: c.selected, chrome: c.chrome, glow: c.tint);
     palette = Palette('skin:${skin.id}', skin.id, '', tones, tones, strong: c.strong);
   }
   final dark = brightness == Brightness.dark;
@@ -193,12 +204,20 @@ ThemeData buildAppTheme(
   final dialogRadius = BorderRadius.circular(shape?.cardRadius ?? Radii.xl);
   // A palette brings its own accent for each mode.
   if (palette != null && !highContrast) seed = palette.of(brightness).accent;
-  var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: variant, contrastLevel: highContrast ? 1.0 : 0.0);
+  var scheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: brightness,
+      dynamicSchemeVariant: variant,
+      contrastLevel: highContrast ? 1.0 : 0.0);
   if (highContrast) {
     // Windows' high contrast themes: borders and secondary text as strong as text.
-    scheme = scheme.copyWith(outline: scheme.onSurface, outlineVariant: scheme.onSurfaceVariant, surface: dark ? Colors.black : Colors.white);
+    scheme = scheme.copyWith(
+        outline: scheme.onSurface,
+        outlineVariant: scheme.onSurfaceVariant,
+        surface: dark ? Colors.black : Colors.white);
   } else if (palette != null) {
-    scheme = paletteScheme(scheme, palette, brightness, pureBlack: (skin == null || skin.followsThemeMode) && pureBlack);
+    scheme = paletteScheme(scheme, palette, brightness,
+        pureBlack: (skin == null || skin.followsThemeMode) && pureBlack);
     if (skin != null) {
       final c = skin.colors;
       scheme = scheme.copyWith(
@@ -214,7 +233,11 @@ ThemeData buildAppTheme(
   } else {
     scheme = _neutralScheme(scheme, seed, brightness, pureBlack: pureBlack);
   }
-  var chrome = highContrast || (skin != null && skin.followsThemeMode && dark && pureBlack) ? null : skin != null ? skin.colors.chrome : paletteChrome(palette, brightness, pureBlack: pureBlack);
+  var chrome = highContrast || (skin != null && skin.followsThemeMode && dark && pureBlack)
+      ? null
+      : skin != null
+          ? skin.colors.chrome
+          : paletteChrome(palette, brightness, pureBlack: pureBlack);
   if (warmth > 0 && !highContrast) {
     scheme = warmScheme(scheme, warmth);
     if (chrome != null) chrome = warmColor(chrome, warmth);
@@ -235,30 +258,46 @@ ThemeData buildAppTheme(
   // A skin's display face often has Latin letters only; Inter goes on
   // with the rest of the alphabets.
   final fallback = [if (skin?.font != null) interFont, ...fontFallback(chosen)];
-  TextStyle font(TextStyle style) => style.copyWith(fontFamily: family, fontFamilyFallback: fallback);
+  TextStyle font(TextStyle style) =>
+      style.copyWith(fontFamily: family, fontFamilyFallback: fallback);
   final border = BorderSide(color: scheme.outlineVariant);
   final focusColor = focusRingColor(scheme);
   // Every button: a visible ring when reached by keyboard, label in
   // semibold on the type scale.
-  final focusRing = WidgetStateProperty.resolveWith<BorderSide?>((states) => states.contains(WidgetState.focused) ? BorderSide(color: focusColor, width: 2) : null);
-  final outlineRing = WidgetStateProperty.resolveWith<BorderSide?>((states) => states.contains(WidgetState.focused)
-      ? BorderSide(color: focusColor, width: 2)
-      : BorderSide(color: states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.08) : scheme.outlineVariant));
-  final buttonText = WidgetStatePropertyAll(font(const TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w600)));
-  const buttonPadding = WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: Space.l, vertical: Space.s));
+  final focusRing = WidgetStateProperty.resolveWith<BorderSide?>((states) =>
+      states.contains(WidgetState.focused) ? BorderSide(color: focusColor, width: 2) : null);
+  final outlineRing = WidgetStateProperty.resolveWith<BorderSide?>((states) =>
+      states.contains(WidgetState.focused)
+          ? BorderSide(color: focusColor, width: 2)
+          : BorderSide(
+              color: states.contains(WidgetState.disabled)
+                  ? scheme.onSurface.withValues(alpha: 0.08)
+                  : scheme.outlineVariant));
+  final buttonText = WidgetStatePropertyAll(
+      font(const TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w600)));
+  const buttonPadding =
+      WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: Space.l, vertical: Space.s));
   final buttonShape = WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: controlRadius));
   const flat = WidgetStatePropertyAll(0.0);
   // A quiet grey wash on hover and press, the same on every control.
   final overlay = WidgetStateProperty.resolveWith<Color?>((states) {
     if (states.contains(WidgetState.pressed)) return scheme.onSurface.withValues(alpha: 0.18);
-    if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) return scheme.onSurface.withValues(alpha: 0.08);
+    if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
+      return scheme.onSurface.withValues(alpha: 0.08);
+    }
     return null;
   });
   // The main button is the text colour filled: black on light, white on
   // dark. The accent stays for what is chosen or playing.
   final solid = ButtonStyle(
-    backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.12) : scheme.onSurface),
-    foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : scheme.surface),
+    backgroundColor: WidgetStateProperty.resolveWith((states) =>
+        states.contains(WidgetState.disabled)
+            ? scheme.onSurface.withValues(alpha: 0.12)
+            : scheme.onSurface),
+    foregroundColor: WidgetStateProperty.resolveWith((states) =>
+        states.contains(WidgetState.disabled)
+            ? scheme.onSurface.withValues(alpha: 0.38)
+            : scheme.surface),
     overlayColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.pressed)
         ? scheme.surface.withValues(alpha: 0.26)
         : states.contains(WidgetState.hovered)
@@ -279,10 +318,15 @@ ThemeData buildAppTheme(
       // Off, the skin's surface fades into the page and the label takes the
       // page's text colour: the skin's own label colour is chosen for the
       // full surface and would sink into a faded one.
-      foregroundColor: text == null ? null : WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.6) : text),
+      foregroundColor: text == null
+          ? null
+          : WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled)
+              ? scheme.onSurface.withValues(alpha: 0.6)
+              : text),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       side: focusRing,
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius))),
+      shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius))),
       backgroundBuilder: (context, states, child) {
         final pressed = states.contains(WidgetState.pressed);
         final hovered = states.contains(WidgetState.hovered);
@@ -293,10 +337,22 @@ ThemeData buildAppTheme(
             : hovered && !pressed && surface.hover == null
                 ? Colors.white.withValues(alpha: 0.14)
                 : null;
-        final paint = DecoratedBox(decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed, focused: states.contains(WidgetState.focused)), radius: radius));
+        final paint = DecoratedBox(
+            decoration: SurfaceDecoration.of(
+                context,
+                surface.forState(
+                    hovered: hovered,
+                    pressed: pressed,
+                    focused: states.contains(WidgetState.focused)),
+                radius: radius));
         return Stack(fit: StackFit.passthrough, children: [
-          Positioned.fill(child: states.contains(WidgetState.disabled) ? Opacity(opacity: 0.3, child: paint) : paint),
-          DecoratedBox(decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)), child: child),
+          Positioned.fill(
+              child: states.contains(WidgetState.disabled)
+                  ? Opacity(opacity: 0.3, child: paint)
+                  : paint),
+          DecoratedBox(
+              decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)),
+              child: child),
         ]);
       },
     );
@@ -318,7 +374,9 @@ ThemeData buildAppTheme(
             ? Colors.transparent
             : skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)),
     // A skin's icon finish (emboss, gel, glow); left out in Low resource mode.
-    iconTheme: IconThemeData(color: dark ? Colors.white : Colors.black87, shadows: plain ? null : skin?.icons.shadows(brightness, scheme.primary)),
+    iconTheme: IconThemeData(
+        color: dark ? Colors.white : Colors.black87,
+        shadows: plain ? null : skin?.icons.shadows(brightness, scheme.primary)),
     canvasColor: scheme.surface,
     visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
     // No ripples: a flat wash that comes in at once on press.
@@ -327,12 +385,18 @@ ThemeData buildAppTheme(
       null => scheme.onSurface.withValues(alpha: 0.14),
       'glow' => scheme.primary.withValues(alpha: 0.38),
       'ripple' => scheme.onSurface.withValues(alpha: 0.16),
-      _ => Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), scheme.onSurface.withValues(alpha: 0.08)),
+      _ => Color.alphaBlend(
+          scheme.primary.withValues(alpha: 0.18), scheme.onSurface.withValues(alpha: 0.08)),
     },
     // Hover has to show on every row and button, on a skin's busy page too.
-    hoverColor: skin == null ? scheme.onSurface.withValues(alpha: 0.07) : Color.alphaBlend(scheme.primary.withValues(alpha: 0.10), scheme.onSurface.withValues(alpha: 0.04)),
+    hoverColor: skin == null
+        ? scheme.onSurface.withValues(alpha: 0.07)
+        : Color.alphaBlend(
+            scheme.primary.withValues(alpha: 0.10), scheme.onSurface.withValues(alpha: 0.04)),
     highlightColor: Colors.transparent,
-    focusColor: skin == null ? scheme.onSurface.withValues(alpha: 0.10) : scheme.primary.withValues(alpha: 0.16),
+    focusColor: skin == null
+        ? scheme.onSurface.withValues(alpha: 0.10)
+        : scheme.primary.withValues(alpha: 0.16),
     appBarTheme: AppBarTheme(
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -364,7 +428,8 @@ ThemeData buildAppTheme(
       indicatorShape: RoundedRectangleBorder(borderRadius: controlRadius),
       selectedIconTheme: IconThemeData(color: scheme.onSecondaryContainer),
       unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-      selectedLabelTextStyle: font(TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface)),
+      selectedLabelTextStyle:
+          font(TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface)),
       unselectedLabelTextStyle: font(TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -380,11 +445,15 @@ ThemeData buildAppTheme(
       fillColor: dark ? scheme.surfaceContainerLow : scheme.surface,
       hoverColor: Colors.transparent,
       isDense: true,
-      contentPadding: EdgeInsets.symmetric(horizontal: Space.m, vertical: compact ? Space.s : Space.m),
+      contentPadding:
+          EdgeInsets.symmetric(horizontal: Space.m, vertical: compact ? Space.s : Space.m),
       border: OutlineInputBorder(borderRadius: controlRadius, borderSide: border),
       enabledBorder: OutlineInputBorder(borderRadius: controlRadius, borderSide: border),
-      disabledBorder: OutlineInputBorder(borderRadius: controlRadius, borderSide: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5))),
-      focusedBorder: OutlineInputBorder(borderRadius: controlRadius, borderSide: BorderSide(color: focusColor, width: 1.5)),
+      disabledBorder: OutlineInputBorder(
+          borderRadius: controlRadius,
+          borderSide: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: controlRadius, borderSide: BorderSide(color: focusColor, width: 1.5)),
       hintStyle: font(TextStyle(color: scheme.outline)),
     ),
     popupMenuTheme: PopupMenuThemeData(
@@ -415,15 +484,24 @@ ThemeData buildAppTheme(
         color: dark ? scheme.surfaceContainerHigh : scheme.surface,
         borderRadius: controlRadius,
         border: Border.all(color: scheme.outlineVariant),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.5 : 0.16), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: dark ? 0.5 : 0.16),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
       ),
     ),
     // Tags: a hairline when off; the text colour filled when on.
     chipTheme: ChipThemeData(
       shape: RoundedRectangleBorder(borderRadius: controlRadius),
       side: WidgetStateBorderSide.resolveWith((states) => states.contains(WidgetState.selected)
-          ? BorderSide(color: skin?.chipSelected?.border ?? skin?.chipSelected?.baseColor ?? scheme.onSurface)
-          : skin?.chip?.border != null ? BorderSide(color: skin!.chip!.border!) : border),
+          ? BorderSide(
+              color:
+                  skin?.chipSelected?.border ?? skin?.chipSelected?.baseColor ?? scheme.onSurface)
+          : skin?.chip?.border != null
+              ? BorderSide(color: skin!.chip!.border!)
+              : border),
       backgroundColor: skin?.chip?.baseColor ?? scheme.surface,
       selectedColor: skin?.chipSelected?.baseColor ?? scheme.onSurface,
       checkmarkColor: scheme.surface,
@@ -433,9 +511,12 @@ ThemeData buildAppTheme(
       labelStyle: font(TextStyle(
         fontSize: 14,
         height: 20 / 14,
-        color: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? skin?.chipSelectedText ?? scheme.surface : skin?.chipText ?? scheme.onSurface),
+        color: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected)
+            ? skin?.chipSelectedText ?? scheme.surface
+            : skin?.chipText ?? scheme.onSurface),
       )),
-      secondaryLabelStyle: font(TextStyle(fontSize: 14, height: 20 / 14, color: scheme.surface, fontWeight: FontWeight.w600)),
+      secondaryLabelStyle: font(TextStyle(
+          fontSize: 14, height: 20 / 14, color: scheme.surface, fontWeight: FontWeight.w600)),
       padding: const EdgeInsets.symmetric(horizontal: Space.s),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       elevation: 0,
@@ -452,7 +533,8 @@ ThemeData buildAppTheme(
         padding: const WidgetStatePropertyAll(EdgeInsets.all(Space.xs)),
       ),
     ),
-    menuButtonTheme: MenuButtonThemeData(style: ButtonStyle(
+    menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: controlRadius)),
       overlayColor: overlay,
     )),
@@ -461,46 +543,70 @@ ThemeData buildAppTheme(
         visualDensity: VisualDensity.compact,
         side: WidgetStatePropertyAll(border),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: controlRadius)),
-        backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.secondaryContainer : null),
-        foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.onSecondaryContainer : scheme.onSurfaceVariant),
+        backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? scheme.secondaryContainer : null),
+        foregroundColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? scheme.onSecondaryContainer
+                : scheme.onSurfaceVariant),
         overlayColor: overlay,
       ),
     ),
-    filledButtonTheme: FilledButtonThemeData(style: skinned(solid, skin?.primaryButton, skin?.primaryButtonText ?? scheme.onPrimary)),
-    elevatedButtonTheme: ElevatedButtonThemeData(style: skinned(ButtonStyle(
-      elevation: flat,
-      backgroundColor: WidgetStatePropertyAll(scheme.surface),
-      foregroundColor: WidgetStatePropertyAll(scheme.onSurface),
-      overlayColor: overlay,
-      side: outlineRing,
-      textStyle: buttonText,
-      padding: buttonPadding,
-      shape: buttonShape,
-    ), skin?.button, skin?.buttonText ?? scheme.onSurface)),
-    outlinedButtonTheme: OutlinedButtonThemeData(style: skinned(ButtonStyle(
-      foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : scheme.onSurface),
-      overlayColor: overlay,
-      side: outlineRing,
-      textStyle: buttonText,
-      padding: buttonPadding,
-      shape: buttonShape,
-    ), skin?.button, skin?.buttonText ?? scheme.onSurface)),
-    textButtonTheme: TextButtonThemeData(style: ButtonStyle(
-      foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : scheme.onSurface),
+    filledButtonTheme: FilledButtonThemeData(
+        style: skinned(solid, skin?.primaryButton, skin?.primaryButtonText ?? scheme.onPrimary)),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+        style: skinned(
+            ButtonStyle(
+              elevation: flat,
+              backgroundColor: WidgetStatePropertyAll(scheme.surface),
+              foregroundColor: WidgetStatePropertyAll(scheme.onSurface),
+              overlayColor: overlay,
+              side: outlineRing,
+              textStyle: buttonText,
+              padding: buttonPadding,
+              shape: buttonShape,
+            ),
+            skin?.button,
+            skin?.buttonText ?? scheme.onSurface)),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+        style: skinned(
+            ButtonStyle(
+              foregroundColor: WidgetStateProperty.resolveWith((states) =>
+                  states.contains(WidgetState.disabled)
+                      ? scheme.onSurface.withValues(alpha: 0.38)
+                      : scheme.onSurface),
+              overlayColor: overlay,
+              side: outlineRing,
+              textStyle: buttonText,
+              padding: buttonPadding,
+              shape: buttonShape,
+            ),
+            skin?.button,
+            skin?.buttonText ?? scheme.onSurface)),
+    textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+      foregroundColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.disabled)
+              ? scheme.onSurface.withValues(alpha: 0.38)
+              : scheme.onSurface),
       overlayColor: overlay,
       side: focusRing,
       textStyle: buttonText,
-      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s)),
+      padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s)),
       shape: buttonShape,
     )),
-    iconButtonTheme: IconButtonThemeData(style: ButtonStyle(
+    iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
       side: focusRing,
       overlayColor: overlay,
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: controlRadius)),
     )),
     // A plain toggle: white knob of one size on a grey or accent track.
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.surface.withValues(alpha: 0.7) : Neutral.white),
+      thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled)
+          ? scheme.surface.withValues(alpha: 0.7)
+          : Neutral.white),
       trackColor: WidgetStateProperty.resolveWith((states) {
         final on = states.contains(WidgetState.selected);
         final color = on ? scheme.primary : (dark ? Neutral.n700 : Neutral.n200);
@@ -513,19 +619,26 @@ ThemeData buildAppTheme(
     checkboxTheme: CheckboxThemeData(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(Radii.s))),
       side: BorderSide(color: scheme.outline, width: 1.5),
-      fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.onSurface : null),
+      fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? scheme.onSurface : null),
       checkColor: WidgetStatePropertyAll(scheme.surface),
     ),
-    radioTheme: RadioThemeData(fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.onSurface : scheme.outline)),
+    radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? scheme.onSurface : scheme.outline)),
     sliderTheme: SliderThemeData(
       trackHeight: 4,
       activeTrackColor: scheme.primary,
       inactiveTrackColor: scheme.surfaceContainerHighest,
       thumbColor: scheme.primary,
       overlayShape: SliderComponentShape.noOverlay,
-      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7, elevation: 0, pressedElevation: 0),
+      thumbShape:
+          const RoundSliderThumbShape(enabledThumbRadius: 7, elevation: 0, pressedElevation: 0),
     ),
-    progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary, linearTrackColor: scheme.surfaceContainerHighest, circularTrackColor: Colors.transparent),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+        linearTrackColor: scheme.surfaceContainerHighest,
+        circularTrackColor: Colors.transparent),
     tabBarTheme: TabBarThemeData(
       labelColor: scheme.onSurface,
       unselectedLabelColor: scheme.onSurfaceVariant,
@@ -545,14 +658,21 @@ ThemeData buildAppTheme(
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: dark ? scheme.surfaceContainerLow : scheme.surface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: dialogRadius.topLeft), side: border),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: dialogRadius.topLeft), side: border),
     ),
-    drawerTheme: DrawerThemeData(backgroundColor: scheme.surface, surfaceTintColor: Colors.transparent, shape: const RoundedRectangleBorder()),
+    drawerTheme: DrawerThemeData(
+        backgroundColor: scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder()),
     badgeTheme: BadgeThemeData(backgroundColor: scheme.primary, textColor: scheme.onPrimary),
     scrollbarTheme: ScrollbarThemeData(
       thickness: const WidgetStatePropertyAll(6),
       radius: const Radius.circular(3),
-      thumbColor: WidgetStateProperty.resolveWith((states) => scheme.onSurface.withValues(alpha: states.contains(WidgetState.dragged) || states.contains(WidgetState.hovered) ? 0.35 : 0.18)),
+      thumbColor: WidgetStateProperty.resolveWith((states) => scheme.onSurface.withValues(
+          alpha: states.contains(WidgetState.dragged) || states.contains(WidgetState.hovered)
+              ? 0.35
+              : 0.18)),
     ),
     dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1, thickness: 1),
     expansionTileTheme: const ExpansionTileThemeData(shape: Border(), collapsedShape: Border()),
@@ -565,7 +685,8 @@ ThemeData buildAppTheme(
   );
   var text = _typeScale(theme.textTheme);
   if (skin?.displayFont case final display?) {
-    TextStyle? d(TextStyle? style) => style?.copyWith(fontFamily: display, fontFamilyFallback: [if (family != null) family, ...fallback]);
+    TextStyle? d(TextStyle? style) => style?.copyWith(
+        fontFamily: display, fontFamilyFallback: [if (family != null) family, ...fallback]);
     text = text.copyWith(
       displayLarge: d(text.displayLarge),
       displayMedium: d(text.displayMedium),
@@ -576,7 +697,9 @@ ThemeData buildAppTheme(
       titleLarge: d(text.titleLarge),
     );
   }
-  return theme.copyWith(textTheme: text, extensions: [AppTones(chrome: chrome, warmth: highContrast ? 0 : warmth), SkinTheme(skin)]);
+  return theme.copyWith(
+      textTheme: text,
+      extensions: [AppTones(chrome: chrome, warmth: highContrast ? 0 : warmth), SkinTheme(skin)]);
 }
 
 /// What the colour scheme does not carry: the palette's top bar and side
@@ -587,7 +710,8 @@ class AppTones extends ThemeExtension<AppTones> {
   final double warmth;
 
   @override
-  AppTones copyWith({Color? chrome, double? warmth}) => AppTones(chrome: chrome ?? this.chrome, warmth: warmth ?? this.warmth);
+  AppTones copyWith({Color? chrome, double? warmth}) =>
+      AppTones(chrome: chrome ?? this.chrome, warmth: warmth ?? this.warmth);
 
   @override
   AppTones lerp(AppTones? other, double t) => AppTones(
@@ -612,7 +736,9 @@ class _NoTransitionsBuilder extends PageTransitionsBuilder {
   const _NoTransitionsBuilder();
 
   @override
-  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) => child;
+  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) =>
+      child;
 }
 
 extension ThemeShortcuts on BuildContext {
@@ -620,10 +746,22 @@ extension ThemeShortcuts on BuildContext {
   TextTheme get text => Theme.of(this).textTheme;
   AppTones get tones => Theme.of(this).extension<AppTones>() ?? const AppTones();
   Skin? get skin => Theme.of(this).extension<SkinTheme>()?.skin;
+
   /// Corners of cards and of thumbnails, from the skin when there is one.
-  BorderRadius get cardRadius => switch (skin?.shape.cardRadius) { final r? => BorderRadius.circular(r), null => AppStyle.cardRadius };
-  BorderRadius get thumbnailRadius => switch (skin?.shape.thumbnailRadius ?? skin?.shape.cardRadius) { final r? => BorderRadius.circular(r), null => AppStyle.thumbnailRadius };
-  BorderRadius get controlRadius => switch (skin?.shape.controlRadius) { final r? => BorderRadius.circular(r), null => AppStyle.controlRadius };
+  BorderRadius get cardRadius => switch (skin?.shape.cardRadius) {
+        final r? => BorderRadius.circular(r),
+        null => AppStyle.cardRadius
+      };
+  BorderRadius get thumbnailRadius =>
+      switch (skin?.shape.thumbnailRadius ?? skin?.shape.cardRadius) {
+        final r? => BorderRadius.circular(r),
+        null => AppStyle.thumbnailRadius
+      };
+  BorderRadius get controlRadius => switch (skin?.shape.controlRadius) {
+        final r? => BorderRadius.circular(r),
+        null => AppStyle.controlRadius
+      };
+
   /// Multiplied into thumbnails and avatars under 护眼暖色, none otherwise.
   Color? get pictureWarmth {
     final w = tones.warmth;

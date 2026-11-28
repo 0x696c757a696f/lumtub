@@ -37,7 +37,8 @@ abstract interface class StreamRelay {
 
 /// Whether an mpv error says a loopback server, such as the relay, refused
 /// the connection.
-bool loopbackRefused(String message) => RegExp(r'(127\.0\.0\.1|localhost)[^\n]*refused', caseSensitive: false).hasMatch(message);
+bool loopbackRefused(String message) =>
+    RegExp(r'(127\.0\.0\.1|localhost)[^\n]*refused', caseSensitive: false).hasMatch(message);
 
 /// The relay in lumtub_core: the stream's bytes are copied on native
 /// threads and never pass through Dart.
@@ -51,7 +52,9 @@ class NativeRelay implements StreamRelay {
 
   @override
   Future<void> start() async {
-    if (_core.relayStart() == 0) throw const SocketException('lumtub_core could not listen on 127.0.0.1');
+    if (_core.relayStart() == 0) {
+      throw const SocketException('lumtub_core could not listen on 127.0.0.1');
+    }
   }
 
   /// lumtub_core checks the port on every start and listens again when it
@@ -90,21 +93,36 @@ class NativeRelay implements StreamRelay {
   String? register(String url, {int? size, String? userAgent, String? proxy}) {
     final length = size ?? int.tryParse(Uri.tryParse(url)?.queryParameters['clen'] ?? '');
     if (length == null || length <= 0) return null;
-    final json = jsonEncode({'url': url, 'size': length, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize});
+    final json = jsonEncode(
+        {'url': url, 'size': length, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize});
     _watchLog();
     return _core.take(_core.withText(json, _core.relayRegister));
   }
 
   @override
   String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) {
-    final json = jsonEncode({'url': url, 'size': 0, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize, 'live': pair});
+    final json = jsonEncode({
+      'url': url,
+      'size': 0,
+      'userAgent': userAgent,
+      'proxy': proxy,
+      'chunk': chunkSize,
+      'live': pair
+    });
     _watchLog();
     return _core.take(_core.withText(json, _core.relayRegister));
   }
 
   @override
   String? registerHls(String url, {String? userAgent, String? proxy}) {
-    final json = jsonEncode({'url': url, 'size': 0, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize, 'hls': 'playlist'});
+    final json = jsonEncode({
+      'url': url,
+      'size': 0,
+      'userAgent': userAgent,
+      'proxy': proxy,
+      'chunk': chunkSize,
+      'hls': 'playlist'
+    });
     _watchLog();
     return _core.take(_core.withText(json, _core.relayRegister));
   }
@@ -160,7 +178,8 @@ class ChunkedRelay implements StreamRelay {
   }
 
   @override
-  String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) => null;
+  String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) =>
+      null;
 
   @override
   String? registerHls(String url, {String? userAgent, String? proxy}) => null;
@@ -173,7 +192,8 @@ class ChunkedRelay implements StreamRelay {
     if (server == null) return;
     final port = server.port;
     try {
-      final probe = await Socket.connect(InternetAddress.loopbackIPv4, port, timeout: const Duration(milliseconds: 500));
+      final probe = await Socket.connect(InternetAddress.loopbackIPv4, port,
+          timeout: const Duration(milliseconds: 500));
       probe.destroy();
       return;
     } on IOException catch (e) {
@@ -206,7 +226,8 @@ class ChunkedRelay implements StreamRelay {
     final size = target.size;
     var start = 0;
     var end = size - 1;
-    final range = RegExp(r'^bytes=(\d*)-(\d*)$').firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
+    final range = RegExp(r'^bytes=(\d*)-(\d*)$')
+        .firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
     if (range != null) {
       final from = int.tryParse(range[1]!);
       final to = int.tryParse(range[2]!);
@@ -267,8 +288,11 @@ class ChunkedRelay implements StreamRelay {
       }).handleError((Object e) => failure = e));
       next += received;
       if (next <= to) {
-        if (attempt >= 2 || received == 0) throw _Upstream('YouTube 在 $next 字节处中断（${failure ?? '提前结束'}）');
-        logWarn('YouTube reply broke off at byte $next (${failure ?? 'ended early'}), continuing from there');
+        if (attempt >= 2 || received == 0) {
+          throw _Upstream('YouTube 在 $next 字节处中断（${failure ?? '提前结束'}）');
+        }
+        logWarn(
+            'YouTube reply broke off at byte $next (${failure ?? 'ended early'}), continuing from there');
       } else if (next > to + 1) {
         // More than asked for would shift every later byte.
         throw _Upstream('YouTube 多发了 ${next - to - 1} 字节');
@@ -282,12 +306,18 @@ class ChunkedRelay implements StreamRelay {
     for (var attempt = 0;; attempt++) {
       try {
         final upstream = await _client.getUrl(uri);
-        if (target.userAgent != null) upstream.headers.set(HttpHeaders.userAgentHeader, target.userAgent!);
+        if (target.userAgent != null) {
+          upstream.headers.set(HttpHeaders.userAgentHeader, target.userAgent!);
+        }
         final reply = await upstream.close();
-        if (reply.statusCode == HttpStatus.ok || reply.statusCode == HttpStatus.partialContent) return reply;
+        if (reply.statusCode == HttpStatus.ok || reply.statusCode == HttpStatus.partialContent) {
+          return reply;
+        }
         await reply.drain<void>();
         // A 403 means the address expired; the app reopens the video.
-        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube returned {0}', [reply.statusCode]));
+        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) {
+          throw _Upstream(tr('YouTube returned {0}', [reply.statusCode]));
+        }
       } on IOException catch (e) {
         // A connection YouTube dropped, before any byte of this reply.
         if (attempt >= 1) throw _Upstream('$e');

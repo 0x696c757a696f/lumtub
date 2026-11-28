@@ -5,9 +5,15 @@ import 'package:lumtub/learning/word_voice.dart';
 void main() {
   test('Portuguese lines are told from Spanish ones', () {
     final guess = LatinLanguageGuess();
-    expect(guess.guess('Você não sabe o que está fazendo, então eu vou com ela', const ['en', 'es', 'fr', 'de', 'it', 'pt']), 'pt');
+    expect(
+        guess.guess('Você não sabe o que está fazendo, então eu vou com ela',
+            const ['en', 'es', 'fr', 'de', 'it', 'pt']),
+        'pt');
     final other = LatinLanguageGuess();
-    expect(other.guess('Yo no sé qué está pasando, pero los niños están muy bien', const ['en', 'es', 'fr', 'de', 'it', 'pt']), 'es');
+    expect(
+        other.guess('Yo no sé qué está pasando, pero los niños están muy bien',
+            const ['en', 'es', 'fr', 'de', 'it', 'pt']),
+        'es');
   });
 
   test('the voice follows the subtitles’ region', () {

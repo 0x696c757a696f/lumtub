@@ -1,7 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui show Codec, Image, ImmutableBuffer, Picture, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
+import 'dart:ui' as ui
+    show
+        Codec,
+        Image,
+        ImmutableBuffer,
+        Picture,
+        PictureRecorder,
+        TargetImageSize,
+        TargetImageSizeCallback;
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/foundation.dart';
@@ -25,7 +33,11 @@ void paintSkinLayer(Canvas canvas, Rect rect, SkinPaint layer) {
     case RadialPaint(:final center, :final radius, :final colors, :final stops):
       final c = Offset(rect.left + rect.width * center.dx, rect.top + rect.height * center.dy);
       final r = math.max(1.0, math.max(rect.width, rect.height) * radius);
-      canvas.drawRect(rect, Paint()..shader = RadialGradient(colors: colors, stops: stops).createShader(Rect.fromCircle(center: c, radius: r)));
+      canvas.drawRect(
+          rect,
+          Paint()
+            ..shader = RadialGradient(colors: colors, stops: stops)
+                .createShader(Rect.fromCircle(center: c, radius: r)));
     case PatternPaint():
       _paintPattern(canvas, rect, layer);
     case ImagePaint():
@@ -54,7 +66,11 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
       matrix
         ..translateByDouble(rect.left, rect.top, 0, 1)
         ..scaleByDouble(scale, scale, 1, 1);
-      canvas.drawRect(rect, Paint()..shader = ImageShader(tile.image, TileMode.repeated, TileMode.repeated, matrix.storage, filterQuality: FilterQuality.medium));
+      canvas.drawRect(
+          rect,
+          Paint()
+            ..shader = ImageShader(tile.image, TileMode.repeated, TileMode.repeated, matrix.storage,
+                filterQuality: FilterQuality.medium));
       return;
     }
   }
@@ -71,7 +87,10 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
     canvas.translate(-rect.center.dx, -rect.center.dy);
   }
   // Rotated patterns cover the box's diagonal.
-  final cover = p.angle == 0 ? rect : Rect.fromCenter(center: rect.center, width: rect.longestSide * 1.5, height: rect.longestSide * 1.5);
+  final cover = p.angle == 0
+      ? rect
+      : Rect.fromCenter(
+          center: rect.center, width: rect.longestSide * 1.5, height: rect.longestSide * 1.5);
   switch (p.type) {
     case 'lines' || 'scanlines':
       for (var y = cover.top; y < cover.bottom; y += step) {
@@ -107,9 +126,11 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
       final random = math.Random(7);
       for (var y = cover.top; y < cover.bottom; y += step * (0.5 + random.nextDouble())) {
         final alpha = 0.35 + random.nextDouble() * 0.65;
-        canvas.drawRect(Rect.fromLTWH(cover.left, y, cover.width, size * (0.6 + random.nextDouble() * 0.8)), Paint()
-          ..color = p.color.withValues(alpha: p.color.a * alpha)
-          ..shader = fade);
+        canvas.drawRect(
+            Rect.fromLTWH(cover.left, y, cover.width, size * (0.6 + random.nextDouble() * 0.8)),
+            Paint()
+              ..color = p.color.withValues(alpha: p.color.a * alpha)
+              ..shader = fade);
       }
     case 'noise':
       // Fine grain, as of sand or paper: one small tile drawn once and
@@ -155,7 +176,8 @@ const _tileScale = 2.0;
   final extent = period * math.min(math.max(1, (32 / period).ceil()), (most / period).floor());
   final pixels = (extent * _tileScale).round();
   final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, pixels.toDouble(), pixels.toDouble()))..scale(pixels / extent);
+  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, pixels.toDouble(), pixels.toDouble()))
+    ..scale(pixels / extent);
   final paint = Paint()
     ..color = p.color
     ..isAntiAlias = false;
@@ -178,10 +200,13 @@ const _tileScale = 2.0;
       final points = <double>[];
       for (var y = 0.0; y <= extent + 0.001; y += step) {
         for (var x = 0.0; x <= extent + 0.001; x += step) {
-          points..add(x)..add(y);
+          points
+            ..add(x)
+            ..add(y);
         }
       }
-      canvas.drawRawPoints(PointMode.points, Float32List.fromList(points), paint..strokeWidth = size);
+      canvas.drawRawPoints(
+          PointMode.points, Float32List.fromList(points), paint..strokeWidth = size);
     case 'checker':
       final path = Path();
       var row = 0;
@@ -221,15 +246,20 @@ ImageShader noiseShader(Color color, {required double spacing, required double s
     buckets[random.nextInt(4)].addAll([random.nextDouble() * tile, random.nextDouble() * tile]);
   }
   for (var b = 0; b < buckets.length; b++) {
-    canvas.drawRawPoints(PointMode.points, Float32List.fromList(buckets[b]), Paint()
-      ..color = color.withValues(alpha: color.a * (0.25 + b * 0.25))
-      ..strokeWidth = size
-      ..strokeCap = StrokeCap.round);
+    canvas.drawRawPoints(
+        PointMode.points,
+        Float32List.fromList(buckets[b]),
+        Paint()
+          ..color = color.withValues(alpha: color.a * (0.25 + b * 0.25))
+          ..strokeWidth = size
+          ..strokeCap = StrokeCap.round);
   }
   final picture = recorder.endRecording();
   final image = picture.toImageSync((tile * scale).round(), (tile * scale).round());
   picture.dispose();
-  final shader = ImageShader(image, TileMode.repeated, TileMode.repeated, (Matrix4.identity()..scaleByDouble(1 / scale, 1 / scale, 1, 1)).storage, filterQuality: FilterQuality.medium);
+  final shader = ImageShader(image, TileMode.repeated, TileMode.repeated,
+      (Matrix4.identity()..scaleByDouble(1 / scale, 1 / scale, 1, 1)).storage,
+      filterQuality: FilterQuality.medium);
   if (_noiseTiles.length > 12) _noiseTiles.remove(_noiseTiles.keys.first);
   return _noiseTiles[key] = shader;
 }
@@ -244,7 +274,8 @@ abstract final class SkinGlass {
   /// How much of a skin's page colour stays over the backdrop under the
   /// pages ([Skin.veil]): all of it down to the clearest glass the skin
   /// keeps readable ([Skin.glassMin]), less below that.
-  static double thinning(Skin skin) => skin.glass && opacity < skin.glassMin ? opacity / skin.glassMin : 1;
+  static double thinning(Skin skin) =>
+      skin.glass && opacity < skin.glassMin ? opacity / skin.glassMin : 1;
 }
 
 class SurfaceDecoration extends Decoration {
@@ -253,16 +284,24 @@ class SurfaceDecoration extends Decoration {
   /// glass's alpha ([GlassLook]) instead of a glass skin's own clarity.
   factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) {
     final glass = surface.frame ? context.glass : null;
-    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1), plain: lowResourceMode || FramePressure.on);
+    return SurfaceDecoration(surface,
+        radius: radius,
+        warmth: context.pictureWarmth,
+        clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1),
+        plain: lowResourceMode || FramePressure.on);
   }
 
-  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1, this.plain = false});
+  const SurfaceDecoration(this.surface,
+      {this.radius = 0, this.warmth, this.clarity = 1, this.plain = false});
   final SkinSurface surface;
   final double radius;
+
   /// 护眼暖色's tint, multiplied into everything drawn.
   final Color? warmth;
+
   /// How much of the fill is drawn: below 1 the backdrop shows through.
   final double clarity;
+
   /// 低占用模式, or frames running late ([FramePressure]): the fill's
   /// patterns and grain are left out, its colours kept.
   final bool plain;
@@ -270,10 +309,13 @@ class SurfaceDecoration extends Decoration {
   double get _radius => surface.radius ?? radius;
 
   @override
-  EdgeInsetsGeometry get padding => EdgeInsets.all(surface.bevel != null ? surface.bevel!.width * (surface.bevel!.innerLight != null ? 2 : 1) : 0);
+  EdgeInsetsGeometry get padding => EdgeInsets.all(surface.bevel != null
+      ? surface.bevel!.width * (surface.bevel!.innerLight != null ? 2 : 1)
+      : 0);
 
   @override
-  Path getClipPath(Rect rect, TextDirection textDirection) => Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(_radius)));
+  Path getClipPath(Rect rect, TextDirection textDirection) =>
+      Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(_radius)));
 
   @override
   bool hitTest(Size size, Offset position, {TextDirection? textDirection}) => true;
@@ -282,7 +324,13 @@ class SurfaceDecoration extends Decoration {
   BoxPainter createBoxPainter([VoidCallback? onChanged]) => _SurfacePainter(this);
 
   @override
-  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth && other.clarity == clarity && other.plain == plain;
+  bool operator ==(Object other) =>
+      other is SurfaceDecoration &&
+      identical(other.surface, surface) &&
+      other.radius == radius &&
+      other.warmth == warmth &&
+      other.clarity == clarity &&
+      other.plain == plain;
 
   @override
   int get hashCode => Object.hash(identityHashCode(surface), radius, warmth, clarity, plain);
@@ -321,26 +369,32 @@ class _SurfacePainter extends BoxPainter {
 
   void _paint(Canvas canvas, Rect rect) {
     if (decoration.warmth case final tint?) {
-      canvas.saveLayer(rect.inflate(24), Paint()..colorFilter = ColorFilter.mode(tint, BlendMode.modulate));
-      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity, plain: decoration.plain);
+      canvas.saveLayer(
+          rect.inflate(24), Paint()..colorFilter = ColorFilter.mode(tint, BlendMode.modulate));
+      paintSurface(canvas, rect, decoration.surface, decoration._radius,
+          clarity: decoration.clarity, plain: decoration.plain);
       canvas.restore();
     } else {
-      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity, plain: decoration.plain);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius,
+          clarity: decoration.clarity, plain: decoration.plain);
     }
   }
 }
 
 /// Paints [s] into [rect] with corners of [radius]; [plain] leaves out
 /// the fill's patterns and grain.
-void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {double clarity = 1, bool plain = false}) {
+void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius,
+    {double clarity = 1, bool plain = false}) {
   final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
   for (final shadow in s.shadows) {
     canvas.drawRRect(rrect.shift(shadow.offset).inflate(shadow.spreadRadius), shadow.toPaint());
   }
   if (s.glow case final glow?) {
-    canvas.drawRRect(rrect.inflate(1), Paint()
-      ..color = glow
-      ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 10));
+    canvas.drawRRect(
+        rrect.inflate(1),
+        Paint()
+          ..color = glow
+          ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 10));
   }
   // Clearer glass: the fill, shine and bevel drawn at [clarity]; the edges
   // stay as they are so the pane keeps its shape.
@@ -359,15 +413,23 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {doubl
     // Rounded gel keeps the shine off its curved sides; a square bar is lit
     // edge to edge, or its ends look a different colour.
     final inset = radius <= 0 ? 0.0 : math.min(rect.width * 0.04, radius);
-    final shine = Rect.fromLTRB(rect.left + inset, rect.top + 1, rect.right - inset, rect.top + rect.height * 0.5);
+    final shine = Rect.fromLTRB(
+        rect.left + inset, rect.top + 1, rect.right - inset, rect.top + rect.height * 0.5);
     final r = math.min(radius, shine.height);
     canvas.drawRRect(
-      RRect.fromRectAndCorners(shine, topLeft: Radius.circular(r), topRight: Radius.circular(r), bottomLeft: Radius.circular(r * 0.5), bottomRight: Radius.circular(r * 0.5)),
+      RRect.fromRectAndCorners(shine,
+          topLeft: Radius.circular(r),
+          topRight: Radius.circular(r),
+          bottomLeft: Radius.circular(r * 0.5),
+          bottomRight: Radius.circular(r * 0.5)),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.white.withValues(alpha: 0.9 * s.gloss), Colors.white.withValues(alpha: 0.12 * s.gloss)],
+          colors: [
+            Colors.white.withValues(alpha: 0.9 * s.gloss),
+            Colors.white.withValues(alpha: 0.12 * s.gloss)
+          ],
         ).createShader(shine),
     );
   }
@@ -378,15 +440,25 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {doubl
     final paint = Paint()..color = color;
     final sides = s.borderSides;
     if (sides == null) {
-      canvas.drawRRect(rrect.deflate(w / 2), Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w);
+      canvas.drawRRect(
+          rrect.deflate(w / 2),
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w);
     } else {
-      if (sides.contains('top')) canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, rect.width, w), paint);
-      if (sides.contains('bottom')) canvas.drawRect(Rect.fromLTWH(rect.left, rect.bottom - w, rect.width, w), paint);
-      if (sides.contains('left')) canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, w, rect.height), paint);
-      if (sides.contains('right')) canvas.drawRect(Rect.fromLTWH(rect.right - w, rect.top, w, rect.height), paint);
+      if (sides.contains('top')) {
+        canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, rect.width, w), paint);
+      }
+      if (sides.contains('bottom')) {
+        canvas.drawRect(Rect.fromLTWH(rect.left, rect.bottom - w, rect.width, w), paint);
+      }
+      if (sides.contains('left')) {
+        canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, w, rect.height), paint);
+      }
+      if (sides.contains('right')) {
+        canvas.drawRect(Rect.fromLTWH(rect.right - w, rect.top, w, rect.height), paint);
+      }
     }
   }
 }
@@ -409,7 +481,8 @@ void _paintBevel(Canvas canvas, Rect rect, SkinBevel b) {
   final (outerLight, outerDark) = b.sunk ? (b.dark, b.light) : (b.light, b.dark);
   edge(rect, w, outerLight, outerDark);
   if (b.innerLight != null && b.innerDark != null) {
-    final (innerLight, innerDark) = b.sunk ? (b.innerDark!, b.innerLight!) : (b.innerLight!, b.innerDark!);
+    final (innerLight, innerDark) =
+        b.sunk ? (b.innerDark!, b.innerLight!) : (b.innerLight!, b.innerDark!);
     edge(rect.deflate(w), w, innerLight, innerDark);
   }
 }
@@ -425,22 +498,24 @@ class SkinLayers extends StatelessWidget {
           if (layer is ImagePaint)
             // The image's own opacity, not an Opacity layer: no offscreen
             // pass for a picture the size of the window.
-            LayoutBuilder(builder: (context, constraints) => Image(
-                image: _decodedFor(layer, constraints, MediaQuery.devicePixelRatioOf(context)),
-                opacity: layer.opacity < 1 ? AlwaysStoppedAnimation(layer.opacity) : null,
-                // A new size keeps the old picture up until it is decoded,
-                // rather than leaving the window bare for a frame.
-                gaplessPlayback: true,
-                fit: switch (layer.fit) {
-                  'contain' => BoxFit.contain,
-                  'fill' => BoxFit.fill,
-                  'tile' => BoxFit.none,
-                  _ => BoxFit.cover,
-                },
-                repeat: layer.fit == 'tile' ? ImageRepeat.repeat : ImageRepeat.noRepeat,
-                alignment: layer.fit == 'tile' ? Alignment.topLeft : layer.focus,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ))
+            LayoutBuilder(
+                builder: (context, constraints) => Image(
+                      image:
+                          _decodedFor(layer, constraints, MediaQuery.devicePixelRatioOf(context)),
+                      opacity: layer.opacity < 1 ? AlwaysStoppedAnimation(layer.opacity) : null,
+                      // A new size keeps the old picture up until it is decoded,
+                      // rather than leaving the window bare for a frame.
+                      gaplessPlayback: true,
+                      fit: switch (layer.fit) {
+                        'contain' => BoxFit.contain,
+                        'fill' => BoxFit.fill,
+                        'tile' => BoxFit.none,
+                        _ => BoxFit.cover,
+                      },
+                      repeat: layer.fit == 'tile' ? ImageRepeat.repeat : ImageRepeat.noRepeat,
+                      alignment: layer.fit == 'tile' ? Alignment.topLeft : layer.focus,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ))
           else
             CustomPaint(painter: _LayerPainter(layer)),
       ]);
@@ -451,27 +526,38 @@ class SkinLayers extends StatelessWidget {
 /// photo straight from a camera would otherwise sit in memory at full
 /// size. Tiles keep their own size.
 ImageProvider _decodedFor(ImagePaint layer, BoxConstraints constraints, double pixelRatio) {
-  final provider = layer.builtIn ? AssetImage(layer.path) as ImageProvider : FileImage(File(layer.path));
-  if (layer.fit == 'tile' || !constraints.hasBoundedWidth || !constraints.hasBoundedHeight) return provider;
+  final provider =
+      layer.builtIn ? AssetImage(layer.path) as ImageProvider : FileImage(File(layer.path));
+  if (layer.fit == 'tile' || !constraints.hasBoundedWidth || !constraints.hasBoundedHeight) {
+    return provider;
+  }
   int step(double length) => math.max(256, (length * pixelRatio / 256).ceil() * 256);
-  return BoxDecodedImage(provider, width: step(constraints.maxWidth), height: step(constraints.maxHeight), cover: layer.fit != 'contain');
+  return BoxDecodedImage(provider,
+      width: step(constraints.maxWidth),
+      height: step(constraints.maxHeight),
+      cover: layer.fit != 'contain');
 }
 
 /// [image] decoded at the size it is drawn in a [width] × [height] box:
 /// covering it (or filling it) when [cover], else fitting inside; never
 /// larger than the picture itself.
 class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
-  const BoxDecodedImage(this.image, {required this.width, required this.height, required this.cover});
+  const BoxDecodedImage(this.image,
+      {required this.width, required this.height, required this.cover});
   final ImageProvider<Object> image;
   final int width;
   final int height;
   final bool cover;
 
   /// The decoded size of a [pictureWidth] × [pictureHeight] picture.
-  static (int, int) sizeFor(int pictureWidth, int pictureHeight, {required int width, required int height, required bool cover}) {
+  static (int, int) sizeFor(int pictureWidth, int pictureHeight,
+      {required int width, required int height, required bool cover}) {
     final across = width / pictureWidth, down = height / pictureHeight;
     final scale = math.min(1.0, cover ? math.max(across, down) : math.min(across, down));
-    return (math.max(1, (pictureWidth * scale).round()), math.max(1, (pictureHeight * scale).round()));
+    return (
+      math.max(1, (pictureWidth * scale).round()),
+      math.max(1, (pictureHeight * scale).round())
+    );
   }
 
   // Answered at once when the picture's own key is, so a rebuild finds it
@@ -491,15 +577,23 @@ class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
   // Equal providers: a rebuild with the same picture and size is not a
   // new picture to load.
   @override
-  bool operator ==(Object other) => other is BoxDecodedImage && other.image == image && other.width == width && other.height == height && other.cover == cover;
+  bool operator ==(Object other) =>
+      other is BoxDecodedImage &&
+      other.image == image &&
+      other.width == width &&
+      other.height == height &&
+      other.cover == cover;
 
   @override
   int get hashCode => Object.hash(image, width, height, cover);
 
   @override
   ImageStreamCompleter loadImage(BoxDecodedKey key, ImageDecoderCallback decode) {
-    Future<ui.Codec> sized(ui.ImmutableBuffer buffer, {ui.TargetImageSizeCallback? getTargetSize}) => decode(buffer, getTargetSize: (pictureWidth, pictureHeight) {
-          final (w, h) = sizeFor(pictureWidth, pictureHeight, width: width, height: height, cover: cover);
+    Future<ui.Codec> sized(ui.ImmutableBuffer buffer,
+            {ui.TargetImageSizeCallback? getTargetSize}) =>
+        decode(buffer, getTargetSize: (pictureWidth, pictureHeight) {
+          final (w, h) =
+              sizeFor(pictureWidth, pictureHeight, width: width, height: height, cover: cover);
           return ui.TargetImageSize(width: w, height: h);
         });
     return image.loadImage(key.inner, sized);
@@ -514,7 +608,12 @@ class BoxDecodedKey {
   final bool cover;
 
   @override
-  bool operator ==(Object other) => other is BoxDecodedKey && other.inner == inner && other.width == width && other.height == height && other.cover == cover;
+  bool operator ==(Object other) =>
+      other is BoxDecodedKey &&
+      other.inner == inner &&
+      other.width == width &&
+      other.height == height &&
+      other.cover == cover;
 
   @override
   int get hashCode => Object.hash(inner, width, height, cover);
@@ -536,10 +635,16 @@ class _LayerPainter extends CustomPainter {
 /// Under 低占用模式 ([plain]) the ornaments are left out. 护眼暖色 tints
 /// it all like the video.
 class SkinBackdrop extends StatelessWidget {
-  const SkinBackdrop({super.key, required this.skin, required this.child, this.plain = false, this.pictures = true});
+  const SkinBackdrop(
+      {super.key,
+      required this.skin,
+      required this.child,
+      this.plain = false,
+      this.pictures = true});
   final Skin skin;
   final Widget child;
   final bool plain;
+
   /// Whether the skin's background pictures, landscape and ornaments are
   /// drawn; without them only its page colour is.
   final bool pictures;
@@ -550,25 +655,39 @@ class SkinBackdrop extends StatelessWidget {
     // pictures and ornaments would cover what shows through.
     final glass = context.glass;
     if (glass != null) {
-      return Stack(fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: plain), child]);
+      return Stack(
+          fit: StackFit.expand, children: [GlassBackdrop(look: glass, plain: plain), child]);
     }
     final decorations = plain || !pictures ? const <SkinDecoration>[] : skin.decorations;
     final below = decorations.where((d) => !d.above).toList();
     final above = decorations.where((d) => d.above).toList();
     final warmth = context.pictureWarmth;
-    Widget warm(Widget child) => warmth == null ? child : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
+    Widget warm(Widget child) => warmth == null
+        ? child
+        : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
     return Stack(fit: StackFit.expand, children: [
-      RepaintBoundary(child: warm(_Kept(child: Stack(fit: StackFit.expand, children: [
+      RepaintBoundary(
+          child: warm(_Kept(
+              child: Stack(fit: StackFit.expand, children: [
         // Pure black in dark mode replaces the page of a skin that follows
         // the theme mode, as it does Lumtub's own.
-        ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
+        ColoredBox(
+            color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black
+                ? Colors.black
+                : skin.colors.page),
         // Low resource mode keeps the colours and leaves out pictures,
         // which cost memory to decode.
-        if (skin.background.isNotEmpty && pictures) SkinLayers(plain ? skin.background.where((layer) => layer is! ImagePaint).toList() : skin.background),
+        if (skin.background.isNotEmpty && pictures)
+          SkinLayers(plain
+              ? skin.background.where((layer) => layer is! ImagePaint).toList()
+              : skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
       ])))),
       child,
-      if (above.isNotEmpty) IgnorePointer(child: RepaintBoundary(child: warm(_Kept(child: CustomPaint(painter: SkinDecorationPainter(above)))))),
+      if (above.isNotEmpty)
+        IgnorePointer(
+            child: RepaintBoundary(
+                child: warm(_Kept(child: CustomPaint(painter: SkinDecorationPainter(above)))))),
     ]);
   }
 }
@@ -584,7 +703,8 @@ class _Kept extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => CustomPaint(painter: const _Nothing(), isComplex: true, child: child);
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: const _Nothing(), isComplex: true, child: child);
 }
 
 class _Nothing extends CustomPainter {
@@ -599,7 +719,8 @@ class _Nothing extends CustomPainter {
 
 /// A box drawn as [surface] (or nothing when null) round [child].
 class SkinBox extends StatelessWidget {
-  const SkinBox({super.key, required this.surface, required this.child, this.radius = 0, this.padding});
+  const SkinBox(
+      {super.key, required this.surface, required this.child, this.radius = 0, this.padding});
   final SkinSurface? surface;
   final double radius;
   final EdgeInsetsGeometry? padding;
@@ -646,8 +767,14 @@ class SkinDecorationPainter extends CustomPainter {
           ScenePainter(SkinScene.byName(scene)!, night: night, seed: seed).paint(canvas, size);
         case PatternDecoration(:final paint, :final fade):
           final shader = switch (fade) {
-            'top' => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [paint.color.withValues(alpha: 0), paint.color]).createShader(rect),
-            'bottom' => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [paint.color, paint.color.withValues(alpha: 0)]).createShader(rect),
+            'top' => LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [paint.color.withValues(alpha: 0), paint.color]).createShader(rect),
+            'bottom' => LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [paint.color, paint.color.withValues(alpha: 0)]).createShader(rect),
             _ => null,
           };
           _paintPattern(canvas, rect, paint, fade: shader);
@@ -662,18 +789,34 @@ class SkinDecorationPainter extends CustomPainter {
       final edge = random.nextBool();
       // The left edge holds the side rail's labels, so bubbles there sit
       // just to its right.
-      final x = edge ? (random.nextBool() ? 0.08 + random.nextDouble() * 0.08 : 0.88 + random.nextDouble() * 0.12) : 0.08 + random.nextDouble() * 0.92;
-      final y = edge ? random.nextDouble() : (random.nextBool() ? random.nextDouble() * 0.15 : 0.85 + random.nextDouble() * 0.15);
+      final x = edge
+          ? (random.nextBool()
+              ? 0.08 + random.nextDouble() * 0.08
+              : 0.88 + random.nextDouble() * 0.12)
+          : 0.08 + random.nextDouble() * 0.92;
+      final y = edge
+          ? random.nextDouble()
+          : (random.nextBool() ? random.nextDouble() * 0.15 : 0.85 + random.nextDouble() * 0.15);
       final r = 8 + random.nextDouble() * 40;
       final c = Offset(x * size.width, y * size.height);
       final circle = Rect.fromCircle(center: c, radius: r);
-      canvas.drawCircle(c, r, Paint()
-        ..shader = RadialGradient(
-          colors: [Colors.transparent, d.tint, Colors.white.withValues(alpha: 0.75)],
-          stops: const [0.58, 0.82, 1],
-        ).createShader(circle));
-      canvas.drawCircle(c + Offset(-r * 0.35, -r * 0.4), r * 0.18, Paint()
-        ..shader = RadialGradient(colors: [Colors.white.withValues(alpha: 0.95), Colors.white.withValues(alpha: 0)]).createShader(Rect.fromCircle(center: c + Offset(-r * 0.35, -r * 0.4), radius: r * 0.18)));
+      canvas.drawCircle(
+          c,
+          r,
+          Paint()
+            ..shader = RadialGradient(
+              colors: [Colors.transparent, d.tint, Colors.white.withValues(alpha: 0.75)],
+              stops: const [0.58, 0.82, 1],
+            ).createShader(circle));
+      canvas.drawCircle(
+          c + Offset(-r * 0.35, -r * 0.4),
+          r * 0.18,
+          Paint()
+            ..shader = RadialGradient(colors: [
+              Colors.white.withValues(alpha: 0.95),
+              Colors.white.withValues(alpha: 0)
+            ]).createShader(
+                Rect.fromCircle(center: c + Offset(-r * 0.35, -r * 0.4), radius: r * 0.18)));
     }
   }
 
@@ -690,9 +833,11 @@ class SkinDecorationPainter extends CustomPainter {
         ..quadraticBezierTo(c.dx, c.dy, c.dx, c.dy - r)
         ..close();
       if (d.glow case final glow?) {
-        canvas.drawPath(path, Paint()
-          ..color = glow
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+        canvas.drawPath(
+            path,
+            Paint()
+              ..color = glow
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
       }
       canvas.drawPath(path, Paint()..color = d.color);
     }
@@ -703,7 +848,10 @@ class SkinDecorationPainter extends CustomPainter {
     final floor = Rect.fromLTRB(0, horizon, size.width, size.height);
     final paint = Paint()
       ..strokeWidth = 1
-      ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [d.color.withValues(alpha: 0), d.color]).createShader(floor);
+      ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [d.color.withValues(alpha: 0), d.color]).createShader(floor);
     final vanish = Offset(size.width / 2, horizon);
     final spacing = d.spacing.isFinite ? math.max(d.spacing, 4.0) : 48.0;
     final lines = (size.width / spacing).ceil() * 3;
@@ -725,7 +873,8 @@ class SkinDecorationPainter extends CustomPainter {
       final thickness = size.height * (0.05 + random.nextDouble() * 0.08);
       final phase = random.nextDouble() * math.pi * 2;
       final turns = 0.6 + random.nextDouble() * 0.8;
-      double y(double x, double shift) => base + shift + math.sin(x / size.width * math.pi * 2 * turns + phase) * amplitude;
+      double y(double x, double shift) =>
+          base + shift + math.sin(x / size.width * math.pi * 2 * turns + phase) * amplitude;
       const steps = 48;
       final top = Path()..moveTo(0, y(0, 0));
       final ribbon = Path()..moveTo(0, y(0, 0));
@@ -736,20 +885,25 @@ class SkinDecorationPainter extends CustomPainter {
       }
       for (var s = steps; s >= 0; s--) {
         final x = size.width * s / steps;
-        ribbon.lineTo(x, y(x, thickness * (0.6 + 0.4 * math.cos(x / size.width * math.pi + phase))));
+        ribbon.lineTo(
+            x, y(x, thickness * (0.6 + 0.4 * math.cos(x / size.width * math.pi + phase))));
       }
       ribbon.close();
       final bounds = Rect.fromLTRB(0, base - amplitude, size.width, base + amplitude + thickness);
-      canvas.drawPath(ribbon, Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [d.color, d.color.withValues(alpha: 0)],
-        ).createShader(bounds));
-      canvas.drawPath(top, Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = Colors.white.withValues(alpha: 0.7));
+      canvas.drawPath(
+          ribbon,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [d.color, d.color.withValues(alpha: 0)],
+            ).createShader(bounds));
+      canvas.drawPath(
+          top,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = Colors.white.withValues(alpha: 0.7));
     }
   }
 
@@ -758,14 +912,23 @@ class SkinDecorationPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height * d.position);
     canvas.translate(center.dx, center.dy);
     canvas.rotate(d.angle * math.pi / 180);
-    final band = Rect.fromCenter(center: Offset.zero, width: size.longestSide * 1.6, height: size.height * 0.4);
-    canvas.drawRect(band, Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [d.color.withValues(alpha: 0), d.color.withValues(alpha: d.color.a * 0.4), d.color, d.color.withValues(alpha: d.color.a * 0.4), d.color.withValues(alpha: 0)],
-        stops: const [0.3, 0.47, 0.5, 0.53, 0.7],
-      ).createShader(band));
+    final band = Rect.fromCenter(
+        center: Offset.zero, width: size.longestSide * 1.6, height: size.height * 0.4);
+    canvas.drawRect(
+        band,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              d.color.withValues(alpha: 0),
+              d.color.withValues(alpha: d.color.a * 0.4),
+              d.color,
+              d.color.withValues(alpha: d.color.a * 0.4),
+              d.color.withValues(alpha: 0)
+            ],
+            stops: const [0.3, 0.47, 0.5, 0.53, 0.7],
+          ).createShader(band));
     canvas.restore();
   }
 
@@ -793,7 +956,9 @@ class SkinAppBar extends StatelessWidget implements PreferredSizeWidget {
     return DecoratedBox(
       decoration: SurfaceDecoration.of(context, top),
       child: Theme(
-        data: theme.copyWith(appBarTheme: theme.appBarTheme.copyWith(backgroundColor: Colors.transparent, foregroundColor: skin.topBarText)),
+        data: theme.copyWith(
+            appBarTheme: theme.appBarTheme
+                .copyWith(backgroundColor: Colors.transparent, foregroundColor: skin.topBarText)),
         // The bar's buttons repaint apart from the surface under them.
         child: RepaintBoundary(child: bar),
       ),

@@ -10,7 +10,8 @@ import 'motion.dart';
 /// screen is kept above the page and faded away, instead of every colour
 /// being interpolated and the whole tree rebuilt on each frame.
 class ThemeCrossFade extends StatefulWidget {
-  const ThemeCrossFade({required this.child, super.key, this.duration = ThemeCrossFade.standard, this.instant});
+  const ThemeCrossFade(
+      {required this.child, super.key, this.duration = ThemeCrossFade.standard, this.instant});
   final Duration duration;
 
   /// Asked at each change: whether to switch without a fade.
@@ -20,7 +21,10 @@ class ThemeCrossFade extends StatefulWidget {
   static const standard = Duration(milliseconds: 250);
 
   @visibleForTesting
-  static bool fadingAt(Element element) => element is StatefulElement && element.state is _ThemeCrossFadeState && (element.state as _ThemeCrossFadeState)._old != null;
+  static bool fadingAt(Element element) =>
+      element is StatefulElement &&
+      element.state is _ThemeCrossFadeState &&
+      (element.state as _ThemeCrossFadeState)._old != null;
 
   @override
   State<ThemeCrossFade> createState() => _ThemeCrossFadeState();
@@ -28,7 +32,8 @@ class ThemeCrossFade extends StatefulWidget {
 
 class _ThemeCrossFadeState extends State<ThemeCrossFade> with SingleTickerProviderStateMixin {
   final _boundary = GlobalKey();
-  late final AnimationController _controller = AnimationController(vsync: this)..addStatusListener(_statusChanged);
+  late final AnimationController _controller = AnimationController(vsync: this)
+    ..addStatusListener(_statusChanged);
   ThemeData? _seen;
   ui.Image? _old;
   Size? _oldSize;
@@ -43,8 +48,13 @@ class _ThemeCrossFadeState extends State<ThemeCrossFade> with SingleTickerProvid
     if (before == null || before == theme) return;
     final duration = Motion.of(widget.duration);
     final lifecycle = WidgetsBinding.instance.lifecycleState;
-    final hidden = lifecycle == AppLifecycleState.hidden || lifecycle == AppLifecycleState.paused || lifecycle == AppLifecycleState.detached;
-    final snapshot = Motion.reduced || hidden || duration == Duration.zero || (widget.instant?.call() ?? false) ? null : _capture();
+    final hidden = lifecycle == AppLifecycleState.hidden ||
+        lifecycle == AppLifecycleState.paused ||
+        lifecycle == AppLifecycleState.detached;
+    final snapshot =
+        Motion.reduced || hidden || duration == Duration.zero || (widget.instant?.call() ?? false)
+            ? null
+            : _capture();
     if (snapshot == null) return _drop();
     _drop();
     _old = snapshot;
@@ -94,7 +104,9 @@ class _ThemeCrossFadeState extends State<ThemeCrossFade> with SingleTickerProvid
         RepaintBoundary(child: widget.child),
         if (old != null)
           Positioned.fill(
-            child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: _OldFrame(old, _oldSize!, _controller)))),
+            child: IgnorePointer(
+                child: RepaintBoundary(
+                    child: CustomPaint(painter: _OldFrame(old, _oldSize!, _controller)))),
           ),
       ]),
     );
@@ -115,9 +127,11 @@ class _OldFrame extends CustomPainter {
     if (size != captured) return;
     final weight = 1 - Ease.curve.transform(progress.value.clamp(0.0, 1.0));
     final rect = Offset.zero & size;
-    canvas.drawRect(rect, Paint()
-      ..color = Color.fromRGBO(0, 0, 0, weight)
-      ..blendMode = BlendMode.dstOut);
+    canvas.drawRect(
+        rect,
+        Paint()
+          ..color = Color.fromRGBO(0, 0, 0, weight)
+          ..blendMode = BlendMode.dstOut);
     canvas.drawImageRect(
       image,
       Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),

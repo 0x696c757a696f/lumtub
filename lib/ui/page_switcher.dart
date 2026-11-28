@@ -8,7 +8,8 @@ import 'motion.dart';
 /// the pages only cross-fade. With animations reduced the page changes at
 /// once. A page on its way out runs no animations and takes no focus.
 class PageSwitcher extends StatefulWidget {
-  const PageSwitcher({super.key, required this.pageKey, required this.child, this.index, this.slides = false});
+  const PageSwitcher(
+      {super.key, required this.pageKey, required this.child, this.index, this.slides = false});
 
   /// Names the page [child] is; a new name switches.
   final String pageKey;
@@ -25,7 +26,9 @@ class PageSwitcher extends StatefulWidget {
 
   /// Whether the page around [context] is still coming in: what it shows
   /// then arrives with it, and needs no entrance of its own.
-  static bool entering(BuildContext context) => context.getInheritedWidgetOfExactType<_Entering>()?.animation.status == AnimationStatus.forward;
+  static bool entering(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_Entering>()?.animation.status ==
+      AnimationStatus.forward;
 
   @override
   State<PageSwitcher> createState() => _PageSwitcherState();

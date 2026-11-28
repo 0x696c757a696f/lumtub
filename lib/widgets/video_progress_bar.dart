@@ -98,7 +98,8 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     widget.onSeek(_timeAt(fraction));
   }
 
-  String _spoken(Duration at) => '${_clock(at < Duration.zero ? Duration.zero : (at > widget.total ? widget.total : at))} / ${_clock(widget.total)}';
+  String _spoken(Duration at) =>
+      '${_clock(at < Duration.zero ? Duration.zero : (at > widget.total ? widget.total : at))} / ${_clock(widget.total)}';
 
   /// Screen readers move it five seconds at a time.
   void _step(int seconds) {
@@ -142,8 +143,10 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
               _letGo();
               _seekTo(_fractionAt(details.localPosition.dx, width));
             },
-            onHorizontalDragStart: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
-            onHorizontalDragUpdate: (details) => setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+            onHorizontalDragStart: (details) =>
+                setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
+            onHorizontalDragUpdate: (details) =>
+                setState(() => _drag = _fractionAt(details.localPosition.dx, width)),
             onHorizontalDragEnd: (_) {
               final last = _drag;
               setState(() => _drag = null);
@@ -160,7 +163,8 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
                     right: 0,
                     height: VideoProgressBar.heatmapHeight,
                     bottom: height / 2 + VideoProgressBar.barHeight / 2 + 1,
-                    child: IgnorePointer(child: CustomPaint(painter: _HeatPainter(heat, widget.color))),
+                    child: IgnorePointer(
+                        child: CustomPaint(painter: _HeatPainter(heat, widget.color))),
                   ),
                 Positioned.fill(
                   child: CustomPaint(
@@ -169,14 +173,21 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
                       gradient: widget.playedGradient,
                       played: played,
                       buffered: _fractionOf(widget.buffered),
-                      segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
-                      chapters: [for (final c in widget.chapterStarts) if (c > Duration.zero) _fractionOf(c)],
+                      segments: [
+                        for (final s in widget.segments)
+                          (_fractionOf(s.start), _fractionOf(s.end), s.color)
+                      ],
+                      chapters: [
+                        for (final c in widget.chapterStarts)
+                          if (c > Duration.zero) _fractionOf(c)
+                      ],
                       active: pointer != null,
                       pointer: pointer,
                     ),
                   ),
                 ),
-                if (pointer != null && widget.total > Duration.zero) _label(width, pointer, hasHeat, dragging),
+                if (pointer != null && widget.total > Duration.zero)
+                  _label(width, pointer, hasHeat, dragging),
               ]),
             ),
           ),
@@ -189,35 +200,46 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     final time = _timeAt(pointer);
     final text = widget.labelOf?.call(time) ?? _clock(time);
     const style = TextStyle(color: Colors.white, fontSize: 12);
-    final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, maxLines: 1)..layout(maxWidth: 320);
+    final painter = TextPainter(
+        text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, maxLines: 1)
+      ..layout(maxWidth: 320);
     final labelWidth = painter.width + 16;
     painter.dispose();
     final preview = widget.preview;
     final columnWidth = math.max(labelWidth, preview?.size.width ?? 0);
-    final left = (pointer * width - columnWidth / 2).clamp(0.0, math.max(0.0, width - columnWidth)).toDouble();
+    final left = (pointer * width - columnWidth / 2)
+        .clamp(0.0, math.max(0.0, width - columnWidth))
+        .toDouble();
     return Positioned(
       left: left,
       width: columnWidth,
       bottom: VideoProgressBar.touchHeight + 4 + (hasHeat ? 16 : 0),
       child: IgnorePointer(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-            if (preview != null) ...[
-              DecoratedBox(
-                decoration: BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: 0.7)), borderRadius: BorderRadius.circular(4)),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: SizedBox.fromSize(size: preview.size, child: preview.builder(time)),
-                ),
+          if (preview != null) ...[
+            DecoratedBox(
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+                  borderRadius: BorderRadius.circular(4)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: SizedBox.fromSize(size: preview.size, child: preview.builder(time)),
               ),
-              const SizedBox(height: 4),
-            ],
-            Container(
-              width: labelWidth,
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
-              child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: style),
             ),
-          ]),
+            const SizedBox(height: 4),
+          ],
+          Container(
+            width: labelWidth,
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
+            child: Text(text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: style),
+          ),
+        ]),
       ),
     );
   }
@@ -273,13 +295,15 @@ class _TrackPainter extends CustomPainter {
       fill(start, split, Paint()..color = shade);
       fill(split, end, Paint()..color = segmentColor);
       for (final edge in [start, end]) {
-        canvas.drawRect(Rect.fromLTWH(edge * w - 0.75, track.top, 1.5, thickness), Paint()..color = _dark);
+        canvas.drawRect(
+            Rect.fromLTWH(edge * w - 0.75, track.top, 1.5, thickness), Paint()..color = _dark);
       }
     }
     canvas.restore();
 
     for (final chapter in chapters) {
-      canvas.drawRect(Rect.fromLTWH(chapter * w - 1, track.top - 0.5, 2, thickness + 1), Paint()..color = _dark);
+      canvas.drawRect(Rect.fromLTWH(chapter * w - 1, track.top - 0.5, 2, thickness + 1),
+          Paint()..color = _dark);
     }
 
     canvas.drawCircle(Offset(played * w, cy), active ? 7 : 5.5, Paint()..color = color);
@@ -287,15 +311,36 @@ class _TrackPainter extends CustomPainter {
     final x = pointer == null ? null : pointer! * w;
     if (x != null) {
       final paint = Paint()..color = color;
-      canvas.drawPath(Path()..moveTo(x - 4.5, cy - 9)..lineTo(x + 4.5, cy - 9)..lineTo(x, cy - 4)..close(), paint);
-      canvas.drawPath(Path()..moveTo(x - 4.5, cy + 9)..lineTo(x + 4.5, cy + 9)..lineTo(x, cy + 4)..close(), paint);
+      canvas.drawPath(
+          Path()
+            ..moveTo(x - 4.5, cy - 9)
+            ..lineTo(x + 4.5, cy - 9)
+            ..lineTo(x, cy - 4)
+            ..close(),
+          paint);
+      canvas.drawPath(
+          Path()
+            ..moveTo(x - 4.5, cy + 9)
+            ..lineTo(x + 4.5, cy + 9)
+            ..lineTo(x, cy + 4)
+            ..close(),
+          paint);
     }
   }
 
   @override
   bool shouldRepaint(_TrackPainter old) {
-    if (old.color != color || old.gradient != gradient || old.played != played || old.buffered != buffered || old.active != active || old.pointer != pointer) return true;
-    if (old.segments.length != segments.length || old.chapters.length != chapters.length) return true;
+    if (old.color != color ||
+        old.gradient != gradient ||
+        old.played != played ||
+        old.buffered != buffered ||
+        old.active != active ||
+        old.pointer != pointer) {
+      return true;
+    }
+    if (old.segments.length != segments.length || old.chapters.length != chapters.length) {
+      return true;
+    }
     for (var i = 0; i < segments.length; i++) {
       if (old.segments[i] != segments[i]) return true;
     }
@@ -318,11 +363,14 @@ class _HeatPainter extends CustomPainter {
     if (n < 2 || peak <= 0) return;
     final bottom = size.height;
     final points = [
-      for (var i = 0; i < n; i++) Offset(i / (n - 1) * size.width, bottom - (values[i] / peak).clamp(0.0, 1.0) * (size.height - 1) - 1),
+      for (var i = 0; i < n; i++)
+        Offset(i / (n - 1) * size.width,
+            bottom - (values[i] / peak).clamp(0.0, 1.0) * (size.height - 1) - 1),
     ];
     final line = Path()..moveTo(points.first.dx, points.first.dy);
     for (var i = 1; i < n - 1; i++) {
-      final mid = Offset((points[i].dx + points[i + 1].dx) / 2, (points[i].dy + points[i + 1].dy) / 2);
+      final mid =
+          Offset((points[i].dx + points[i + 1].dx) / 2, (points[i].dy + points[i + 1].dy) / 2);
       line.quadraticBezierTo(points[i].dx, points[i].dy, mid.dx, mid.dy);
     }
     line.lineTo(points.last.dx, points.last.dy);
@@ -331,7 +379,12 @@ class _HeatPainter extends CustomPainter {
       ..lineTo(points.first.dx, bottom)
       ..close();
     canvas.drawPath(area, Paint()..color = Colors.white.withValues(alpha: 0.14));
-    canvas.drawPath(line, Paint()..color = Colors.white.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 1);
+    canvas.drawPath(
+        line,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1);
   }
 
   @override

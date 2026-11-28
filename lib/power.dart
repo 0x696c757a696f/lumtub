@@ -11,7 +11,9 @@ import 'package:flutter/services.dart' show MethodChannel;
 /// picture the cheap way.
 abstract final class Power {
   static final _getSystemPowerStatus = Platform.isWindows
-      ? DynamicLibrary.open('kernel32.dll').lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>('GetSystemPowerStatus')
+      ? DynamicLibrary.open('kernel32.dll')
+          .lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>(
+              'GetSystemPowerStatus')
       : null;
 
   static (DateTime, bool)? _last;
@@ -19,7 +21,9 @@ abstract final class Power {
   /// Read at most every 30 seconds; false where it cannot be asked.
   static bool get saving {
     final last = _last;
-    if (last != null && DateTime.now().difference(last.$1) < const Duration(seconds: 30)) return last.$2;
+    if (last != null && DateTime.now().difference(last.$1) < const Duration(seconds: 30)) {
+      return last.$2;
+    }
     final value = _read();
     _last = (DateTime.now(), value);
     return value;
@@ -43,13 +47,15 @@ abstract final class Power {
   }
 
   /// On battery (AC line 0) or with battery saver on (system status 1).
-  static bool savingOf({required int acLine, required int systemStatus}) => acLine == 0 || systemStatus == 1;
+  static bool savingOf({required int acLine, required int systemStatus}) =>
+      acLine == 0 || systemStatus == 1;
 
   /// Linux: a battery discharging, read from /sys/class/power_supply.
   static bool _readLinux() {
     try {
       final supplies = Directory('/sys/class/power_supply').listSync();
-      return supplies.any((supply) => linuxSupplySaving(_readOr('${supply.path}/type'), _readOr('${supply.path}/status'), _readOr('${supply.path}/scope')));
+      return supplies.any((supply) => linuxSupplySaving(_readOr('${supply.path}/type'),
+          _readOr('${supply.path}/status'), _readOr('${supply.path}/scope')));
     } catch (_) {
       return false;
     }
@@ -75,7 +81,8 @@ abstract final class Power {
   static bool _readPhone() {
     if (!_askingPhone) {
       _askingPhone = true;
-      unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('powerSaving').then((value) {
+      unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('powerSaving').then(
+          (value) {
         _savingPhone = value ?? false;
         _last = (DateTime.now(), _savingPhone);
       }, onError: (Object _) {}).whenComplete(() => _askingPhone = false));
@@ -93,7 +100,8 @@ abstract final class Power {
     if (!_askingMac) {
       _askingMac = true;
       unawaited(Process.run('pmset', ['-g', 'batt']).then((result) {
-        _onBatteryMac = result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
+        _onBatteryMac =
+            result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
         _last = (DateTime.now(), _onBatteryMac);
       }, onError: (Object _) {}).whenComplete(() => _askingMac = false));
     }

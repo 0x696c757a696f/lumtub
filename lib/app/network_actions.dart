@@ -28,8 +28,15 @@ extension NetworkActions on AppController {
       quantum: settings.postQuantum,
     );
     final folder = directories?.data;
-    if (folder != null) await YtDlpTls.configure(folder, roots: settings.certificateRoots, quantum: settings.postQuantum);
-    if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
+    if (folder != null) {
+      await YtDlpTls.configure(folder,
+          roots: settings.certificateRoots, quantum: settings.postQuantum);
+    }
+    if (next.url != proxy.url) {
+      logInfo(next.url == null
+          ? 'Network: direct connection'
+          : 'Network: using proxy ${next.redacted}');
+    }
     proxy = next;
     _chooseIpVersion();
     final player = this.player;
@@ -39,7 +46,10 @@ extension NetworkActions on AppController {
   /// Whether both IPv4 and IPv6 reach YouTube with nothing between, so a
   /// video taken for a bot over one is asked again over the other.
   bool get _bothFamilies =>
-      settings.ipVersion != 'ipv4' && proxy.url == null && !(settings.proxyMode == ProxyMode.system && proxyEndpoint != null) && (_ipv6Works ?? false);
+      settings.ipVersion != 'ipv4' &&
+      proxy.url == null &&
+      !(settings.proxyMode == ProxyMode.system && proxyEndpoint != null) &&
+      (_ipv6Works ?? false);
 
   /// Whether yt-dlp keeps to IPv4. On 自动 it does when IPv6 does not reach
   /// YouTube; behind a proxy the proxy picks, so it is left alone. The
@@ -59,13 +69,20 @@ extension NetworkActions on AppController {
     }
     ProcessTree.forceIpv4 = _ipv6Works == false;
     final checked = _ipv6Checked;
-    if (_ipv6Checking || checked != null && DateTime.now().difference(checked) < const Duration(minutes: 10)) return;
+    if (_ipv6Checking ||
+        checked != null && DateTime.now().difference(checked) < const Duration(minutes: 10)) {
+      return;
+    }
     _ipv6Checking = true;
     unawaited(Ipv6Probe.works().then((works) {
       _ipv6Checking = false;
       _ipv6Checked = DateTime.now();
       if (works == null) return;
-      if (works != _ipv6Works) logInfo(works ? 'Network: IPv6 reaches YouTube' : 'Network: IPv6 does not reach YouTube; yt-dlp keeps to IPv4');
+      if (works != _ipv6Works) {
+        logInfo(works
+            ? 'Network: IPv6 reaches YouTube'
+            : 'Network: IPv6 does not reach YouTube; yt-dlp keeps to IPv4');
+      }
       _ipv6Works = works;
       if (settings.ipVersion == 'auto' && proxy.url == null) ProcessTree.forceIpv4 = !works;
     }));
@@ -89,16 +106,24 @@ extension NetworkActions on AppController {
       try {
         _bridge = await SocksBridge.start(next.url!);
       } catch (e) {
-        logError('Could not start the local SOCKS bridge; requests will fail rather than go direct', e);
+        logError(
+            'Could not start the local SOCKS bridge; requests will fail rather than go direct', e);
       }
     }
-    proxyEndpoint = next.isSocks ? (_bridge?.hostPort ?? '127.0.0.1:1') : next.isHttp ? next.hostPort : null;
+    proxyEndpoint = next.isSocks
+        ? (_bridge?.hostPort ?? '127.0.0.1:1')
+        : next.isHttp
+            ? next.hostPort
+            : null;
     await old?.close();
   }
 
   /// libmpv's streams can only use an HTTP proxy.
   Future<void> _applyProxy(Player player) async {
     final platform = player.platform;
-    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxyEndpoint == null ? '' : 'http://$proxyEndpoint');
+    if (platform is NativePlayer) {
+      await platform.setProperty(
+          'http-proxy', proxyEndpoint == null ? '' : 'http://$proxyEndpoint');
+    }
   }
 }

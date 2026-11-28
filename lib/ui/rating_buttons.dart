@@ -9,7 +9,8 @@ import 'theme.dart';
 /// press (signed in, from a page that carried their actions); without it
 /// only the like count shows.
 class RatingButtons extends StatelessWidget {
-  const RatingButtons({super.key, required this.likes, this.state = '', this.loaded = '', this.onRate});
+  const RatingButtons(
+      {super.key, required this.likes, this.state = '', this.loaded = '', this.onRate});
 
   /// YouTube's own count, such as "1.2万".
   final String likes;
@@ -29,18 +30,27 @@ class RatingButtons extends StatelessWidget {
     final onRate = this.onRate;
     if (onRate == null) {
       return Tooltip(
-        message: tr('Likes. Sign in with a browser under Settings › YouTube account to like and dislike'),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(AppIcons.thumbsUp, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
+        message: tr(
+            'Likes. Sign in with a browser under Settings › YouTube account to like and dislike'),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(AppIcons.thumbsUp, size: 14, color: colors.outline),
+          const SizedBox(width: 4),
+          count
+        ]),
       );
     }
     Future<void> press(String want) async {
       final failed = await onRate(want);
-      if (failed != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failed)));
+      if (failed != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failed)));
+      }
     }
 
     Widget button(String want, IconData off, IconData on, String tip) {
       // One icon for both states, so it fills in rather than swapping.
-      final icon = IconTheme.merge(data: IconThemeData(color: state == want ? colors.primary : colors.outline), child: FillIcon(off, on, selected: state == want));
+      final icon = IconTheme.merge(
+          data: IconThemeData(color: state == want ? colors.primary : colors.outline),
+          child: FillIcon(off, on, selected: state == want));
       return IconButton(
         tooltip: tip,
         visualDensity: VisualDensity.compact,
@@ -52,10 +62,13 @@ class RatingButtons extends StatelessWidget {
         onPressed: () => press(want),
       );
     }
+
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill, state == 'like' ? tr('Remove like') : tr('Like')),
+      button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill,
+          state == 'like' ? tr('Remove like') : tr('Like')),
       count,
-      button('dislike', AppIcons.thumbsDown, AppIcons.thumbsDownFill, state == 'dislike' ? tr('Remove dislike') : tr('Dislike')),
+      button('dislike', AppIcons.thumbsDown, AppIcons.thumbsDownFill,
+          state == 'dislike' ? tr('Remove dislike') : tr('Dislike')),
     ]);
   }
 }

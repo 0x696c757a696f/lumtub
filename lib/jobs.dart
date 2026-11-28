@@ -67,7 +67,14 @@ class JobCancelled implements Exception {
 /// A job as the interface shows it.
 @immutable
 class JobInfo {
-  const JobInfo({required this.key, required this.lane, required this.priority, required this.running, this.stage = '', this.done = 0, this.total = 0});
+  const JobInfo(
+      {required this.key,
+      required this.lane,
+      required this.priority,
+      required this.running,
+      this.stage = '',
+      this.done = 0,
+      this.total = 0});
   final String key;
   final JobLane lane;
   final JobPriority priority;
@@ -76,8 +83,14 @@ class JobInfo {
   final int done;
   final int total;
 
-  JobInfo _with({bool? running, String? stage, int? done, int? total}) =>
-      JobInfo(key: key, lane: lane, priority: priority, running: running ?? this.running, stage: stage ?? this.stage, done: done ?? this.done, total: total ?? this.total);
+  JobInfo _with({bool? running, String? stage, int? done, int? total}) => JobInfo(
+      key: key,
+      lane: lane,
+      priority: priority,
+      running: running ?? this.running,
+      stage: stage ?? this.stage,
+      done: done ?? this.done,
+      total: total ?? this.total);
 }
 
 class _Job<T> {
@@ -106,7 +119,8 @@ class _Job<T> {
 /// A job is known by its key: asking again for a job that is already
 /// queued or running joins it rather than doing the work twice.
 class JobQueue extends ChangeNotifier {
-  JobQueue({bool Function()? backgroundPaused}) : backgroundPaused = backgroundPaused ?? (() => false);
+  JobQueue({bool Function()? backgroundPaused})
+      : backgroundPaused = backgroundPaused ?? (() => false);
 
   /// Whether background jobs should wait for now. Asked whenever a slot
   /// frees up and on [wake].
@@ -127,12 +141,17 @@ class JobQueue extends ChangeNotifier {
   /// Runs [work] as the job [key] once its lane has room, and answers what
   /// it answers. Throws [JobCancelled] when it is cancelled before it
   /// starts; a running job stops at its next [JobContext.checkCancelled].
-  Future<T> run<T>(String key, Future<T> Function(JobContext job) work, {JobLane lane = JobLane.network, JobPriority priority = JobPriority.asked}) {
+  Future<T> run<T>(String key, Future<T> Function(JobContext job) work,
+      {JobLane lane = JobLane.network, JobPriority priority = JobPriority.asked}) {
     // A job told to stop is not joined: the new request starts afresh.
     if (_byKey[key] case final same? when !same.cancelled) {
       return same.completer.future.then((value) => value as T);
     }
-    final job = _Job<Object?>(this, JobInfo(key: key, lane: lane, priority: priority, running: false), (context) async => work(context), _order++);
+    final job = _Job<Object?>(
+        this,
+        JobInfo(key: key, lane: lane, priority: priority, running: false),
+        (context) async => work(context),
+        _order++);
     _byKey[key] = job;
     _waiting.add(job);
     _pump();
@@ -177,8 +196,14 @@ class JobQueue extends ChangeNotifier {
     final paused = backgroundPaused();
     _Job<Object?>? best;
     for (final job in _waiting) {
-      if (job.info.lane != lane || (paused && job.info.priority == JobPriority.background)) continue;
-      if (best == null || job.info.priority.index < best.info.priority.index || (job.info.priority == best.info.priority && job.order < best.order)) best = job;
+      if (job.info.lane != lane || (paused && job.info.priority == JobPriority.background)) {
+        continue;
+      }
+      if (best == null ||
+          job.info.priority.index < best.info.priority.index ||
+          (job.info.priority == best.info.priority && job.order < best.order)) {
+        best = job;
+      }
     }
     return best;
   }

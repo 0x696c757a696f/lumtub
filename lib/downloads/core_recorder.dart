@@ -11,6 +11,7 @@ class CoreRecorder implements LiveRecorder {
   CoreRecorder({required this.sources, required this.proxy});
 
   final Future<LiveSplit?> Function(String videoId, {bool fresh}) sources;
+
   /// `http://host:port` to fetch through, or null.
   final String? Function() proxy;
 
@@ -20,7 +21,12 @@ class CoreRecorder implements LiveRecorder {
     if (core == null) throw StateError(NativeCore.missingMessage);
     final split = await sources(videoId);
     if (split == null) throw StateError('no live streams to record');
-    final started = core.recordStart(video: split.videoUrl, audio: split.audioUrl, stem: stem, userAgent: split.userAgent, proxy: proxy());
+    final started = core.recordStart(
+        video: split.videoUrl,
+        audio: split.audioUrl,
+        stem: stem,
+        userAgent: split.userAgent,
+        proxy: proxy());
     final id = started.id;
     if (id == null) throw StateError(started.error ?? 'the recording could not start');
     logInfo('Recording $videoId as ${split.label}');

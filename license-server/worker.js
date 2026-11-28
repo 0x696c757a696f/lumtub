@@ -556,7 +556,8 @@ function md5(text) {
   for (let chunk = 0; chunk < words.length; chunk += 16) {
     let [a, b, c, d] = [a0, b0, c0, d0];
     for (let i = 0; i < 64; i++) {
-      let f, g;
+      let f;
+      let g;
       if (i < 16) { f = (b & c) | (~b & d); g = i; }
       else if (i < 32) { f = (d & b) | (~d & c); g = (5 * i + 1) % 16; }
       else if (i < 48) { f = b ^ c ^ d; g = (3 * i + 5) % 16; }

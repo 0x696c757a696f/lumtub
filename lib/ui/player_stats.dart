@@ -87,16 +87,26 @@ class _PlayerStatsState extends State<PlayerStats> {
     return IgnorePointer(
       child: Container(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.68), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.68), borderRadius: BorderRadius.circular(8)),
         child: DefaultTextStyle(
-          style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.45, fontFeatures: [FontFeature.tabularFigures()]),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            for (final (label, value) in rows)
-              Row(mainAxisSize: MainAxisSize.min, children: [
-                SizedBox(width: 64, child: Text(label, style: const TextStyle(color: Colors.white70))),
-                Text(value),
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              height: 1.45,
+              fontFeatures: [FontFeature.tabularFigures()]),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (label, value) in rows)
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    SizedBox(
+                        width: 64,
+                        child: Text(label, style: const TextStyle(color: Colors.white70))),
+                    Text(value),
+                  ]),
               ]),
-          ]),
         ),
       ),
     );
@@ -120,22 +130,54 @@ List<(String, String)> statsRows(Map<String, String> v) {
   String speed(String raw) {
     final bytes = double.tryParse(raw);
     if (bytes == null) return '—';
-    return bytes >= 1 << 20 ? '${(bytes / (1 << 20)).toStringAsFixed(1)} MB/s' : '${(bytes / 1024).round()} KB/s';
+    return bytes >= 1 << 20
+        ? '${(bytes / (1 << 20)).toStringAsFixed(1)} MB/s'
+        : '${(bytes / 1024).round()} KB/s';
   }
 
   final width = value('video-params/w');
   final height = value('video-params/h');
   final hwdec = value('hwdec-current');
   return [
-    (tr('Videos'), or([value('video-codec'), value('video-format'), value('current-tracks/video/codec')].firstWhere((name) => name.isNotEmpty, orElse: () => ''))),
+    (
+      tr('Videos'),
+      or([value('video-codec'), value('video-format'), value('current-tracks/video/codec')]
+          .firstWhere((name) => name.isNotEmpty, orElse: () => ''))
+    ),
     (tr('Resolution'), width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
-    (tr('Decoding'), hwdec.isEmpty || hwdec == 'no' ? tr('Software decoding') : tr('Hardware {0}', [hwdec])),
-    (tr('Frame rate'), tr('{0} / source {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])),
-    (tr('Dropped frames'), tr('Output {0} · Decode {1} · Delay {2}', [or(value('frame-drop-count')), or(value('decoder-frame-drop-count')), or(value('vo-delayed-frame-count'))])),
-    (tr('A/V offset'), value('avsync').isEmpty ? '—' : tr('{0} ms · display {1} Hz', [((double.tryParse(value('avsync')) ?? 0) * 1000).round(), number('display-fps', digits: 0)])),
+    (
+      tr('Decoding'),
+      hwdec.isEmpty || hwdec == 'no' ? tr('Software decoding') : tr('Hardware {0}', [hwdec])
+    ),
+    (
+      tr('Frame rate'),
+      tr('{0} / source {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])
+    ),
+    (
+      tr('Dropped frames'),
+      tr('Output {0} · Decode {1} · Delay {2}', [
+        or(value('frame-drop-count')),
+        or(value('decoder-frame-drop-count')),
+        or(value('vo-delayed-frame-count'))
+      ])
+    ),
+    (
+      tr('A/V offset'),
+      value('avsync').isEmpty
+          ? '—'
+          : tr('{0} ms · display {1} Hz', [
+              ((double.tryParse(value('avsync')) ?? 0) * 1000).round(),
+              number('display-fps', digits: 0)
+            ])
+    ),
     (tr('Bitrate'), tr('Video {0} · Audio {1}', [kbps('video-bitrate'), kbps('audio-bitrate')])),
     (tr('Audio'), or(value('audio-codec-name'))),
-    (tr('Buffering'), value('demuxer-cache-duration').isEmpty ? '—' : tr('{0} s', [number('demuxer-cache-duration', digits: 1)])),
+    (
+      tr('Buffering'),
+      value('demuxer-cache-duration').isEmpty
+          ? '—'
+          : tr('{0} s', [number('demuxer-cache-duration', digits: 1)])
+    ),
     (tr('Download speed'), speed(value('cache-speed'))),
   ];
 }

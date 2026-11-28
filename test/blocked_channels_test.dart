@@ -4,37 +4,67 @@ import 'package:lumtub/blocked_groups.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/native_core.dart';
 
-VideoItem _from(String channel) => VideoItem.fromJson({'id': 'aaaaaaaaaaa', 'title': 'x', 'channel': channel});
+VideoItem _from(String channel) =>
+    VideoItem.fromJson({'id': 'aaaaaaaaaaa', 'title': 'x', 'channel': channel});
 
 void main() {
   test('choices saved by older versions move to the lists and entries now', () {
     final prefs = AppPreferences.fromJson({
       'enabledGroups': ['中国官方媒体'],
       'allowedGroups': ['法轮功'],
-      'allowedEntries': ['中国官方媒体/channel/央视', '中国官方媒体/channel/CCTV', 'chinese-state-media/xed6ee24c'],
+      'allowedEntries': [
+        '中国官方媒体/channel/央视',
+        '中国官方媒体/channel/CCTV',
+        'chinese-state-media/xed6ee24c'
+      ],
     });
     expect(prefs.enabledGroups, ['chinese-state-media']);
     expect(prefs.allowedGroups, ['falun-gong']);
-    expect(prefs.allowedEntries, ['chinese-state-media/cctv'], reason: 'the names of one channel are one entry now');
+    expect(prefs.allowedEntries, ['chinese-state-media/cctv'],
+        reason: 'the names of one channel are one entry now');
   });
 
   test('a ticked or unticked group stays so when an update changes its default', () {
-    BlockedGroup group(bool suggested) => BlockedGroup(name: 'g', id: 'g', label: 'G', entries: const [], categories: const ['religion'], onByDefault: suggested);
+    BlockedGroup group(bool suggested) => BlockedGroup(
+        name: 'g',
+        id: 'g',
+        label: 'G',
+        entries: const [],
+        categories: const ['religion'],
+        onByDefault: suggested);
     for (final first in [true, false]) {
       for (final on in [true, false]) {
         final prefs = const AppPreferences().withGroup(group(first), on);
         expect(prefs.groupOn(group(first)), on);
-        expect(prefs.groupOn(group(!first)), on, reason: 'the list now ${first ? 'not ' : ''}suggested');
+        expect(prefs.groupOn(group(!first)), on,
+            reason: 'the list now ${first ? 'not ' : ''}suggested');
         final media = const AppPreferences().withGroup(group(first), on, media: true);
         expect(media.groupOn(group(!first), media: true), on);
-        expect(AppPreferences.fromJson(prefs.toJson()).groupOn(group(!first)), on, reason: 'saved and read back');
+        expect(AppPreferences.fromJson(prefs.toJson()).groupOn(group(!first)), on,
+            reason: 'saved and read back');
       }
     }
   });
 
-  test('hosts tied to the Falun Gong media are blocked by their channel name, in either script', () {
+  test('hosts tied to the Falun Gong media are blocked by their channel name, in either script',
+      () {
     const prefs = AppPreferences(blockGroups: true);
-    for (final channel in ['天亮时分', '天亮時分', '章天亮', '陈破空', '陳破空', '陳破空 Chen Pokong', 'Chen Pokong', 'Tianliang Times', '熱點互動', '石濤聚焦', '乾淨世界', 'Gan Jing World', '李天笑', 'Trevor Loudon']) {
+    for (final channel in [
+      '天亮时分',
+      '天亮時分',
+      '章天亮',
+      '陈破空',
+      '陳破空',
+      '陳破空 Chen Pokong',
+      'Chen Pokong',
+      'Tianliang Times',
+      '熱點互動',
+      '石濤聚焦',
+      '乾淨世界',
+      'Gan Jing World',
+      '李天笑',
+      'Trevor Loudon'
+    ]) {
       expect(prefs.blocksGroup(_from(channel)), isTrue, reason: channel);
     }
     for (final channel in ['破空', '王赫野', '老外看中国', '未解之谜']) {
@@ -42,7 +72,9 @@ void main() {
     }
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
-  test('a change to anything but the block settings keeps the answers; a block setting changes them', () {
+  test(
+      'a change to anything but the block settings keeps the answers; a block setting changes them',
+      () {
     const prefs = AppPreferences(blockGroups: true);
     expect(prefs.blocksGroup(_from('陈破空')), isTrue);
     expect(prefs.copyWith(hideShorts: true).blocksGroup(_from('陈破空')), isTrue);
@@ -51,7 +83,8 @@ void main() {
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
   test('a channel blocked without an id is matched by its exact saved name', () {
-    const prefs = AppPreferences(blockedChannels: [ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Some Channel')]);
+    const prefs =
+        AppPreferences(blockedChannels: [ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Some Channel')]);
     expect(prefs.shows(_from('Some Channel')), isFalse);
     expect(prefs.shows(_from('some channel')), isTrue);
   });

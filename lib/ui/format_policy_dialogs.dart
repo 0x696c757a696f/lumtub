@@ -14,7 +14,8 @@ String get disabledCodecsNote => tr('Once disabled, no playback strategy picks t
 String get lastCodecNote => tr('Keep at least one of H.264, VP9 and AV1, or no video can play');
 
 /// Said where H.264 cannot be disabled.
-String get h264NeededNote => tr('VP9 and AV1 are not decoded in hardware here, so H.264 cannot be disabled, or every video would be decoded on the CPU');
+String get h264NeededNote => tr(
+    'VP9 and AV1 are not decoded in hardware here, so H.264 cannot be disabled, or every video would be decoded on the CPU');
 
 /// [settings] with [codec] disabled or enabled again; null when that would
 /// leave nothing to play.
@@ -25,7 +26,11 @@ PlayerSettings? withCodecDisabled(PlayerSettings settings, VideoCodec codec, boo
 
 PlayerSettings? _withCodecs(PlayerSettings settings, Set<VideoCodec> next) {
   if (!VideoCodec.playableWithout(next)) return null;
-  if (next.contains(VideoCodec.h264) && !settings.disabledCodecs.contains(VideoCodec.h264) && !FormatPolicy.canDisableH264(settings)) return null;
+  if (next.contains(VideoCodec.h264) &&
+      !settings.disabledCodecs.contains(VideoCodec.h264) &&
+      !FormatPolicy.canDisableH264(settings)) {
+    return null;
+  }
   return settings.withDisabledCodecs(next);
 }
 
@@ -33,10 +38,12 @@ void _say(BuildContext context, String text) {
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 }
 
-String _why(PlayerSettings settings, Set<VideoCodec> next) => VideoCodec.playableWithout(next) ? h264NeededNote : lastCodecNote;
+String _why(PlayerSettings settings, Set<VideoCodec> next) =>
+    VideoCodec.playableWithout(next) ? h264NeededNote : lastCodecNote;
 
 /// Disables or enables [codec] through [save], or says why it cannot.
-void toggleCodec(BuildContext context, PlayerSettings settings, VideoCodec codec, bool disabled, ValueChanged<PlayerSettings> save) {
+void toggleCodec(BuildContext context, PlayerSettings settings, VideoCodec codec, bool disabled,
+    ValueChanged<PlayerSettings> save) {
   final next = withCodecDisabled(settings, codec, disabled);
   if (next != null) return save(next);
   final current = settings.disabledCodecs;
@@ -45,7 +52,11 @@ void toggleCodec(BuildContext context, PlayerSettings settings, VideoCodec codec
 
 /// Asks for one of [values], each with its one-line description, and
 /// reports a changed choice.
-Future<void> pickDescribed<T>(BuildContext context, {required String title, required T current, required List<(T, String, String)> values, required ValueChanged<T> onSelected}) async {
+Future<void> pickDescribed<T>(BuildContext context,
+    {required String title,
+    required T current,
+    required List<(T, String, String)> values,
+    required ValueChanged<T> onSelected}) async {
   final result = await showDialog<T>(
     context: context,
     builder: (context) => SimpleDialog(
@@ -67,7 +78,9 @@ Future<void> pickDescribed<T>(BuildContext context, {required String title, requ
 
 /// Asks for a [PlaybackStrategy], each with its one-line description, and
 /// reports a changed choice.
-Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current, ValueChanged<PlaybackStrategy> onSelected) => pickDescribed(
+Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current,
+        ValueChanged<PlaybackStrategy> onSelected) =>
+    pickDescribed(
       context,
       title: tr('Playback strategy'),
       current: current,
@@ -78,13 +91,19 @@ Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current
 /// How this device decodes AV1 and what automatic playback does about it.
 String av1Note(PlayerSettings settings) {
   if (settings.disabledCodecs.contains(VideoCodec.av1)) return tr('AV1 is disabled');
-  if (FormatPolicy.hardware(settings, VideoCodec.av1)) return tr('Hardware decoding. Smart auto prefers AV1: the same picture in less data');
-  if (FormatPolicy.softwareOnly(settings, VideoCodec.av1)) return tr('Software decoding. Smart auto avoids AV1, which costs much power on the CPU');
-  return tr('Not verified yet. Smart auto prefers other codecs until an AV1 video has played in hardware');
+  if (FormatPolicy.hardware(settings, VideoCodec.av1)) {
+    return tr('Hardware decoding. Smart auto prefers AV1: the same picture in less data');
+  }
+  if (FormatPolicy.softwareOnly(settings, VideoCodec.av1)) {
+    return tr('Software decoding. Smart auto avoids AV1, which costs much power on the CPU');
+  }
+  return tr(
+      'Not verified yet. Smart auto prefers other codecs until an AV1 video has played in hardware');
 }
 
 /// Asks which codecs to disable and reports the settings when they changed.
-Future<void> pickDisabledCodecs(BuildContext context, PlayerSettings settings, ValueChanged<PlayerSettings> onSelected) async {
+Future<void> pickDisabledCodecs(
+    BuildContext context, PlayerSettings settings, ValueChanged<PlayerSettings> onSelected) async {
   final current = settings.disabledCodecs;
   final result = await showDialog<List<VideoCodec>>(
     context: context,

@@ -5,14 +5,16 @@ const defaultThumbnailCapBytes = 512 * 1024 * 1024;
 
 /// The thumbnail cache cap for `PlayerSettings.cacheLimitGb` ([limitGb], in
 /// GiB; null means the default).
-int thumbnailCapBytes(int? limitGb) => limitGb == null ? defaultThumbnailCapBytes : limitGb * 1024 * 1024 * 1024;
+int thumbnailCapBytes(int? limitGb) =>
+    limitGb == null ? defaultThumbnailCapBytes : limitGb * 1024 * 1024 * 1024;
 
 /// Deletes the least recently used files of [directory] (a file's
 /// modification time is moved forward when it is shown again) until what is
 /// left is at most [capBytes]. Files modified within [recent] of [now] (being
 /// written, or just shown) are never deleted, and a file that cannot be
 /// deleted is skipped. Returns the bytes freed.
-Future<int> trimThumbnails(Directory directory, int capBytes, {DateTime? now, Duration recent = const Duration(minutes: 1)}) async {
+Future<int> trimThumbnails(Directory directory, int capBytes,
+    {DateTime? now, Duration recent = const Duration(minutes: 1)}) async {
   if (!await directory.exists()) return 0;
   final files = <({File file, int size, DateTime modified})>[];
   var total = 0;

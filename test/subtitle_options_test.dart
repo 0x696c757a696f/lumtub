@@ -8,7 +8,10 @@ void main() {
           {'ext': 'vtt', 'url': 'https://yt.example/$lang.vtt', 'name': name},
         ];
     final options = SubtitleOption.listFrom(
-      {'zh-Hant': formats('zh-Hant', 'Chinese (Traditional)'), 'live_chat': formats('chat', 'chat')},
+      {
+        'zh-Hant': formats('zh-Hant', 'Chinese (Traditional)'),
+        'live_chat': formats('chat', 'chat')
+      },
       {
         'en-orig': formats('en-orig', 'English (Original)'),
         'en': formats('en', 'English'),
@@ -18,7 +21,9 @@ void main() {
         ],
       },
     );
-    expect([for (final o in options) (o.language, o.kind)], [
+    expect([
+      for (final o in options) (o.language, o.kind)
+    ], [
       ('zh-Hant', SubtitleKind.uploaded),
       ('en', SubtitleKind.automatic),
       ('ja', SubtitleKind.translated),
@@ -30,7 +35,9 @@ void main() {
   });
 
   test('the captions in the language spoken come before another entry named original', () {
-    List<Map<String, String>> vtt(String lang) => [{'ext': 'vtt', 'url': 'https://yt.example/$lang.vtt', 'name': 'Italian (Original)'}];
+    List<Map<String, String>> vtt(String lang) => [
+          {'ext': 'vtt', 'url': 'https://yt.example/$lang.vtt', 'name': 'Italian (Original)'}
+        ];
     final options = SubtitleOption.listFrom(null, {'it': vtt('it'), 'it-orig': vtt('it-orig')});
     expect(options.single.url, 'https://yt.example/it-orig.vtt');
   });

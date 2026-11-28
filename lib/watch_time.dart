@@ -23,22 +23,29 @@ class WatchTime {
   final _names = <String, String>{};
   Timer? _save;
   bool _dirty = false;
+
   /// Counts changes, so a save only clears [_dirty] when nothing changed while it wrote.
   int _revision = 0;
   final _writes = WriteQueue();
 
-  static String dayOf(DateTime time) => '${time.year.toString().padLeft(4, '0')}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
+  static String dayOf(DateTime time) =>
+      '${time.year.toString().padLeft(4, '0')}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
 
   Future<void> load() async {
     if (!await file.exists()) return;
     try {
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) throw const FormatException('Not a JSON object');
-      for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const <dynamic, dynamic>{}).entries) {
+      for (final MapEntry(:key, :value)
+          in (data['days'] is Map ? data['days'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is! Map) continue;
-        _days['$key'] = {for (final MapEntry(key: channel, value: seconds) in value.entries) if (seconds is num && seconds > 0) '$channel': seconds.round()};
+        _days['$key'] = {
+          for (final MapEntry(key: channel, value: seconds) in value.entries)
+            if (seconds is num && seconds > 0) '$channel': seconds.round()
+        };
       }
-      for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const <dynamic, dynamic>{}).entries) {
+      for (final MapEntry(:key, :value)
+          in (data['names'] is Map ? data['names'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is String) _names['$key'] = value;
       }
     } catch (e) {
@@ -95,10 +102,12 @@ class WatchTime {
   /// lumtub_core off the UI thread; null without the core.
   Future<WatchStats?> stats({int span = 30, DateTime? today}) async {
     if (NativeCore.instance == null) return null;
-    final input = jsonEncode({'days': _days, 'names': _names, 'today': dayOf(today ?? DateTime.now()), 'span': span});
+    final input = jsonEncode(
+        {'days': _days, 'names': _names, 'today': dayOf(today ?? DateTime.now()), 'span': span});
     final answer = await Isolate.run(() {
       final core = NativeCore.instance!;
-      final stats = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_watch_stats');
+      final stats = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_watch_stats');
       return core.take(core.withText(input, stats));
     });
     return answer == null ? null : WatchStats.fromJson(jsonDecode(answer));
@@ -116,20 +125,36 @@ class WatchStats {
       month: number('month'),
       total: number('total'),
       average: number('average'),
-      days: [for (final d in map['days'] is List ? map['days'] as List : const []) if (d is List && d.length == 2) ('${d[0]}', (d[1] as num).toInt())],
-      top: [for (final t in map['top'] is List ? map['top'] as List : const []) if (t is List && t.length == 3) ('${t[0]}', '${t[1]}', (t[2] as num).toInt())],
+      days: [
+        for (final d in map['days'] is List ? map['days'] as List : const [])
+          if (d is List && d.length == 2) ('${d[0]}', (d[1] as num).toInt())
+      ],
+      top: [
+        for (final t in map['top'] is List ? map['top'] as List : const [])
+          if (t is List && t.length == 3) ('${t[0]}', '${t[1]}', (t[2] as num).toInt())
+      ],
     );
   }
 
-  const WatchStats({required this.today, required this.week, required this.month, required this.total, required this.average, required this.days, required this.top});
+  const WatchStats(
+      {required this.today,
+      required this.week,
+      required this.month,
+      required this.total,
+      required this.average,
+      required this.days,
+      required this.top});
   final int today;
   final int week;
   final int month;
   final int total;
+
   /// A day's average over the span.
   final int average;
+
   /// Each day of the span, oldest first.
   final List<(String, int)> days;
+
   /// The channels watched most in the span: key, name, seconds.
   final List<(String, String, int)> top;
 }

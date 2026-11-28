@@ -16,35 +16,52 @@ class PlayQueuePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = controller.playQueue.items;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-      Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 4),
-        child: Row(children: [
-          Text(tr('Play queue'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(width: 8),
-          Text('${items.length}', style: TextStyle(color: context.colors.outline, fontSize: 12)),
-          const Spacer(),
-          TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
-        ]),
-      ),
-      // A long queue scrolls inside its own box instead of lengthening the page.
-      ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 320),
-        child: ReorderableListView.builder(
-        shrinkWrap: true,
-        buildDefaultDragHandles: false,
-        itemCount: items.length,
-        onReorderItem: controller.moveQueued,
-        itemBuilder: (context, i) {
-          final item = items[i];
-          return Row(key: ValueKey(item.id), children: [
-            Expanded(child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.playQueued(item))),
-            IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: Icon(AppIcons.x, size: 18)),
-            ReorderableDragStartListener(index: i, child: Padding(padding: const EdgeInsetsDirectional.only(end: 4), child: Icon(AppIcons.equals, size: 20))),
-          ]);
-        },
-        ),
-      ),
-    ]);
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 4),
+            child: Row(children: [
+              Text(tr('Play queue'),
+                  style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(width: 8),
+              Text('${items.length}',
+                  style: TextStyle(color: context.colors.outline, fontSize: 12)),
+              const Spacer(),
+              TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
+            ]),
+          ),
+          // A long queue scrolls inside its own box instead of lengthening the page.
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 320),
+            child: ReorderableListView.builder(
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              itemCount: items.length,
+              onReorderItem: controller.moveQueued,
+              itemBuilder: (context, i) {
+                final item = items[i];
+                return Row(key: ValueKey(item.id), children: [
+                  Expanded(
+                      child: CompactVideoTile(
+                          item: item,
+                          thumbnails: controller.thumbnailDirectory,
+                          onOpen: () => controller.playQueued(item))),
+                  IconButton(
+                      tooltip: tr('Remove from queue'),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => controller.removeQueued(item.id),
+                      icon: Icon(AppIcons.x, size: 18)),
+                  ReorderableDragStartListener(
+                      index: i,
+                      child: Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 4),
+                          child: Icon(AppIcons.equals, size: 20))),
+                ]);
+              },
+            ),
+          ),
+        ]);
   }
 }

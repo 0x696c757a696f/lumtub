@@ -28,7 +28,8 @@ class _VersionKey implements Comparable<_VersionKey> {
     final numbers = match.group(1)!.split('.').map(int.tryParse).toList();
     if (numbers.contains(null)) return null;
     final rest = base.substring(match.end);
-    return _VersionKey(numbers.cast<int>(), unpacked: rest.contains('-dir'), v3: rest.contains('-x86_64-v3'));
+    return _VersionKey(numbers.cast<int>(),
+        unpacked: rest.contains('-dir'), v3: rest.contains('-x86_64-v3'));
   }
 
   /// Positive when this is newer.
@@ -36,7 +37,8 @@ class _VersionKey implements Comparable<_VersionKey> {
   int compareTo(_VersionKey other) {
     final length = numbers.length > other.numbers.length ? numbers.length : other.numbers.length;
     for (var i = 0; i < length; i++) {
-      final order = (i < numbers.length ? numbers[i] : 0).compareTo(i < other.numbers.length ? other.numbers[i] : 0);
+      final order = (i < numbers.length ? numbers[i] : 0)
+          .compareTo(i < other.numbers.length ? other.numbers[i] : 0);
       if (order != 0) return order;
     }
     if (unpacked != other.unpacked) return unpacked ? 1 : -1;

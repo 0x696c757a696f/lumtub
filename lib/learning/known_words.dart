@@ -72,7 +72,8 @@ class KnownWords extends ChangeNotifier {
     if (!token.isWord) return true;
     final language = Learning.languageOf(token);
     if (_keys.contains(keyOf(language, token.key))) return true;
-    final state = review.of('$language:${token.key}') ?? review.of('$language:${token.key.toLowerCase()}');
+    final state =
+        review.of('$language:${token.key}') ?? review.of('$language:${token.key.toLowerCase()}');
     return state?.known ?? false;
   }
 
@@ -97,7 +98,10 @@ class KnownWords extends ChangeNotifier {
   }
 
   /// The words of [tokens] the learner does not know yet, each once.
-  Set<String> unknownIn(List<WordToken> tokens) => {for (final t in tokens) if (t.isWord && counts(t) && !knows(t)) tokenKey(t)};
+  Set<String> unknownIn(List<WordToken> tokens) => {
+        for (final t in tokens)
+          if (t.isWord && counts(t) && !knows(t)) tokenKey(t)
+      };
 
   /// Numbers, names in Latin letters inside other scripts and single
   /// letters say nothing about what is understood.
@@ -123,7 +127,10 @@ final _known = <String, KnownWords>{};
 KnownWords knownWordsOf(VocabularyBook book) => _known.putIfAbsent(
       book.file.path,
       () {
-        final words = KnownWords(File('${book.file.parent.path}${Platform.pathSeparator}known.json'), book, reviewStoreOf(book));
+        final words = KnownWords(
+            File('${book.file.parent.path}${Platform.pathSeparator}known.json'),
+            book,
+            reviewStoreOf(book));
         unawaited(words.load());
         return words;
       },

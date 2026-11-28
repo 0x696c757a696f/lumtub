@@ -8,7 +8,8 @@ import 'dart:typed_data';
 /// dictionary, so every small object made there costs the window frames
 /// while the garbage collector copies it.
 class PackedLines {
-  PackedLines._(this._bytes, this._lineStart, this._lineEnd, this._keyStart, this._keyEnd, this._keyLine, this._next, this._table);
+  PackedLines._(this._bytes, this._lineStart, this._lineEnd, this._keyStart, this._keyEnd,
+      this._keyLine, this._next, this._table);
 
   final Uint8List _bytes;
   final Int32List _lineStart;
@@ -27,7 +28,8 @@ class PackedLines {
   int get size => _lineStart.length;
 
   /// Line [i] as text.
-  String line(int i) => utf8.decode(Uint8List.sublistView(_bytes, _lineStart[i], _lineEnd[i]), allowMalformed: true);
+  String line(int i) =>
+      utf8.decode(Uint8List.sublistView(_bytes, _lineStart[i], _lineEnd[i]), allowMalformed: true);
 
   /// The lines [key] is found in, in file order; empty when none.
   List<int> linesOf(String key) {
@@ -71,7 +73,8 @@ class PackedLines {
   /// line's start and end (without the line break) and calls `key` with
   /// the start and end of each key the line is found by, or nothing to
   /// leave the line out.
-  static PackedLines build(Uint8List bytes, void Function(int start, int end, void Function(int start, int end) key) keysOf) {
+  static PackedLines build(Uint8List bytes,
+      void Function(int start, int end, void Function(int start, int end) key) keysOf) {
     final lineStart = _Ints();
     final lineEnd = _Ints();
     final keyStart = _Ints();

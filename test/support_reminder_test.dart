@@ -55,14 +55,16 @@ void main() {
     for (var day = 0; day < 6; day++) {
       reminder.used(start.add(Duration(days: day)));
     }
-    expect(reminder.starDue(start.add(const Duration(days: 30))), isFalse, reason: 'six days of use');
+    expect(reminder.starDue(start.add(const Duration(days: 30))), isFalse,
+        reason: 'six days of use');
     reminder.used(start.add(const Duration(days: 6)));
     expect(reminder.starDue(start.add(const Duration(days: 6))), isFalse, reason: 'not a week yet');
     final asked = start.add(const Duration(days: 13));
     expect(reminder.starDue(asked), isTrue);
     reminder.starAsked(asked);
     expect(reminder.starDue(asked.add(const Duration(days: 400))), isFalse, reason: 'only once');
-    expect(reminder.due(start.add(const Duration(days: 14))), isFalse, reason: 'a day after the star');
+    expect(reminder.due(start.add(const Duration(days: 14))), isFalse,
+        reason: 'a day after the star');
     expect(reminder.due(asked.add(const Duration(days: 7))), isTrue);
 
     final again = await reload(reminder, file);
@@ -109,7 +111,10 @@ void main() {
 
   testWidgets("the question offers support, later and don't ask again", (tester) async {
     final reminder = SupportReminder(File('${dir.path}/support_reminder.json'));
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => askForSupport(context, reminder), child: const Text('open')))));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                onPressed: () => askForSupport(context, reminder), child: const Text('open')))));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Enjoying Lumtub?'), findsOneWidget);
@@ -127,7 +132,10 @@ void main() {
 
   testWidgets('the star question asks once and offers GitHub', (tester) async {
     final reminder = SupportReminder(File('${dir.path}/support_reminder.json'));
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => TextButton(onPressed: () => askForStar(context, reminder), child: const Text('open')))));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                onPressed: () => askForStar(context, reminder), child: const Text('open')))));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Star it on GitHub'), findsOneWidget);

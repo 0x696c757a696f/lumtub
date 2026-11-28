@@ -137,7 +137,6 @@ class AndroidSubtitleFonts {
     'Adlam': RegExp(r'[\u{1E900}-\u{1E95F}]', unicode: true),
   };
 
-
   static final _letter = RegExp(r'[\p{L}]', unicode: true);
   static final _kana = RegExp(r'[぀-ヿ]');
   static final _hangul = RegExp(r'[가-힯ᄀ-ᇿ㄰-㆏]');
@@ -163,16 +162,25 @@ class AndroidSubtitleFonts {
 
   /// Letters Noto Sans CJK or [latin] has: Latin, Greek, Cyrillic,
   /// Chinese, Japanese and Korean.
-  static final _drawnLetters = RegExp(r'[A-Za-z\u00AA-\u052F\u1D00-\u1FFF\u1100-\u11FF\u2E80-\u9FFF\uA960-\uA97F\uAC00-\uD7FF\uF900-\uFAFF\uFF00-\uFFEF]|[\u{20000}-\u{3FFFF}]', unicode: true);
+  static final _drawnLetters = RegExp(
+      r'[A-Za-z\u00AA-\u052F\u1D00-\u1FFF\u1100-\u11FF\u2E80-\u9FFF\uA960-\uA97F\uAC00-\uD7FF\uF900-\uFAFF\uFF00-\uFFEF]|[\u{20000}-\u{3FFFF}]',
+      unicode: true);
 
   /// Chinese, Japanese or Korean characters, which [latin] lacks.
-  static final _cjkText = RegExp(r'[\u1100-\u11FF\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\uFF00-\uFFEF]|[\u{20000}-\u{3FFFF}]', unicode: true);
+  static final _cjkText = RegExp(
+      r'[\u1100-\u11FF\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\uFF00-\uFFEF]|[\u{20000}-\u{3FFFF}]',
+      unicode: true);
 
   /// The family drawing Chinese, Japanese and Korean text as each language
   /// writes it: Android's Noto Sans CJK, or the iPhone app's own fonts.
   static Map<String, String> cjkFamilies = _androidCjk;
 
-  static const _androidCjk = {'ja': 'Noto Sans CJK JP', 'ko': 'Noto Sans CJK KR', 'zh-Hant': 'Noto Sans CJK TC', 'zh': 'Noto Sans CJK SC'};
+  static const _androidCjk = {
+    'ja': 'Noto Sans CJK JP',
+    'ko': 'Noto Sans CJK KR',
+    'zh-Hant': 'Noto Sans CJK TC',
+    'zh': 'Noto Sans CJK SC'
+  };
 
   /// On iOS: makes [folder] hold links to the app's own fonts, Noto Sans SC
   /// in [flutterFonts] (with Latin, Greek, Cyrillic and kana) and the
@@ -182,11 +190,17 @@ class AndroidSubtitleFonts {
   /// Japanese, Korean or traditional Chinese faces downloaded as data packs
   /// (CjkFontPacks), by forms and with their families, which then draw
   /// those languages in their own character forms.
-  static Future<String?> prepareIos(String folder, {required String flutterFonts, required String bundled, Map<String, (File, String)> downloaded = const {}}) async {
+  static Future<String?> prepareIos(String folder,
+      {required String flutterFonts,
+      required String bundled,
+      Map<String, (File, String)> downloaded = const {}}) async {
     try {
       const sc = 'NotoSansSC-Regular.ttf';
       final hasSc = File('$flutterFonts/$sc').existsSync();
-      final names = Directory(bundled).existsSync() ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]..sort()) : <String>[];
+      final names = Directory(bundled).existsSync()
+          ? ([for (final f in Directory(bundled).listSync()) f.path.split(RegExp(r'[/\\]')).last]
+            ..sort())
+          : <String>[];
       // Without the Chinese face the other scripts are still drawn by
       // libass; Chinese, Japanese and Korean lines go to Flutter's view.
       if (!hasSc && names.isEmpty) return null;
@@ -228,7 +242,9 @@ class AndroidSubtitleFonts {
   /// returns it; null when Android has no Noto Sans CJK.
   static Future<String?> prepare(String folder, {String system = _system}) async {
     try {
-      final names = [await for (final f in Directory(system).list()) f.path.split(RegExp(r'[/\\]')).last]..sort();
+      final names = [
+        await for (final f in Directory(system).list()) f.path.split(RegExp(r'[/\\]')).last
+      ]..sort();
       final dir = Directory(folder);
       if (await dir.exists()) await dir.delete(recursive: true);
       await dir.create(recursive: true);
@@ -246,13 +262,16 @@ class AndroidSubtitleFonts {
       if (!cjk) return null;
       await link(cjkFile!);
       families.clear();
-      final roboto = names.where((n) => RegExp(r'^Roboto-(Regular|VF)\.[ot]tf$').hasMatch(n)).firstOrNull;
+      final roboto =
+          names.where((n) => RegExp(r'^Roboto-(Regular|VF)\.[ot]tf$').hasMatch(n)).firstOrNull;
       if (roboto != null) await link(roboto);
       latin = roboto == null ? null : 'Roboto';
       for (final MapEntry(key: script, value: prefixes) in _scriptFiles.entries) {
         for (final prefix in prefixes) {
           // The plain face, not the narrower UI one nor a bold or serif one.
-          final file = names.where((n) => n.startsWith(prefix) && RegExp(r'-(Regular|VF)\.[ot]tf$').hasMatch(n)).firstOrNull;
+          final file = names
+              .where((n) => n.startsWith(prefix) && RegExp(r'-(Regular|VF)\.[ot]tf$').hasMatch(n))
+              .firstOrNull;
           if (file == null) continue;
           await link(file);
           families[script] = familyOf(file);
@@ -267,7 +286,8 @@ class AndroidSubtitleFonts {
   }
 
   /// "NotoNaskhArabic-Regular.ttf" is the family "Noto Naskh Arabic".
-  static String familyOf(String file) => file.split('-').first.replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (_) => ' ');
+  static String familyOf(String file) =>
+      file.split('-').first.replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (_) => ' ');
 
   /// For the lines libmpv shows, the main subtitle's first and the second
   /// subtitle's after it: the family for the main one, and whether libmpv
@@ -283,8 +303,10 @@ class AndroidSubtitleFonts {
     final main = lines.isEmpty ? '' : lines.first.trim();
     final rest = lines.skip(1).map((l) => l.trim()).where((l) => l.isNotEmpty);
     final family = main.isEmpty ? null : familyFor(main, language: language);
-    bool fits(String line, String? whole, String language) => whole != null || runs(line, language: language) != null;
-    final drawable = (main.isEmpty || fits(main, family, language)) && rest.every((l) => fits(l, familyFor(l), ''));
+    bool fits(String line, String? whole, String language) =>
+        whole != null || runs(line, language: language) != null;
+    final drawable = (main.isEmpty || fits(main, family, language)) &&
+        rest.every((l) => fits(l, familyFor(l), ''));
     return (drawable: drawable, main: family);
   }
 
@@ -346,7 +368,8 @@ class AndroidSubtitleFonts {
     final pieces = <({StringBuffer text, String? kind})>[];
     for (final rune in text.runes) {
       final kind = _kindOf(rune);
-      if (pieces.isEmpty || (kind != null && pieces.last.kind != null && kind != pieces.last.kind)) {
+      if (pieces.isEmpty ||
+          (kind != null && pieces.last.kind != null && kind != pieces.last.kind)) {
         pieces.add((text: StringBuffer()..writeCharCode(rune), kind: kind));
       } else if (kind != null && pieces.last.kind == null) {
         // Leading spaces or punctuation take the first letters' kind.
@@ -379,7 +402,8 @@ class AndroidSubtitleFonts {
   /// [text] in stretches, those in a script of [families] marked with its
   /// family and the rest with null: where libass finds fonts by itself
   /// (fontconfig on Linux) and only [families] were added beside them.
-  static List<({String text, String? family})> stretches(String text, Map<String, String> families) {
+  static List<({String text, String? family})> stretches(
+      String text, Map<String, String> families) {
     final out = <({String text, String? family})>[];
     for (final piece in _pieces(text)) {
       final family = families[piece.kind];
@@ -409,7 +433,11 @@ class AndroidSubtitleFonts {
     if (needed.length > 1 || (needed.length == 1 && rest)) return null;
     if (needed.length == 1) return families[needed.first];
     // Without the CJK font only Latin, Greek and Cyrillic lines have one.
-    if (!cjk) return _cjkText.hasMatch(text) || _kana.hasMatch(text) || _hangul.hasMatch(text) ? null : latin;
+    if (!cjk) {
+      return _cjkText.hasMatch(text) || _kana.hasMatch(text) || _hangul.hasMatch(text)
+          ? null
+          : latin;
+    }
     // A letter of a script no font here has (Tibetan, Mongolian...).
     if (_letter.hasMatch(other.replaceAll(_drawnLetters, ''))) return null;
     // Polish, Czech, Vietnamese, Ukrainian and the like: the Latin font,

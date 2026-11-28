@@ -53,10 +53,21 @@ abstract final class NativeHttp {
   /// [dns] looks names up for direct connections instead of the system.
   /// [roots] names the certificate authorities trusted: `system`,
   /// `mozilla` or `google`.
-  static void configure({String? proxy, bool system = false, DnsServer? dns, String roots = 'system', String quantum = 'prefer'}) {
+  static void configure(
+      {String? proxy,
+      bool system = false,
+      DnsServer? dns,
+      String roots = 'system',
+      String quantum = 'prefer'}) {
     final native = _native;
     if (native == null) return;
-    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}, 'roots': roots, 'quantum': quantum}));
+    final bytes = utf8.encode(jsonEncode({
+      'proxy': proxy,
+      'system': system,
+      'dns': dns?.toJson() ?? const {},
+      'roots': roots,
+      'quantum': quantum
+    }));
     _withBytes(bytes, native.configure);
   }
 
@@ -75,7 +86,8 @@ abstract final class NativeHttp {
     if (pending == null) return;
     switch (message[1]) {
       case 0:
-        pending.head(message[2] as int, message[3] as String, message[4] as int?, message.length > 5 ? message[5] as String? : null);
+        pending.head(message[2] as int, message[3] as String, message[4] as int?,
+            message.length > 5 ? message[5] as String? : null);
       case 1:
         pending.body.add(message[2] as Uint8List);
       case 2:
@@ -100,27 +112,54 @@ abstract final class NativeHttp {
 
 class _Bindings {
   _Bindings(DynamicLibrary library)
-      : init = library.lookupFunction<Void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>), void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>)>('lumtub_http_init'),
-        configure = library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_http_configure'),
-        send = library.lookupFunction<Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send'),
-        cancel = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_http_cancel'),
-        take = library.providesSymbol('lumtub_http_take') ? library.lookupFunction<Void Function(Int64, Int64), void Function(int, int)>('lumtub_http_take') : null,
-        body = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Pointer<Uint8> Function(Size), Pointer<Uint8> Function(int)>('lumtub_http_body') : null,
-        bodyFree = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_http_body_free') : null,
-        sendOwned = library.providesSymbol('lumtub_http_send_owned') ? library.lookupFunction<Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send_owned') : null;
+      : init = library.lookupFunction<
+                Void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>),
+                void Function(
+                    Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>)>(
+            'lumtub_http_init'),
+        configure = library.lookupFunction<Void Function(Pointer<Uint8>, Size),
+            void Function(Pointer<Uint8>, int)>('lumtub_http_configure'),
+        send = library.lookupFunction<
+            Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+            bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send'),
+        cancel =
+            library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_http_cancel'),
+        take = library.providesSymbol('lumtub_http_take')
+            ? library.lookupFunction<Void Function(Int64, Int64), void Function(int, int)>(
+                'lumtub_http_take')
+            : null,
+        body = library.providesSymbol('lumtub_http_send_owned')
+            ? library.lookupFunction<Pointer<Uint8> Function(Size), Pointer<Uint8> Function(int)>(
+                'lumtub_http_body')
+            : null,
+        bodyFree = library.providesSymbol('lumtub_http_send_owned')
+            ? library.lookupFunction<Void Function(Pointer<Uint8>, Size),
+                void Function(Pointer<Uint8>, int)>('lumtub_http_body_free')
+            : null,
+        sendOwned = library.providesSymbol('lumtub_http_send_owned')
+            ? library.lookupFunction<
+                Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size),
+                bool Function(
+                    int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send_owned')
+            : null;
 
   final void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>) init;
   final void Function(Pointer<Uint8>, int) configure;
-  final bool Function(int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength) send;
+  final bool Function(
+      int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength) send;
   final void Function(int id) cancel;
+
   /// Tells the core the body's reader has taken so many more bytes, so it
   /// sends more; a core without it does not wait.
   final void Function(int id, int bytes)? take;
+
   /// A buffer in the core's memory that [sendOwned] hands over, so a large
   /// body is written there once instead of being gathered and copied.
   final Pointer<Uint8> Function(int length)? body;
   final void Function(Pointer<Uint8> body, int length)? bodyFree;
-  final bool Function(int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength)? sendOwned;
+  final bool Function(
+          int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength)?
+      sendOwned;
 }
 
 /// A request waiting for its head, then streaming its body.
@@ -177,6 +216,7 @@ class _Pending {
 /// An [http.Client] whose requests the Rust core makes.
 class NativeHttpClient extends http.BaseClient {
   bool _closed = false;
+
   /// This client's requests, so closing it stops those still running.
   final _mine = <int>{};
 
@@ -184,7 +224,9 @@ class NativeHttpClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (_closed) throw http.ClientException('Client is closed', request.url);
     final native = NativeHttp._native;
-    if (native == null) throw http.ClientException('The native HTTP client is missing', request.url);
+    if (native == null) {
+      throw http.ClientException('The native HTTP client is missing', request.url);
+    }
     final length = request.contentLength;
     final direct = native.sendOwned != null && length != null && length >= _directBody;
     final stream = request.finalize();
@@ -198,7 +240,8 @@ class NativeHttpClient extends http.BaseClient {
     final headers = [
       for (final MapEntry(:key, :value) in request.headers.entries) [key, value],
     ];
-    final meta = utf8.encode(jsonEncode({'method': request.method, 'url': request.url.toString(), 'headers': headers}));
+    final meta = utf8.encode(
+        jsonEncode({'method': request.method, 'url': request.url.toString(), 'headers': headers}));
     final id = NativeHttp._nextId++;
     final pending = _Pending(id, request);
     NativeHttp._open[id] = pending;
@@ -208,7 +251,10 @@ class NativeHttpClient extends http.BaseClient {
     final port = NativeHttp._sendPort.nativePort;
     final started = owned != null
         ? NativeHttp._withBytes(meta, (m, ml) => native.sendOwned!(id, port, m, ml, owned, length!))
-        : NativeHttp._withBytes(meta, (m, ml) => NativeHttp._withBytes(bytes!, (b, bl) => native.send(id, port, m, ml, b, bl)));
+        : NativeHttp._withBytes(
+            meta,
+            (m, ml) =>
+                NativeHttp._withBytes(bytes!, (b, bl) => native.send(id, port, m, ml, b, bl)));
     if (!started) {
       NativeHttp._open.remove(id);
       throw http.ClientException('Could not start the request', request.url);
@@ -221,13 +267,16 @@ class NativeHttpClient extends http.BaseClient {
   static const _directBody = 256 << 10;
 
   /// [stream], which must be [length] bytes, in a buffer the core owns.
-  static Future<Pointer<Uint8>> _gather(_Bindings native, Stream<List<int>> stream, int length) async {
+  static Future<Pointer<Uint8>> _gather(
+      _Bindings native, Stream<List<int>> stream, int length) async {
     final buffer = native.body!(length);
     final view = buffer.asTypedList(length);
     var at = 0;
     try {
       await for (final piece in stream) {
-        if (at + piece.length > length) throw const FormatException('The request body is longer than its length');
+        if (at + piece.length > length) {
+          throw const FormatException('The request body is longer than its length');
+        }
         view.setAll(at, piece);
         at += piece.length;
       }

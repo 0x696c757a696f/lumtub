@@ -13,13 +13,24 @@ void main() {
   });
 
   testWidgets('the tag shows the kind in a word, the full reason on hover', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: ReasonTag(FeedReason.of(ReasonKind.related, 'Viewers of "Identity" also watched'))))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Center(
+                child: ReasonTag(
+                    FeedReason.of(ReasonKind.related, 'Viewers of "Identity" also watched'))))));
     expect(find.text('Related'), findsOneWidget);
     expect(byTooltip('Viewers of "Identity" also watched'), findsOneWidget);
   });
 
   testWidgets('on its own line under a card the tag shows the whole reason', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: SizedBox(width: 300, child: ReasonTag(FeedReason.of(ReasonKind.related, 'Viewers of "Identity" also watched'), wide: true))))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: Center(
+                child: SizedBox(
+                    width: 300,
+                    child: ReasonTag(
+                        FeedReason.of(ReasonKind.related, 'Viewers of "Identity" also watched'),
+                        wide: true))))));
     expect(find.text('Viewers of "Identity" also watched'), findsOneWidget);
   });
 }

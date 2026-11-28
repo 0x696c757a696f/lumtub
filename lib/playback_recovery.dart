@@ -3,7 +3,9 @@ import 'dart:async';
 /// Decides when a video that stopped because of the network is reopened at
 /// the same position, and when to give up and show the error.
 class PlaybackRecovery {
-  PlaybackRecovery({this.maxAttempts = 3, this.window = const Duration(minutes: 2), DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  PlaybackRecovery(
+      {this.maxAttempts = 3, this.window = const Duration(minutes: 2), DateTime Function()? clock})
+      : _clock = clock ?? DateTime.now;
 
   final int maxAttempts;
   final Duration window;
@@ -37,7 +39,8 @@ class PlaybackRecovery {
 
   /// Opening or seeking to the resume point is not playback. Count only
   /// decoded, advancing playback; a seek starts the observation again.
-  bool observeProgress(Duration position, {required bool playing, required bool buffering, required bool decoded, double rate = 1}) {
+  bool observeProgress(Duration position,
+      {required bool playing, required bool buffering, required bool decoded, double rate = 1}) {
     final previous = _position;
     if (previous == null) return false;
     final now = _clock();
@@ -45,7 +48,8 @@ class PlaybackRecovery {
     final advance = position - previous;
     _position = position;
     _observedAt = now;
-    final maximumAdvance = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) + const Duration(milliseconds: 500);
+    final maximumAdvance = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) +
+        const Duration(milliseconds: 500);
     if (!playing || buffering || !decoded || advance < Duration.zero || advance > maximumAdvance) {
       _progress = Duration.zero;
       return false;
@@ -73,7 +77,9 @@ class PlaybackRecovery {
   /// mpv reaches the end of a stream it can no longer read as if the video
   /// had finished; a real ending is within a few seconds of the duration.
   static bool endedEarly(Duration position, Duration duration) =>
-      duration > const Duration(seconds: 30) && position > Duration.zero && position < duration - const Duration(seconds: 5);
+      duration > const Duration(seconds: 30) &&
+      position > Duration.zero &&
+      position < duration - const Duration(seconds: 5);
 
   static final _network = RegExp(
     r'http|tcp|tls|ssl|network|connection|connect|timed? ?out|failed to open|unreachable|host|403|404|410|5\d\d|stream ended',
@@ -82,7 +88,8 @@ class PlaybackRecovery {
 
   /// Errors from reading the stream, as opposed to a broken subtitle or
   /// filter, which leave the video playing.
-  static bool isNetworkError(String message) => !message.toLowerCase().contains('sub') && _network.hasMatch(message);
+  static bool isNetworkError(String message) =>
+      !message.toLowerCase().contains('sub') && _network.hasMatch(message);
 
   // DXGI_ERROR_DEVICE_REMOVED, _HUNG and _RESET.
   static final _deviceLost = RegExp(r'\b887a000[567]\b', caseSensitive: false);
@@ -92,9 +99,11 @@ class PlaybackRecovery {
   /// picture, which then flickers or freezes until the output is made again.
   /// VideoToolbox's decoder session was invalidated (kVTInvalidSessionErr),
   /// as iOS does to an app's sessions while it is in the background.
-  static bool decoderSessionLost(String text) => text.contains('invalid session') || text.contains('-12903');
+  static bool decoderSessionLost(String text) =>
+      text.contains('invalid session') || text.contains('-12903');
 
-  static bool graphicsLost(String text) => text.contains('Mapping hardware decoded surface failed') || _deviceLost.hasMatch(text);
+  static bool graphicsLost(String text) =>
+      text.contains('Mapping hardware decoded surface failed') || _deviceLost.hasMatch(text);
 }
 
 /// Where to reopen a video after its stream failed. mpv that can no longer
@@ -134,7 +143,8 @@ class ResumePoint {
     final observedAt = _observedAt;
     if (observedAt != null) {
       final elapsed = now.difference(observedAt);
-      final allowed = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) + const Duration(seconds: 2);
+      final allowed = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) +
+          const Duration(seconds: 2);
       final jumpedAt = _jumpedAt;
       final recentJump = jumpedAt != null && now.difference(jumpedAt) <= window;
       // A seek by the viewer looks the same; within [window] the earliest
@@ -154,7 +164,8 @@ class ResumePoint {
 /// or the rest of the video in. Work that would compete with the start of
 /// playback, such as resolving the next video, waits for it.
 class SettledPlayback {
-  SettledPlayback({this.needed = const Duration(seconds: 5), this.ahead = const Duration(seconds: 10)});
+  SettledPlayback(
+      {this.needed = const Duration(seconds: 5), this.ahead = const Duration(seconds: 10)});
 
   final Duration needed;
   final Duration ahead;
@@ -173,14 +184,23 @@ class SettledPlayback {
   void stop() => _waiting = false;
 
   /// Whether playback settled with this position; true only once.
-  bool observe(Duration position, {required bool playing, required bool buffering, required bool decoded, required Duration buffered, Duration duration = Duration.zero}) {
+  bool observe(Duration position,
+      {required bool playing,
+      required bool buffering,
+      required bool decoded,
+      required Duration buffered,
+      Duration duration = Duration.zero}) {
     if (!_waiting) return false;
     final previous = _position;
     _position = position;
     if (previous == null) return false;
     final advance = position - previous;
     // A seek or a stall starts the count again.
-    if (!playing || buffering || !decoded || advance < Duration.zero || advance > const Duration(seconds: 2)) {
+    if (!playing ||
+        buffering ||
+        !decoded ||
+        advance < Duration.zero ||
+        advance > const Duration(seconds: 2)) {
       _progress = Duration.zero;
       return false;
     }

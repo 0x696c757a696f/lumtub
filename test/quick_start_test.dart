@@ -9,7 +9,8 @@ import 'package:lumtub/stream_resolver.dart';
 
 Map<String, dynamic> _stream(int itag, String mime, int height, int bitrate) => {
       'itag': itag,
-      'url': 'https://rr1.googlevideo.com/videoplayback?expire=${DateTime.now().add(const Duration(hours: 6)).millisecondsSinceEpoch ~/ 1000}&c=VISIONOS&itag=$itag',
+      'url':
+          'https://rr1.googlevideo.com/videoplayback?expire=${DateTime.now().add(const Duration(hours: 6)).millisecondsSinceEpoch ~/ 1000}&c=VISIONOS&itag=$itag',
       'mimeType': mime,
       'bitrate': bitrate,
       'contentLength': '1000',
@@ -23,7 +24,9 @@ void main() {
     final request = jsonDecode(core!.quickRequest('abc')!) as Map<String, dynamic>;
     final body = request['body'] as Map<String, dynamic>;
     expect(body['videoId'], 'abc');
-    expect(((body['context'] as Map<String, dynamic>)['client'] as Map<String, dynamic>)['clientName'], 'VISIONOS');
+    expect(
+        ((body['context'] as Map<String, dynamic>)['client'] as Map<String, dynamic>)['clientName'],
+        'VISIONOS');
     expect((request['headers'] as Map<String, dynamic>)['X-YouTube-Client-Name'], '101');
   }, skip: core == null);
 
@@ -41,8 +44,10 @@ void main() {
     };
     const settings = PlayerSettings(disabledCodecs: {});
     final text = core!.quickInfo(jsonEncode(player), FormatPolicy.settingsJson(settings))!;
-    final video = ResolvedVideo(jsonDecode(text) as Map<String, dynamic>, File('info.json'), 'f', text: text);
-    expect(video.directUrl, allOf(startsWith('edl://'), contains('itag=137'), contains('itag=140')));
+    final video =
+        ResolvedVideo(jsonDecode(text) as Map<String, dynamic>, File('info.json'), 'f', text: text);
+    expect(
+        video.directUrl, allOf(startsWith('edl://'), contains('itag=137'), contains('itag=140')));
     expect(video.heights, [1080]);
     expect(video.origin, contains('VISIONOS'));
     player['playabilityStatus'] = {'status': 'LOGIN_REQUIRED'};

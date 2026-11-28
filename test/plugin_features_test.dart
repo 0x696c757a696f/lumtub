@@ -23,13 +23,20 @@ import 'package:lumtub/youtube_comments.dart';
 import 'package:material_ui/material_ui.dart';
 
 http.Response _reply(String content) => http.Response.bytes(
-      utf8.encode(jsonEncode({'choices': [{'message': {'content': content}}]})),
+      utf8.encode(jsonEncode({
+        'choices': [
+          {
+            'message': {'content': content}
+          }
+        ]
+      })),
       200,
       headers: {'content-type': 'application/json; charset=utf-8'},
     );
 
 String _vtt(int lines) => 'WEBVTT\n\n${[
-      for (var i = 0; i < lines; i++) '00:${(i * 5 ~/ 60).toString().padLeft(2, '0')}:${(i * 5 % 60).toString().padLeft(2, '0')}.000 --> 00:${(i * 5 ~/ 60).toString().padLeft(2, '0')}:${(i * 5 % 60 + 4).toString().padLeft(2, '0')}.500\nline number $i.\n',
+      for (var i = 0; i < lines; i++)
+        '00:${(i * 5 ~/ 60).toString().padLeft(2, '0')}:${(i * 5 % 60).toString().padLeft(2, '0')}.000 --> 00:${(i * 5 ~/ 60).toString().padLeft(2, '0')}:${(i * 5 % 60 + 4).toString().padLeft(2, '0')}.500\nline number $i.\n',
     ].join('\n')}';
 
 void main() {
@@ -39,9 +46,14 @@ void main() {
 
   group('Remember speed and volume per channel', () {
     test('keys by channel id, else by name', () {
-      expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: 'Name', channelId: 'UC1', url: '')), 'UC1');
-      expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: 'Name', url: '')), 'name:Name');
-      expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: '', url: '')), isNull);
+      expect(
+          ChannelPlayback.keyOf(
+              const VideoItem(id: 'a', title: '', channel: 'Name', channelId: 'UC1', url: '')),
+          'UC1');
+      expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: 'Name', url: '')),
+          'name:Name');
+      expect(
+          ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: '', url: '')), isNull);
     });
 
     test('keeps speed and volume apart and survives a restart', () async {
@@ -124,7 +136,8 @@ void main() {
       expect(transcript.cut, isFalse);
     });
 
-    test('a short video is one request for an overview, its times checked against the subtitles', () async {
+    test('a short video is one request for an overview, its times checked against the subtitles',
+        () async {
       final asked = <String>[];
       final client = MockClient((request) async {
         final messages = (jsonDecode(request.body) as Map)['messages'] as List;
@@ -141,12 +154,16 @@ void main() {
               ],
             })}\n```');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)), description: 'About lines');
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final body = await summarizeTranscript(
+          ai.complete, 'Title', await summaryTranscript(_vtt(10)),
+          description: 'About lines');
       expect(asked.single, allOf(contains('Transcript:'), contains('About lines')));
       final overview = VideoOverview.parse(body)!;
       expect(overview.about, 'Lines are counted.');
-      expect([for (final c in overview.chapters) (c.start.inSeconds, c.end.inSeconds, c.title)], [(0, 15, 'First lines'), (15, 49, 'Later lines')]);
+      expect([for (final c in overview.chapters) (c.start.inSeconds, c.end.inSeconds, c.title)],
+          [(0, 15, 'First lines'), (15, 49, 'Later lines')]);
       expect(overview.quotes.single.at, const Duration(seconds: 35));
       expect(overview.quotes.single.found, isTrue);
       expect(overview.text, contains('[0:35] “Line number 7.”'));
@@ -161,8 +178,10 @@ void main() {
         asked.add((messages.last as Map)['content'] as String);
         return _reply('- [0:00] point ${asked.length}');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final summary = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)));
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final summary =
+          await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(10)));
       expect(asked, hasLength(3));
       expect(asked[1], endsWith('Reply with the JSON object only.'));
       expect(summary, '- [0:00] point 3');
@@ -175,12 +194,18 @@ void main() {
         final messages = (jsonDecode(request.body) as Map)['messages'] as List;
         systems.add((messages.first as Map)['content'] as String);
         asked.add((messages.last as Map)['content'] as String);
-        if (asked.last.contains('Notes on each part')) return _reply('{"about": "All of it.", "chapters": [{"time": "0:00", "title": "Start"}, {"time": "4:00", "title": "End"}]}');
+        if (asked.last.contains('Notes on each part')) {
+          return _reply(
+              '{"about": "All of it.", "chapters": [{"time": "0:00", "title": "Start"}, {"time": "4:00", "title": "End"}]}');
+        }
         return _reply('- [0:00] point\n> [0:05] "line number 1."');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
       final progress = <(int, int)>[];
-      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60), budget: 500), onProgress: (done, total) => progress.add((done, total)));
+      final body = await summarizeTranscript(
+          ai.complete, 'Title', await summaryTranscript(_vtt(60), budget: 500),
+          onProgress: (done, total) => progress.add((done, total)));
       expect(asked.length, greaterThan(2));
       expect(asked.last, contains('Notes on each part'));
       expect(systems.last, contains('The last chapter must start after 3:44.'));
@@ -207,12 +232,16 @@ void main() {
           ],
         }));
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final body = await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60)));
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final body =
+          await summarizeTranscript(ai.complete, 'Title', await summaryTranscript(_vtt(60)));
       expect(asked, hasLength(2));
-      expect(asked.last, contains('Your last chapter started at 0:00, but the video runs until 4:59.'));
+      expect(asked.last,
+          contains('Your last chapter started at 0:00, but the video runs until 4:59.'));
       final overview = VideoOverview.parse(body)!;
-      expect([for (final c in overview.chapters) (c.title, c.summary)], [('Start', 'The first lines.'), ('End', 'The last lines.')]);
+      expect([for (final c in overview.chapters) (c.title, c.summary)],
+          [('Start', 'The first lines.'), ('End', 'The last lines.')]);
       expect(overview.text, contains('    The last lines.'));
       expect(overview.quotes.single.found, isTrue);
       expect(overview.quotes.single.at, const Duration(seconds: 210));
@@ -225,9 +254,16 @@ void main() {
         asked.add((messages.last as Map)['content'] as String);
         return _reply('"Batteries hate the cold."');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      expect(await completeQuoteText(ai.complete, 'hate the', title: 'T', before: ['so batteries'], after: ['cold you know']), 'Batteries hate the cold.');
-      expect(asked.last, allOf(contains('Before:\nso batteries'), contains('The stretch:\nhate the'), contains('After:\ncold you know')));
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      expect(
+          await completeQuoteText(ai.complete, 'hate the',
+              title: 'T', before: ['so batteries'], after: ['cold you know']),
+          'Batteries hate the cold.');
+      expect(
+          asked.last,
+          allOf(contains('Before:\nso batteries'), contains('The stretch:\nhate the'),
+              contains('After:\ncold you know')));
     });
 
     test('a subtitle line is explained with the lines around it, and a note tidied', () async {
@@ -237,28 +273,48 @@ void main() {
         asked.add((messages.last as Map)['content'] as String);
         return _reply('<think>x</think>It means hello.');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      expect(await explainSubtitle(ai.complete, 'Howdy', title: 'T', before: ['a'], after: ['b']), 'It means hello.');
-      expect(asked.last, allOf(contains('Before:\na'), contains('The line:\nHowdy'), contains('After:\nb')));
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      expect(await explainSubtitle(ai.complete, 'Howdy', title: 'T', before: ['a'], after: ['b']),
+          'It means hello.');
+      expect(asked.last,
+          allOf(contains('Before:\na'), contains('The line:\nHowdy'), contains('After:\nb')));
       expect(await tidyNoteText(ai.complete, 'um so like the cold', 'cold bad'), 'It means hello.');
       expect(asked.last, contains("The viewer's note:\ncold bad"));
     });
 
     test('notes are Markdown with their times', () {
       final notes = [
-        VideoNote(id: 1, video: 'v', at: const Duration(seconds: 65), quote: 'Batteries hate\nthe cold.', body: 'Keep it warm.', created: DateTime(2026)),
-        VideoNote(id: 2, video: 'v', at: const Duration(minutes: 2), body: 'Only a thought.', created: DateTime(2026)),
+        VideoNote(
+            id: 1,
+            video: 'v',
+            at: const Duration(seconds: 65),
+            quote: 'Batteries hate\nthe cold.',
+            body: 'Keep it warm.',
+            created: DateTime(2026)),
+        VideoNote(
+            id: 2,
+            video: 'v',
+            at: const Duration(minutes: 2),
+            body: 'Only a thought.',
+            created: DateTime(2026)),
       ];
-      expect(notesText('Talk', notes), '# Talk\n\n> [01:05] Batteries hate the cold.\n\nKeep it warm.\n\n[02:00]\n\nOnly a thought.');
+      expect(notesText('Talk', notes),
+          '# Talk\n\n> [01:05] Batteries hate the cold.\n\nKeep it warm.\n\n[02:00]\n\nOnly a thought.');
     });
 
-    test('translations into Chinese follow its style rules, other languages and own prompts do not', () {
+    test('translations into Chinese follow its style rules, other languages and own prompts do not',
+        () {
       final client = MockClient((_) async => _reply(''));
-      final built = AiTranslator(client, baseUrl: 'https://ai.example/v1', model: 'm', prompt: AiTranslator.promptPresets.first.text);
+      final built = AiTranslator(client,
+          baseUrl: 'https://ai.example/v1',
+          model: 'm',
+          prompt: AiTranslator.promptPresets.first.text);
       expect(built.systemPrompt('zh-CN', 1, const []), contains(AiTranslator.chineseStyle));
       expect(built.systemPrompt('zh-TW', 1, const []), contains(AiTranslator.chineseStyle));
       expect(built.systemPrompt('ja', 1, const []), isNot(contains(AiTranslator.chineseStyle)));
-      final own = AiTranslator(client, baseUrl: 'https://ai.example/v1', model: 'm', prompt: 'Translate into {target}.');
+      final own = AiTranslator(client,
+          baseUrl: 'https://ai.example/v1', model: 'm', prompt: 'Translate into {target}.');
       expect(own.systemPrompt('zh-CN', 1, const []), isNot(contains(AiTranslator.chineseStyle)));
     });
 
@@ -269,8 +325,12 @@ void main() {
         asked = (messages.last as Map)['content'] as String;
         return _reply('- [1:05] Setup');
       });
-      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
-      final chapters = [(start: Duration.zero, title: 'Intro'), (start: const Duration(seconds: 65), title: 'Setup')];
+      final ai =
+          AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final chapters = [
+        (start: Duration.zero, title: 'Intro'),
+        (start: const Duration(seconds: 65), title: 'Setup')
+      ];
       expect(canSummarizeDescription('short', const []), isFalse);
       expect(canSummarizeDescription('short', chapters), isTrue);
       final summary = await summarizeDescription(ai.complete, 'Title', 'About the video', chapters);
@@ -282,13 +342,16 @@ void main() {
     test('needs an AI service with its key, except a local one', () {
       final client = MockClient((_) async => _reply(''));
       expect(aiServiceFor(const TranslationConfig(), const {}, client), isNull);
-      expect(aiServiceFor(const TranslationConfig(), const {'ai@api.openai.com': 'k'}, client), isNotNull);
-      expect(aiServiceFor(const TranslationConfig(aiPreset: 'ollama'), const {}, client), isNotNull);
+      expect(aiServiceFor(const TranslationConfig(), const {'ai@api.openai.com': 'k'}, client),
+          isNotNull);
+      expect(
+          aiServiceFor(const TranslationConfig(aiPreset: 'ollama'), const {}, client), isNotNull);
     });
   });
 
   test('搜索评论 matches every word in the text or the author, ignoring case', () {
-    const comment = YoutubeComment(id: '1', author: '@Maria', text: 'Great Video about Rust and Flutter');
+    const comment =
+        YoutubeComment(id: '1', author: '@Maria', text: 'Great Video about Rust and Flutter');
     expect(commentMatches(comment, commentQueryWords('rust  FLUTTER')), isTrue);
     expect(commentMatches(comment, commentQueryWords('maria great')), isTrue);
     expect(commentMatches(comment, commentQueryWords('rust go')), isFalse);
@@ -301,10 +364,18 @@ void main() {
       const VideoItem(id: 'b', title: '', channel: '', url: '', duration: 1200),
     ];
     expect(playlistLength(items), '1 h 20 min in total');
-    expect(playlistLength([...items, const VideoItem(id: 'c', title: '', channel: '', url: '')]), 'At least 1 h 20 min');
+    expect(playlistLength([...items, const VideoItem(id: 'c', title: '', channel: '', url: '')]),
+        'At least 1 h 20 min');
     expect(playlistLength(items, partial: true), 'At least 1 h 20 min');
-    expect(playlistLength(items, progressOf: (id) => id == 'a' ? const WatchProgress(Duration(minutes: 50), Duration(hours: 1)) : null), '1 h 20 min in total · 30 min left');
-    expect(playlistLength(items, progressOf: (_) => const WatchProgress(Duration(hours: 1), Duration(hours: 1))), '1 h 20 min in total · all watched');
+    expect(
+        playlistLength(items,
+            progressOf: (id) =>
+                id == 'a' ? const WatchProgress(Duration(minutes: 50), Duration(hours: 1)) : null),
+        '1 h 20 min in total · 30 min left');
+    expect(
+        playlistLength(items,
+            progressOf: (_) => const WatchProgress(Duration(hours: 1), Duration(hours: 1))),
+        '1 h 20 min in total · all watched');
     expect(playlistLength(const []), isNull);
     // A playlist page works its view out again when the order changes.
     final view = playlistView('p', items, reversed: true);
@@ -332,7 +403,12 @@ void main() {
       ..ready = true
       ..preferences = const AppPreferences(focusHideHome: true);
     var searched = false;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () => searched = true)))));
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: VideoActions(
+                controller: controller,
+                child:
+                    HomeFeedPage(controller: controller, onFocusSearch: () => searched = true)))));
     expect(find.text('Focus mode'), findsOneWidget);
     expect(find.text('For you'), findsNothing);
     await tester.tap(find.text(Platform.isMacOS ? 'Search (⌘K)' : 'Search (Ctrl+K)'));

@@ -42,9 +42,23 @@ class ThemePreset {
   final DynamicSchemeVariant variant;
   final bool pureBlack;
 
-  bool isApplied(AppearanceSettings a) => a.skin.isEmpty && a.palette.isEmpty && !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+  bool isApplied(AppearanceSettings a) =>
+      a.skin.isEmpty &&
+      a.palette.isEmpty &&
+      !a.systemAccent &&
+      a.accentIndex < 0 &&
+      a.customAccent == seed &&
+      a.schemeVariant == variant &&
+      a.pureBlack == pureBlack;
 
-  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(skin: '', palette: '', systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(
+      skin: '',
+      palette: '',
+      systemAccent: false,
+      accentIndex: -1,
+      customAccent: seed,
+      schemeVariant: variant,
+      pureBlack: pureBlack);
 }
 
 const themePresets = [
@@ -148,14 +162,17 @@ String? cjkFormOf(String language) {
   final tag = language.toLowerCase().replaceAll('_', '-');
   if (tag == 'ja' || tag == 'jpn' || tag.startsWith('ja-')) return 'ja';
   if (tag == 'ko' || tag == 'kor' || tag.startsWith('ko-')) return 'ko';
-  if (RegExp(r'^zh-(hant|tw|hk|mo)\b').hasMatch(tag) || tag == 'yue' || tag.startsWith('yue-')) return 'zh-Hant';
+  if (RegExp(r'^zh-(hant|tw|hk|mo)\b').hasMatch(tag) || tag == 'yue' || tag.startsWith('yue-')) {
+    return 'zh-Hant';
+  }
   return null;
 }
 
 /// Whether [language] is Chinese in simplified characters.
 bool isSimplifiedChineseTag(String language) {
   final tag = language.toLowerCase().replaceAll('_', '-');
-  return (tag == 'zh' || tag == 'chi' || tag == 'zho' || tag.startsWith('zh-')) && cjkFormOf(tag) == null;
+  return (tag == 'zh' || tag == 'chi' || tag == 'zho' || tag.startsWith('zh-')) &&
+      cjkFormOf(tag) == null;
 }
 
 /// Downloaded faces (data packs) for Japanese, Korean or traditional
@@ -174,8 +191,16 @@ final downloadedScriptFamilies = <String>[];
 /// alike.
 List<String> fontFallback(String? family, [String? languageTag]) {
   final forms = cjkFormOf(languageTag ?? currentLanguage.tag);
-  if (family == bundledFont || forms == null) return downloadedScriptFamilies.isEmpty ? const [bundledFont, blankFont] : [bundledFont, ...downloadedScriptFamilies, blankFont];
-  return [if (downloadedCjkFamilies[forms] case final face?) face, ...downloadedScriptFamilies, blankFont];
+  if (family == bundledFont || forms == null) {
+    return downloadedScriptFamilies.isEmpty
+        ? const [bundledFont, blankFont]
+        : [bundledFont, ...downloadedScriptFamilies, blankFont];
+  }
+  return [
+    if (downloadedCjkFamilies[forms] case final face?) face,
+    ...downloadedScriptFamilies,
+    blankFont
+  ];
 }
 
 /// For text known to be in [language] (a subtitle line, a word being
@@ -197,7 +222,11 @@ TextStyle? languageStyle(String? language) {
     locale = Locale(forms ?? code);
   }
   final fallback = forms != null
-      ? [if (downloadedCjkFamilies[forms] case final face?) face, ...downloadedScriptFamilies, blankFont]
+      ? [
+          if (downloadedCjkFamilies[forms] case final face?) face,
+          ...downloadedScriptFamilies,
+          blankFont
+        ]
       : isSimplifiedChineseTag(tag)
           ? [bundledFont, ...downloadedScriptFamilies, blankFont]
           : fontFallback(null);
@@ -207,7 +236,10 @@ TextStyle? languageStyle(String? language) {
 /// Fonts offered in Settings: automatic, the bundled ones, then fonts that
 /// ship with Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[
-  (autoFont, tr('Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language')),
+  (
+    autoFont,
+    tr('Automatic (default): Inter, with Chinese, Japanese and Korean characters in the forms of the interface language')
+  ),
   (interFont, tr('Inter (built-in)')),
   (bundledFont, tr('Noto Sans CJK SC (built-in)')),
   (null, tr('System default')),
@@ -278,7 +310,8 @@ enum AppIcon {
 
 int _hour(Object? raw, int fallback) => raw is int && raw >= 0 && raw < 24 ? raw : fallback;
 
-T _byName<T extends Enum>(List<T> values, Object? name, T fallback) => values.where((v) => v.name == name).firstOrNull ?? fallback;
+T _byName<T extends Enum>(List<T> values, Object? name, T fallback) =>
+    values.where((v) => v.name == name).firstOrNull ?? fallback;
 
 class AppearanceSettings {
   const AppearanceSettings({
@@ -324,7 +357,8 @@ class AppearanceSettings {
 
   factory AppearanceSettings.fromJson(Object? raw) {
     if (raw is! Map) return const AppearanceSettings();
-    final mode = ThemeMode.values.where((m) => m.name == raw['themeMode']).firstOrNull ?? ThemeMode.system;
+    final mode =
+        ThemeMode.values.where((m) => m.name == raw['themeMode']).firstOrNull ?? ThemeMode.system;
     final index = raw['accentIndex'];
     final custom = raw['customAccent'];
     final font = raw['fontFamily']?.toString();
@@ -335,7 +369,8 @@ class AppearanceSettings {
       accentIndex: index is int && index >= -1 && index < accentChoices.length ? index : 0,
       customAccent: custom is int ? custom | 0xFF000000 : 0xFFE53935,
       systemAccent: raw['systemAccent'] == true,
-      schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
+      schemeVariant: _byName(
+          DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
       compact: raw['compact'] == true,
       watchHidesRail: raw['watchHidesRail'] == true,
@@ -351,7 +386,8 @@ class AppearanceSettings {
       motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),
       cardWidth: width is num ? width.toDouble().clamp(180, 420) : 250,
-      thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),
+      thumbnailQuality:
+          _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
@@ -362,10 +398,13 @@ class AppearanceSettings {
       },
       systemTitleBar: raw['systemTitleBar'] == true,
       hideTitleBar: raw['hideTitleBar'] == true,
-      glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
+      glassOpacity:
+          raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
       skinBackground: raw['skinBackground'] != false,
       windowGlass: raw['windowGlass'] == true,
-      windowGlassClarity: raw['windowGlassClarity'] is num ? (raw['windowGlassClarity'] as num).toDouble().clamp(0.0, 1.0) : 0.7,
+      windowGlassClarity: raw['windowGlassClarity'] is num
+          ? (raw['windowGlassClarity'] as num).toDouble().clamp(0.0, 1.0)
+          : 0.7,
       windowGlassWhole: raw['windowGlassWhole'] == true,
       windowGlassBlur: raw['windowGlassBlur'] != false,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
@@ -382,16 +421,21 @@ class AppearanceSettings {
   }
 
   final ThemeMode themeMode;
+
   /// An index into [accentChoices], or -1 for [customAccent].
   final int accentIndex;
   final int customAccent;
+
   /// Follow the Windows accent colour instead of the chosen one.
   final bool systemAccent;
   final DynamicSchemeVariant schemeVariant;
+
   /// True black backgrounds in dark mode.
   final bool pureBlack;
+
   /// Smaller rows, menus and fields, so more fits on screen.
   final bool compact;
+
   /// The side rail steps aside on the watch page, as YouTube's guide
   /// does; 剧场模式 always hides it.
   final bool watchHidesRail;
@@ -400,40 +444,53 @@ class AppearanceSettings {
   final PageTransition transition;
   final MotionPreference motion;
   final NavigationStyle navigation;
+
   /// The narrowest a video card may get before a column is dropped.
   final double cardWidth;
   final ThumbnailQuality thumbnailQuality;
   final bool darkWatchPage;
   final bool showStatusBar;
+
   /// The interface language; it applies after a restart.
   final AppLanguage language;
+
   /// A [Palette] id from lib/ui/palettes.dart, or '' for the neutral one.
   final String palette;
+
   /// A skin id (lib/skins), or '' for none. A skin sets the whole look and
   /// comes before [palette], the accent and the theme mode.
   final String skin;
+
   /// Under a skin with its own title bar: keep the system's instead.
   final bool systemTitleBar;
+
   /// Under a skin with a menu bar: no title bar; the window buttons sit in
   /// the menu bar.
   final bool hideTitleBar;
+
   /// Under a glass skin: how solid its panes are, 0.3 to 1.
   final double glassOpacity;
+
   /// Whether a skin's pictures and landscape lie behind the pages; off
   /// leaves its page colour alone.
   final bool skinBackground;
+
   /// 窗口透明: the desktop shows through the window, under any skin
   /// (lib/window_glass.dart). Not a skin's [glassOpacity], which makes its
   /// panes clearer over its own pictures.
   final bool windowGlass;
+
   /// How clear the glass is, 0 (solid) to 1 (as clear as words stay
   /// readable over anything behind).
   final double windowGlassClarity;
+
   /// The pages are glass too, not only the frame round them.
   final bool windowGlassWhole;
+
   /// The system blurs what is behind, where it can.
   final bool windowGlassBlur;
   final EyeCare eyeCare;
+
   /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
   /// temperature of the light, from 6040 K down to 1900 K
   /// ([kelvinOf], [warmthOf]).
@@ -443,13 +500,16 @@ class AppearanceSettings {
   /// white at 6500 K, a candle at 1900 K.
   static int kelvinOf(double warmth) => (6500 - warmth * 4600).round();
   static double warmthOf(int kelvin) => ((6500 - kelvin) / 4600).clamp(0.1, 1.0);
+
   /// [EyeCare.hours]: from this hour until [eyeCareEnd].
   final int eyeCareStart;
   final int eyeCareEnd;
   final DarkSchedule darkSchedule;
+
   /// [DarkSchedule.hours]: dark from this hour until [darkEnd].
   final int darkStart;
   final int darkEnd;
+
   /// 低占用模式: no animations, small thumbnails, no hover loading and a
   /// smaller image cache.
   final bool lowResource;
@@ -466,7 +526,8 @@ class AppearanceSettings {
     if (eyeCare == EyeCare.off) return 0;
     if (eyeCare == EyeCare.always) return warmth;
     if (eyeCare == EyeCare.sun) return warmth * (SunTimes.here.nightness(now) * 12).round() / 12;
-    final step = DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch ~/ _step.inMilliseconds * _step.inMilliseconds);
+    final step = DateTime.fromMillisecondsSinceEpoch(
+        now.millisecondsSinceEpoch ~/ _step.inMilliseconds * _step.inMilliseconds);
     var on = 0;
     for (var i = -6; i < 6; i++) {
       if (warmAt(step.add(_step * i + _step ~/ 2))) on++;
@@ -491,7 +552,8 @@ class AppearanceSettings {
       };
 
   /// The thumbnails asked for: the smallest in 低占用模式.
-  ThumbnailQuality get effectiveThumbnails => lowResource ? ThumbnailQuality.medium : thumbnailQuality;
+  ThumbnailQuality get effectiveThumbnails =>
+      lowResource ? ThumbnailQuality.medium : thumbnailQuality;
 
   /// Animations as chosen, none in 低占用模式.
   MotionPreference get effectiveMotion => lowResource ? MotionPreference.reduced : motion;
@@ -499,7 +561,11 @@ class AppearanceSettings {
   /// The chosen colour; [systemAccent] is resolved by the app.
   Color get accent => accentIndex < 0 ? Color(customAccent) : accentChoices[accentIndex].$2;
 
-  String get accentLabel => systemAccent ? tr('Follow Windows accent color') : accentIndex < 0 ? tr('Custom') : accentChoices[accentIndex].$1;
+  String get accentLabel => systemAccent
+      ? tr('Follow Windows accent color')
+      : accentIndex < 0
+          ? tr('Custom')
+          : accentChoices[accentIndex].$1;
 
   AppearanceSettings copyWith({
     ThemeMode? themeMode,
@@ -587,7 +653,8 @@ class AppearanceSettings {
   String? get font => fontFamily == autoFont ? interFont : fontFamily;
 
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition, palette, skin);
+  Object themeKey(Color seed) =>
+      (seed, schemeVariant, pureBlack, compact, font, transition, palette, skin);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -637,8 +704,10 @@ class AppearanceSettings {
 Future<Color?> readWindowsAccent() async {
   if (!Platform.isWindows) return null;
   try {
-    final result = await Process.run(windowsProgram(r'System32\reg.exe'), ['query', r'HKCU\Software\Microsoft\Windows\DWM', '/v', 'AccentColor']);
-    final match = RegExp(r'AccentColor\s+REG_DWORD\s+0x([0-9a-fA-F]+)').firstMatch('${result.stdout}');
+    final result = await Process.run(windowsProgram(r'System32\reg.exe'),
+        ['query', r'HKCU\Software\Microsoft\Windows\DWM', '/v', 'AccentColor']);
+    final match =
+        RegExp(r'AccentColor\s+REG_DWORD\s+0x([0-9a-fA-F]+)').firstMatch('${result.stdout}');
     if (match == null) return null;
     // Stored as 0xAABBGGRR.
     final abgr = int.parse(match[1]!, radix: 16);
@@ -649,7 +718,8 @@ Future<Color?> readWindowsAccent() async {
 }
 
 class AppearanceSettingsStore {
-  AppearanceSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}appearance.json');
+  AppearanceSettingsStore(AppDirectories directories)
+      : file = File('${directories.config.path}${Platform.pathSeparator}appearance.json');
   final File file;
 
   Future<AppearanceSettings> load() async {
@@ -671,4 +741,5 @@ class AppearanceSettingsStore {
 }
 
 /// The skin a colour scheme saved before 0.2.30 became: ricePaper → rice-paper.
-String paletteSkinId(String palette) => palette.replaceAllMapped(RegExp('[A-Z]'), (m) => '-${m[0]!.toLowerCase()}');
+String paletteSkinId(String palette) =>
+    palette.replaceAllMapped(RegExp('[A-Z]'), (m) => '-${m[0]!.toLowerCase()}');

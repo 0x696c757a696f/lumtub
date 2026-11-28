@@ -7,7 +7,8 @@ import '../thumbnail_cache.dart';
 /// `:face-blue-smiling:`, or a Unicode emoji YouTube sent a picture of)
 /// drawn as its picture, the size of the text. YouTube's own emoji that
 /// came without a picture take one seen before; see [EmojiPictures].
-List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, String> given, {TextStyle? style}) {
+List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, String> given,
+    {TextStyle? style}) {
   final emojis = EmojiPictures.fill(text, given);
   if (emojis.isEmpty) return [TextSpan(text: text, style: style)];
   final size = (style?.fontSize ?? DefaultTextStyle.of(context).style.fontSize ?? 14) * 1.4;
@@ -16,7 +17,9 @@ List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, Strin
   final spans = <InlineSpan>[];
   var start = 0;
   for (final match in pattern.allMatches(text)) {
-    if (match.start > start) spans.add(TextSpan(text: text.substring(start, match.start), style: style));
+    if (match.start > start) {
+      spans.add(TextSpan(text: text.substring(start, match.start), style: style));
+    }
     final name = match[0]!;
     spans.add(WidgetSpan(
       alignment: PlaceholderAlignment.middle,
@@ -45,7 +48,10 @@ RegExp emojiPattern(Iterable<String> names) {
   final key = names.join('\n');
   final kept = _patterns.remove(key);
   if (kept != null) return _patterns[key] = kept;
-  final sorted = [for (final name in names) if (name.isNotEmpty) name]..sort((a, b) => b.length.compareTo(a.length));
+  final sorted = [
+    for (final name in names)
+      if (name.isNotEmpty) name
+  ]..sort((a, b) => b.length.compareTo(a.length));
   if (_patterns.length >= 64) _patterns.remove(_patterns.keys.first);
   return _patterns[key] = RegExp(sorted.map(RegExp.escape).join('|'));
 }

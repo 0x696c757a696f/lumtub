@@ -6,7 +6,8 @@ import 'package:material_ui/material_ui.dart';
 void main() {
   tearDown(() => Motion.reduced = false);
 
-  Future<void Function()> pumpApp(WidgetTester tester, {bool Function()? instant, VoidCallback? onTap}) async {
+  Future<void Function()> pumpApp(WidgetTester tester,
+      {bool Function()? instant, VoidCallback? onTap}) async {
     var dark = false;
     late StateSetter update;
     await tester.pumpWidget(StatefulBuilder(builder: (context, setState) {
@@ -23,7 +24,8 @@ void main() {
     return () => update(() => dark = !dark);
   }
 
-  bool fading(WidgetTester tester) => ThemeCrossFade.fadingAt(tester.element(find.byType(ThemeCrossFade)));
+  bool fading(WidgetTester tester) =>
+      ThemeCrossFade.fadingAt(tester.element(find.byType(ThemeCrossFade)));
 
   testWidgets('the first frame shows the theme without a fade', (tester) async {
     await pumpApp(tester);

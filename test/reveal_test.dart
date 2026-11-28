@@ -7,11 +7,16 @@ import 'package:material_ui/material_ui.dart';
 /// A page that loads: a spinner, then its content.
 Widget _page({required bool loaded}) => MaterialApp(
       home: Scaffold(
-        body: loaded ? const Reveal(child: Text('content')) : const Center(child: CircularProgressIndicator()),
+        body: loaded
+            ? const Reveal(child: Text('content'))
+            : const Center(child: CircularProgressIndicator()),
       ),
     );
 
-double _opacity(WidgetTester tester, Finder finder) => tester.widget<FadeTransition>(find.ancestor(of: finder, matching: find.byType(FadeTransition)).first).opacity.value;
+double _opacity(WidgetTester tester, Finder finder) => tester
+    .widget<FadeTransition>(find.ancestor(of: finder, matching: find.byType(FadeTransition)).first)
+    .opacity
+    .value;
 
 void main() {
   tearDown(() => Motion.reduced = false);
@@ -26,7 +31,11 @@ void main() {
     final halfway = _opacity(tester, content);
     expect(halfway, greaterThan(0.5));
     expect(halfway, lessThan(1));
-    final scale = tester.widget<ScaleTransition>(find.ancestor(of: content, matching: find.byType(ScaleTransition)).first).scale.value;
+    final scale = tester
+        .widget<ScaleTransition>(
+            find.ancestor(of: content, matching: find.byType(ScaleTransition)).first)
+        .scale
+        .value;
     expect(scale, greaterThan(Reveal.scale));
     expect(scale, lessThan(1));
     await tester.pump(Ease.fade);
@@ -47,7 +56,8 @@ void main() {
   });
 
   testWidgets('content that comes with its page waits for no entrance of its own', (tester) async {
-    Widget area(String page) => MaterialApp(home: PageSwitcher(pageKey: page, child: Reveal(child: Text(page))));
+    Widget area(String page) =>
+        MaterialApp(home: PageSwitcher(pageKey: page, child: Reveal(child: Text(page))));
     await tester.pumpWidget(area('home'));
     await tester.pumpWidget(area('explore'));
     await tester.pump();
@@ -60,12 +70,14 @@ void main() {
   testWidgets('a sliver of results fades in as one', (tester) async {
     Widget list(bool loaded) => MaterialApp(
           home: CustomScrollView(slivers: [
-            if (loaded) SliverReveal(sliver: SliverList.list(children: const [Text('a'), Text('b')])),
+            if (loaded)
+              SliverReveal(sliver: SliverList.list(children: const [Text('a'), Text('b')])),
           ]),
         );
     await tester.pumpWidget(list(false));
     await tester.pumpWidget(list(true));
-    SliverFadeTransition fade() => tester.widget<SliverFadeTransition>(find.byType(SliverFadeTransition));
+    SliverFadeTransition fade() =>
+        tester.widget<SliverFadeTransition>(find.byType(SliverFadeTransition));
     expect(fade().opacity.value, 0);
     await tester.pump(const Duration(milliseconds: 100));
     expect(fade().opacity.value, inExclusiveRange(0, 1));

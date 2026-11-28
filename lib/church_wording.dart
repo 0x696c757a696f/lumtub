@@ -36,7 +36,8 @@ abstract final class ChurchWording {
 
   /// Whether Traditional Chinese is written the Hong Kong way: the
   /// interface or the system is in Hong Kong or Macau Chinese.
-  static bool Function() hongKong = () => currentLanguage.tag == 'zh-HK' || RegExp(r'^zh.*[-_](HK|MO)\b').hasMatch(Platform.localeName);
+  static bool Function() hongKong = () =>
+      currentLanguage.tag == 'zh-HK' || RegExp(r'^zh.*[-_](HK|MO)\b').hasMatch(Platform.localeName);
 
   /// The rite [about] (a title, channel name, description, post) speaks of,
   /// when it speaks of the Catholic Church at least as much as of any other
@@ -73,8 +74,10 @@ abstract final class ChurchWording {
 
   /// Channels whose page or name said they are Catholic, by id: the rite.
   static final _sure = <String, ChurchRite>{};
+
   /// Other channels' videos seen: [seen, Latin, Byzantine].
   static final _tallies = <String, List<int>>{};
+
   /// The videos counted since start, so one shown again is not counted
   /// again; what they counted as.
   static final _counted = <String, ChurchRite?>{};
@@ -91,12 +94,17 @@ abstract final class ChurchWording {
       if (saved is! Map) return;
       if (saved['sure'] case final Map<Object?, Object?> sure) {
         for (final MapEntry(:key, :value) in sure.entries) {
-          if (key is String && value is int && value >= 0 && value < ChurchRite.values.length) _sure.putIfAbsent(key, () => ChurchRite.values[value]);
+          if (key is String && value is int && value >= 0 && value < ChurchRite.values.length) {
+            _sure.putIfAbsent(key, () => ChurchRite.values[value]);
+          }
         }
       }
       if (saved['seen'] case final Map<Object?, Object?> seen) {
         for (final MapEntry(:key, :value) in seen.entries) {
-          if (key is String && value is List && value.length == 3 && value.every((n) => n is int && n >= 0)) {
+          if (key is String &&
+              value is List &&
+              value.length == 3 &&
+              value.every((n) => n is int && n >= 0)) {
             _tallies.putIfAbsent(key, () => [for (final n in value) n as int]);
           }
         }
@@ -161,7 +169,8 @@ abstract final class ChurchWording {
     });
   }
 
-  static bool isCatholicVideo(VideoItem item, {String? description}) => riteOfVideo(item, description: description) != null;
+  static bool isCatholicVideo(VideoItem item, {String? description}) =>
+      riteOfVideo(item, description: description) != null;
 
   /// lumtub_core's number for [target]'s Chinese and [rite]; null when
   /// [target] is not Chinese.
@@ -178,7 +187,8 @@ abstract final class ChurchWording {
 
   /// [translated] (of [original], when known) in Catholic wording when
   /// [rite] is set and [target] is Chinese; else as it is.
-  static String apply(String translated, String target, {required ChurchRite? rite, String original = ''}) {
+  static String apply(String translated, String target,
+      {required ChurchRite? rite, String original = ''}) {
     if (rite == null || translated.isEmpty) return translated;
     final int? variant;
     try {
@@ -195,7 +205,8 @@ abstract final class ChurchWording {
     }
     String out;
     try {
-      out = NativeCore.instance?.churchWords(translated, variant: variant, original: original) ?? translated;
+      out = NativeCore.instance?.churchWords(translated, variant: variant, original: original) ??
+          translated;
     } catch (_) {
       out = translated;
     }

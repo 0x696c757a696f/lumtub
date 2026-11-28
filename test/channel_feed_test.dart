@@ -12,7 +12,8 @@ void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
 
   test('builds the feed address from the channel id', () {
-    expect(ChannelFeed.feedUri(channel).toString(), 'https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw');
+    expect(ChannelFeed.feedUri(channel).toString(),
+        'https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw');
   });
 
   test('parses the entries of a channel feed', () {
@@ -53,13 +54,19 @@ void main() {
   });
 
   test('decodes numeric character references in titles', () {
-    const xml = '<feed><entry><yt:videoId>dQw4w9WgXcQ</yt:videoId><title>It&#8217;s &#x4E2D;&#25991;</title></entry></feed>';
+    const xml =
+        '<feed><entry><yt:videoId>dQw4w9WgXcQ</yt:videoId><title>It&#8217;s &#x4E2D;&#25991;</title></entry></feed>';
     final items = ChannelFeed.parse(xml, channel);
-    expect(items.single.title, NativeCore.instance?.library.providesSymbol('lumtub_channel_feed') ?? false ? 'It’s 中文' : isNotEmpty);
+    expect(
+        items.single.title,
+        NativeCore.instance?.library.providesSymbol('lumtub_channel_feed') ?? false
+            ? 'It’s 中文'
+            : isNotEmpty);
   });
 
   test('merges channel feeds newest first, undated last', () {
-    VideoItem video(String id, [DateTime? published]) => VideoItem(id: id, title: id, channel: '', url: '', published: published);
+    VideoItem video(String id, [DateTime? published]) =>
+        VideoItem(id: id, title: id, channel: '', url: '', published: published);
     final merged = LibraryController.mergeFeeds([
       [video('a', DateTime(2026)), video('b')],
       [video('c', DateTime(2026, 3)), video('a', DateTime(2026))],
@@ -68,7 +75,16 @@ void main() {
   });
 
   test('lists given videos before falling back to a search', () async {
-    final listing = VideoRepository('yt-dlp.exe').videosOr(() async => [const VideoItem(id: 'abcdefghijk', title: 'Related', channel: 'C', url: 'https://www.youtube.com/watch?v=abcdefghijk', duration: 90)], 'query');
+    final listing = VideoRepository('yt-dlp.exe').videosOr(
+        () async => [
+              const VideoItem(
+                  id: 'abcdefghijk',
+                  title: 'Related',
+                  channel: 'C',
+                  url: 'https://www.youtube.com/watch?v=abcdefghijk',
+                  duration: 90)
+            ],
+        'query');
     final items = (await listing.next(5).toList()).whereType<VideoItem>().toList();
     expect(items.map((i) => (i.id, i.title, i.duration)), [('abcdefghijk', 'Related', 90)]);
   });
@@ -77,14 +93,25 @@ void main() {
     final arguments = VideoRepository('yt-dlp.exe').listingArguments('${channel.url}/videos');
     expect(arguments, containsAllInOrder(['--flat-playlist', '--lazy-playlist', '--dump-json']));
     expect(arguments, isNot(contains('--playlist-items')));
-    expect(arguments.sublist(arguments.length - 2), ['--', 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos']);
+    expect(arguments.sublist(arguments.length - 2),
+        ['--', 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos']);
   });
 
   test('reads the channel id from yt-dlp entries', () {
-    final item = VideoItem.fromJson({'id': 'dQw4w9WgXcQ', 'title': 'x', 'channel': 'Rick Astley', 'channel_id': 'UCuAXFkgsw1L7xaCfnd5JJOw'});
+    final item = VideoItem.fromJson({
+      'id': 'dQw4w9WgXcQ',
+      'title': 'x',
+      'channel': 'Rick Astley',
+      'channel_id': 'UCuAXFkgsw1L7xaCfnd5JJOw'
+    });
     expect(item.channelRef, channel);
-    expect(VideoItem.fromJson({'id': 'dQw4w9WgXcQ', 'title': 'x', 'channel_id': 'bad'}).channelRef, isNull);
-    expect(const VideoItem(id: 'dQw4w9WgXcQ', title: 'x', channel: '', url: '').withChannel(channel).channel, 'Rick Astley');
+    expect(VideoItem.fromJson({'id': 'dQw4w9WgXcQ', 'title': 'x', 'channel_id': 'bad'}).channelRef,
+        isNull);
+    expect(
+        const VideoItem(id: 'dQw4w9WgXcQ', title: 'x', channel: '', url: '')
+            .withChannel(channel)
+            .channel,
+        'Rick Astley');
   });
 
   test('feeds are fetched a few at a time, results in order', () async {

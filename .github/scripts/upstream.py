@@ -189,7 +189,7 @@ def ios_libmpv(changes):
         return
     try:
         release = get(f"https://api.github.com/repos/{MEDIA_BUILDS}/releases/tags/{tag}")
-    except Exception:
+    except Exception:  # noqa: BLE001, a missing release skips this check.
         print(f"lumtub-media-builds has not released {tag} yet; skipped.")
         return
     assets = {a["name"]: a for a in release["assets"]}
@@ -332,7 +332,9 @@ def android_libmpv(changes):
             print(f"libmpv-android-video-build {tag} lacks a jar for {abis}; skipped.")
             return text
         for abi in abis:
-            md5 = hashlib.md5(get(urls[f"default-{abi}.jar"], raw=True)).hexdigest()
+            md5 = hashlib.md5(
+                get(urls[f"default-{abi}.jar"], raw=True), usedforsecurity=False
+            ).hexdigest()
             text = re.sub(
                 rf'^( *"{re.escape(abi)}": ")[0-9a-f]{{32}}(",)$',
                 rf"\g<1>{md5}\g<2>",
@@ -457,7 +459,7 @@ def vendored(notes):
         ours = re.search(r"^version: *([\d.]+)", text, re.M)[1]
         try:
             latest = get(f"https://pub.dev/api/packages/{name}")["latest"]["version"]
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001, a missing package skips it.
             print(f"pub.dev has no {name}: {e}")
             continue
         if version(latest) > version(ours):
@@ -472,7 +474,7 @@ def ios_only():
     changes = []
     try:
         ios_libmpv(changes)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001, one failed check must not stop the others.
         print(f"::warning::ios_libmpv: {e}")
     if changes:
         with open(os.path.join(TEMP, "upstream-commit.txt"), "w", encoding="utf-8") as f:
@@ -487,7 +489,7 @@ def main():
     for check in (mpv_prebuilt, angle_prebuilt, windows_mpv, ffmpeg, ffmpeg_prebuilt, appimagetool):
         try:
             text = check(text, changes)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001, one failed check must not stop the others.
             print(f"::warning::{check.__name__}: {e}")
     if changes:
         with open(BUILD, "w", encoding="utf-8") as f:
@@ -495,11 +497,11 @@ def main():
     for check in (android_libmpv, mpvkit, ios_libmpv):
         try:
             check(changes)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001, one failed check must not stop the others.
             print(f"::warning::{check.__name__}: {e}")
     try:
         ios_python(changes, notes)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001, one failed check must not stop the others.
         print(f"::warning::ios_python: {e}")
     vendored(notes)
     if changes:

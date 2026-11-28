@@ -10,7 +10,8 @@ import 'language_guess.dart';
 /// [youtube] is the `tlang` YouTube's auto-translated captions use; [tags]
 /// are every tag a subtitle in it may carry.
 class TranslationLanguage {
-  const TranslationLanguage(this.code, this._label, [String? youtube, this._aliases = const []]) : youtube = youtube ?? code;
+  const TranslationLanguage(this.code, this._label, [String? youtube, this._aliases = const []])
+      : youtube = youtube ?? code;
   final String code;
   final String youtube;
   final String _label;
@@ -113,10 +114,12 @@ class TranslationLanguage {
   ];
 
   /// The language for a saved [code], else simplified Chinese.
-  static TranslationLanguage byCode(Object? code) => all.firstWhere((l) => l.code == code, orElse: () => all.first);
+  static TranslationLanguage byCode(Object? code) =>
+      all.firstWhere((l) => l.code == code, orElse: () => all.first);
 
   /// The language for a saved [code]; null for none or an unknown one.
-  static TranslationLanguage? maybeByCode(Object? code) => all.where((l) => l.code == code).firstOrNull;
+  static TranslationLanguage? maybeByCode(Object? code) =>
+      all.where((l) => l.code == code).firstOrNull;
 
   /// The language a language [tag] (an interface language's, Windows' or a
   /// subtitle's) names; Chinese by script, null when none is.
@@ -156,7 +159,9 @@ class TranslationException implements Exception {
 
   /// The service's answer to too many requests (429): the same request may
   /// go through after a pause.
-  factory TranslationException.busy() => TranslationException(tr('Too many translation requests. Please try again later.'), busy: true);
+  factory TranslationException.busy() =>
+      TranslationException(tr('Too many translation requests. Please try again later.'),
+          busy: true);
 
   final String message;
   final bool busy;
@@ -215,7 +220,8 @@ class GoogleTranslator implements Translator {
     return target != 'en' && _latin(text) && !looksLike(text, target) ? 'en' : null;
   }
 
-  static bool _unchanged(String a, String b) => a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();
+  static bool _unchanged(String a, String b) =>
+      a.replaceAll(RegExp(r'\s+'), ' ').trim() == b.replaceAll(RegExp(r'\s+'), ' ').trim();
 
   /// Mostly Latin letters, as English is written.
   static bool _latin(String text) {
@@ -235,7 +241,12 @@ class GoogleTranslator implements Translator {
   /// request fails at once, so another service can take it.
   static bool get coolingDown => DateTime.now().isBefore(_coolUntil);
   static const _spacing = Duration(milliseconds: 300);
-  static const _cooldowns = [Duration(seconds: 5), Duration(seconds: 15), Duration(seconds: 45), Duration(minutes: 2)];
+  static const _cooldowns = [
+    Duration(seconds: 5),
+    Duration(seconds: 15),
+    Duration(seconds: 45),
+    Duration(minutes: 2)
+  ];
 
   /// Forgets earlier refusals and spacing, for tests.
   static void resetPacing() {
@@ -261,7 +272,8 @@ class GoogleTranslator implements Translator {
   }
 
   Future<String> _ask(String chunk, String target, String source) async {
-    final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': source, 'tl': target, 'dt': 't', 'q': chunk});
+    final uri = Uri.https('translate.googleapis.com', '/translate_a/single',
+        {'client': 'gtx', 'sl': source, 'tl': target, 'dt': 't', 'q': chunk});
     if (coolingDown) throw TranslationException.busy();
     try {
       await _turn();
@@ -271,7 +283,10 @@ class GoogleTranslator implements Translator {
         throw TranslationException.busy();
       }
       _refusals = 0;
-      if (response.statusCode != 200) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+      if (response.statusCode != 200) {
+        throw TranslationException(
+            tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
+      }
       return parseResponse(utf8.decode(response.bodyBytes));
     } on TranslationException {
       rethrow;
@@ -285,7 +300,11 @@ class GoogleTranslator implements Translator {
     try {
       final data = jsonDecode(body);
       if (data is List && data.isNotEmpty && data.first is List) {
-        return [for (final segment in data.first as List) if (segment is List && segment.isNotEmpty && segment.first is String) segment.first as String].join();
+        return [
+          for (final segment in data.first as List)
+            if (segment is List && segment.isNotEmpty && segment.first is String)
+              segment.first as String
+        ].join();
       }
     } on FormatException {
       // Falls through to the error below.
@@ -314,14 +333,19 @@ class GoogleTranslator implements Translator {
 /// comment written in two languages gets its foreign half translated
 /// instead of coming back unchanged. [isTarget] tells which lines are.
 /// Lines are sent together in one request.
-Future<String> translateForeignLines(Translator translator, String text, String target, bool Function(String line) isTarget) async {
+Future<String> translateForeignLines(
+    Translator translator, String text, String target, bool Function(String line) isTarget) async {
   final lines = text.split('\n');
   final foreign = [
     for (final (i, line) in lines.indexed)
       if (line.trim().isNotEmpty && !isTarget(line)) i,
   ];
-  if (foreign.isEmpty || foreign.length == lines.where((l) => l.trim().isNotEmpty).length) return translator.translate(text, target);
-  final translated = (await translator.translate([for (final i in foreign) lines[i]].join('\n'), target)).split('\n');
+  if (foreign.isEmpty || foreign.length == lines.where((l) => l.trim().isNotEmpty).length) {
+    return translator.translate(text, target);
+  }
+  final translated =
+      (await translator.translate([for (final i in foreign) lines[i]].join('\n'), target))
+          .split('\n');
   final out = [...lines];
   if (translated.length == foreign.length) {
     for (final (k, i) in foreign.indexed) {

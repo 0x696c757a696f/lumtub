@@ -37,6 +37,7 @@ class AccountController extends ChangeNotifier {
 
   /// The user's own OAuth client, when they entered one in settings.
   final File clientFile;
+
   /// The refresh token and account name, encrypted for this Windows user.
   final SecureJsonFile credentials;
   final LibraryController library;
@@ -47,13 +48,16 @@ class AccountController extends ChangeNotifier {
   AccountState state = AccountState.signedOut;
   OAuthClientConfig? customClient;
   String? name;
+
   /// The account's channel picture, an https address.
   String? avatar;
   DateTime? lastSync;
   bool syncing = false;
   String? error;
+
   /// The scopes of the sign-in; older sign-ins were read-only.
   String? scope;
+
   /// The account's "liked videos" playlist.
   String? likesPlaylist;
 
@@ -62,7 +66,8 @@ class AccountController extends ChangeNotifier {
   GoogleAuth? _auth;
 
   /// The client in use: the user's own, else the one built into this copy.
-  OAuthClientConfig? get client => customClient ?? (OAuthClientConfig.builtIn.isValid ? OAuthClientConfig.builtIn : null);
+  OAuthClientConfig? get client =>
+      customClient ?? (OAuthClientConfig.builtIn.isValid ? OAuthClientConfig.builtIn : null);
 
   /// Signed in with Google.
   bool get signedIn => state == AccountState.signedIn;
@@ -124,7 +129,9 @@ class AccountController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      if (await clientFile.exists()) customClient = OAuthClientConfig.fromJson(jsonDecode(await clientFile.readAsString()));
+      if (await clientFile.exists()) {
+        customClient = OAuthClientConfig.fromJson(jsonDecode(await clientFile.readAsString()));
+      }
     } catch (_) {
       customClient = null;
     }
@@ -164,7 +171,9 @@ class AccountController extends ChangeNotifier {
     notifyListeners();
     try {
       final tokens = await auth.signIn();
-      if (tokens.refreshToken == null) throw OAuthException(tr("Google didn't return long-term credentials. Please try again."));
+      if (tokens.refreshToken == null) {
+        throw OAuthException(tr("Google didn't return long-term credentials. Please try again."));
+      }
       _tokens = tokens;
       _refreshToken = tokens.refreshToken;
       scope = tokens.scope ?? youtubeScope;
@@ -237,15 +246,21 @@ class AccountController extends ChangeNotifier {
       likesPlaylist = likesId;
       final remote = await api.playlists();
       final mirrored = <String, ({String name, List<VideoItem> items})>{};
-      if (likesId != null) mirrored[likesId] = (name: tr('Liked videos'), items: await api.playlistItems(likesId));
+      if (likesId != null) {
+        mirrored[likesId] = (name: tr('Liked videos'), items: await api.playlistItems(likesId));
+      }
       for (final playlist in remote) {
-        mirrored[playlist.id] = (name: playlist.title, items: playlist.count == 0 ? const [] : await api.playlistItems(playlist.id));
+        mirrored[playlist.id] = (
+          name: playlist.title,
+          items: playlist.count == 0 ? const [] : await api.playlistItems(playlist.id)
+        );
       }
       library.mirrorRemotePlaylists(mirrored);
       lastSync = DateTime.now();
       if (!web) await _save();
       logInfo('YouTube sync done: ${channels.length} subscriptions, ${mirrored.length} playlists');
-      notice(tr('Sync complete: {0} subscriptions ({1} new), {2} playlists', [channels.length, added, mirrored.length]));
+      notice(tr('Sync complete: {0} subscriptions ({1} new), {2} playlists',
+          [channels.length, added, mirrored.length]));
     } catch (e) {
       logError('YouTube sync failed', e);
       if (!(e is OAuthException && e.revoked)) error = '$e';
@@ -267,7 +282,11 @@ class AccountController extends ChangeNotifier {
   List<VideoItem> get likedVideos {
     final id = likesPlaylist;
     if (id == null) return const [];
-    return library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}$id').firstOrNull?.items ?? const [];
+    return library.playlists
+            .where((p) => p.id == '${LibraryController.remotePrefix}$id')
+            .firstOrNull
+            ?.items ??
+        const [];
   }
 
   final _ratings = <String, VideoRating>{};
@@ -330,7 +349,8 @@ class AccountController extends ChangeNotifier {
   void _mirrorLike(VideoItem item, bool liked) {
     final id = likesPlaylist;
     if (id == null) return;
-    final playlist = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}$id').firstOrNull;
+    final playlist =
+        library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}$id').firstOrNull;
     if (playlist == null) return;
     final others = playlist.items.where((v) => v.id != item.id).toList();
     library.mirrorRemotePlaylist(id, playlist.name, liked ? [item, ...others] : others);
@@ -340,7 +360,12 @@ class AccountController extends ChangeNotifier {
   /// whether it was posted. The browser sign-in writes in the comment box
   /// the comments page named: [createParams] for the video's,
   /// [replyParams] for the comment's.
-  Future<bool> postComment({required String videoId, required String text, String? parentId, String? createParams, String? replyParams}) async {
+  Future<bool> postComment(
+      {required String videoId,
+      required String text,
+      String? parentId,
+      String? createParams,
+      String? replyParams}) async {
     if (!_writable() || text.trim().isEmpty) return false;
     final params = parentId == null ? createParams : replyParams;
     try {
@@ -379,8 +404,11 @@ class AccountController extends ChangeNotifier {
       final api = _actor;
       final target = playlist ?? await api.createPlaylist(newTitle!.trim());
       await api.addToPlaylist(target.id, item.id);
-      final local = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}${target.id}').firstOrNull;
-      library.mirrorRemotePlaylist(target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
+      final local = library.playlists
+          .where((p) => p.id == '${LibraryController.remotePrefix}${target.id}')
+          .firstOrNull;
+      library.mirrorRemotePlaylist(
+          target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
       notice(tr('Saved to YouTube playlist "{0}"', [target.title]));
     } catch (e) {
       _failed(tr('Save failed'), e);
@@ -427,8 +455,11 @@ class AccountController extends ChangeNotifier {
       return false;
     }
     try {
-      final moved = await WebAccountApi(web!).reorderPlaylist(playlistId, [for (final item in items) item.id]);
-      notice(moved == 0 ? tr('The order on YouTube is already the same') : tr('Order saved on YouTube ({0} videos moved)', [moved]));
+      final moved = await WebAccountApi(web!)
+          .reorderPlaylist(playlistId, [for (final item in items) item.id]);
+      notice(moved == 0
+          ? tr('The order on YouTube is already the same')
+          : tr('Order saved on YouTube ({0} videos moved)', [moved]));
       return true;
     } catch (e) {
       _failed(tr("Couldn't change the order on YouTube"), e);
@@ -446,13 +477,17 @@ class AccountController extends ChangeNotifier {
         await _actor.unsubscribe(channel.id);
       }
     } catch (e) {
-      _failed(subscribed ? tr('YouTube subscription failed') : tr("Couldn't unsubscribe on YouTube"), e);
+      _failed(
+          subscribed ? tr('YouTube subscription failed') : tr("Couldn't unsubscribe on YouTube"),
+          e);
     }
   }
 
   bool _writable() {
     if (canAct) return true;
-    notice(signedIn ? tr('Sign in to Google again to grant permissions for likes, comments and more') : tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    notice(signedIn
+        ? tr('Sign in to Google again to grant permissions for likes, comments and more')
+        : tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
     return false;
   }
 
@@ -472,7 +507,9 @@ class AccountController extends ChangeNotifier {
     if (tokens != null && !tokens.expired) return tokens.accessToken;
     final refreshToken = _refreshToken;
     final config = client;
-    if (refreshToken == null || config == null) throw OAuthException(tr('Sign in to your Google account first'));
+    if (refreshToken == null || config == null) {
+      throw OAuthException(tr('Sign in to your Google account first'));
+    }
     try {
       final fresh = await GoogleAuth(config, _client).refresh(refreshToken);
       _tokens = fresh;

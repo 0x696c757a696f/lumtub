@@ -22,7 +22,11 @@ const defaultMediaReceiverId = 'CC1AD845';
 
 /// One CastMessage with a string payload.
 class CastMessage {
-  const CastMessage({required this.source, required this.destination, required this.namespace, required this.payload});
+  const CastMessage(
+      {required this.source,
+      required this.destination,
+      required this.namespace,
+      required this.payload});
   final String source;
   final String destination;
   final String namespace;
@@ -81,20 +85,27 @@ Uint8List frameCastMessage(CastMessage message) {
 CastMessage _message(Object? json) {
   if (json is! Map) throw const FormatException('bad message');
   if (json['error'] case final String error) throw FormatException(error);
-  return CastMessage(source: '${json['source'] ?? ''}', destination: '${json['destination'] ?? ''}', namespace: '${json['namespace'] ?? ''}', payload: '${json['payload'] ?? ''}');
+  return CastMessage(
+      source: '${json['source'] ?? ''}',
+      destination: '${json['destination'] ?? ''}',
+      namespace: '${json['namespace'] ?? ''}',
+      payload: '${json['payload'] ?? ''}');
 }
 
 /// Reads a CastMessage in the core; fields it does not use are skipped.
 /// Throws [FormatException] on a malformed one.
-CastMessage decodeCastMessage(Uint8List bytes) => _message(readInCore('lumtub_cast_message', bytes));
+CastMessage decodeCastMessage(Uint8List bytes) =>
+    _message(readInCore('lumtub_cast_message', bytes));
 
 /// Splits the bytes of a socket into the messages they frame, in the core.
 /// The core is asked only once a whole frame has come, so a message sent
 /// in small pieces is not copied over again for each.
 class CastFrameReader {
   final _bytes = BytesBuilder(copy: false);
+
   /// The first bytes of the frame being read, up to its 4-byte length.
   final _head = <int>[];
+
   /// The core's `MAX_CAST_MESSAGE`: a longer frame is its error to give.
   static const _maxMessage = 1 << 20;
 
@@ -122,12 +133,18 @@ class CastFrameReader {
 }
 
 /// The receiver app named [appId] in a RECEIVER_STATUS payload.
-({String transportId, String sessionId})? parseReceiverApp(Map<String, dynamic> json, String appId) {
+({String transportId, String sessionId})? parseReceiverApp(
+    Map<String, dynamic> json, String appId) {
   final status = json['status'];
   final apps = status is Map<String, Object?> ? status['applications'] : null;
   if (apps is! List) return null;
   for (final app in apps.whereType<Map<String, Object?>>()) {
-    if (app case {'appId': final String id, 'transportId': final String transportId, 'sessionId': final String sessionId} when id == appId) {
+    if (app
+        case {
+          'appId': final String id,
+          'transportId': final String transportId,
+          'sessionId': final String sessionId
+        } when id == appId) {
       return (transportId: transportId, sessionId: sessionId);
     }
   }
@@ -151,11 +168,15 @@ MediaStatus? parseMediaStatus(Map<String, dynamic> json) {
     'BUFFERING' => CastState.loading,
     _ => CastState.stopped,
   };
-  Duration seconds(Object? value) => value is num ? Duration(milliseconds: (value * 1000).round()) : Duration.zero;
+  Duration seconds(Object? value) =>
+      value is num ? Duration(milliseconds: (value * 1000).round()) : Duration.zero;
   final media = entry['media'];
   return MediaStatus(
     sessionId: (entry['mediaSessionId'] as num?)?.toInt() ?? 0,
-    status: CastStatus(state: state, position: seconds(entry['currentTime']), duration: media is Map ? seconds(media['duration']) : Duration.zero),
+    status: CastStatus(
+        state: state,
+        position: seconds(entry['currentTime']),
+        duration: media is Map ? seconds(media['duration']) : Duration.zero),
   );
 }
 
@@ -166,13 +187,21 @@ Future<Socket> _secureConnect(InternetAddress host, int port) =>
     // Chromecasts present a self-signed certificate; it is accepted for
     // this connection only.
     // security-lint: allow tls-bypass (a Chromecast's certificate is self-signed and chains to no public root)
-    SecureSocket.connect(host, port, onBadCertificate: (_) => true, timeout: const Duration(seconds: 6));
+    SecureSocket.connect(host, port,
+        onBadCertificate: (_) => true, timeout: const Duration(seconds: 6));
 
 /// A Chromecast, driven through the Default Media Receiver.
 class ChromecastDevice implements CastDevice {
-  ChromecastDevice({required this.id, required this.name, required this.address, this.port = 8009, CastConnector? connector}) : _connector = connector ?? _secureConnect;
+  ChromecastDevice(
+      {required this.id,
+      required this.name,
+      required this.address,
+      this.port = 8009,
+      CastConnector? connector})
+      : _connector = connector ?? _secureConnect;
 
-  factory ChromecastDevice.fromService(MdnsService service) => ChromecastDevice(id: service.id, name: service.name, address: service.host, port: service.port);
+  factory ChromecastDevice.fromService(MdnsService service) => ChromecastDevice(
+      id: service.id, name: service.name, address: service.host, port: service.port);
 
   @override
   final String id;
@@ -215,7 +244,8 @@ class ChromecastDevice implements CastDevice {
     _socket = socket;
     socket.listen(_onData, onError: (_) => _lost(), onDone: _lost, cancelOnError: true);
     _send(castConnectionNamespace, 'receiver-0', {'type': 'CONNECT'});
-    _heartbeat = Timer.periodic(const Duration(seconds: 5), (_) => _send(castHeartbeatNamespace, 'receiver-0', {'type': 'PING'}));
+    _heartbeat = Timer.periodic(const Duration(seconds: 5),
+        (_) => _send(castHeartbeatNamespace, 'receiver-0', {'type': 'PING'}));
   }
 
   void _lost() {
@@ -226,7 +256,9 @@ class ChromecastDevice implements CastDevice {
       if (!waiting.isCompleted) waiting.completeError(const CastException('connection lost'));
     }
     _pending.clear();
-    if (_launch case final launch? when !launch.isCompleted) launch.completeError(const CastException('connection lost'));
+    if (_launch case final launch? when !launch.isCompleted) {
+      launch.completeError(const CastException('connection lost'));
+    }
   }
 
   void _onData(List<int> data) {
@@ -249,11 +281,18 @@ class ChromecastDevice implements CastDevice {
         case 'PING':
           _send(castHeartbeatNamespace, message.source, {'type': 'PONG'});
         case 'RECEIVER_STATUS':
-          if (parseReceiverApp(json, defaultMediaReceiverId) case final app? when _launch?.isCompleted == false) _launch!.complete(app);
+          if (parseReceiverApp(json, defaultMediaReceiverId) case final app?
+              when _launch?.isCompleted == false) {
+            _launch!.complete(app);
+          }
         case 'LAUNCH_ERROR':
-          if (_launch case final launch? when !launch.isCompleted) launch.completeError(CastException('${json['reason'] ?? 'launch failed'}'));
+          if (_launch case final launch? when !launch.isCompleted) {
+            launch.completeError(CastException('${json['reason'] ?? 'launch failed'}'));
+          }
         case 'MEDIA_STATUS':
-          if (parseMediaStatus(json) case final media? when media.sessionId != 0) _mediaSessionId = media.sessionId;
+          if (parseMediaStatus(json) case final media? when media.sessionId != 0) {
+            _mediaSessionId = media.sessionId;
+          }
       }
       final id = json['requestId'];
       if (id is int && id != 0) _pending.remove(id)?.complete(json);
@@ -261,10 +300,16 @@ class ChromecastDevice implements CastDevice {
   }
 
   void _send(String namespace, String destination, Map<String, Object?> payload) {
-    _socket?.add(frameCastMessage(CastMessage(source: _sender, destination: destination, namespace: namespace, payload: jsonEncode(payload))));
+    _socket?.add(frameCastMessage(CastMessage(
+        source: _sender,
+        destination: destination,
+        namespace: namespace,
+        payload: jsonEncode(payload))));
   }
 
-  Future<Map<String, dynamic>> _request(String namespace, String destination, Map<String, Object?> payload, {Duration timeout = const Duration(seconds: 10)}) {
+  Future<Map<String, dynamic>> _request(
+      String namespace, String destination, Map<String, Object?> payload,
+      {Duration timeout = const Duration(seconds: 10)}) {
     if (_socket == null) return Future.error(const CastException('connection lost'));
     final id = ++_requestId;
     final completer = _pending[id] = Completer();
@@ -280,36 +325,45 @@ class ChromecastDevice implements CastDevice {
     await _connect();
     try {
       final launch = _launch = Completer();
-      _send(castReceiverNamespace, 'receiver-0', {'type': 'LAUNCH', 'appId': defaultMediaReceiverId, 'requestId': ++_requestId});
-      final app = await launch.future.timeout(const Duration(seconds: 15), onTimeout: () => throw const CastException('timed out'));
+      _send(castReceiverNamespace, 'receiver-0',
+          {'type': 'LAUNCH', 'appId': defaultMediaReceiverId, 'requestId': ++_requestId});
+      final app = await launch.future.timeout(const Duration(seconds: 15),
+          onTimeout: () => throw const CastException('timed out'));
       _transportId = app.transportId;
       _sessionId = app.sessionId;
       _send(castConnectionNamespace, app.transportId, {'type': 'CONNECT'});
-      final reply = await _request(castMediaNamespace, app.transportId, {
-        'type': 'LOAD',
-        'autoplay': true,
-        'currentTime': media.start.inMilliseconds / 1000,
-        'media': {
-          'contentId': media.url,
-          'contentType': media.mime,
-          'streamType': 'BUFFERED',
-          'metadata': {'metadataType': 0, 'title': media.title},
-          if (media.subtitles case final subtitles?)
-            'tracks': [
-              {
-                'trackId': 1,
-                'type': 'TEXT',
-                'subtype': 'SUBTITLES',
-                'trackContentId': subtitles.vtt,
-                'trackContentType': 'text/vtt',
-                'name': media.title,
-                if (subtitles.language case final language?) 'language': language,
-              },
-            ],
-        },
-        if (media.subtitles != null) 'activeTrackIds': [1],
-      }, timeout: const Duration(seconds: 20));
-      if (reply['type'] != 'MEDIA_STATUS') throw CastException('${reply['type']}${reply['reason'] != null ? ': ${reply['reason']}' : ''}');
+      final reply = await _request(
+          castMediaNamespace,
+          app.transportId,
+          {
+            'type': 'LOAD',
+            'autoplay': true,
+            'currentTime': media.start.inMilliseconds / 1000,
+            'media': {
+              'contentId': media.url,
+              'contentType': media.mime,
+              'streamType': 'BUFFERED',
+              'metadata': {'metadataType': 0, 'title': media.title},
+              if (media.subtitles case final subtitles?)
+                'tracks': [
+                  {
+                    'trackId': 1,
+                    'type': 'TEXT',
+                    'subtype': 'SUBTITLES',
+                    'trackContentId': subtitles.vtt,
+                    'trackContentType': 'text/vtt',
+                    'name': media.title,
+                    if (subtitles.language case final language?) 'language': language,
+                  },
+                ],
+            },
+            if (media.subtitles != null) 'activeTrackIds': [1],
+          },
+          timeout: const Duration(seconds: 20));
+      if (reply['type'] != 'MEDIA_STATUS') {
+        throw CastException(
+            '${reply['type']}${reply['reason'] != null ? ': ${reply['reason']}' : ''}');
+      }
       final status = parseMediaStatus(reply);
       if (status != null) {
         _mediaSessionId = status.sessionId;
@@ -325,8 +379,11 @@ class ChromecastDevice implements CastDevice {
     final transport = _transportId;
     final session = _mediaSessionId;
     if (transport == null || session == null) throw const CastException('nothing is playing');
-    final reply = await _request(castMediaNamespace, transport, {'type': type, 'mediaSessionId': session, ...extra});
-    if (reply['type'] == 'INVALID_REQUEST' || reply['type'] == 'INVALID_PLAYER_STATE') throw CastException('${reply['reason'] ?? reply['type']}');
+    final reply = await _request(
+        castMediaNamespace, transport, {'type': type, 'mediaSessionId': session, ...extra});
+    if (reply['type'] == 'INVALID_REQUEST' || reply['type'] == 'INVALID_PLAYER_STATE') {
+      throw CastException('${reply['reason'] ?? reply['type']}');
+    }
   }
 
   @override
@@ -334,13 +391,15 @@ class ChromecastDevice implements CastDevice {
   @override
   Future<void> pause() => _control('PAUSE');
   @override
-  Future<void> seek(Duration position) => _control('SEEK', {'currentTime': position.inMilliseconds / 1000});
+  Future<void> seek(Duration position) =>
+      _control('SEEK', {'currentTime': position.inMilliseconds / 1000});
 
   @override
   Future<void> stop() async {
     try {
       if (_sessionId case final session?) {
-        await _request(castReceiverNamespace, 'receiver-0', {'type': 'STOP', 'sessionId': session}, timeout: const Duration(seconds: 3));
+        await _request(castReceiverNamespace, 'receiver-0', {'type': 'STOP', 'sessionId': session},
+            timeout: const Duration(seconds: 3));
       }
     } on CastException catch (e) {
       logWarn('Chromecast stop failed: $e');
@@ -354,12 +413,14 @@ class ChromecastDevice implements CastDevice {
     final transport = _transportId;
     if (transport == null) return null;
     try {
-      final reply = await _request(castMediaNamespace, transport, {'type': 'GET_STATUS'}, timeout: const Duration(seconds: 4));
+      final reply = await _request(castMediaNamespace, transport, {'type': 'GET_STATUS'},
+          timeout: const Duration(seconds: 4));
       final media = parseMediaStatus(reply);
       if (media == null) return const CastStatus(state: CastState.stopped);
       _mediaSessionId = media.sessionId;
       if (media.status.duration > Duration.zero) _duration = media.status.duration;
-      return CastStatus(state: media.status.state, position: media.status.position, duration: _duration);
+      return CastStatus(
+          state: media.status.state, position: media.status.position, duration: _duration);
     } on CastException {
       return null;
     }

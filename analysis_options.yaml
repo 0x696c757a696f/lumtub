@@ -1,5 +1,9 @@
 include: package:flutter_lints/flutter.yaml
 
+# `dart format lib test`; Checks fails on any change it would make.
+formatter:
+  page_width: 100
+
 analyzer:
   exclude:
     - vendor/**

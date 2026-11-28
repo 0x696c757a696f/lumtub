@@ -6,7 +6,8 @@ import 'package:lumtub/app/video_list_loader.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/video_repository.dart';
 
-String _video(int i) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
+String _video(int i) =>
+    jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
 
 /// A source that records how many lines were read from it.
 class _Source {
@@ -70,7 +71,8 @@ void main() {
     var calls = 0;
     final loader = VideoListLoader(() {
       calls++;
-      return Listing(() => calls == 1 ? Stream.error(StateError('offline')) : Stream.value(_video(1)));
+      return Listing(
+          () => calls == 1 ? Stream.error(StateError('offline')) : Stream.value(_video(1)));
     });
     addTearDown(loader.dispose);
 
@@ -112,8 +114,15 @@ void main() {
     expect(loader.hasMore, isFalse);
   });
 
-  test('channels count for nothing towards a strict filter, and a source failing part way is not an empty list', () async {
-    String channel(int i) => jsonEncode({'_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'UC${i.toString().padLeft(22, 'x')}', 'title': 'c$i'});
+  test(
+      'channels count for nothing towards a strict filter, and a source failing part way is not an empty list',
+      () async {
+    String channel(int i) => jsonEncode({
+          '_type': 'url',
+          'ie_key': 'YoutubeTab',
+          'id': 'UC${i.toString().padLeft(22, 'x')}',
+          'title': 'c$i'
+        });
     final loader = VideoListLoader(
       () => Listing(() async* {
         for (var i = 0; i < 6; i++) {
@@ -130,7 +139,8 @@ void main() {
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();
-    expect(loader.items.map((v) => v.title), ['2'], reason: 'pages of channels alone are read past');
+    expect(loader.items.map((v) => v.title), ['2'],
+        reason: 'pages of channels alone are read past');
     final strict = VideoListLoader(
       () => Listing(() async* {
         yield _video(1);
@@ -148,11 +158,19 @@ void main() {
 
   test('keeps channels apart from videos', () async {
     final channel = jsonEncode({
-      '_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'UCsXVk37bltHxD1rDPwtNM8Q', 'title': 'Kurzgesagt',
-      'channel_follower_count': 24000000, 'uploader_id': '@kurzgesagt',
-      'thumbnails': [{'url': '//yt3.ggpht.com/a=s88'}, {'url': '//yt3.ggpht.com/a=s176'}],
+      '_type': 'url',
+      'ie_key': 'YoutubeTab',
+      'id': 'UCsXVk37bltHxD1rDPwtNM8Q',
+      'title': 'Kurzgesagt',
+      'channel_follower_count': 24000000,
+      'uploader_id': '@kurzgesagt',
+      'thumbnails': [
+        {'url': '//yt3.ggpht.com/a=s88'},
+        {'url': '//yt3.ggpht.com/a=s176'}
+      ],
     });
-    final loader = VideoListLoader(() => Listing(() => Stream.fromIterable([channel, _video(1), 'not json'])));
+    final loader =
+        VideoListLoader(() => Listing(() => Stream.fromIterable([channel, _video(1), 'not json'])));
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();
@@ -166,8 +184,12 @@ void main() {
 
   test('keeps playlists apart and reads live status', () async {
     final playlist = jsonEncode({
-      '_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
-      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI', 'title': 'Hits', 'playlist_count': 42,
+      '_type': 'url',
+      'ie_key': 'YoutubeTab',
+      'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'title': 'Hits',
+      'playlist_count': 42,
     });
     final live = jsonEncode({'id': 'jfKfPfyJRdk', 'title': 'lofi radio', 'live_status': 'is_live'});
     final loader = VideoListLoader(() => Listing(() => Stream.fromIterable([playlist, live])));
@@ -180,15 +202,21 @@ void main() {
   });
   test('reads playlists that report extractor_key instead of ie_key', () {
     final entry = parseListingEntry(jsonEncode({
-      '_type': 'url', 'extractor_key': 'YoutubeTab', 'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
-      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI', 'title': 'Hits',
+      '_type': 'url',
+      'extractor_key': 'YoutubeTab',
+      'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'title': 'Hits',
     }));
     expect(entry, isA<PlaylistResult>());
   });
   test('a title filter reads past pages with no match', () async {
-    String titled(int i, String title) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': title, 'channel': ''});
-    final source = _Source([for (var i = 0; i < 30; i++) titled(i, i == 25 ? 'Big Dog' : 'cat $i')]);
-    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, matches: (title) => title.toLowerCase().contains('dog'));
+    String titled(int i, String title) =>
+        jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': title, 'channel': ''});
+    final source =
+        _Source([for (var i = 0; i < 30; i++) titled(i, i == 25 ? 'Big Dog' : 'cat $i')]);
+    final loader = VideoListLoader(() => Listing(source.open),
+        pageSize: 2, matches: (title) => title.toLowerCase().contains('dog'));
     addTearDown(loader.dispose);
     loader.loadMore();
     while (loader.loading) {
@@ -199,13 +227,21 @@ void main() {
   });
 
   test('a playlists tab follows its shelf links', () {
-    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists?view=50&shelf_id=2'})), 'https://www.youtube.com/@x/playlists?view=50&shelf_id=2');
-    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/playlist?list=PL123', 'ie_key': 'YoutubeTab'})), isNull);
-    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists'})), isNull);
+    expect(
+        VideoRepository.shelfUrl(
+            jsonEncode({'url': 'https://www.youtube.com/@x/playlists?view=50&shelf_id=2'})),
+        'https://www.youtube.com/@x/playlists?view=50&shelf_id=2');
+    expect(
+        VideoRepository.shelfUrl(jsonEncode(
+            {'url': 'https://www.youtube.com/playlist?list=PL123', 'ie_key': 'YoutubeTab'})),
+        isNull);
+    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists'})),
+        isNull);
     expect(VideoRepository.shelfUrl('not json'), isNull);
   });
 
-  test('ranks every candidate gathered, not each page on its own, and fills strict filters', () async {
+  test('ranks every candidate gathered, not each page on its own, and fills strict filters',
+      () async {
     final source = _Source([for (var i = 0; i < 12; i++) _video(i)]);
     final loader = VideoListLoader(
       () => Listing(source.open),
@@ -260,7 +296,8 @@ void main() {
   test('a candidate left out of one page still beats a worse one found later', () async {
     final scores = [5, 9, 1, 7, 2, 8, 0, 3, 4, 6, 1, 1, 1, 1, 1, 1];
     final source = _Source([for (var i = 0; i < scores.length; i++) _video(scores[i] * 100 + i)]);
-    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, rank: (item) => (int.parse(item.title) ~/ 100).toDouble());
+    final loader = VideoListLoader(() => Listing(source.open),
+        pageSize: 2, rank: (item) => (int.parse(item.title) ~/ 100).toDouble());
     addTearDown(loader.dispose);
     final shown = <int>[];
     while (loader.hasMore) {
@@ -317,7 +354,8 @@ void main() {
     expect(other.items, hasLength(1));
 
     // Being rate limited is not retried.
-    final limited = VideoListLoader(() => Listing(() => Stream.error(StateError('HTTP Error 429: Too Many Requests'))));
+    final limited = VideoListLoader(
+        () => Listing(() => Stream.error(StateError('HTTP Error 429: Too Many Requests'))));
     addTearDown(limited.dispose);
     limited.loadMore();
     await pumpEventQueue();
@@ -326,12 +364,21 @@ void main() {
   });
 
   test('tries again when the first answer is empty', () async {
-    VideoListLoader.emptyRetryDelays = const [Duration(milliseconds: 10), Duration(milliseconds: 10)];
-    addTearDown(() => VideoListLoader.emptyRetryDelays = const [Duration(seconds: 3), Duration(seconds: 10)]);
+    VideoListLoader.emptyRetryDelays = const [
+      Duration(milliseconds: 10),
+      Duration(milliseconds: 10)
+    ];
+    addTearDown(() =>
+        VideoListLoader.emptyRetryDelays = const [Duration(seconds: 3), Duration(seconds: 10)]);
     var opened = 0;
     final loader = VideoListLoader(() {
       opened++;
-      final lines = opened < 3 ? const <String>[] : [jsonEncode(const VideoItem(id: 'abcdefghijk', title: 't', channel: 'c', url: 'u').toJson())];
+      final lines = opened < 3
+          ? const <String>[]
+          : [
+              jsonEncode(
+                  const VideoItem(id: 'abcdefghijk', title: 't', channel: 'c', url: 'u').toJson())
+            ];
       return Listing(() => Stream.fromIterable(lines));
     }, name: 'test');
     loader.loadMore();
@@ -344,8 +391,9 @@ void main() {
 
   test('a narrow listing that runs out goes on with a wider one', () async {
     var switched = 0;
-    final listing = Listing(() => Stream.fromIterable([_video(0), _video(1)]))
-        .followedBy(() => Listing(() => Stream.fromIterable([_video(1), _video(2), _video(3)])), switched: () => switched++);
+    final listing = Listing(() => Stream.fromIterable([_video(0), _video(1)])).followedBy(
+        () => Listing(() => Stream.fromIterable([_video(1), _video(2), _video(3)])),
+        switched: () => switched++);
     final loader = VideoListLoader(() => listing, pageSize: 10);
     addTearDown(loader.dispose);
     loader.loadMore();
@@ -356,7 +404,8 @@ void main() {
 
   test('reads at most its pages while filters leave nothing, then reads on when asked', () async {
     final source = _Source([for (var i = 0; i < 40; i++) _video(i)]);
-    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, pages: 3, where: (item) => item.title == '20');
+    final loader = VideoListLoader(() => Listing(source.open),
+        pageSize: 2, pages: 3, where: (item) => item.title == '20');
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();
@@ -371,7 +420,12 @@ void main() {
   });
 
   test('a live stream keeps its watchers apart from views', () {
-    final live = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 't', 'live_status': 'is_live', 'concurrent_view_count': 1500});
+    final live = VideoItem.fromJson({
+      'id': 'abcdefghijk',
+      'title': 't',
+      'live_status': 'is_live',
+      'concurrent_view_count': 1500
+    });
     expect(live.viewCount, isNull);
     expect(live.watching, 1500);
     expect(live.audience, 1500);
@@ -383,7 +437,9 @@ void main() {
 
   test('a list put away reads no further pages by itself', () async {
     final source = _Source([for (var i = 0; i < 40; i++) _video(i)]);
-    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, where: (item) => int.parse(item.title) > 30, fill: 2)..paused = true;
+    final loader = VideoListLoader(() => Listing(source.open),
+        pageSize: 2, where: (item) => int.parse(item.title) > 30, fill: 2)
+      ..paused = true;
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();

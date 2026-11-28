@@ -13,10 +13,13 @@ void main() {
     expect(AppearanceSettings.fromJson({'fontFamily': bundledFont}).fontFamily, autoFont);
     expect(AppearanceSettings.fromJson({}).fontFamily, autoFont);
     expect(AppearanceSettings.fromJson({'fontFamily': 'system'}).font, isNull);
-    final chosen = AppearanceSettings.fromJson(const AppearanceSettings(fontFamily: bundledFont).toJson());
+    final chosen =
+        AppearanceSettings.fromJson(const AppearanceSettings(fontFamily: bundledFont).toJson());
     expect(chosen.font, bundledFont);
     expect(AppearanceSettings.fromJson({'fontFamily': 'Segoe UI'}).font, 'Segoe UI');
-    expect(AppearanceSettings.fromJson(const AppearanceSettings(fontFamily: interFont).toJson()).font, interFont);
+    expect(
+        AppearanceSettings.fromJson(const AppearanceSettings(fontFamily: interFont).toJson()).font,
+        interFont);
   });
 
   test('Japanese, Korean and traditional Chinese keep their own character forms', () {
@@ -48,10 +51,12 @@ void main() {
   test('text in a known language keeps its forms whatever the interface language', () {
     expect(languageStyle('ja')!.locale, const Locale('ja'));
     expect(languageStyle('ja')!.fontFamilyFallback, isNot(contains(bundledFont)));
-    expect(languageStyle('zh-TW')!.locale, const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'));
+    expect(languageStyle('zh-TW')!.locale,
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'));
     // Chinese being learned in a Japanese interface stays simplified.
     expect(languageStyle('zh')!.fontFamilyFallback!.first, bundledFont);
-    expect(languageStyle('zh')!.locale, const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'));
+    expect(languageStyle('zh')!.locale,
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'));
     expect(languageStyle(''), isNull);
     expect(languageStyle(null), isNull);
     downloadedCjkFamilies['ja'] = 'Noto Sans JP';
@@ -69,6 +74,7 @@ void main() {
     expect(PlayerSettings.defaultFontOn('macos', null), 'PingFang SC');
     expect(PlayerSettings.defaultFontOn('linux', 'ja'), 'Noto Sans CJK JP');
     expect(PlayerSettings.defaultFontOn('linux', null), 'Noto Sans CJK SC');
-    expect(PlayerSettings.defaultFontOn('linux', 'ja', downloaded: {'ja': 'Noto Sans JP'}), 'Noto Sans JP');
+    expect(PlayerSettings.defaultFontOn('linux', 'ja', downloaded: {'ja': 'Noto Sans JP'}),
+        'Noto Sans JP');
   });
 }

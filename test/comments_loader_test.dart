@@ -17,8 +17,11 @@ class _FakeSignIn implements WebInnerTube {
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
-    if (endpoint == 'comment/perform_comment_action') actions.add((body['actions']! as List).single);
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
+    if (endpoint == 'comment/perform_comment_action') {
+      actions.add((body['actions']! as List).single);
+    }
     return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(answer(endpoint, body)))));
   }
 }
@@ -37,35 +40,84 @@ Map<String, Object?> _comment(String id, {bool buttons = false, String? detail})
             'commentId': id,
             'contentText': {'simpleText': id},
             if (detail != null)
-              'detailViewEndpoint': {'engagementPanelEndpoint': {'content': {'sectionListRenderer': {'contents': [
-                {'itemSectionRenderer': {'continuations': [{'nextContinuationData': {'continuation': detail}}]}},
-              ]}}}},
+              'detailViewEndpoint': {
+                'engagementPanelEndpoint': {
+                  'content': {
+                    'sectionListRenderer': {
+                      'contents': [
+                        {
+                          'itemSectionRenderer': {
+                            'continuations': [
+                              {
+                                'nextContinuationData': {'continuation': detail}
+                              }
+                            ]
+                          }
+                        },
+                      ]
+                    }
+                  }
+                }
+              },
             if (buttons)
-              'actionButtons': {'commentActionButtonsRenderer': {
-                'likeButton': {'toggleButtonRenderer': {
-                  'defaultServiceEndpoint': {'performCommentActionEndpoint': {'action': _action(id)}},
-                }},
-              }},
+              'actionButtons': {
+                'commentActionButtonsRenderer': {
+                  'likeButton': {
+                    'toggleButtonRenderer': {
+                      'defaultServiceEndpoint': {
+                        'performCommentActionEndpoint': {'action': _action(id)}
+                      },
+                    }
+                  },
+                }
+              },
           },
         },
       },
     };
 
-Map<String, Object?> _page(List<Map<String, Object?>> comments) => {'continuationContents': {'itemSectionContinuation': {'contents': comments}}};
+Map<String, Object?> _page(List<Map<String, Object?>> comments) => {
+      'continuationContents': {
+        'itemSectionContinuation': {'contents': comments}
+      }
+    };
 
 void main() {
   test('likes comments whose buttons a list leaves out, from their own page', () async {
     final sign = _FakeSignIn((endpoint, body) => switch (body['continuation']) {
-          final String token when token == YoutubeComments.videoSectionToken('dQw4w9WgXcQ') => {'engagementPanels': [
-              {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
-                {'continuation': {'reloadContinuationData': {'continuation': 'TOP'}}},
-              ]}}}}}},
-            ]},
+          final String token when token == YoutubeComments.videoSectionToken('dQw4w9WgXcQ') => {
+              'engagementPanels': [
+                {
+                  'engagementPanelSectionListRenderer': {
+                    'panelIdentifier': 'comment-item-section',
+                    'header': {
+                      'engagementPanelTitleHeaderRenderer': {
+                        'menu': {
+                          'sortFilterSubMenuRenderer': {
+                            'subMenuItems': [
+                              {
+                                'continuation': {
+                                  'reloadContinuationData': {'continuation': 'TOP'}
+                                }
+                              },
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+              ]
+            },
           'TOP' => _page([_comment('UgxParent', detail: 'DETAIL')]),
-          'DETAIL' => _page([_comment('UgxParent', buttons: true, detail: 'DETAIL'), _comment('UgxParent.reply')]),
+          'DETAIL' => _page([
+              _comment('UgxParent', buttons: true, detail: 'DETAIL'),
+              _comment('UgxParent.reply')
+            ]),
           _ => const {},
         });
-    final source = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = sign;
+    final source = YoutubeComments(MockClient((request) async => fail('signed out request')))
+      ..web = sign;
     final loader = CommentsLoader(source, videoId: 'dQw4w9WgXcQ');
     await loader.loadMore();
     final parent = loader.comments.single;
@@ -78,7 +130,8 @@ void main() {
 
     await loader.loadReplies(parent);
     final replies = loader.replies[parent.id]!.replies;
-    expect(replies.map((c) => c.id), ['UgxParent.reply'], reason: 'the page starts with the comment itself');
+    expect(replies.map((c) => c.id), ['UgxParent.reply'],
+        reason: 'the page starts with the comment itself');
     expect(loader.canRate(replies.single), isTrue);
     expect(await loader.rate(replies.single, 'like'), isNull);
     expect(sign.actions.last, _action('UgxParent.reply'));

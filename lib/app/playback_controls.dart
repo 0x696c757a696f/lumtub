@@ -19,11 +19,13 @@ extension PlaybackControls on AppController {
   /// [afterCurrent]; null turns the timer off (定时关闭).
   void setSleepTimer(Duration? after, {bool afterCurrent = false}) {
     _sleepTimer?.cancel();
-    _sleepTimer = after == null ? null : Timer(after, () {
-      unawaited(player?.pause());
-      _update(() => sleepAt = null);
-      _notice(tr('Sleep timer: playback paused'));
-    });
+    _sleepTimer = after == null
+        ? null
+        : Timer(after, () {
+            unawaited(player?.pause());
+            _update(() => sleepAt = null);
+            _notice(tr('Sleep timer: playback paused'));
+          });
     _update(() {
       sleepAt = after == null ? null : DateTime.now().add(after);
       sleepAfterCurrent = afterCurrent;
@@ -79,7 +81,13 @@ extension PlaybackControls on AppController {
       final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
       final ranges = cache is Map ? cache['seekable-ranges'] : null;
       final at = target.inMilliseconds / 1000;
-      return ranges is List && ranges.any((r) => r is Map && r['start'] is num && r['end'] is num && at >= (r['start'] as num) && at <= (r['end'] as num) - 1);
+      return ranges is List &&
+          ranges.any((r) =>
+              r is Map &&
+              r['start'] is num &&
+              r['end'] is num &&
+              at >= (r['start'] as num) &&
+              at <= (r['end'] as num) - 1);
     } catch (_) {
       return false;
     }
@@ -143,7 +151,8 @@ extension PlaybackControls on AppController {
   Future<void> _applyLoop() async {
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
-    String at(Duration? d) => d == null || loopB == null ? 'no' : (d.inMilliseconds / 1000).toStringAsFixed(3);
+    String at(Duration? d) =>
+        d == null || loopB == null ? 'no' : (d.inMilliseconds / 1000).toStringAsFixed(3);
     await platform.setProperty('ab-loop-a', at(loopA));
     await platform.setProperty('ab-loop-b', at(loopB));
   }
@@ -153,13 +162,18 @@ extension PlaybackControls on AppController {
   Future<void> _applyChannelPlayback(VideoItem item, Player player) async {
     _playbackChannel = null;
     final key = ChannelPlayback.keyOf(item);
-    final saved = preferences.rememberChannelPlayback && key != null ? channelPlayback?.of(key) : null;
+    final saved =
+        preferences.rememberChannelPlayback && key != null ? channelPlayback?.of(key) : null;
     final rate = saved?.rate ?? settings.defaultSpeed;
     if (rate != player.state.rate) await player.setRate(rate);
     // Said once, so a speed that came back on its own is not a surprise.
-    if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('This channel plays at its last speed, {0}x', [rateText(kept)]));
+    if (saved?.rate case final kept? when kept != settings.defaultSpeed) {
+      _notice(tr('This channel plays at its last speed, {0}x', [rateText(kept)]));
+    }
     final volume = saved?.volume?.toDouble() ?? _sessionVolume;
-    if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()));
+    if (volume != null && volume != player.state.volume) {
+      await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()));
+    }
     if (this.player == player && playing?.id == item.id) _playbackChannel = key;
   }
 
@@ -181,14 +195,18 @@ extension PlaybackControls on AppController {
 
   Future<void> changeVolume(double delta) async {
     final player = this.player;
-    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()));
+    if (player != null) {
+      await player
+          .setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()));
+    }
   }
 
   /// Brightens or darkens the video by [delta] and returns the new value;
   /// saved, and shown to the rest of the app, once the changes pause, not
   /// at every wheel notch or slide step.
   Future<int> changeBrightness(int delta) async {
-    final value = (brightness + delta).clamp(-pictureLimit('brightness'), pictureLimit('brightness'));
+    final value =
+        (brightness + delta).clamp(-pictureLimit('brightness'), pictureLimit('brightness'));
     settings = settings.copyWith(picture: {...settings.picture, 'brightness': value});
     _brightnessSave?.cancel();
     _brightnessSave = Timer(const Duration(seconds: 1), () {
@@ -225,11 +243,13 @@ extension PlaybackControls on AppController {
     // Automatic codecs follow the quality: above 1080p VP9 stays enabled.
     final next = settings.copyWith(maxHeight: height);
     if (height > 1080) {
-      final usable = [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
+      final usable =
+          [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
       if (usable.isEmpty) {
         if (asDefault) _notice(tr('VP9 and AV1 are both disabled, and H.264 stops at 1080p'));
       } else if (!usable.any((codec) => FormatPolicy.hardware(next, codec))) {
-        _notice(tr('This PC cannot decode VP9 or AV1 in hardware, so 1440p and 4K are decoded on the CPU and use a lot of it'));
+        _notice(tr(
+            'This PC cannot decode VP9 or AV1 in hardware, so 1440p and 4K are decoded on the CPU and use a lot of it'));
       }
     }
     await reloadVideo(next);
@@ -261,7 +281,8 @@ extension PlaybackControls on AppController {
     await reloadVideo();
   }
 
-  Future<void> setAutoplayNext(bool value) => setPlayOrder(value ? PlayOrder.autoPlayRelated : PlayOrder.pause);
+  Future<void> setAutoplayNext(bool value) =>
+      setPlayOrder(value ? PlayOrder.autoPlayRelated : PlayOrder.pause);
 
   Future<void> setPlayOrder(PlayOrder order) => saveSettings(settings.copyWith(playOrder: order));
 }

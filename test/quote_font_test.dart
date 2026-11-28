@@ -6,13 +6,17 @@ import 'package:lumtub/appearance_settings.dart';
 import 'package:material_ui/material_ui.dart';
 
 Future<void> _load(String family, String path) async {
-  final loader = FontLoader(family)..addFont(Future.value(ByteData.sublistView(File(path).readAsBytesSync())));
+  final loader = FontLoader(family)
+    ..addFont(Future.value(ByteData.sublistView(File(path).readAsBytesSync())));
   await loader.load();
 }
 
 double _width(String text, String family) {
   final painter = TextPainter(
-    text: TextSpan(text: text, style: TextStyle(fontFamily: family, fontFamilyFallback: const [bundledFont], fontSize: 100)),
+    text: TextSpan(
+        text: text,
+        style:
+            TextStyle(fontFamily: family, fontFamilyFallback: const [bundledFont], fontSize: 100)),
     textDirection: TextDirection.ltr,
   )..layout();
   return painter.width;
@@ -28,6 +32,7 @@ void main() {
     expect(_width('’', bundledFont), closeTo(100, 1));
     expect(_width('’', quotesFont), closeTo(27.9, 1));
     expect(_width('“”', quotesFont), closeTo(95, 1));
-    expect(_width('dall’attacca 中文', quotesFont), closeTo(_width('dall’attacca 中文', bundledFont) - 72.1, 1));
+    expect(_width('dall’attacca 中文', quotesFont),
+        closeTo(_width('dall’attacca 中文', bundledFont) - 72.1, 1));
   });
 }

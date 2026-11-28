@@ -14,7 +14,8 @@ import 'theme.dart';
 /// [title] when there is one. [shown] leaves it out for videos it has
 /// nothing for.
 class LearningDrawerSection {
-  const LearningDrawerSection({required this.id, required this.order, required this.build, this.title, this.shown});
+  const LearningDrawerSection(
+      {required this.id, required this.order, required this.build, this.title, this.shown});
   final String id;
   final int order;
   final String Function()? title;
@@ -23,8 +24,16 @@ class LearningDrawerSection {
 }
 
 final _sections = <String, LearningDrawerSection>{
-  'study': LearningDrawerSection(id: 'study', order: 10, shown: (c) => c.playing?.isLive != true, build: (context, c) => _StudySection(controller: c)),
-  'lines': LearningDrawerSection(id: 'lines', order: 20, title: () => tr('Line by line'), build: (context, c) => _LineSection(controller: c)),
+  'study': LearningDrawerSection(
+      id: 'study',
+      order: 10,
+      shown: (c) => c.playing?.isLive != true,
+      build: (context, c) => _StudySection(controller: c)),
+  'lines': LearningDrawerSection(
+      id: 'lines',
+      order: 20,
+      title: () => tr('Line by line'),
+      build: (context, c) => _LineSection(controller: c)),
 };
 
 /// What the drawer's 精学 part shows while [studyUnlocked] says no: set by
@@ -36,11 +45,15 @@ Widget Function(BuildContext context, AppController controller)? studyLockedView
 void addLearningDrawerSection(LearningDrawerSection section) => _sections[section.id] = section;
 
 /// The parts of the learning drawer, in order.
-List<LearningDrawerSection> get learningDrawerSections => _sections.values.toList()..sort((a, b) => a.order.compareTo(b.order));
+List<LearningDrawerSection> get learningDrawerSections =>
+    _sections.values.toList()..sort((a, b) => a.order.compareTo(b.order));
 
 /// Slides the learning drawer out from the player's edge.
 Future<void> showLearningDrawer(BuildContext context, AppController controller) =>
-    showPlayerPanel(context, title: tr('Learning'), width: 380, builder: (context) => LearningDrawer(controller: controller));
+    showPlayerPanel(context,
+        title: tr('Learning'),
+        width: 380,
+        builder: (context) => LearningDrawer(controller: controller));
 
 class LearningDrawer extends StatelessWidget {
   const LearningDrawer({super.key, required this.controller});
@@ -51,7 +64,10 @@ class LearningDrawer extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([controller, controller.studyChanged, controller.shadowStage]),
       builder: (context, _) {
-        final sections = [for (final s in learningDrawerSections) if (s.shown?.call(controller) ?? true) s];
+        final sections = [
+          for (final s in learningDrawerSections)
+            if (s.shown?.call(controller) ?? true) s
+        ];
         return ListView(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
           children: [
@@ -60,7 +76,8 @@ class LearningDrawer extends StatelessWidget {
               if (section.title?.call() case final title?)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(title, style: context.text.labelMedium?.copyWith(color: context.colors.outline)),
+                  child: Text(title,
+                      style: context.text.labelMedium?.copyWith(color: context.colors.outline)),
                 ),
               section.build(context, controller),
             ],
@@ -95,40 +112,44 @@ class _StudySection extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       if (locked)
-        studyLockedView?.call(context, controller) ?? Text(tr('Study mode is part of the learning pack'), style: context.text.bodySmall)
+        studyLockedView?.call(context, controller) ??
+            Text(tr('Study mode is part of the learning pack'), style: context.text.bodySmall)
       else
-      Wrap(spacing: 8, runSpacing: 4, children: [
-        if (studying)
-          OutlinedButton(onPressed: () => unawaited(controller.stopStudy()), child: Text(tr('Stop studying')))
-        else if (resume != null) ...[
-          FilledButton(
-            onPressed: () {
-              close();
-              unawaited(controller.startStudy(resume: true));
-            },
-            child: Text(tr('Go on')),
-          ),
-          OutlinedButton(
-            onPressed: () {
-              close();
-              unawaited(controller.startStudy(fromStart: true));
-            },
-            child: Text(tr('From the start')),
-          ),
-        ] else
-          FilledButton(
-            onPressed: () {
-              close();
-              unawaited(controller.startStudy());
-            },
-            child: Text(tr('Start studying')),
-          ),
-      ]),
+        Wrap(spacing: 8, runSpacing: 4, children: [
+          if (studying)
+            OutlinedButton(
+                onPressed: () => unawaited(controller.stopStudy()),
+                child: Text(tr('Stop studying')))
+          else if (resume != null) ...[
+            FilledButton(
+              onPressed: () {
+                close();
+                unawaited(controller.startStudy(resume: true));
+              },
+              child: Text(tr('Go on')),
+            ),
+            OutlinedButton(
+              onPressed: () {
+                close();
+                unawaited(controller.startStudy(fromStart: true));
+              },
+              child: Text(tr('From the start')),
+            ),
+          ] else
+            FilledButton(
+              onPressed: () {
+                close();
+                unawaited(controller.startStudy());
+              },
+              child: Text(tr('Start studying')),
+            ),
+        ]),
       if (!locked && !studying && resume != null)
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            tr('Study stopped at {0}, step {1} of 4: {2}', [studyClock(resume.unitStart), resume.step.index + 1, studyStepName(resume.step)]),
+            tr('Study stopped at {0}, step {1} of 4: {2}',
+                [studyClock(resume.unitStart), resume.step.index + 1, studyStepName(resume.step)]),
             style: context.text.bodySmall?.copyWith(color: colors.outline),
           ),
         ),
@@ -145,7 +166,8 @@ class _LineSection extends StatelessWidget {
     final settings = controller.settings;
     final colors = context.colors;
     final recording = controller.shadowStage.value == ShadowStage.recording;
-    Widget toggle(String title, String detail, bool value, ValueChanged<bool> onChanged) => SwitchListTile(
+    Widget toggle(String title, String detail, bool value, ValueChanged<bool> onChanged) =>
+        SwitchListTile(
           dense: true,
           contentPadding: EdgeInsets.zero,
           title: Text(title),
@@ -154,19 +176,26 @@ class _LineSection extends StatelessWidget {
           onChanged: onChanged,
         );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      toggle(tr('Pause after each line'), tr('Playback pauses as each subtitle line ends.'), settings.pauseEachLine,
-          (on) => unawaited(controller.saveSettings(controller.settings.copyWith(pauseEachLine: on)))),
-      toggle(tr('Blur the translation'), tr('Hover over the second subtitle or tap it to see it.'), settings.blurSecondary, (on) => unawaited(controller.setBlurSecondary(on))),
+      toggle(
+          tr('Pause after each line'),
+          tr('Playback pauses as each subtitle line ends.'),
+          settings.pauseEachLine,
+          (on) =>
+              unawaited(controller.saveSettings(controller.settings.copyWith(pauseEachLine: on)))),
+      toggle(tr('Blur the translation'), tr('Hover over the second subtitle or tap it to see it.'),
+          settings.blurSecondary, (on) => unawaited(controller.setBlurSecondary(on))),
       const SizedBox(height: 4),
       Wrap(spacing: 8, runSpacing: 4, children: [
         OutlinedButton.icon(
           onPressed: () => unawaited(controller.toggleLineLoop()),
-          icon: Icon(AppIcons.repeat, size: 16, color: controller.loopB != null ? colors.primary : null),
+          icon: Icon(AppIcons.repeat,
+              size: 16, color: controller.loopB != null ? colors.primary : null),
           label: Text(tr('Loop this line')),
         ),
         OutlinedButton.icon(
           onPressed: () => unawaited(controller.toggleShadowing()),
-          icon: Icon(recording ? AppIcons.stop : AppIcons.microphoneStage, size: 16, color: recording ? colors.error : null),
+          icon: Icon(recording ? AppIcons.stop : AppIcons.microphoneStage,
+              size: 16, color: recording ? colors.error : null),
           label: Text(recording ? tr('Stop recording') : tr('Record yourself')),
         ),
       ]),
@@ -186,9 +215,11 @@ class LearningDrawerHandle extends StatelessWidget {
       message: tr('Learning'),
       child: Material(
         color: const Color(0x99000000),
-        borderRadius: const BorderRadiusDirectional.horizontal(start: Radius.circular(10)).resolve(Directionality.of(context)),
+        borderRadius: const BorderRadiusDirectional.horizontal(start: Radius.circular(10))
+            .resolve(Directionality.of(context)),
         child: InkWell(
-          borderRadius: const BorderRadiusDirectional.horizontal(start: Radius.circular(10)).resolve(Directionality.of(context)),
+          borderRadius: const BorderRadiusDirectional.horizontal(start: Radius.circular(10))
+              .resolve(Directionality.of(context)),
           onTap: () => unawaited(showLearningDrawer(context, controller)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),

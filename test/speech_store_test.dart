@@ -47,7 +47,8 @@ void main() {
     test('files from before the database are moved into it', () async {
       await sub('data').create();
       await sub('speech').create();
-      await File('${sub('speech').path}${Platform.pathSeparator}aaaaaaaaaaa.de.vtt').writeAsString('WEBVTT\n\nalt');
+      await File('${sub('speech').path}${Platform.pathSeparator}aaaaaaaaaaa.de.vtt')
+          .writeAsString('WEBVTT\n\nalt');
       final db = LocalDb('${sub('data').path}${Platform.pathSeparator}lumtub.db');
       final store = SpeechSubtitleStore(sub('speech'), db: db, cache: sub('cache'));
       final found = await store.of('aaaaaaaaaaa');
@@ -71,8 +72,14 @@ void main() {
     test('notes are kept by video in the order of the video', () async {
       await sub('data').create();
       final db = LocalDb('${sub('data').path}${Platform.pathSeparator}lumtub.db');
-      final late = await db.putNote(video: 'v', title: 'Talk', at: const Duration(minutes: 2), quote: 'the end');
-      await db.putNote(video: 'v', title: 'Talk', at: const Duration(seconds: 5), quote: 'hello', body: 'a greeting');
+      final late = await db.putNote(
+          video: 'v', title: 'Talk', at: const Duration(minutes: 2), quote: 'the end');
+      await db.putNote(
+          video: 'v',
+          title: 'Talk',
+          at: const Duration(seconds: 5),
+          quote: 'hello',
+          body: 'a greeting');
       await db.putNote(video: 'w', body: 'elsewhere');
       final notes = await db.notes(video: 'v');
       expect([for (final n in notes) n.quote], ['hello', 'the end']);

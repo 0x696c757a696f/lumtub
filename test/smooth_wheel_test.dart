@@ -16,7 +16,9 @@ void main() {
         ),
       );
 
-  Future<void> wheel(WidgetTester tester, Offset delta, {Offset at = const Offset(100, 300), PointerDeviceKind kind = PointerDeviceKind.mouse}) async {
+  Future<void> wheel(WidgetTester tester, Offset delta,
+      {Offset at = const Offset(100, 300),
+      PointerDeviceKind kind = PointerDeviceKind.mouse}) async {
     final pointer = TestPointer(1, kind);
     await tester.sendEventToBinding(pointer.hover(at));
     await tester.sendEventToBinding(pointer.scroll(delta));
@@ -145,7 +147,10 @@ void main() {
     final row = ScrollController();
     final rail = SizedBox(
       height: 100,
-      child: ListView(controller: row, scrollDirection: Axis.horizontal, children: [for (var i = 0; i < 30; i++) SizedBox(width: 100, child: Text('r$i'))]),
+      child: ListView(
+          controller: row,
+          scrollDirection: Axis.horizontal,
+          children: [for (var i = 0; i < 30; i++) SizedBox(width: 100, child: Text('r$i'))]),
     );
     await tester.pumpWidget(list(page, rail: rail));
     await wheel(tester, const Offset(150, 0), at: const Offset(100, 50));

@@ -39,6 +39,7 @@ class BlockedSignIn {
     _told = true;
     return true;
   }
+
   final _uses = <DateTime>[];
 
   /// YouTube took this network for a bot.
@@ -46,7 +47,10 @@ class BlockedSignIn {
     final again = recentlyBlocked;
     _blockedAt = DateTime.now();
     if (!again) _told = false;
-    if (!again) logInfo('YouTube takes this network for a bot; signed-in requests go first for ${remember.inMinutes} minutes when allowed');
+    if (!again) {
+      logInfo(
+          'YouTube takes this network for a bot; signed-in requests go first for ${remember.inMinutes} minutes when allowed');
+    }
   }
 
   /// A request without the account got through: this network is not

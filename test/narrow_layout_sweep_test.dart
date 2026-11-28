@@ -37,8 +37,12 @@ List<String> squeezedTexts(WidgetTester tester) {
       if (text.length >= 6 && line > 0 && width > 0) {
         final lines = object.size.height / line;
         final oneLine = object.getMaxIntrinsicWidth(double.infinity);
-        if (lines >= 2.5 && width < 3 * line) found.add('on end: "$text" ${width.toStringAsFixed(0)} wide');
-        if (object.didExceedMaxLines && width < 3.2 * line && oneLine > width * 1.5) found.add('cut short: "$text" ${width.toStringAsFixed(0)} wide');
+        if (lines >= 2.5 && width < 3 * line) {
+          found.add('on end: "$text" ${width.toStringAsFixed(0)} wide');
+        }
+        if (object.didExceedMaxLines && width < 3.2 * line && oneLine > width * 1.5) {
+          found.add('cut short: "$text" ${width.toStringAsFixed(0)} wide');
+        }
       }
     }
     object.visitChildren(visit);
@@ -53,10 +57,19 @@ void main() {
   tearDown(() => setLanguage(AppLanguage.en));
 
   const channel = ChannelRef('UC0123456789abcdefghijkl', 'Discerning Hearts® Catholic Podcasts');
-  const playlist = PlaylistResult(id: 'PL0123456789abcdefghijklmn', title: 'A Time of Lectio Divina for the Discerning Heart', channel: 'Discerning Hearts®');
+  const playlist = PlaylistResult(
+      id: 'PL0123456789abcdefghijklmn',
+      title: 'A Time of Lectio Divina for the Discerning Heart',
+      channel: 'Discerning Hearts®');
   final videos = [
     for (var i = 0; i < 3; i++)
-      VideoItem(id: 'video${i}xxxxx', title: 'Wednesday of the 34th Week in Ordinary Time $i', channel: channel.name, url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: 900, channelId: channel.id),
+      VideoItem(
+          id: 'video${i}xxxxx',
+          title: 'Wednesday of the 34th Week in Ordinary Time $i',
+          channel: channel.name,
+          url: 'https://www.youtube.com/watch?v=video${i}xxxxx',
+          duration: 900,
+          channelId: channel.id),
   ];
 
   final pages = <String, Widget Function(AppController)>{
@@ -94,7 +107,8 @@ void main() {
   // the narrowest phones too.
   final cases = [
     for (final file in Directory('assets/l10n').listSync().whereType<File>())
-      if (file.path.endsWith('.json')) (file.uri.pathSegments.last.replaceAll('.json', ''), 360.0, 1.3),
+      if (file.path.endsWith('.json'))
+        (file.uri.pathSegments.last.replaceAll('.json', ''), 360.0, 1.3),
     ('en', 360.0, 1.3),
     for (final language in ['it', 'de', 'fi', 'ru', 'ta', 'el', 'ar', 'zh-Hans'])
       for (final (width, scale) in [(320.0, 1.0), (390.0, 1.0)]) (language, width, scale),
@@ -113,7 +127,9 @@ void main() {
           final controller = AppController()..library = library;
           await tester.pumpWidget(MaterialApp(
             theme: buildAppTheme(Colors.red, Brightness.light),
-            builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!),
             home: Scaffold(body: VideoActions(controller: controller, child: page(controller))),
           ));
           await tester.pump(const Duration(milliseconds: 600));
@@ -162,7 +178,9 @@ void main() {
           final controller = AppController()..library = library;
           await tester.pumpWidget(MaterialApp(
             theme: buildAppTheme(Colors.red, Brightness.light),
-            builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2)), child: child!),
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2)),
+                child: child!),
             home: Scaffold(body: VideoActions(controller: controller, child: page(controller))),
           ));
           await tester.pump(const Duration(milliseconds: 600));

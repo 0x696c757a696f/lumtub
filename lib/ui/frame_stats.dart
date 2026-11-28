@@ -60,7 +60,8 @@ class FrameStats {
         final page = _page();
         _pages[page] = (_pages[page] ?? 0) + 1;
         if (build > long || raster > long) {
-          logDebug(() => 'Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
+          logDebug(() =>
+              'Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
               'build ${_ms(build)}, raster ${_ms(raster)}, waited ${_ms(timing.timestampInMicroseconds(FramePhase.rasterStart) - timing.timestampInMicroseconds(FramePhase.buildFinish))} for raster');
         }
       }
@@ -70,10 +71,17 @@ class FrameStats {
     final now = DateTime.now();
     if (now.difference(_since) < const Duration(minutes: 1)) return;
     if (_slow > 0) {
-      final where = (_pages.entries.toList()..sort((a, b) => b.value - a.value)).take(3).map((e) => '${e.key} ${e.value}').join(', ');
+      final where = (_pages.entries.toList()..sort((a, b) => b.value - a.value))
+          .take(3)
+          .map((e) => '${e.key} ${e.value}')
+          .join(', ');
       final causes = _causes?.call() ?? const {};
-      final by = (causes.entries.toList()..sort((a, b) => b.value - a.value)).take(5).map((e) => '${e.key} ${e.value}').join(', ');
-      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times, page $_pageRebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
+      final by = (causes.entries.toList()..sort((a, b) => b.value - a.value))
+          .take(5)
+          .map((e) => '${e.key} ${e.value}')
+          .join(', ');
+      logInfo(
+          'Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times, page $_pageRebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
     }
     _causes?.call().clear();
     _frames = _slow = _rebuilds = _pageRebuilds = 0;
@@ -82,5 +90,6 @@ class FrameStats {
     _since = now;
   }
 
-  static String _ms(Object d) => '${((d is Duration ? d.inMicroseconds : d as int) / 1000).toStringAsFixed(1)} ms';
+  static String _ms(Object d) =>
+      '${((d is Duration ? d.inMicroseconds : d as int) / 1000).toStringAsFixed(1)} ms';
 }

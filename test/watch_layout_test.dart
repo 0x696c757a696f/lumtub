@@ -4,7 +4,8 @@ import 'package:lumtub/ui/common.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  Future<bool> phoneLike(WidgetTester tester, Size size, {bool touch = true, bool tv = false}) async {
+  Future<bool> phoneLike(WidgetTester tester, Size size,
+      {bool touch = true, bool tv = false}) async {
     debugTouchFirst = touch;
     Device.tv = tv;
     addTearDown(() {
@@ -12,14 +13,18 @@ void main() {
       Device.tv = false;
     });
     late bool result;
-    await tester.pumpWidget(MediaQuery(data: MediaQueryData(size: size), child: Builder(builder: (context) {
-      result = watchesLikePhone(context);
-      return const SizedBox();
-    })));
+    await tester.pumpWidget(MediaQuery(
+        data: MediaQueryData(size: size),
+        child: Builder(builder: (context) {
+          result = watchesLikePhone(context);
+          return const SizedBox();
+        })));
     return result;
   }
 
-  testWidgets('the watch page is laid out as a phone\'s on phones and upright tablets, never on TVs or computers', (tester) async {
+  testWidgets(
+      'the watch page is laid out as a phone\'s on phones and upright tablets, never on TVs or computers',
+      (tester) async {
     expect(await phoneLike(tester, const Size(412, 800)), isTrue);
     expect(await phoneLike(tester, const Size(800, 412)), isTrue);
     expect(await phoneLike(tester, const Size(800, 1280)), isTrue);

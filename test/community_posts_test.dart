@@ -16,8 +16,17 @@ Map<String, dynamic> _post(String id, {Map<String, dynamic>? attachment}) => {
         'post': {
           'backstagePostRenderer': {
             'postId': id,
-            'contentText': {'runs': [{'text': '新视频上线了 '}, {'text': '快去看看'}]},
-            'publishedTimeText': {'runs': [{'text': '3天前'}]},
+            'contentText': {
+              'runs': [
+                {'text': '新视频上线了 '},
+                {'text': '快去看看'}
+              ]
+            },
+            'publishedTimeText': {
+              'runs': [
+                {'text': '3天前'}
+              ]
+            },
             'voteCount': {'simpleText': '1.2万'},
             if (attachment != null) 'backstageAttachment': attachment,
           },
@@ -41,18 +50,66 @@ final _page = {
                         _post('Ugkx1', attachment: {
                           'postMultiImageRenderer': {
                             'images': [
-                              {'backstageImageRenderer': {'image': {'thumbnails': [{'url': 'https://yt3.ggpht.com/a=s288'}, {'url': 'https://yt3.ggpht.com/a=s1080'}]}}},
-                              {'backstageImageRenderer': {'image': {'thumbnails': [{'url': '//yt3.ggpht.com/b=s1080'}]}}},
+                              {
+                                'backstageImageRenderer': {
+                                  'image': {
+                                    'thumbnails': [
+                                      {'url': 'https://yt3.ggpht.com/a=s288'},
+                                      {'url': 'https://yt3.ggpht.com/a=s1080'}
+                                    ]
+                                  }
+                                }
+                              },
+                              {
+                                'backstageImageRenderer': {
+                                  'image': {
+                                    'thumbnails': [
+                                      {'url': '//yt3.ggpht.com/b=s1080'}
+                                    ]
+                                  }
+                                }
+                              },
                             ],
                           },
                         }),
                         _post('Ugkx2', attachment: {
-                          'videoRenderer': {'videoId': 'dQw4w9WgXcQ', 'title': {'runs': [{'text': 'Never Gonna'}]}, 'lengthText': {'simpleText': '3:33'}},
+                          'videoRenderer': {
+                            'videoId': 'dQw4w9WgXcQ',
+                            'title': {
+                              'runs': [
+                                {'text': 'Never Gonna'}
+                              ]
+                            },
+                            'lengthText': {'simpleText': '3:33'}
+                          },
                         }),
                         _post('Ugkx3', attachment: {
-                          'pollRenderer': {'choices': [{'text': {'runs': [{'text': '是'}]}}, {'text': {'runs': [{'text': '否'}]}}]},
+                          'pollRenderer': {
+                            'choices': [
+                              {
+                                'text': {
+                                  'runs': [
+                                    {'text': '是'}
+                                  ]
+                                }
+                              },
+                              {
+                                'text': {
+                                  'runs': [
+                                    {'text': '否'}
+                                  ]
+                                }
+                              }
+                            ]
+                          },
                         }),
-                        {'continuationItemRenderer': {'continuationEndpoint': {'continuationCommand': {'token': 'NEXT'}}}},
+                        {
+                          'continuationItemRenderer': {
+                            'continuationEndpoint': {
+                              'continuationCommand': {'token': 'NEXT'}
+                            }
+                          }
+                        },
                       ],
                     },
                   },
@@ -73,7 +130,8 @@ void main() {
     expect(page.posts[0].text, '新视频上线了 快去看看');
     expect(page.posts[0].published, '3天前');
     expect(page.posts[0].likes, '1.2万');
-    expect(page.posts[0].images, ['https://yt3.ggpht.com/a=s1080', 'https://yt3.ggpht.com/b=s1080']);
+    expect(
+        page.posts[0].images, ['https://yt3.ggpht.com/a=s1080', 'https://yt3.ggpht.com/b=s1080']);
     expect(page.posts[1].video?.id, 'dQw4w9WgXcQ');
     expect(page.posts[1].video?.duration, 213);
     expect(page.posts[2].poll, ['是', '否']);
@@ -81,7 +139,10 @@ void main() {
   });
 
   test('finds ytInitialData in the page despite braces inside strings', () {
-    final html = '<script>var ytInitialData = ${jsonEncode({'a': '};{', 'b': {'c': 1}})};</script>';
+    final html = '<script>var ytInitialData = ${jsonEncode({
+          'a': '};{',
+          'b': {'c': 1}
+        })};</script>';
     expect(CommunityPosts.read(html)?.posts, isEmpty);
     expect(CommunityPosts.read('<html></html>'), isNull);
   });
@@ -91,13 +152,27 @@ void main() {
     final client = MockClient((request) async {
       requests.add(request);
       if (request.method == 'GET') {
-        return http.Response.bytes(utf8.encode('<script>ytcfg.set({"INNERTUBE_API_KEY":"KEY","INNERTUBE_CLIENT_VERSION":"2.2026"});var ytInitialData = ${jsonEncode(_page)};</script>'), 200);
+        return http.Response.bytes(
+            utf8.encode(
+                '<script>ytcfg.set({"INNERTUBE_API_KEY":"KEY","INNERTUBE_CLIENT_VERSION":"2.2026"});var ytInitialData = ${jsonEncode(_page)};</script>'),
+            200);
       }
-      return http.Response.bytes(utf8.encode(jsonEncode({'onResponseReceivedEndpoints': [{'appendContinuationItemsAction': {'continuationItems': [_post('Ugkx4')]}}]})), 200);
+      return http.Response.bytes(
+          utf8.encode(jsonEncode({
+            'onResponseReceivedEndpoints': [
+              {
+                'appendContinuationItemsAction': {
+                  'continuationItems': [_post('Ugkx4')]
+                }
+              }
+            ]
+          })),
+          200);
     });
     final posts = CommunityPosts(client);
     final first = await posts.first(const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
-    expect(requests.single.url.toString(), 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/posts?hl=en');
+    expect(requests.single.url.toString(),
+        'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/posts?hl=en');
     final next = await posts.next(first.continuation!);
     expect(next.posts.single.id, 'Ugkx4');
     expect(next.continuation, isNull);
@@ -107,24 +182,34 @@ void main() {
     expect(((body['context'] as Map)['client'] as Map)['clientVersion'], '2.2026');
   });
 
-  test('with the cookie sign-in, posts load as the website signed in and polls can be voted in', () async {
-    final web = _FakeWeb()..answer = (endpoint, body) => (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(_signedInPoll))));
-    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = web;
-    final posts = CommunityPosts(MockClient((request) async => fail('signed out request')), signIn: comments);
+  test('with the cookie sign-in, posts load as the website signed in and polls can be voted in',
+      () async {
+    final web = _FakeWeb()
+      ..answer = (endpoint, body) =>
+          (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(_signedInPoll))));
+    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))
+      ..web = web;
+    final posts =
+        CommunityPosts(MockClient((request) async => fail('signed out request')), signIn: comments);
     final page = await posts.first(const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
     expect(web.bodies.first.$2['browseId'], 'UCuAXFkgsw1L7xaCfnd5JJOw');
     final post = page.posts.single;
     expect(post.votes, '1.2K 票');
-    expect(post.choices.map((c) => (c.text, c.selected, c.percent)), [('是', false, ''), ('否', true, '40%')]);
+    expect(post.choices.map((c) => (c.text, c.selected, c.percent)),
+        [('是', false, ''), ('否', true, '40%')]);
 
     final loader = PostsLoader(posts, const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
     expect(loader.voteOf(post), 1);
     expect(await loader.vote(post, 0), isNull);
     expect(loader.voteOf(post), 0);
     expect((web.bodies.last.$1, web.bodies.last.$3), ('comment/perform_comment_action', true));
-    expect(web.bodies.last.$2, {'actions': ['S1']});
+    expect(web.bodies.last.$2, {
+      'actions': ['S1']
+    });
     expect(await loader.vote(post, 0), isNull);
-    expect(web.bodies.last.$2, {'actions': ['D1']});
+    expect(web.bodies.last.$2, {
+      'actions': ['D1']
+    });
     expect(loader.voteOf(post), -1);
 
     web.answer = (endpoint, body) => (status: 403, body: Uint8List(0));
@@ -135,19 +220,29 @@ void main() {
 
 class _FakeWeb implements WebInnerTube {
   final bodies = <(String, Map<String, Object?>, bool)>[];
-  SignedAnswer Function(String endpoint, Map<String, Object?> body) answer = (endpoint, body) => (status: 200, body: Uint8List.fromList(utf8.encode('{}')));
+  SignedAnswer Function(String endpoint, Map<String, Object?> body) answer =
+      (endpoint, body) => (status: 200, body: Uint8List.fromList(utf8.encode('{}')));
 
   @override
   bool get signedIn => true;
 
   @override
-  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body,
+      {bool ask = false, String? hl}) async {
     bodies.add((endpoint, body, ask));
     return answer(endpoint, body);
   }
 }
 
-Map<String, dynamic> _vote(String action) => {'commandExecutorCommand': {'commands': [{'performCommentActionEndpoint': {'action': action}}]}};
+Map<String, dynamic> _vote(String action) => {
+      'commandExecutorCommand': {
+        'commands': [
+          {
+            'performCommentActionEndpoint': {'action': action}
+          }
+        ]
+      }
+    };
 
 final _signedInPoll = {
   'contents': [
@@ -155,8 +250,28 @@ final _signedInPoll = {
       'pollRenderer': {
         'totalVotes': {'simpleText': '1.2K 票'},
         'choices': [
-          {'text': {'runs': [{'text': '是'}]}, 'selected': false, 'selectServiceEndpoint': _vote('S1'), 'deselectServiceEndpoint': _vote('D1')},
-          {'text': {'runs': [{'text': '否'}]}, 'selected': true, 'voteRatio': 0.4, 'votePercentage': {'simpleText': '40%'}, 'selectServiceEndpoint': _vote('S2'), 'deselectServiceEndpoint': _vote('D2')},
+          {
+            'text': {
+              'runs': [
+                {'text': '是'}
+              ]
+            },
+            'selected': false,
+            'selectServiceEndpoint': _vote('S1'),
+            'deselectServiceEndpoint': _vote('D1')
+          },
+          {
+            'text': {
+              'runs': [
+                {'text': '否'}
+              ]
+            },
+            'selected': true,
+            'voteRatio': 0.4,
+            'votePercentage': {'simpleText': '40%'},
+            'selectServiceEndpoint': _vote('S2'),
+            'deselectServiceEndpoint': _vote('D2')
+          },
         ],
       },
     }),

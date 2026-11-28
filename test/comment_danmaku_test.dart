@@ -5,7 +5,8 @@ import 'package:lumtub/danmaku.dart';
 import 'package:lumtub/youtube_comments.dart';
 
 void main() {
-  YoutubeComment comment(String id, String text) => YoutubeComment(id: id, author: '@a', text: text);
+  YoutubeComment comment(String id, String text) =>
+      YoutubeComment(id: id, author: '@a', text: text);
 
   test('comments that name a moment fly at it', () {
     final lines = timedComments([
@@ -17,14 +18,17 @@ void main() {
       comment('f', '2:00'),
       comment('g', '59:00 past the end'),
     ], length: const Duration(minutes: 70));
-    expect([for (final l in lines) (l.offset, l.text)], [
+    expect([
+      for (final l in lines) (l.offset, l.text)
+    ], [
       (const Duration(seconds: 30), 'the bridge'),
       (const Duration(minutes: 3, seconds: 45), 'this part is the best'),
       (const Duration(minutes: 59), 'past the end'),
       (const Duration(hours: 1, minutes: 2, seconds: 3), 'The drop at 1:02:03 😂'),
     ]);
     expect(lines.map((l) => l.id).toSet().length, lines.length);
-    expect(timedComments([comment('h', '10:00 later')], length: const Duration(minutes: 5)), isEmpty);
+    expect(
+        timedComments([comment('h', '10:00 later')], length: const Duration(minutes: 5)), isEmpty);
   });
 
   test('a long line is cut', () {
@@ -35,7 +39,8 @@ void main() {
 
   test('timed comments are on by default and saved', () {
     expect(const DanmakuSettings().comments, isTrue);
-    expect(DanmakuSettings.fromJson(const DanmakuSettings(comments: false).toJson()).comments, isFalse);
+    expect(DanmakuSettings.fromJson(const DanmakuSettings(comments: false).toJson()).comments,
+        isFalse);
     expect(DanmakuSettings.fromJson({'enabled': true}).comments, isTrue);
   });
 

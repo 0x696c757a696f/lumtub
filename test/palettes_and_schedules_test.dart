@@ -23,33 +23,71 @@ void main() {
         final scheme = buildAppTheme(Colors.red, brightness, palette: palette).colorScheme;
         final what = '${palette.id} ${brightness.name}';
         expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(12), reason: what);
-        expect(_contrast(scheme.onSurfaceVariant, scheme.surface), greaterThanOrEqualTo(4.5), reason: what);
+        expect(_contrast(scheme.onSurfaceVariant, scheme.surface), greaterThanOrEqualTo(4.5),
+            reason: what);
         expect(_contrast(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.5), reason: what);
-        expect(_contrast(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(4.5), reason: what);
+        expect(_contrast(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(4.5),
+            reason: what);
         expect(scheme.primary, palette.of(brightness).accent, reason: what);
       }
     }
-    expect(buildAppTheme(Colors.red, Brightness.dark, palette: paletteOf('ricePaper'), pureBlack: true).colorScheme.surface, Colors.black);
+    expect(
+        buildAppTheme(Colors.red, Brightness.dark, palette: paletteOf('ricePaper'), pureBlack: true)
+            .colorScheme
+            .surface,
+        Colors.black);
   });
 
   test('appearance keeps the colour scheme (now a skin), schedules, warmth and layout', () {
-    const a = AppearanceSettings(palette: 'nightVoyage', eyeCare: EyeCare.hours, warmth: 0.6, eyeCareStart: 21, eyeCareEnd: 6, darkSchedule: DarkSchedule.sun, lowResource: true, layout: VideoLayout.text);
+    const a = AppearanceSettings(
+        palette: 'nightVoyage',
+        eyeCare: EyeCare.hours,
+        warmth: 0.6,
+        eyeCareStart: 21,
+        eyeCareEnd: 6,
+        darkSchedule: DarkSchedule.sun,
+        lowResource: true,
+        layout: VideoLayout.text);
     final b = AppearanceSettings.fromJson(a.toJson());
     expect((b.palette, b.skin), ('', 'night-voyage'));
-    expect((b.eyeCare, b.warmth, b.eyeCareStart, b.eyeCareEnd, b.darkSchedule, b.lowResource, b.layout), (EyeCare.hours, 0.6, 21, 6, DarkSchedule.sun, true, VideoLayout.text));
+    expect((
+      b.eyeCare,
+      b.warmth,
+      b.eyeCareStart,
+      b.eyeCareEnd,
+      b.darkSchedule,
+      b.lowResource,
+      b.layout
+    ), (
+      EyeCare.hours,
+      0.6,
+      21,
+      6,
+      DarkSchedule.sun,
+      true,
+      VideoLayout.text
+    ));
     expect(b.effectiveThumbnails, ThumbnailQuality.medium);
     expect(b.effectiveMotion, MotionPreference.reduced);
     expect(const AppearanceSettings().palette, '');
   });
 
   test('hours run through midnight', () {
-    const a = AppearanceSettings(eyeCare: EyeCare.hours, eyeCareStart: 21, eyeCareEnd: 6, darkSchedule: DarkSchedule.hours, darkStart: 8, darkEnd: 18);
+    const a = AppearanceSettings(
+        eyeCare: EyeCare.hours,
+        eyeCareStart: 21,
+        eyeCareEnd: 6,
+        darkSchedule: DarkSchedule.hours,
+        darkStart: 8,
+        darkEnd: 18);
     expect(a.warmAt(DateTime(2026, 1, 1, 23)), isTrue);
     expect(a.warmAt(DateTime(2026, 1, 1, 5)), isTrue);
     expect(a.warmAt(DateTime(2026, 1, 1, 12)), isFalse);
     expect(a.themeModeAt(DateTime(2026, 1, 1, 9)), ThemeMode.dark);
     expect(a.themeModeAt(DateTime(2026, 1, 1, 20)), ThemeMode.light);
-    expect(const AppearanceSettings(themeMode: ThemeMode.dark).themeModeAt(DateTime(2026, 1, 1, 12)), ThemeMode.dark);
+    expect(
+        const AppearanceSettings(themeMode: ThemeMode.dark).themeModeAt(DateTime(2026, 1, 1, 12)),
+        ThemeMode.dark);
   });
 
   test('sunrise and sunset come out where they should', () {
@@ -57,8 +95,10 @@ void main() {
     final shanghai = SunTimes.at(31.2, 121.5);
     final (rise, set) = shanghai.on(DateTime(2026, 6, 21))!;
     final riseUtc = rise.toUtc(), setUtc = set.toUtc();
-    expect((riseUtc.hour * 60 + riseUtc.minute - (20 * 60 + 50)).abs(), lessThan(8), reason: '$riseUtc');
-    expect((setUtc.hour * 60 + setUtc.minute - (11 * 60 + 1)).abs(), lessThan(8), reason: '$setUtc');
+    expect((riseUtc.hour * 60 + riseUtc.minute - (20 * 60 + 50)).abs(), lessThan(8),
+        reason: '$riseUtc');
+    expect((setUtc.hour * 60 + setUtc.minute - (11 * 60 + 1)).abs(), lessThan(8),
+        reason: '$setUtc');
     // Tromsø has no sunrise in late December and no sunset in late June.
     final tromso = SunTimes.at(69.6, 18.9);
     expect(tromso.on(DateTime(2026, 12, 21)), isNull);
@@ -100,7 +140,10 @@ void main() {
     // In twelve steps, each lasting five minutes.
     expect(at(19, 47), at(19, 49));
     expect({for (var m = 0; m < 60; m++) at(19 + (30 + m) ~/ 60, (30 + m) % 60)}, hasLength(12));
-    expect(const AppearanceSettings(eyeCare: EyeCare.always, warmth: 0.6).warmthAt(DateTime(2026, 11, 7, 12)), 0.6);
+    expect(
+        const AppearanceSettings(eyeCare: EyeCare.always, warmth: 0.6)
+            .warmthAt(DateTime(2026, 11, 7, 12)),
+        0.6);
     // By the sun's height: Rome at noon is day, at midnight night, and a
     // quarter of an hour after sunset partly warm.
     final rome = SunTimes.at(41.9, 12.5);
@@ -123,13 +166,19 @@ void main() {
         final scheme = theme.colorScheme;
         final what = '${palette?.id} ${brightness.name}';
         expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(10), reason: what);
-        expect(_contrast(scheme.onSurfaceVariant, scheme.surface), greaterThanOrEqualTo(4.0), reason: what);
-        if (palette != null) expect(_contrast(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.0), reason: what);
+        expect(_contrast(scheme.onSurfaceVariant, scheme.surface), greaterThanOrEqualTo(4.0),
+            reason: what);
+        if (palette != null) {
+          expect(_contrast(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.0),
+              reason: what);
+        }
         // The accent moves a quarter as far as the page.
         expect(scheme.primary, warmColor(plain.primary, 0.25), reason: what);
         expect(theme.extension<AppTones>()!.warmth, 1);
         final chrome = palette?.of(brightness).chrome;
-        if (chrome != null) expect(theme.extension<AppTones>()!.chrome, warmColor(chrome, 1), reason: what);
+        if (chrome != null) {
+          expect(theme.extension<AppTones>()!.chrome, warmColor(chrome, 1), reason: what);
+        }
       }
     }
   });

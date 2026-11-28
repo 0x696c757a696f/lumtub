@@ -5,12 +5,18 @@ import 'app_controller.dart' show PageMode;
 /// A place 返回 comes back to: a page with what it showed, or a video
 /// and where it was.
 class BackEntry {
-  const BackEntry.page(this.mode, {this.query, this.channel, this.channelTab = ChannelTab.videos, this.playlistId, this.youtubePlaylist})
+  const BackEntry.page(this.mode,
+      {this.query,
+      this.channel,
+      this.channelTab = ChannelTab.videos,
+      this.playlistId,
+      this.youtubePlaylist})
       : video = null,
         position = null,
         queue = const [];
 
-  const BackEntry.video(VideoItem this.video, {required this.mode, this.position, this.queue = const []})
+  const BackEntry.video(VideoItem this.video,
+      {required this.mode, this.position, this.queue = const []})
       : query = null,
         channel = null,
         channelTab = ChannelTab.videos,
@@ -19,6 +25,7 @@ class BackEntry {
 
   /// The page under the video, or the page itself.
   final PageMode mode;
+
   /// The search on the explore page.
   final String? query;
   final ChannelRef? channel;
@@ -45,7 +52,8 @@ class BackEntry {
   }
 
   @override
-  String toString() => video != null ? 'video ${video!.id}' : '${mode.name}${query == null ? '' : ' “$query”'}';
+  String toString() =>
+      video != null ? 'video ${video!.id}' : '${mode.name}${query == null ? '' : ' “$query”'}';
 }
 
 /// Where 返回 goes, newest last. It keeps the last [limit] places and

@@ -33,9 +33,18 @@ class PlayerOptionApplicator {
   /// while no one seeks.
   static Map<String, String> cacheOptions(PlayerSettings settings, {bool background = false}) {
     final light = settings.strategy == PlaybackStrategy.lowResource;
-    final seconds = light || background ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds;
-    final ahead = background ? math.min(settings.cacheMemoryMb, 24) : light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb;
-    final back = background ? 4 : light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(PlayerSettings.lowMemory ? 8 : 16, 50);
+    final seconds =
+        light || background ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds;
+    final ahead = background
+        ? math.min(settings.cacheMemoryMb, 24)
+        : light
+            ? math.min(settings.cacheMemoryMb, 64)
+            : settings.cacheMemoryMb;
+    final back = background
+        ? 4
+        : light
+            ? 16
+            : (settings.cacheMemoryMb ~/ 4).clamp(PlayerSettings.lowMemory ? 8 : 16, 50);
     return {
       'cache-secs': '$seconds',
       'demuxer-max-bytes': '${ahead}MiB',
@@ -95,13 +104,24 @@ class PlayerOptionApplicator {
       // tablet, and with 低资源占用优先, it goes to the renderer only: one
       // that can draws it, one that cannot leaves it out (a little less
       // grain, much less CPU).
-      'vd-lavc-film-grain': settings.strategy == PlaybackStrategy.quality || !(light || Platform.isIOS || Platform.isAndroid) ? 'auto' : 'gpu',
+      'vd-lavc-film-grain': settings.strategy == PlaybackStrategy.quality ||
+              !(light || Platform.isIOS || Platform.isAndroid)
+          ? 'auto'
+          : 'gpu',
       // Interpolation works only when video is timed to the display.
-      'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
+      'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio
+          ? VideoSync.displayResample.mpvValue
+          : settings.videoSync.mpvValue,
       // Drawn by libmpv, subtitles look as the Flutter view draws them: the
       // same letter size, room below and outline. The player's own size
       // refines these once it is laid out (AppController.subtitleViewChanged).
-      ...libassOptions(settings, LibassLook.standard(position: settings.subtitlePosition, border: settings.subtitleBorder, byHeight: Platform.isAndroid || Platform.isIOS, caption: Device.captionScale)),
+      ...libassOptions(
+          settings,
+          LibassLook.standard(
+              position: settings.subtitlePosition,
+              border: settings.subtitleBorder,
+              byHeight: Platform.isAndroid || Platform.isIOS,
+              caption: Device.captionScale)),
       // Who draws the subtitles: libmpv (libass) or the Flutter view, which
       // reads sub-text either way. Set here, a switch applies at once.
       'sub-ass': settings.libassSubtitles ? 'yes' : 'no',
@@ -141,8 +161,11 @@ class PlayerOptionApplicator {
   }
 
   /// The subtitle options that make libmpv draw subtitles as [look] says.
-  static Map<String, String> libassOptions(PlayerSettings settings, LibassLook look, {String? lines}) {
-    final font = settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont);
+  static Map<String, String> libassOptions(PlayerSettings settings, LibassLook look,
+      {String? lines}) {
+    final font = settings.subtitleFont.isEmpty
+        ? 'sans-serif'
+        : PlayerSettings.fontForThisSystem(settings.subtitleFont);
     final opacity = settings.subtitleOpacity;
     return {
       'sub-scale': settings.subtitleScale.toStringAsFixed(2),
@@ -161,7 +184,14 @@ class PlayerOptionApplicator {
       'sub-border-size': look.border.toStringAsFixed(1),
       // The second subtitle sits just above a one-line main one; the
       // controller moves it as the main one gains lines.
-      'secondary-sub-pos': LibassLayout.secondaryPosition(lines ?? '', position: 100, scale: settings.subtitleScale, fontSize: look.fontSize(font), em: look.em, margin: look.margin, gap: look.gap).toStringAsFixed(1),
+      'secondary-sub-pos': LibassLayout.secondaryPosition(lines ?? '',
+              position: 100,
+              scale: settings.subtitleScale,
+              fontSize: look.fontSize(font),
+              em: look.em,
+              margin: look.margin,
+              gap: look.gap)
+          .toStringAsFixed(1),
       // A second subtitle in its own font and color is an ASS file of
       // Lumtub's, sized by secondary-sub-scale; a plain one takes the first
       // one's style at its own size.
@@ -184,11 +214,15 @@ class PlayerOptionApplicator {
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it
   /// without asking YouTube again.
-  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort, String? extractorArgs}) {
+  static String ytdlRawOptions(PlayerSettings settings,
+      {String? infoJson, String? proxy, String? formatSort, String? extractorArgs}) {
     final subtitles = settings.subtitleMode != SubtitleMode.off;
     // mpv's %length% quoting keeps a comma or equals sign, as a path may
     // have, from splitting the option.
-    String quote(String value) => value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]')) ? '%${utf8.encode(value).length}%$value' : value;
+    String quote(String value) =>
+        value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]'))
+            ? '%${utf8.encode(value).length}%$value'
+            : value;
     return [
       // No yt-dlp configuration file or plugin from outside the app, as
       // for every other yt-dlp run (ProcessTree.ytDlpIsolation).
@@ -196,8 +230,10 @@ class PlayerOptionApplicator {
       'no-plugin-dirs=',
       // The video's own language: yt-dlp names its automatic captions
       // "<language>-orig"; an uploaded one in it is added once known.
-      if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
-      if (subtitles && (settings.subtitleMode.anySubtitle || settings.subtitleOriginal)) 'write-auto-subs=',
+      if (subtitles)
+        'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
+      if (subtitles && (settings.subtitleMode.anySubtitle || settings.subtitleOriginal))
+        'write-auto-subs=',
       if (infoJson != null) 'load-info-json=${quote(infoJson)}',
       // The same codec ranking as the app's own resolving; yt-dlp's default
       // prefers AV1 and VP9 over H.264.
@@ -249,7 +285,8 @@ class PlayerOptionApplicator {
   /// hwdec or the decoder options again restarts the video decoder, which
   /// a change of subtitle colour must not. [lightened] says the lighter
   /// scaling was set over [previous], so its options are set back too.
-  static Future<List<String>> apply(Player player, PlayerSettings settings, {PlayerSettings? previous, bool lightened = false}) async {
+  static Future<List<String>> apply(Player player, PlayerSettings settings,
+      {PlayerSettings? previous, bool lightened = false}) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return const [];
     final failed = <String>[];

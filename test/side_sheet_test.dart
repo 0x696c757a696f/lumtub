@@ -8,26 +8,39 @@ import 'tooltip_finder.dart';
 
 /// Opens a [PanelDialog] with [show] from a button in a window [size]
 /// across, written in [direction].
-Future<void> _open(WidgetTester tester, Size size, Future<void> Function(BuildContext, WidgetBuilder) show, {TextDirection direction = TextDirection.ltr}) async {
+Future<void> _open(
+    WidgetTester tester, Size size, Future<void> Function(BuildContext, WidgetBuilder) show,
+    {TextDirection direction = TextDirection.ltr}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(MaterialApp(
     builder: (context, child) => Directionality(textDirection: direction, child: child!),
-    home: Builder(builder: (context) => Center(child: TextButton(
-      onPressed: () => show(context, (context) => PanelDialog(
-        title: const Text('Panel'),
-        content: Column(children: [const Text('Body'), TextButton(onPressed: () {}, child: const Text('Inside'))]),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))],
-      )),
-      child: const Text('open'),
-    ))),
+    home: Builder(
+        builder: (context) => Center(
+                child: TextButton(
+              onPressed: () => show(
+                  context,
+                  (context) => PanelDialog(
+                        title: const Text('Panel'),
+                        content: Column(children: [
+                          const Text('Body'),
+                          TextButton(onPressed: () {}, child: const Text('Inside'))
+                        ]),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context), child: const Text('Done'))
+                        ],
+                      )),
+              child: const Text('open'),
+            ))),
   ));
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }
 
-Rect _sheet(WidgetTester tester) => tester.getRect(find.ancestor(of: find.text('Body'), matching: find.byType(Material)).first);
+Rect _sheet(WidgetTester tester) =>
+    tester.getRect(find.ancestor(of: find.text('Body'), matching: find.byType(Material)).first);
 
 void main() {
   test('a side sheet is two fifths of the window, between 360 and 560 wide', () {
@@ -89,7 +102,8 @@ void main() {
     await _open(tester, const Size(1200, 800), showPanel, direction: TextDirection.rtl);
     expect(_sheet(tester), const Rect.fromLTWH(0, 0, 480, 800));
     // The close button sits at the end of the title, on the left.
-    expect(tester.getCenter(byTooltip('Close')).dx, lessThan(tester.getCenter(find.text('Panel')).dx));
+    expect(
+        tester.getCenter(byTooltip('Close')).dx, lessThan(tester.getCenter(find.text('Panel')).dx));
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.text('Body'), findsNothing);

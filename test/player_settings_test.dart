@@ -37,7 +37,8 @@ void main() {
         'hevc': {'kind': 'hardware', 'hwdec': 'd3d11va'},
       },
     });
-    expect(settings.decoderResults, {'vp9': const DecoderStatus.hardware('d3d11va'), 'av1': const DecoderStatus.software()});
+    expect(settings.decoderResults,
+        {'vp9': const DecoderStatus.hardware('d3d11va'), 'av1': const DecoderStatus.software()});
   });
 
   test('reads decoder results saved as text by earlier builds', () {
@@ -52,7 +53,8 @@ void main() {
   });
 
   test('decoder results survive a save and load round trip', () {
-    const original = PlayerSettings(decoderResults: {'vp9': DecoderStatus.hardware('d3d11va-copy')});
+    const original =
+        PlayerSettings(decoderResults: {'vp9': DecoderStatus.hardware('d3d11va-copy')});
     final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
     expect(restored.decoderResults, original.decoderResults);
   });
@@ -77,14 +79,26 @@ void main() {
   });
 
   test('saved codecs equal to the automatic ones stay automatic', () {
-    expect(PlayerSettings.fromJson({'disabledCodecs': ['av1']}).codecsChosen, isTrue);
-    expect(PlayerSettings.fromJson({'disabledCodecs': ['vp9', 'av1']}).codecsChosen, isFalse);
+    expect(
+        PlayerSettings.fromJson({
+          'disabledCodecs': ['av1']
+        }).codecsChosen,
+        isTrue);
+    expect(
+        PlayerSettings.fromJson({
+          'disabledCodecs': ['vp9', 'av1']
+        }).codecsChosen,
+        isFalse);
     expect(PlayerSettings.fromJson(const {}).codecsChosen, isFalse);
     expect(PlayerSettings.fromJson(const PlayerSettings().toJson()).codecsChosen, isFalse);
   });
 
   test('never loads with every playable codec disabled', () {
-    expect(PlayerSettings.fromJson({'disabledCodecs': ['av1', 'vp9', 'h264', 'vp8']}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8});
+    expect(
+        PlayerSettings.fromJson({
+          'disabledCodecs': ['av1', 'vp9', 'h264', 'vp8']
+        }).disabledCodecs,
+        {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8});
     expect(VideoCodec.playableWithout({VideoCodec.av1, VideoCodec.vp9}), isTrue);
     expect(VideoCodec.playableWithout({VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264}), isFalse);
   });
@@ -100,13 +114,18 @@ void main() {
   });
 
   test('strategy and disabled codecs survive a round trip by name', () {
-    const original = PlayerSettings(strategy: PlaybackStrategy.lowResource, disabledCodecs: {VideoCodec.av1, VideoCodec.vp8});
+    const original = PlayerSettings(
+        strategy: PlaybackStrategy.lowResource, disabledCodecs: {VideoCodec.av1, VideoCodec.vp8});
     final json = jsonDecode(jsonEncode(original.toJson())) as Map<String, dynamic>;
     expect(json['disabledCodecs'], ['av1', 'vp8']);
     final restored = PlayerSettings.fromJson(json);
     expect(restored.strategy, PlaybackStrategy.lowResource);
     expect(restored.disabledCodecs, {VideoCodec.av1, VideoCodec.vp8});
-    expect(PlayerSettings.fromJson({'disabledCodecs': ['av1', 'nope', 3]}).disabledCodecs, {VideoCodec.av1});
+    expect(
+        PlayerSettings.fromJson({
+          'disabledCodecs': ['av1', 'nope', 3]
+        }).disabledCodecs,
+        {VideoCodec.av1});
   });
 
   test('new player preferences survive a round trip', () {
@@ -158,7 +177,8 @@ vo=gpu-next
 
   test('hwdec is an ordered list of known decoders', () {
     final windows = hwdecChoicesFor('windows', Abi.windowsX64);
-    expect(PlayerSettings.validHwdec('d3d11va,nvdec,auto-safe', choices: windows), 'd3d11va,nvdec,auto-safe');
+    expect(PlayerSettings.validHwdec('d3d11va,nvdec,auto-safe', choices: windows),
+        'd3d11va,nvdec,auto-safe');
     expect(PlayerSettings.validHwdec('d3d11va,unknown', choices: windows), isNull);
     expect(PlayerSettings.validHwdec('d3d11va,d3d11va', choices: windows), isNull);
     expect(PlayerSettings.fromJson({'hwdec': 'auto,unknown'}).hwdec, 'auto-safe');
@@ -166,20 +186,30 @@ vo=gpu-next
   });
 
   test('each platform offers only its own decoders', () {
-    List<String> names(String os, Abi abi) => [for (final (name, _) in hwdecChoicesFor(os, abi)) name];
-    expect(names('android', Abi.androidArm64), ['no', 'auto', 'auto-safe', 'mediacodec', 'mediacodec-copy']);
+    List<String> names(String os, Abi abi) =>
+        [for (final (name, _) in hwdecChoicesFor(os, abi)) name];
+    expect(names('android', Abi.androidArm64),
+        ['no', 'auto', 'auto-safe', 'mediacodec', 'mediacodec-copy']);
     expect(names('ios', Abi.iosArm64), ['no', 'auto-safe', 'videotoolbox', 'videotoolbox-copy']);
     expect(names('macos', Abi.macosArm64), isNot(contains('vaapi')));
     expect(names('linux', Abi.linuxX64), isNot(contains('d3d11va')));
     expect(names('windows', Abi.windowsX64), containsAll(['d3d11va', 'nvdec', 'amf', 'qsv']));
-    expect(names('windows', Abi.windowsArm64), allOf(containsAll(['d3d11va', 'nvdec', 'amf']), isNot(contains('qsv'))));
+    expect(names('windows', Abi.windowsArm64),
+        allOf(containsAll(['d3d11va', 'nvdec', 'amf']), isNot(contains('qsv'))));
     // A decoder saved on another system goes back to the default.
-    expect(PlayerSettings.validHwdec('vaapi', choices: hwdecChoicesFor('android', Abi.androidArm64)), isNull);
-    expect(PlayerSettings.validHwdec('mediacodec', choices: hwdecChoicesFor('windows', Abi.windowsX64)), isNull);
+    expect(
+        PlayerSettings.validHwdec('vaapi', choices: hwdecChoicesFor('android', Abi.androidArm64)),
+        isNull);
+    expect(
+        PlayerSettings.validHwdec('mediacodec',
+            choices: hwdecChoicesFor('windows', Abi.windowsX64)),
+        isNull);
   });
 
   test('earlier custom options become mpv.conf lines', () {
-    final settings = PlayerSettings.fromJson({'customOptions': {'scale': 'lanczos', 'vo': 'gpu-next'}});
+    final settings = PlayerSettings.fromJson({
+      'customOptions': {'scale': 'lanczos', 'vo': 'gpu-next'}
+    });
     expect(settings.mpvConf, 'scale=lanczos\nvo=gpu-next');
     expect(settings.customOptions, {'scale': 'lanczos'});
   });
@@ -213,30 +243,45 @@ vo=gpu-next
     );
     final read = PlayerSettings.fromJson(jsonDecode(jsonEncode(changed.toJson())));
     expect((read.subtitleFont, read.subtitleColor, read.subtitleOpacity), ('KaiTi', 0xFFEB3B, 0.8));
-    expect((read.secondaryFont, read.secondaryScale, read.secondaryColor, read.secondaryOpacity), ('Arial', 1.2, 0x80DEEA, 0.5));
+    expect((read.secondaryFont, read.secondaryScale, read.secondaryColor, read.secondaryOpacity),
+        ('Arial', 1.2, 0x80DEEA, 0.5));
     expect(read.secondarySubtitleLanguage, 'ja');
     final reset = read.withDefaultSubtitleStyle();
-    expect((reset.subtitleFont, reset.secondaryColor, reset.secondaryScale), (PlayerSettings.defaultSubtitleFont, 0xFFE7A8, 0.9));
+    expect((reset.subtitleFont, reset.secondaryColor, reset.secondaryScale),
+        (PlayerSettings.defaultSubtitleFont, 0xFFE7A8, 0.9));
     expect(reset.secondarySubtitleLanguage, 'ja');
   });
 
   test('a second subtitle chosen at 0.8 stays at 0.8; only old saves move to 0.9', () {
-    final chosen = PlayerSettings.fromJson(const PlayerSettings().copyWith(secondaryScale: 0.8).toJson());
+    final chosen =
+        PlayerSettings.fromJson(const PlayerSettings().copyWith(secondaryScale: 0.8).toJson());
     expect(chosen.secondaryScale, 0.8);
     expect(PlayerSettings.fromJson({'secondaryScale': 0.8}).secondaryScale, 0.9);
   });
 
   test('refuses font names and languages mpv or the app cannot take', () {
-    final read = PlayerSettings.fromJson({'subtitleFont': 'Arial, "x"', 'secondaryFont': '', 'secondarySubtitleLanguage': 'xx', 'subtitleOpacity': 0});
+    final read = PlayerSettings.fromJson({
+      'subtitleFont': 'Arial, "x"',
+      'secondaryFont': '',
+      'secondarySubtitleLanguage': 'xx',
+      'subtitleOpacity': 0
+    });
     expect(read.subtitleFont, '');
     expect(read.secondaryFont, '');
     expect(read.secondarySubtitleLanguage, '');
-    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': 'original'}).secondarySubtitleLanguage, PlayerSettings.originalSubtitle);
+    expect(
+        PlayerSettings.fromJson({'secondarySubtitleLanguage': 'original'})
+            .secondarySubtitleLanguage,
+        PlayerSettings.originalSubtitle);
     // The interface's language is the second subtitle by default, also
     // for settings saved when none was.
     expect(PlayerSettings.fromJson({}).secondarySubtitleLanguage, PlayerSettings.interfaceSubtitle);
-    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': ''}).secondarySubtitleLanguage, PlayerSettings.interfaceSubtitle);
-    expect(PlayerSettings.fromJson(const PlayerSettings(secondarySubtitleLanguage: '').toJson()).secondarySubtitleLanguage, '');
+    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': ''}).secondarySubtitleLanguage,
+        PlayerSettings.interfaceSubtitle);
+    expect(
+        PlayerSettings.fromJson(const PlayerSettings(secondarySubtitleLanguage: '').toJson())
+            .secondarySubtitleLanguage,
+        '');
     expect(const PlayerSettings().secondaryTarget, interfaceTranslationLanguage);
     expect(read.subtitleOpacity, 0.1);
     expect(PlayerSettings.fromJson({}).subtitleFont, PlayerSettings.defaultSubtitleFont);
@@ -255,17 +300,20 @@ vo=gpu-next
     expect(PlayerSettings.fromJson(chosen).playOrder, PlayOrder.autoPlayRelated);
   });
 
-  test('falling back to relays is on and skipping silence off unless chosen, and both are saved', () {
+  test('falling back to relays is on and skipping silence off unless chosen, and both are saved',
+      () {
     final fresh = PlayerSettings.fromJson({});
     expect(fresh.relayFallback, isTrue);
     expect(fresh.skipSilence, isFalse);
-    final chosen = PlayerSettings.fromJson(const PlayerSettings(relayFallback: false, skipSilence: true).toJson());
+    final chosen = PlayerSettings.fromJson(
+        const PlayerSettings(relayFallback: false, skipSilence: true).toJson());
     expect(chosen.relayFallback, isFalse);
     expect(chosen.skipSilence, isTrue);
   });
 
   test('languages understood are kept, and default to the interface and first subtitle ones', () {
-    final saved = PlayerSettings.fromJson(const PlayerSettings(subtitleMode: SubtitleMode.foreign, knownLanguages: ['en', 'ja', 'nonsense']).toJson());
+    final saved = PlayerSettings.fromJson(const PlayerSettings(
+        subtitleMode: SubtitleMode.foreign, knownLanguages: ['en', 'ja', 'nonsense']).toJson());
     expect(saved.subtitleMode, SubtitleMode.foreign);
     expect(saved.subtitleMode.anySubtitle, isTrue);
     expect(saved.knownLanguages, ['en', 'ja']);

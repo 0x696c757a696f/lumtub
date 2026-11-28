@@ -54,7 +54,9 @@ abstract final class PortraitThumbnails {
     if (_known[id] case final verdict?) return verdict;
     final Uint8List bytes;
     try {
-      bytes = await CachedThumbnail('https://i.ytimg.com/vi/$id/hqdefault.jpg', CachedThumbnail.fileFor(thumbnails, id)).bytes();
+      bytes = await CachedThumbnail(
+              'https://i.ytimg.com/vi/$id/hqdefault.jpg', CachedThumbnail.fileFor(thumbnails, id))
+          .bytes();
     } catch (_) {
       return false;
     }
@@ -73,7 +75,9 @@ abstract final class PortraitThumbnails {
     _save?.cancel();
     _save = Timer(const Duration(seconds: 5), () {
       final file = _file;
-      if (file != null) unawaited(file.writeAsString(jsonEncode(_known)).then((_) {}, onError: (_) {}));
+      if (file != null) {
+        unawaited(file.writeAsString(jsonEncode(_known)).then((_) {}, onError: (_) {}));
+      }
     });
   }
 
@@ -122,7 +126,8 @@ abstract final class PortraitThumbnails {
 
   /// [lines] of a listing without the videos whose thumbnails are
   /// portrait, in order, with up to [parallel] thumbnails looked at once.
-  static Stream<String> drop(Stream<String> lines, Future<bool> Function(String id) portrait, {int parallel = 6}) {
+  static Stream<String> drop(Stream<String> lines, Future<bool> Function(String id) portrait,
+      {int parallel = 6}) {
     final out = StreamController<String>();
     final queue = Queue<_Held>();
     StreamSubscription<String>? source;

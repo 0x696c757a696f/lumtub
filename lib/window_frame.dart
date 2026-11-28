@@ -26,7 +26,8 @@ abstract final class WindowFrame {
   static bool _custom = false;
 
   /// Windows, Linux (X11 and Wayland) and macOS.
-  static bool get supported => debugSupported ?? (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+  static bool get supported =>
+      debugSupported ?? (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
   /// Lets tests lay the app out as on a phone, tablet or TV.
   @visibleForTesting
@@ -56,7 +57,8 @@ abstract final class WindowFrame {
   /// the pointer only once it hears from the mouse again, and after the
   /// window went fullscreen it may not, so the pointer would stay over the
   /// picture until moved.
-  static Future<void> hidePointer(Rect area) => _invoke('hidePointer', [area.left, area.top, area.right, area.bottom]);
+  static Future<void> hidePointer(Rect area) =>
+      _invoke('hidePointer', [area.left, area.top, area.right, area.bottom]);
 
   static Future<void> toggleMaximize() => _invoke('toggleMaximize');
 
@@ -104,14 +106,28 @@ abstract final class WindowFrame {
   /// none), the [maximizeButton] rect, and [interactive] rects inside the
   /// caption that stay clickable (menus, buttons, the search box). Call it
   /// whenever the layout changes.
-  static void setCaption({required double height, Rect? maximizeButton, List<Rect> interactive = const []}) {
+  static void setCaption(
+      {required double height, Rect? maximizeButton, List<Rect> interactive = const []}) {
     if (!reportsCaption) return;
-    final next = (height: height, maximize: maximizeButton == null ? null : rectToList(maximizeButton), interactive: interactive.map(rectToList).toList());
+    final next = (
+      height: height,
+      maximize: maximizeButton == null ? null : rectToList(maximizeButton),
+      interactive: interactive.map(rectToList).toList()
+    );
     final last = _lastCaption;
-    if (last != null && last.height == next.height && listEquals(last.maximize, next.maximize) && _sameRects(last.interactive, next.interactive)) return;
+    if (last != null &&
+        last.height == next.height &&
+        listEquals(last.maximize, next.maximize) &&
+        _sameRects(last.interactive, next.interactive)) {
+      return;
+    }
     _lastCaption = next;
     _listen();
-    unawaited(_tryInvoke('setCaption', {'height': next.height, 'maximize': next.maximize, 'interactive': next.interactive}).then((taken) {
+    unawaited(_tryInvoke('setCaption', {
+      'height': next.height,
+      'maximize': next.maximize,
+      'interactive': next.interactive
+    }).then((taken) {
       // Not taken: the next report goes out again instead of being
       // skipped as already sent.
       if (!taken && identical(_lastCaption, next)) _lastCaption = null;
@@ -166,7 +182,8 @@ abstract final class WindowFrame {
         case 'maximizeButton':
           _maximizeButton.value = buttonStateOf(call.arguments);
         case 'captionClick':
-          logInfo('Title bar click taken as the caption: ${call.arguments}, last report $_lastCaption');
+          logInfo(
+              'Title bar click taken as the caption: ${call.arguments}, last report $_lastCaption');
       }
     });
     unawaited(_refresh());

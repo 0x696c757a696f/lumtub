@@ -6,17 +6,24 @@ import 'package:lumtub/danmaku.dart';
 
 void main() {
   test('danmaku settings come back as saved, within their ranges', () {
-    const set = DanmakuSettings(enabled: true, opacity: 0.6, size: 50, seconds: 10, area: 1, paid: false);
+    const set =
+        DanmakuSettings(enabled: true, opacity: 0.6, size: 50, seconds: 10, area: 1, paid: false);
     expect(DanmakuSettings.fromJson(jsonDecode(jsonEncode(set.toJson()))), set);
-    final wild = DanmakuSettings.fromJson({'opacity': 5, 'size': 1, 'seconds': 100, 'area': 0, 'version': 2});
+    final wild = DanmakuSettings.fromJson(
+        {'opacity': 5, 'size': 1, 'seconds': 100, 'area': 0, 'version': 2});
     expect((wild.opacity, wild.size, wild.seconds, wild.area), (1.0, 24.0, 20.0, 0.25));
     expect(DanmakuSettings.fromJson(null), const DanmakuSettings());
-    expect(DanmakuSettings.fromJson({'enabled': true, 'seconds': 8}).seconds, 16, reason: 'the old, too fast default is not kept');
-    expect(DanmakuSettings.fromJson({'seconds': 12, 'version': 3}).seconds, 16, reason: 'nor the 12 s one after it');
-    expect(DanmakuSettings.fromJson({'seconds': 10, 'version': 3}).seconds, 10, reason: 'a speed someone chose is kept');
+    expect(DanmakuSettings.fromJson({'enabled': true, 'seconds': 8}).seconds, 16,
+        reason: 'the old, too fast default is not kept');
+    expect(DanmakuSettings.fromJson({'seconds': 12, 'version': 3}).seconds, 16,
+        reason: 'nor the 12 s one after it');
+    expect(DanmakuSettings.fromJson({'seconds': 10, 'version': 3}).seconds, 10,
+        reason: 'a speed someone chose is kept');
     expect(DanmakuSettings.fromJson({'seconds': 12, 'version': 4}).seconds, 12);
-    expect(DanmakuSettings.fromJson({'size': 44, 'version': 2}).size, 52, reason: 'the old, too small default is not kept');
-    expect(DanmakuSettings.fromJson({'size': 60, 'version': 2}).size, 60, reason: 'a size someone chose is kept');
+    expect(DanmakuSettings.fromJson({'size': 44, 'version': 2}).size, 52,
+        reason: 'the old, too small default is not kept');
+    expect(DanmakuSettings.fromJson({'size': 60, 'version': 2}).size, 60,
+        reason: 'a size someone chose is kept');
     expect(DanmakuSettings.fromJson({'size': 90, 'version': 3}).size, 90);
   });
 
@@ -58,7 +65,8 @@ void main() {
     }
     expect(steps.every((step) => step > 0), isTrue, reason: 'never still, never back');
     final after = steps.skip(60);
-    expect(after.reduce(math.max) - after.reduce(math.min), lessThan(12), reason: 'steps of about one frame each');
+    expect(after.reduce(math.max) - after.reduce(math.min), lessThan(12),
+        reason: 'steps of about one frame each');
     expect((last - (10000 + wall)).abs(), lessThan(40), reason: 'it keeps with the video');
   });
 
@@ -77,6 +85,7 @@ void main() {
     wall = 1000;
     expect(clock.at(60150, playing: true, rate: 2), 60150);
     wall = 1100;
-    expect(clock.at(60150, playing: true, rate: 2), closeTo(60350, 1), reason: 'at twice the speed');
+    expect(clock.at(60150, playing: true, rate: 2), closeTo(60350, 1),
+        reason: 'at twice the speed');
   });
 }

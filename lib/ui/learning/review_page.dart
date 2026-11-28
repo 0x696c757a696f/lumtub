@@ -26,20 +26,29 @@ Future<void> openReview(BuildContext context, AppController controller, {String?
   await book.load();
   await reviewStoreOf(book).load();
   if (!context.mounted) return;
-  await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => ReviewPage(controller: controller, video: video)));
+  await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => ReviewPage(controller: controller, video: video)));
 }
 
 /// Plays [word]'s video from a second before the moment it was saved.
 void watchVocabularyMoment(BuildContext context, AppController controller, VocabularyWord word) {
   if (word.videoId.isEmpty) return;
-  final start = word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
-  unawaited(controller.play(VideoItem(id: word.videoId, title: word.videoTitle, channel: '', url: 'https://www.youtube.com/watch?v=${word.videoId}'), at: start));
+  final start =
+      word.at > const Duration(seconds: 1) ? word.at - const Duration(seconds: 1) : Duration.zero;
+  unawaited(controller.play(
+      VideoItem(
+          id: word.videoId,
+          title: word.videoTitle,
+          channel: '',
+          url: 'https://www.youtube.com/watch?v=${word.videoId}'),
+      at: start));
   Navigator.of(context).popUntil((route) => route.isFirst);
 }
 
 /// A saved word's card: the word in its line, reading, meaning and
 /// translation, the line's own sound, and a way back to its moment.
-Future<void> showSavedWord(BuildContext context, AppController controller, VocabularyWord word) async {
+Future<void> showSavedWord(
+    BuildContext context, AppController controller, VocabularyWord word) async {
   final book = controller.learning.book;
   final sound = book?.soundOf(word.key);
   final hasSound = sound != null && await sound.exists();
@@ -121,7 +130,8 @@ class _ReviewPageState extends State<ReviewPage> {
     _grading = true;
     final now = DateTime.now();
     try {
-      await _store.grade(word.key, grade, now, seconds: now.difference(_since).inMilliseconds / 1000);
+      await _store.grade(word.key, grade, now,
+          seconds: now.difference(_since).inMilliseconds / 1000);
     } finally {
       _grading = false;
     }
@@ -152,7 +162,11 @@ class _ReviewPageState extends State<ReviewPage> {
       final grade = switch (key) {
         LogicalKeyboardKey.digit1 || LogicalKeyboardKey.numpad1 => ReviewGrade.again,
         LogicalKeyboardKey.digit2 || LogicalKeyboardKey.numpad2 => ReviewGrade.hard,
-        LogicalKeyboardKey.digit3 || LogicalKeyboardKey.numpad3 || LogicalKeyboardKey.space || LogicalKeyboardKey.enter => ReviewGrade.good,
+        LogicalKeyboardKey.digit3 ||
+        LogicalKeyboardKey.numpad3 ||
+        LogicalKeyboardKey.space ||
+        LogicalKeyboardKey.enter =>
+          ReviewGrade.good,
         LogicalKeyboardKey.digit4 || LogicalKeyboardKey.numpad4 => ReviewGrade.easy,
         _ => null,
       };
@@ -177,7 +191,8 @@ class _ReviewPageState extends State<ReviewPage> {
   void _openVideo(VocabularyWord word) => watchVocabularyMoment(context, widget.controller, word);
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(listenable: _store, builder: (context, _) => _page(context));
+  Widget build(BuildContext context) =>
+      ListenableBuilder(listenable: _store, builder: (context, _) => _page(context));
 
   Widget _page(BuildContext context) {
     final learning = widget.controller.learning;
@@ -187,16 +202,24 @@ class _ReviewPageState extends State<ReviewPage> {
     // its card.
     final scene = focus && word != null && word.videoId.isNotEmpty;
     final touchHint = tr('Tap the card for the answer · swipe right: remembered, left: forgot');
-    final keyHint = tr('Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode');
+    final keyHint =
+        tr('Space shows the answer · 1 2 3 4 grade · R plays the line again · F focus mode');
     Widget answerArea(VocabularyWord word) => AnimatedSwitcher(
           duration: Motion.of(Ease.fade),
           child: _shown
-              ? _GradeButtons(key: const ValueKey('grades'), store: _store, word: word, quiet: focus, onGrade: (g) => unawaited(_grade(g)))
+              ? _GradeButtons(
+                  key: const ValueKey('grades'),
+                  store: _store,
+                  word: word,
+                  quiet: focus,
+                  onGrade: (g) => unawaited(_grade(g)))
               : SizedBox(
                   key: const ValueKey('show'),
                   height: 64,
                   width: double.infinity,
-                  child: FilledButton(onPressed: () => setState(() => _shown = true), child: Text(tr('Show the answer'))),
+                  child: FilledButton(
+                      onPressed: () => setState(() => _shown = true),
+                      child: Text(tr('Show the answer'))),
                 ),
         );
     Widget card(VocabularyWord word) => GestureDetector(
@@ -238,7 +261,9 @@ class _ReviewPageState extends State<ReviewPage> {
             Padding(
               padding: const EdgeInsets.only(right: Space.s),
               child: IconButton(
-                tooltip: focus ? tr('Leave focus mode (F)') : tr('Focus mode: the video scene, no numbers (F)'),
+                tooltip: focus
+                    ? tr('Leave focus mode (F)')
+                    : tr('Focus mode: the video scene, no numbers (F)'),
                 isSelected: focus,
                 icon: Icon(AppIcons.filmStrip),
                 selectedIcon: Icon(AppIcons.filmStrip, color: context.colors.primary),
@@ -259,12 +284,15 @@ class _ReviewPageState extends State<ReviewPage> {
               child: !learning.unlocked
                   ? const Center(child: ReviewPlate(child: _ReviewLocked()))
                   : word == null
-                      ? Center(child: ReviewPlate(child: _ReviewDone(store: _store, book: _book, done: _done)))
+                      ? Center(
+                          child: ReviewPlate(
+                              child: _ReviewDone(store: _store, book: _book, done: _done)))
                       : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                           // Focus mode drops the count: only the words.
                           if (!focus) ...[
                             ReviewPlate(
-                              padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: Space.m, vertical: Space.s),
                               child: _Progress(done: _done, total: _total, left: _queue.length),
                             ),
                             const SizedBox(height: Space.m),
@@ -275,9 +303,14 @@ class _ReviewPageState extends State<ReviewPage> {
                               switchInCurve: Ease.curve,
                               transitionBuilder: (child, animation) => FadeTransition(
                                 opacity: animation,
-                                child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(animation), child: child),
+                                child: SlideTransition(
+                                    position: Tween(begin: const Offset(0.06, 0), end: Offset.zero)
+                                        .animate(animation),
+                                    child: child),
                               ),
-                              layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, children: [...previous, if (current != null) current]),
+                              layoutBuilder: (current, previous) => Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: [...previous, if (current != null) current]),
                               child: card(word),
                             ),
                           ),
@@ -290,7 +323,8 @@ class _ReviewPageState extends State<ReviewPage> {
                               Text(
                                 _touch ? touchHint : keyHint,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: context.colors.onSurfaceVariant),
+                                style:
+                                    TextStyle(fontSize: 11, color: context.colors.onSurfaceVariant),
                               ),
                             ]),
                           ),
@@ -314,7 +348,10 @@ class ReviewPlate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final panel = context.skin?.panel;
-    if (panel != null) return SkinBox(surface: panel, radius: context.cardRadius.topLeft.x, padding: padding, child: child);
+    if (panel != null) {
+      return SkinBox(
+          surface: panel, radius: context.cardRadius.topLeft.x, padding: padding, child: child);
+    }
     return Card(child: Padding(padding: padding, child: child));
   }
 }
@@ -324,7 +361,14 @@ class ReviewPlate extends StatelessWidget {
 /// translation under it as a second subtitle once shown, and the word's
 /// reading and meaning on the skin's panel below.
 class ReviewScenePanel extends StatelessWidget {
-  const ReviewScenePanel({super.key, required this.word, required this.shown, required this.sound, required this.thumbnails, required this.onReplay, required this.onOpenVideo});
+  const ReviewScenePanel(
+      {super.key,
+      required this.word,
+      required this.shown,
+      required this.sound,
+      required this.thumbnails,
+      required this.onReplay,
+      required this.onOpenVideo});
   final VocabularyWord word;
   final bool shown;
   final bool sound;
@@ -338,12 +382,21 @@ class ReviewScenePanel extends StatelessWidget {
     final colors = theme.colorScheme;
     final sentence = word.sentence.isEmpty ? word.word : word.sentence;
     final at = sentence.toLowerCase().indexOf(word.word.toLowerCase());
-    const outline = [Shadow(blurRadius: 4), Shadow(blurRadius: 2), Shadow(offset: Offset(0, 1), blurRadius: 1)];
+    const outline = [
+      Shadow(blurRadius: 4),
+      Shadow(blurRadius: 2),
+      Shadow(offset: Offset(0, 1), blurRadius: 1)
+    ];
     // Sized to the screen as the player sizes subtitles: smaller on a
     // phone, never too small to read.
     final width = MediaQuery.sizeOf(context).width;
     final narrow = width < 600;
-    final line = TextStyle(color: Colors.white, fontSize: (width / 34).clamp(16, 24), height: 1.4, fontWeight: FontWeight.w600, shadows: outline);
+    final line = TextStyle(
+        color: Colors.white,
+        fontSize: (width / 34).clamp(16, 24),
+        height: 1.4,
+        fontWeight: FontWeight.w600,
+        shadows: outline);
     // The accent where it reads on the dark foot of the picture, else a
     // warm yellow, as subtitles light up a word.
     final lit = colors.primary.computeLuminance() > 0.18 ? colors.primary : const Color(0xFFFFD54F);
@@ -354,7 +407,9 @@ class ReviewScenePanel extends StatelessWidget {
         child: Stack(fit: StackFit.expand, children: [
           const ColoredBox(color: Colors.black),
           Image(
-            image: thumbnailFor(ReviewScene(word.videoId, word.videoTitle, const []).video, thumbnails, width: 1280, size: 'maxresdefault'),
+            image: thumbnailFor(
+                ReviewScene(word.videoId, word.videoTitle, const []).video, thumbnails,
+                width: 1280, size: 'maxresdefault'),
             fit: BoxFit.cover,
             gaplessPlayback: true,
             errorBuilder: (context, error, stack) => const SizedBox.shrink(),
@@ -362,7 +417,11 @@ class ReviewScenePanel extends StatelessWidget {
           // Darker toward the foot, where the subtitle is, as on the player.
           const DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, stops: [0.35, 1], colors: [Color(0x14000000), Color(0xC8000000)]),
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.35, 1],
+                  colors: [Color(0x14000000), Color(0xC8000000)]),
             ),
           ),
           Positioned(
@@ -377,7 +436,11 @@ class ReviewScenePanel extends StatelessWidget {
                         TextSpan(text: sentence.substring(0, at)),
                         TextSpan(
                           text: sentence.substring(at, at + word.word.length),
-                          style: TextStyle(color: lit, decoration: TextDecoration.underline, decorationColor: lit, decorationThickness: 2),
+                          style: TextStyle(
+                              color: lit,
+                              decoration: TextDecoration.underline,
+                              decorationColor: lit,
+                              decorationThickness: 2),
                         ),
                         TextSpan(text: sentence.substring(at + word.word.length)),
                       ]),
@@ -390,7 +453,12 @@ class ReviewScenePanel extends StatelessWidget {
                 child: shown && word.translation.isNotEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(top: Space.xs),
-                        child: Text(word.translation, textAlign: TextAlign.center, style: line.copyWith(fontSize: narrow ? 13 : 16, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.9))),
+                        child: Text(word.translation,
+                            textAlign: TextAlign.center,
+                            style: line.copyWith(
+                                fontSize: narrow ? 13 : 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.9))),
                       )
                     : const SizedBox(width: double.infinity),
               ),
@@ -430,7 +498,9 @@ class ReviewScenePanel extends StatelessWidget {
               const Spacer(),
               if (sound)
                 IconButton.filled(
-                  style: IconButton.styleFrom(backgroundColor: Colors.black.withValues(alpha: 0.45), foregroundColor: Colors.white),
+                  style: IconButton.styleFrom(
+                      backgroundColor: Colors.black.withValues(alpha: 0.45),
+                      foregroundColor: Colors.white),
                   tooltip: tr('Play the line again'),
                   onPressed: onReplay,
                   icon: Icon(AppIcons.speakerHigh, size: 18),
@@ -454,11 +524,22 @@ class ReviewScenePanel extends StatelessWidget {
                   child: Entrance(
                     scale: 0.98,
                     child: ReviewPlate(
-                      child: Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: Space.l, runSpacing: Space.xs, children: [
-                        SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700).merge(languageStyle(word.language))),
-                        if (word.reading.isNotEmpty) Text(word.reading, style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
-                        if (word.meaning.isNotEmpty) Text(word.meaning, style: theme.textTheme.bodyLarge),
-                      ]),
+                      child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.end,
+                          spacing: Space.l,
+                          runSpacing: Space.xs,
+                          children: [
+                            SelectableText(word.word,
+                                style: theme.textTheme.headlineMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700)
+                                    .merge(languageStyle(word.language))),
+                            if (word.reading.isNotEmpty)
+                              Text(word.reading,
+                                  style:
+                                      theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
+                            if (word.meaning.isNotEmpty)
+                              Text(word.meaning, style: theme.textTheme.bodyLarge),
+                          ]),
                     ),
                   ),
                 ),
@@ -486,7 +567,11 @@ class _Progress extends StatelessWidget {
           curve: Ease.curve,
           builder: (context, v, _) => ClipRRect(
             borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(value: v, minHeight: 6, color: colors.primary, backgroundColor: colors.primaryContainer),
+            child: LinearProgressIndicator(
+                value: v,
+                minHeight: 6,
+                color: colors.primary,
+                backgroundColor: colors.primaryContainer),
           ),
         ),
       ),
@@ -499,7 +584,13 @@ class _Progress extends StatelessWidget {
 /// The word in its line: the line and its sound first, the word lit up in
 /// it; the reading, meaning and translation once shown.
 class SavedWordCard extends StatelessWidget {
-  const SavedWordCard({super.key, required this.word, required this.shown, required this.sound, required this.onReplay, required this.onOpenVideo});
+  const SavedWordCard(
+      {super.key,
+      required this.word,
+      required this.shown,
+      required this.sound,
+      required this.onReplay,
+      required this.onOpenVideo});
   final VocabularyWord word;
   final bool shown;
   final bool sound;
@@ -512,15 +603,24 @@ class SavedWordCard extends StatelessWidget {
     final colors = theme.colorScheme;
     final sentence = word.sentence;
     final at = sentence.toLowerCase().indexOf(word.word.toLowerCase());
-    final lineStyle = theme.textTheme.titleMedium?.copyWith(height: 1.6, fontWeight: FontWeight.w400).merge(languageStyle(word.language));
+    final lineStyle = theme.textTheme.titleMedium
+        ?.copyWith(height: 1.6, fontWeight: FontWeight.w400)
+        .merge(languageStyle(word.language));
     return ReviewPlate(
       padding: const EdgeInsets.all(Space.xl),
       child: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: SelectableText(word.word, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700).merge(languageStyle(word.language)))),
+            Expanded(
+                child: SelectableText(word.word,
+                    style: theme.textTheme.headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)
+                        .merge(languageStyle(word.language)))),
             if (sound)
-              IconButton(tooltip: tr('Play the line again'), onPressed: onReplay, icon: Icon(AppIcons.speakerHigh, color: colors.primary)),
+              IconButton(
+                  tooltip: tr('Play the line again'),
+                  onPressed: onReplay,
+                  icon: Icon(AppIcons.speakerHigh, color: colors.primary)),
           ]),
           if (sentence.isNotEmpty) ...[
             const SizedBox(height: Space.m),
@@ -531,7 +631,11 @@ class SavedWordCard extends StatelessWidget {
                       TextSpan(text: sentence.substring(0, at)),
                       TextSpan(
                         text: sentence.substring(at, at + word.word.length),
-                        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w700, decoration: TextDecoration.underline, decorationColor: colors.primary),
+                        style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                            decorationColor: colors.primary),
                       ),
                       TextSpan(text: sentence.substring(at + word.word.length)),
                     ]),
@@ -548,18 +652,26 @@ class SavedWordCard extends StatelessWidget {
                     scale: 0.98,
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Divider(height: Space.xl * 1.5, color: colors.outlineVariant),
-                      if (word.reading.isNotEmpty) Text(word.reading, style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
-                      if (word.meaning.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: Text(word.meaning, style: theme.textTheme.bodyLarge)),
+                      if (word.reading.isNotEmpty)
+                        Text(word.reading,
+                            style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
+                      if (word.meaning.isNotEmpty)
+                        Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(word.meaning, style: theme.textTheme.bodyLarge)),
                       if (word.translation.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: Space.m),
-                          child: Text(word.translation, style: theme.textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant)),
+                          child: Text(word.translation,
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: colors.onSurfaceVariant)),
                         ),
                       if (word.videoId.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: Space.m),
                           child: TextButton.icon(
-                            style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+                            style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
                             onPressed: onOpenVideo,
                             icon: Icon(AppIcons.playCircle, size: 18),
                             label: Text(
@@ -579,7 +691,12 @@ class SavedWordCard extends StatelessWidget {
 }
 
 class _GradeButtons extends StatelessWidget {
-  const _GradeButtons({super.key, required this.store, required this.word, required this.onGrade, this.quiet = false});
+  const _GradeButtons(
+      {super.key,
+      required this.store,
+      required this.word,
+      required this.onGrade,
+      this.quiet = false});
   final ReviewStore store;
   final VocabularyWord word;
 
@@ -601,7 +718,12 @@ class _GradeButtons extends StatelessWidget {
           Text(label, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w700)),
           if (!quiet) ...[
             const SizedBox(height: 2),
-            Text(reviewIntervalLabel(next), maxLines: 1, style: TextStyle(fontSize: 11, color: main ? colors.onPrimary.withValues(alpha: 0.8) : colors.onSurfaceVariant)),
+            Text(reviewIntervalLabel(next),
+                maxLines: 1,
+                style: TextStyle(
+                    fontSize: 11,
+                    color:
+                        main ? colors.onPrimary.withValues(alpha: 0.8) : colors.onSurfaceVariant)),
           ],
         ]),
       );
@@ -610,9 +732,16 @@ class _GradeButtons extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: main
-              ? FilledButton(style: FilledButton.styleFrom(padding: padding, backgroundColor: colors.primary, foregroundColor: colors.onPrimary), onPressed: () => onGrade(grade), child: content)
+              ? FilledButton(
+                  style: FilledButton.styleFrom(
+                      padding: padding,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary),
+                  onPressed: () => onGrade(grade),
+                  child: content)
               : OutlinedButton(
-                  style: OutlinedButton.styleFrom(padding: padding, foregroundColor: color ?? colors.onSurface),
+                  style: OutlinedButton.styleFrom(
+                      padding: padding, foregroundColor: color ?? colors.onSurface),
                   onPressed: () => onGrade(grade),
                   child: content,
                 ),
@@ -645,10 +774,15 @@ class _ReviewDone extends StatelessWidget {
     final colors = theme.colorScheme;
     final now = DateTime.now();
     final streak = store.streak(now);
-    final next = [for (final w in book.words) store.of(w.key)?.due].whereType<DateTime>().where((d) => d.isAfter(now)).fold<DateTime?>(null, (a, b) => a == null || b.isBefore(a) ? b : a);
+    final next = [for (final w in book.words) store.of(w.key)?.due]
+        .whereType<DateTime>()
+        .where((d) => d.isAfter(now))
+        .fold<DateTime?>(null, (a, b) => a == null || b.isBefore(a) ? b : a);
     Widget stat(String number, String label) => Expanded(
           child: Column(children: [
-            Text(number, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: colors.primary)),
+            Text(number,
+                style: theme.textTheme.headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.w800, color: colors.primary)),
             Text(label, style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
           ]),
         );
@@ -657,16 +791,20 @@ class _ReviewDone extends StatelessWidget {
         Icon(AppIcons.checkCircle, size: 56, color: colors.primary),
         const SizedBox(height: Space.m),
         Text(
-          book.words.isEmpty ? tr('No words yet') : (done > 0 ? tr('Done for today') : tr('Nothing to review right now')),
+          book.words.isEmpty
+              ? tr('No words yet')
+              : (done > 0 ? tr('Done for today') : tr('Nothing to review right now')),
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: Space.s),
         Text(
           book.words.isEmpty
-              ? tr('Tap words in subtitles and add them to the vocabulary book; they come back here when it is time.')
+              ? tr(
+                  'Tap words in subtitles and add them to the vocabulary book; they come back here when it is time.')
               : next == null
                   ? ''
-                  : tr('The next words come back in {0}.', [reviewIntervalLabel(next.difference(now))]),
+                  : tr('The next words come back in {0}.',
+                      [reviewIntervalLabel(next.difference(now))]),
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.onSurfaceVariant),
         ),
@@ -694,15 +832,20 @@ class _ReviewLocked extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(AppIcons.lock, size: 40, color: theme.colorScheme.onSurfaceVariant),
       const SizedBox(height: Space.m),
-      Text(tr('Review is part of the learning pack'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      Text(tr('Review is part of the learning pack'),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
       const SizedBox(height: Space.s),
-      Text(tr('Words come back just before you would forget them, each with the line it was said in.'),
-          textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+      Text(
+          tr('Words come back just before you would forget them, each with the line it was said in.'),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
       const SizedBox(height: Space.l),
       const LearningPriceTag(),
       const SizedBox(height: Space.l),
       Wrap(spacing: Space.s, children: [
-        FilledButton(onPressed: () => unawaited(buyLearningPack()), child: Text(tr('Buy the learning pack'))),
+        FilledButton(
+            onPressed: () => unawaited(buyLearningPack()),
+            child: Text(tr('Buy the learning pack'))),
       ]),
     ]);
   }

@@ -28,7 +28,8 @@ void main() {
       asked.add(request.url.pathSegments.last);
       return http.Response.bytes([1, 2, 3], 200);
     });
-    final updates = BlockListUpdates(client: client, data: data, cache: cache, keptSignature: (_) => [1, 2, 3]);
+    final updates =
+        BlockListUpdates(client: client, data: data, cache: cache, keptSignature: (_) => [1, 2, 3]);
     await updates.check();
     expect(asked, ['lists.json.sig']);
     expect(updates.waiting, isNull);
@@ -44,7 +45,8 @@ void main() {
     });
     // A signature file alone, as an older build kept it, is not a kept list.
     await File('${data.path}/lists.json.sig').writeAsBytes([1, 2, 3]);
-    final updates = BlockListUpdates(client: client, data: data, cache: cache, keptSignature: (_) => null);
+    final updates =
+        BlockListUpdates(client: client, data: data, cache: cache, keptSignature: (_) => null);
     await updates.check();
     expect(asked, ['lists.json.sig', 'lists.json']);
     expect(updates.waiting, isNull);
@@ -55,7 +57,8 @@ void main() {
       markTestSkipped('needs lumtub_core');
       return;
     }
-    await File('${data.path}/lists.signed').writeAsBytes([3, 0, 0, 0, 1, 2, 3, ...utf8.encode('{"version": 99999999999, "lists": []}')]);
+    await File('${data.path}/lists.signed').writeAsBytes(
+        [3, 0, 0, 0, 1, 2, 3, ...utf8.encode('{"version": 99999999999, "lists": []}')]);
     expect(BlockLists.keptSignature(data.path), isNull);
     await File('${data.path}/lists.signed').writeAsBytes([1, 2]);
     expect(BlockLists.keptSignature(data.path), isNull);
@@ -73,11 +76,13 @@ void main() {
     await updates.check();
     expect(updates.waiting, isNull);
     expect(File('${data.path}/lists.signed').existsSync(), isFalse);
-    expect(File('${data.path}/lists-checked').existsSync(), isFalse, reason: 'a failed check is tried again');
+    expect(File('${data.path}/lists-checked').existsSync(), isFalse,
+        reason: 'a failed check is tried again');
   });
 
   test('an error answer leaves the lists as they are', () async {
-    final updates = BlockListUpdates(client: MockClient((_) async => http.Response('', 404)), data: data, cache: cache);
+    final updates = BlockListUpdates(
+        client: MockClient((_) async => http.Response('', 404)), data: data, cache: cache);
     await updates.check();
     expect(updates.waiting, isNull);
     expect(data.listSync(), isEmpty);

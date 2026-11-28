@@ -35,9 +35,11 @@ class LiveChatRepository {
 
   /// A folder of its own for one run of yt-dlp, so that a run ending (and
   /// cleaning up) never takes the file of another run for the same video.
-  Directory _runFolder() => Directory('${directory.path}${Platform.pathSeparator}${Random.secure().nextInt(1 << 32).toRadixString(16)}');
+  Directory _runFolder() => Directory(
+      '${directory.path}${Platform.pathSeparator}${Random.secure().nextInt(1 << 32).toRadixString(16)}');
 
-  File fileFor(String videoId, [Directory? folder]) => File('${(folder ?? directory).path}${Platform.pathSeparator}$videoId.live_chat.json');
+  File fileFor(String videoId, [Directory? folder]) =>
+      File('${(folder ?? directory).path}${Platform.pathSeparator}$videoId.live_chat.json');
 
   List<String> arguments(String videoId, [Directory? folder]) => [
         '--no-warnings',
@@ -78,7 +80,11 @@ class LiveChatRepository {
     );
     if (!await file.exists()) {
       final error = result.stderr.toString().trim();
-      if (result.exitCode == 0 || RegExp(r'no subtitles|live chat replay is not available', caseSensitive: false).hasMatch(error)) return const [];
+      if (result.exitCode == 0 ||
+          RegExp(r'no subtitles|live chat replay is not available', caseSensitive: false)
+              .hasMatch(error)) {
+        return const [];
+      }
       throw StateError(error.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : error);
     }
     // Once read, the file is only taking room (its folder goes after).
@@ -95,6 +101,7 @@ class LiveChatRepository {
 
   /// The most read from the chat file at once.
   static const _readBytes = 4 << 20;
+
   /// A chat line is a few kilobytes; one longer than this is skipped.
   static const _lineBytes = 16 << 20;
   static const _errorChars = 256 << 10;
@@ -102,7 +109,8 @@ class LiveChatRepository {
   // A replay of a long stream runs to hundreds of megabytes, nearly all
   // of it markup the messages leave out; it is read a few megabytes of
   // lines at a time, so only the messages are held whole.
-  static Future<List<LiveChatMessage>> _readReplay(File file) => Isolate.run(() => readReplayFile(file));
+  static Future<List<LiveChatMessage>> _readReplay(File file) =>
+      Isolate.run(() => readReplayFile(file));
 
   /// The messages of the replay [file], read [chunkChars] of lines at a time.
   static Future<List<LiveChatMessage>> readReplayFile(File file, {int chunkChars = 4 << 20}) async {
@@ -114,7 +122,8 @@ class LiveChatRepository {
       lines.clear();
     }
 
-    await for (final line in file.openRead().transform(utf8.decoder).transform(const LineSplitter())) {
+    await for (final line
+        in file.openRead().transform(utf8.decoder).transform(const LineSplitter())) {
       if (line.trim().isEmpty) continue;
       lines
         ..write(line)
@@ -204,7 +213,8 @@ class LiveChatRepository {
         }
         if (!running) {
           if (pending.isNotEmpty) {
-            for (final message in LiveChatMessage.parseLine(utf8.decode(pending.takeBytes(), allowMalformed: true))) {
+            for (final message in LiveChatMessage.parseLine(
+                utf8.decode(pending.takeBytes(), allowMalformed: true))) {
               yielded = true;
               yield message;
             }

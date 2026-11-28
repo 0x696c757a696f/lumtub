@@ -16,7 +16,17 @@ void main() {
     File('${temp.path}/image/Lumtub.app/Contents/MacOS/Lumtub').writeAsStringSync('new');
     Link('${temp.path}/image/Applications').createSync('/Applications');
     final dmg = File('${temp.path}/update.dmg');
-    final made = await Process.run('/usr/bin/hdiutil', ['create', '-quiet', '-volname', 'Lumtub', '-srcfolder', '${temp.path}/image', '-format', 'UDZO', dmg.path]);
+    final made = await Process.run('/usr/bin/hdiutil', [
+      'create',
+      '-quiet',
+      '-volname',
+      'Lumtub',
+      '-srcfolder',
+      '${temp.path}/image',
+      '-format',
+      'UDZO',
+      dmg.path
+    ]);
     expect(made.exitCode, 0, reason: '${made.stderr}');
 
     expect(canReplace(app), isTrue);

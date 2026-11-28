@@ -58,7 +58,8 @@ class SkinWordmark extends StatelessWidget {
           final layer = logo.fill.last;
           return switch (layer) {
             LinearPaint() => layer.gradient.createShader(bounds),
-            RadialPaint(:final colors, :final stops) => RadialGradient(colors: colors, stops: stops).createShader(bounds),
+            RadialPaint(:final colors, :final stops) =>
+              RadialGradient(colors: colors, stops: stops).createShader(bounds),
             SolidPaint(:final color) => LinearGradient(colors: [color, color]).createShader(bounds),
             _ => const LinearGradient(colors: [Colors.white, Colors.white]).createShader(bounds),
           };
@@ -68,13 +69,14 @@ class SkinWordmark extends StatelessWidget {
     }
     if (logo.stroke case final stroke?) {
       word = Stack(children: [
-        Text(text, style: style.copyWith(
-          shadows: const [],
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2
-            ..color = stroke,
-        )),
+        Text(text,
+            style: style.copyWith(
+              shadows: const [],
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 1.2
+                ..color = stroke,
+            )),
         word,
       ]);
     }
@@ -86,7 +88,8 @@ abstract final class SkinSurfaceDefaults {
   static final _badges = <Color, SkinSurface>{};
 
   /// The plain badge of skins that do not draw one: the accent, with a shine.
-  static SkinSurface badge(Color accent) => _badges.putIfAbsent(accent, () => SkinSurface.solid(accent, gloss: 0.5));
+  static SkinSurface badge(Color accent) =>
+      _badges.putIfAbsent(accent, () => SkinSurface.solid(accent, gloss: 0.5));
 }
 
 /// The title bar a skin draws, with minimise, maximise and close at the
@@ -94,9 +97,11 @@ abstract final class SkinSurfaceDefaults {
 /// on Windows the system does both from the caption area reported to it,
 /// which keeps snapping and Windows 11's snap layouts.
 class SkinTitleBarView extends StatefulWidget {
-  const SkinTitleBarView({super.key, required this.bar, required this.title, this.menuBar, this.menus});
+  const SkinTitleBarView(
+      {super.key, required this.bar, required this.title, this.menuBar, this.menus});
   final SkinTitleBar bar;
   final String title;
+
   /// With the title bar hidden, the menu bar takes its place: [menus] are
   /// drawn where the title was, in [menuBar]'s colours and height, and the
   /// window buttons sit beside them.
@@ -152,7 +157,8 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
     WindowFrame.setCaption(
       height: bottom,
       maximizeButton: max,
-      interactive: [_rectOf(_minimize), _rectOf(_close), SkinMenuBarView.menusAbove.value].nonNulls.toList(),
+      interactive:
+          [_rectOf(_minimize), _rectOf(_close), SkinMenuBarView.menusAbove.value].nonNulls.toList(),
     );
   }
 
@@ -163,16 +169,31 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
       valueListenable: WindowFrame.active,
       builder: (context, active, _) {
         final merged = widget.menuBar;
-        final surface = merged != null ? merged.surface ?? bar.surface : active ? bar.surface : bar.inactive ?? bar.surface;
-        final height = merged == null ? bar.height : math.max(merged.height, bar.buttonSize.height + 4);
+        final surface = merged != null
+            ? merged.surface ?? bar.surface
+            : active
+                ? bar.surface
+                : bar.inactive ?? bar.surface;
+        final height =
+            merged == null ? bar.height : math.max(merged.height, bar.buttonSize.height + 4);
         final text = active ? bar.text : bar.inactiveText ?? bar.text.withValues(alpha: 0.6);
-        Widget title = Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
+        Widget title = Text(widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
         if (bar.titlePlate case final plate?) {
-          title = ColoredBox(color: plate, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: title));
+          title = ColoredBox(
+              color: plate,
+              child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: title));
         }
         // Seeing the desktop, the title glows as on Windows 7's glass.
         title = GlassPlate(surface: surface, child: title);
-        final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, label: tr('Minimize'), onPressed: WindowFrame.minimize);
+        final minimize = _WindowButton(
+            key: _minimize,
+            bar: bar,
+            icon: _Glyph.minimize,
+            label: tr('Minimize'),
+            onPressed: WindowFrame.minimize);
         final maximize = ValueListenableBuilder(
           valueListenable: WindowFrame.maximized,
           builder: (context, maximized, _) => ValueListenableBuilder(
@@ -187,17 +208,27 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
             ),
           ),
         );
-        final close = _WindowButton(key: _close, bar: bar, icon: _Glyph.close, label: tr('Close'), close: true, onPressed: WindowFrame.close);
+        final close = _WindowButton(
+            key: _close,
+            bar: bar,
+            icon: _Glyph.close,
+            label: tr('Close'),
+            close: true,
+            onPressed: WindowFrame.close);
         final gap = SizedBox(width: bar.buttonsLeft ? 7 : 2);
         // Pointing at any of them shows the signs on all three, as on the
         // desktops these buttons come from.
         final buttons = MouseRegion(
           onEnter: (_) => _WindowButton.group.value = true,
           onExit: (_) => _WindowButton.group.value = false,
-          child: GlassPlate(surface: surface, child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: bar.buttonsLeft ? [close, gap, minimize, gap, maximize] : [minimize, gap, maximize, gap, close],
-          )),
+          child: GlassPlate(
+              surface: surface,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: bar.buttonsLeft
+                    ? [close, gap, minimize, gap, maximize]
+                    : [minimize, gap, maximize, gap, close],
+              )),
         );
         final appIcon = [
           const SizedBox(width: 6),
@@ -205,41 +236,72 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         ];
         final menus = widget.menus;
         // Close at the left, the other two at the right.
-        final split = [GlassPlate(surface: surface, child: Row(mainAxisSize: MainAxisSize.min, children: [minimize, const SizedBox(width: 4), maximize]))];
+        final split = [
+          GlassPlate(
+              surface: surface,
+              child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [minimize, const SizedBox(width: 4), maximize]))
+        ];
         if (bar.buttonsSplit) {
-          return _frame(surface, height, menus != null
-              ? Row(children: [const SizedBox(width: 8), GlassPlate(surface: surface, child: close), const SizedBox(width: 8), Expanded(child: menus), ...split, const SizedBox(width: 8)])
-              : Row(children: [
-                  const SizedBox(width: 8),
-                  GlassPlate(surface: surface, child: close),
-                  const SizedBox(width: 4),
-                  Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
-                  const SizedBox(width: 4),
-                  ...split,
-                  const SizedBox(width: 8),
-                ]));
+          return _frame(
+              surface,
+              height,
+              menus != null
+                  ? Row(children: [
+                      const SizedBox(width: 8),
+                      GlassPlate(surface: surface, child: close),
+                      const SizedBox(width: 8),
+                      Expanded(child: menus),
+                      ...split,
+                      const SizedBox(width: 8)
+                    ])
+                  : Row(children: [
+                      const SizedBox(width: 8),
+                      GlassPlate(surface: surface, child: close),
+                      const SizedBox(width: 4),
+                      Expanded(
+                          child: bar.align == 'center'
+                              ? Center(child: title)
+                              : Align(alignment: AlignmentDirectional.centerStart, child: title)),
+                      const SizedBox(width: 4),
+                      ...split,
+                      const SizedBox(width: 8),
+                    ]));
         }
         final row = menus != null
-            ? Row(children: bar.buttonsLeft
-                ? [const SizedBox(width: 9), buttons, const SizedBox(width: 6), Expanded(child: menus)]
-                : [Expanded(child: menus), buttons, const SizedBox(width: 3)])
+            ? Row(
+                children: bar.buttonsLeft
+                    ? [
+                        const SizedBox(width: 9),
+                        buttons,
+                        const SizedBox(width: 6),
+                        Expanded(child: menus)
+                      ]
+                    : [Expanded(child: menus), buttons, const SizedBox(width: 3)])
             : bar.buttonsLeft
-            ? Row(children: [
-                const SizedBox(width: 9),
-                buttons,
-                if (bar.icon) ...appIcon,
-                const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
-                // Balances the buttons so a centred title sits in the middle.
-                if (bar.align == 'center') SizedBox(width: bar.buttonSize.width * 3 + 23),
-              ])
-            : Row(children: [
-                if (bar.icon) ...appIcon,
-                const SizedBox(width: 8),
-                Expanded(child: bar.align == 'center' ? Center(child: title) : Align(alignment: AlignmentDirectional.centerStart, child: title)),
-                buttons,
-                const SizedBox(width: 3),
-              ]);
+                ? Row(children: [
+                    const SizedBox(width: 9),
+                    buttons,
+                    if (bar.icon) ...appIcon,
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: bar.align == 'center'
+                            ? Center(child: title)
+                            : Align(alignment: AlignmentDirectional.centerStart, child: title)),
+                    // Balances the buttons so a centred title sits in the middle.
+                    if (bar.align == 'center') SizedBox(width: bar.buttonSize.width * 3 + 23),
+                  ])
+                : Row(children: [
+                    if (bar.icon) ...appIcon,
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: bar.align == 'center'
+                            ? Center(child: title)
+                            : Align(alignment: AlignmentDirectional.centerStart, child: title)),
+                    buttons,
+                    const SizedBox(width: 3),
+                  ]);
         return _frame(surface, height, row);
       },
     );
@@ -252,7 +314,10 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
         // The buttons and title repaint in a layer of their own, not
         // with the bar's surface under them.
-        child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: RepaintBoundary(child: row))),
+        child: SizedBox(
+            key: _self,
+            height: height,
+            child: SkinBox(surface: surface, child: RepaintBoundary(child: row))),
       );
 }
 
@@ -281,7 +346,15 @@ abstract final class _AfterLayout {
 enum _Glyph { minimize, maximize, restore, close }
 
 class _WindowButton extends StatefulWidget {
-  const _WindowButton({super.key, required this.bar, required this.icon, required this.label, required this.onPressed, this.close = false, this.forced});
+  const _WindowButton(
+      {super.key,
+      required this.bar,
+      required this.icon,
+      required this.label,
+      required this.onPressed,
+      this.close = false,
+      this.forced});
+
   /// Whether the pointer is over the window buttons, any of them.
   static final group = ValueNotifier(false);
 
@@ -289,8 +362,10 @@ class _WindowButton extends StatefulWidget {
   final _Glyph icon;
   final Future<void> Function() onPressed;
   final bool close;
+
   /// The state Windows reports for the maximise button, which it owns.
   final WindowButtonState? forced;
+
   /// What the button does, for its tooltip and screen readers.
   final String label;
 
@@ -352,10 +427,25 @@ class _WindowButtonState extends State<_WindowButton> {
             surface: surface,
             child: DecoratedBox(
               // Without a skinned button, a plain wash shows the pointer.
-              decoration: BoxDecoration(color: surface != null || !(hovered || pressed) ? null : (widget.close ? const Color(0xFFE81123) : bar.buttonIcon.withValues(alpha: pressed ? 0.2 : 0.1))),
+              decoration: BoxDecoration(
+                  color: surface != null || !(hovered || pressed)
+                      ? null
+                      : (widget.close
+                          ? const Color(0xFFE81123)
+                          : bar.buttonIcon.withValues(alpha: pressed ? 0.2 : 0.1))),
               child: bar.glyphsOnHover
-                  ? (hovered || pressed || _WindowButton.group.value ? CustomPaint(painter: _GlyphPainter(widget.icon, bar.buttonIcon.withValues(alpha: 0.75), small: true)) : null)
-                  : CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon, classic: bar.classicGlyphs)),
+                  ? (hovered || pressed || _WindowButton.group.value
+                      ? CustomPaint(
+                          painter: _GlyphPainter(
+                              widget.icon, bar.buttonIcon.withValues(alpha: 0.75), small: true))
+                      : null)
+                  : CustomPaint(
+                      painter: _GlyphPainter(
+                          widget.icon,
+                          widget.close && surface == null && hovered
+                              ? Colors.white
+                              : bar.buttonIcon,
+                          classic: bar.classicGlyphs)),
             ),
           ),
         ),
@@ -374,10 +464,12 @@ class _WindowButtonState extends State<_WindowButton> {
 /// The window buttons' signs, in pixel lines so they stay crisp in any skin.
 class _GlyphPainter extends CustomPainter {
   _GlyphPainter(this.glyph, this.color, {this.small = false, this.classic = false});
+
   /// Boxes and lines instead of signs.
   final bool classic;
   final _Glyph glyph;
   final Color color;
+
   /// Fine signs inside small round buttons: a cross, a dash and a plus.
   final bool small;
 
@@ -396,8 +488,10 @@ class _GlyphPainter extends CustomPainter {
         case _Glyph.maximize || _Glyph.restore:
           canvas.drawRect(Rect.fromLTWH(box.left, box.top, box.width * 0.55, box.height * 0.55), p);
         case _Glyph.minimize:
-          canvas.drawLine(Offset(box.left, box.center.dy - 1.5), Offset(box.right, box.center.dy - 1.5), p);
-          canvas.drawLine(Offset(box.left, box.center.dy + 1.5), Offset(box.right, box.center.dy + 1.5), p);
+          canvas.drawLine(
+              Offset(box.left, box.center.dy - 1.5), Offset(box.right, box.center.dy - 1.5), p);
+          canvas.drawLine(
+              Offset(box.left, box.center.dy + 1.5), Offset(box.right, box.center.dy + 1.5), p);
       }
       return;
     }
@@ -430,18 +524,22 @@ class _GlyphPainter extends CustomPainter {
     const s = 5.0;
     switch (glyph) {
       case _Glyph.minimize:
-        canvas.drawLine(c + const Offset(-s, s * 0.6), c + const Offset(s, s * 0.6), p..strokeWidth = 2);
+        canvas.drawLine(
+            c + const Offset(-s, s * 0.6), c + const Offset(s, s * 0.6), p..strokeWidth = 2);
       case _Glyph.maximize:
         canvas.drawRect(Rect.fromCenter(center: c, width: s * 2, height: s * 2), p);
-        canvas.drawLine(c + const Offset(-s, -s + 1), c + const Offset(s, -s + 1), p..strokeWidth = 2);
+        canvas.drawLine(
+            c + const Offset(-s, -s + 1), c + const Offset(s, -s + 1), p..strokeWidth = 2);
       case _Glyph.restore:
         canvas.drawRect(Rect.fromLTWH(c.dx - s, c.dy - s + 3, s * 2 - 3, s * 2 - 3), p);
-        canvas.drawPath(Path()
-          ..moveTo(c.dx - s + 3, c.dy - s + 3)
-          ..lineTo(c.dx - s + 3, c.dy - s)
-          ..lineTo(c.dx + s, c.dy - s)
-          ..lineTo(c.dx + s, c.dy + s - 3)
-          ..lineTo(c.dx + s - 3, c.dy + s - 3), p);
+        canvas.drawPath(
+            Path()
+              ..moveTo(c.dx - s + 3, c.dy - s + 3)
+              ..lineTo(c.dx - s + 3, c.dy - s)
+              ..lineTo(c.dx + s, c.dy - s)
+              ..lineTo(c.dx + s, c.dy + s - 3)
+              ..lineTo(c.dx + s - 3, c.dy + s - 3),
+            p);
       case _Glyph.close:
         canvas.drawLine(c + const Offset(-s, -s), c + const Offset(s, s), p..strokeWidth = 1.6);
         canvas.drawLine(c + const Offset(s, -s), c + const Offset(-s, s), p);
@@ -449,7 +547,8 @@ class _GlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GlyphPainter old) => old.glyph != glyph || old.color != color || old.small != small || old.classic != classic;
+  bool shouldRepaint(_GlyphPainter old) =>
+      old.glyph != glyph || old.color != color || old.small != small || old.classic != classic;
 }
 
 /// One menu of [SkinMenuBarView]: '&' marks the letter Alt opens it with.
@@ -457,6 +556,7 @@ class SkinMenu {
   const SkinMenu(this.label, this.entries, {this.bold = false});
   final String label;
   final List<SkinMenuEntry> entries;
+
   /// The app's own menu, named in bold.
   final bool bold;
 }
@@ -478,10 +578,16 @@ class SkinMenuEntry {
 /// The text menus under the title bar, drawn by the app in the skin's
 /// colours: Alt and a menu's underlined letter open it, arrows move.
 class SkinMenuBarView extends StatefulWidget {
-  const SkinMenuBarView({super.key, required this.bar, required this.menus, this.clock = false, this.embedded = false});
+  const SkinMenuBarView(
+      {super.key,
+      required this.bar,
+      required this.menus,
+      this.clock = false,
+      this.embedded = false});
   final SkinMenuBar bar;
   final List<SkinMenu> menus;
   final bool clock;
+
   /// Drawn inside the title bar, which then is hidden: no surface or
   /// dragging of its own.
   final bool embedded;
@@ -540,26 +646,37 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
     final menuRadius = menuSurface?.radius ?? 0;
     final highlight = bar.highlight?.baseColor ?? colors.primary;
     final highlightText = bar.highlightText ?? colors.onPrimary;
-    final base = Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w400);
+    final base =
+        Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w400);
     final textStyle = WidgetStatePropertyAll(base);
-    final itemText = ThemeData.estimateBrightnessForColor(Color.alphaBlend(menuColor, colors.surface)) == Brightness.dark ? Colors.white : Colors.black;
-    bool lit(Set<WidgetState> s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) || s.contains(WidgetState.pressed);
+    final itemText =
+        ThemeData.estimateBrightnessForColor(Color.alphaBlend(menuColor, colors.surface)) ==
+                Brightness.dark
+            ? Colors.white
+            : Colors.black;
+    bool lit(Set<WidgetState> s) =>
+        s.contains(WidgetState.hovered) ||
+        s.contains(WidgetState.focused) ||
+        s.contains(WidgetState.pressed);
     final itemStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.disabled)
           ? itemText.withValues(alpha: 0.4)
           : lit(s)
               ? highlightText
               : itemText),
-      backgroundColor: WidgetStateProperty.resolveWith((s) => !s.contains(WidgetState.disabled) && lit(s) ? highlight : null),
+      backgroundColor: WidgetStateProperty.resolveWith(
+          (s) => !s.contains(WidgetState.disabled) && lit(s) ? highlight : null),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.basic),
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(menuRadius > 0 ? 4 : 0))),
+      shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(menuRadius > 0 ? 4 : 0))),
       minimumSize: const WidgetStatePropertyAll(Size(180, 30)),
       textStyle: textStyle,
     );
     final barStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.resolveWith((s) => lit(s) ? highlightText : bar.text),
-      backgroundColor: WidgetStateProperty.resolveWith((s) => lit(s) ? highlight : Colors.transparent),
+      backgroundColor:
+          WidgetStateProperty.resolveWith((s) => lit(s) ? highlight : Colors.transparent),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.basic),
       shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
@@ -576,11 +693,14 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
         // Menus hang from the bar: square at the top, round below.
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(menuRadius)),
       )),
-      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: menuRadius > 0 ? 4 : 2, vertical: menuRadius > 0 ? 4 : 2)),
+      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(
+          horizontal: menuRadius > 0 ? 4 : 2, vertical: menuRadius > 0 ? 4 : 2)),
     );
     Widget label(String text, {bool bold = false}) {
       final style = bold ? const TextStyle(fontWeight: FontWeight.w700) : null;
-      if (bar.underlineKeys) return DefaultTextStyle.merge(style: style, child: MenuAcceleratorLabel(text));
+      if (bar.underlineKeys) {
+        return DefaultTextStyle.merge(style: style, child: MenuAcceleratorLabel(text));
+      }
       return Text(text.replaceAll('&', ''), style: style);
     }
 
@@ -588,10 +708,12 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
     Widget content = SkinBox(
       surface: widget.embedded ? null : bar.surface,
       // The clock and menu highlights repaint apart from the bar's surface.
-      child: RepaintBoundary(child: SizedBox(
+      child: RepaintBoundary(
+          child: SizedBox(
         height: bar.height,
         child: Row(children: [
-          Expanded(child: MenuBar(
+          Expanded(
+              child: MenuBar(
             style: const MenuStyle(
               backgroundColor: WidgetStatePropertyAll(Colors.transparent),
               elevation: WidgetStatePropertyAll(0),
@@ -601,27 +723,42 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
             children: [
               for (final (i, menu) in menus.indexed)
                 SubmenuButton(
-                  key: i == 0 ? _first : i == menus.length - 1 ? _last : null,
+                  key: i == 0
+                      ? _first
+                      : i == menus.length - 1
+                          ? _last
+                          : null,
                   style: barStyle,
                   menuStyle: menuStyle,
                   menuChildren: [
                     for (final entry in menu.entries)
                       if (entry.isDivider)
-                        Divider(height: 7, indent: 4, endIndent: 4, color: itemText.withValues(alpha: 0.3))
+                        Divider(
+                            height: 7,
+                            indent: 4,
+                            endIndent: 4,
+                            color: itemText.withValues(alpha: 0.3))
                       else
                         MenuItemButton(
                           style: itemStyle,
                           onPressed: entry.onPressed,
                           shortcut: entry.shortcut,
-                          leadingIcon: entry.checked == null ? const SizedBox(width: 16) : Icon(entry.checked! ? AppIcons.check : null, size: 16),
+                          leadingIcon: entry.checked == null
+                              ? const SizedBox(width: 16)
+                              : Icon(entry.checked! ? AppIcons.check : null, size: 16),
                           child: label(entry.label),
                         ),
                   ],
-                  child: GlassPlate(surface: widget.embedded ? null : bar.surface, child: label(menu.label, bold: menu.bold)),
+                  child: GlassPlate(
+                      surface: widget.embedded ? null : bar.surface,
+                      child: label(menu.label, bold: menu.bold)),
                 ),
             ],
           )),
-          if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: GlassPlate(surface: bar.surface, child: _Clock(color: bar.text))),
+          if (widget.clock)
+            Padding(
+                padding: const EdgeInsetsDirectional.only(end: 10),
+                child: GlassPlate(surface: bar.surface, child: _Clock(color: bar.text))),
         ]),
       )),
     );
@@ -665,15 +802,23 @@ class _ClockState extends State<_Clock> {
   @override
   Widget build(BuildContext context) {
     final now = TimeOfDay.now();
-    return Text(MaterialLocalizations.of(context).formatTimeOfDay(now, alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context)),
-        style: TextStyle(color: widget.color, fontSize: 13, fontFeatures: const [FontFeature.tabularFigures()]));
+    return Text(
+        MaterialLocalizations.of(context).formatTimeOfDay(now,
+            alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context)),
+        style: TextStyle(
+            color: widget.color, fontSize: 13, fontFeatures: const [FontFeature.tabularFigures()]));
   }
 }
 
 /// The side rail as a skin draws it: its own surface, and the chosen
 /// page on [Skin.navSelected].
 class SkinRail extends StatelessWidget {
-  const SkinRail({super.key, required this.skin, required this.destinations, required this.selected, required this.onSelected});
+  const SkinRail(
+      {super.key,
+      required this.skin,
+      required this.destinations,
+      required this.selected,
+      required this.onSelected});
   final Skin skin;
   final List<(IconData, IconData, String)> destinations;
   final int? selected;
@@ -699,7 +844,9 @@ class SkinRail extends StatelessWidget {
                 label: destinations[i].$3,
                 selected: i == selected,
                 surface: i == selected ? skin.navSelected ?? _wash(colors) : null,
-                color: i == selected ? skin.navSelectedText ?? colors.onSurface : skin.navText ?? colors.onSurfaceVariant,
+                color: i == selected
+                    ? skin.navSelectedText ?? colors.onSurface
+                    : skin.navText ?? colors.onSurfaceVariant,
                 radius: radius,
                 plate: skin.sideBar,
                 onTap: () => onSelected(i),
@@ -716,7 +863,16 @@ class SkinRail extends StatelessWidget {
 }
 
 class _RailItem extends StatefulWidget {
-  const _RailItem({required this.icon, required this.label, required this.selected, required this.surface, required this.color, required this.radius, required this.onTap, this.plate});
+  const _RailItem(
+      {required this.icon,
+      required this.label,
+      required this.selected,
+      required this.surface,
+      required this.color,
+      required this.radius,
+      required this.onTap,
+      this.plate});
+
   /// The rail, whose colour the glow behind icon and label takes while
   /// the desktop shows through.
   final SkinSurface? plate;
@@ -737,11 +893,16 @@ class _RailItemState extends State<_RailItem> {
   bool _pressed = false;
   bool _focused = false;
 
-  Widget _plated(Widget child) => widget.surface?.baseColor != null ? child : GlassPlate(surface: widget.plate, child: child);
+  Widget _plated(Widget child) =>
+      widget.surface?.baseColor != null ? child : GlassPlate(surface: widget.plate, child: child);
 
   @override
   Widget build(BuildContext context) {
-    final wash = _pressed ? 0.22 : _hover ? 0.12 : 0.0;
+    final wash = _pressed
+        ? 0.22
+        : _hover
+            ? 0.12
+            : 0.0;
     return Semantics(
       button: true,
       selected: widget.selected,
@@ -759,15 +920,22 @@ class _RailItemState extends State<_RailItem> {
           // Pressed, the item sinks a little; with the remote's focus it
           // stands out with a ring.
           child: AnimatedScale(
-            scale: _pressed ? 0.94 : _focused ? 1.04 : 1,
+            scale: _pressed
+                ? 0.94
+                : _focused
+                    ? 1.04
+                    : 1,
             duration: Motion.of(const Duration(milliseconds: 90)),
             curve: Ease.out,
             child: SkinBox(
-              surface: widget.surface?.forState(hovered: _hover, pressed: _pressed, focused: _focused),
+              surface:
+                  widget.surface?.forState(hovered: _hover, pressed: _pressed, focused: _focused),
               radius: widget.radius,
               child: Container(
                 decoration: BoxDecoration(
-                  color: wash == 0 || (widget.surface != null && !_pressed) ? null : widget.color.withValues(alpha: wash),
+                  color: wash == 0 || (widget.surface != null && !_pressed)
+                      ? null
+                      : widget.color.withValues(alpha: wash),
                   borderRadius: BorderRadius.circular(widget.radius),
                   border: _focused ? Border.all(color: widget.color, width: 2.5) : null,
                 ),
@@ -781,7 +949,14 @@ class _RailItemState extends State<_RailItem> {
                   // Subscriptions still reads in the narrow rail.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: FittedBox(fit: BoxFit.scaleDown, child: _plated(Text(widget.label, maxLines: 1, style: TextStyle(fontSize: 12, color: widget.color, fontWeight: widget.selected ? FontWeight.w700 : null)))),
+                    child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _plated(Text(widget.label,
+                            maxLines: 1,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: widget.color,
+                                fontWeight: widget.selected ? FontWeight.w700 : null)))),
                   ),
                 ]),
               ),
@@ -796,7 +971,12 @@ class _RailItemState extends State<_RailItem> {
 /// The pages as a row of tabs, along the bottom or under the top bar, in
 /// the skin's own look.
 class SkinTabBar extends StatelessWidget {
-  const SkinTabBar({super.key, required this.tabs, required this.destinations, required this.selected, required this.onSelected});
+  const SkinTabBar(
+      {super.key,
+      required this.tabs,
+      required this.destinations,
+      required this.selected,
+      required this.onSelected});
   final SkinTabs tabs;
   final List<(IconData, IconData, String)> destinations;
   final int? selected;
@@ -829,19 +1009,31 @@ class SkinTabBar extends StatelessWidget {
               ? LayoutBuilder(builder: (context, constraints) {
                   // Each word as wide as it needs; shared out evenly when
                   // they all fit, scrolled when they don't.
-                  final style = TextStyle(fontSize: tabs.textOnly ? 13 : 11, letterSpacing: tabs.caps ? 0.6 : null, fontWeight: FontWeight.w700);
+                  final style = TextStyle(
+                      fontSize: tabs.textOnly ? 13 : 11,
+                      letterSpacing: tabs.caps ? 0.6 : null,
+                      fontWeight: FontWeight.w700);
                   final scaler = MediaQuery.textScalerOf(context);
                   double widthOf(String label) {
-                    final painter = TextPainter(text: TextSpan(text: tabs.caps ? label.toUpperCase() : label, style: style), textDirection: Directionality.of(context), textScaler: scaler, maxLines: 1)..layout();
+                    final painter = TextPainter(
+                        text: TextSpan(text: tabs.caps ? label.toUpperCase() : label, style: style),
+                        textDirection: Directionality.of(context),
+                        textScaler: scaler,
+                        maxLines: 1)
+                      ..layout();
                     final width = painter.width;
                     painter.dispose();
                     return math.max(72.0, width + 28);
                   }
+
                   final widths = [for (final d in destinations) widthOf(d.$3)];
                   final total = widths.fold(0.0, (a, b) => a + b);
                   return total <= constraints.maxWidth
                       ? Row(children: [for (final item in items) Expanded(child: item)])
-                      : ListView(scrollDirection: Axis.horizontal, children: [for (var i = 0; i < items.length; i++) SizedBox(width: widths[i], child: items[i])]);
+                      : ListView(scrollDirection: Axis.horizontal, children: [
+                          for (var i = 0; i < items.length; i++)
+                            SizedBox(width: widths[i], child: items[i])
+                        ]);
                 })
               : Row(children: [for (final item in items) Expanded(child: item)]),
         ),
@@ -851,7 +1043,13 @@ class SkinTabBar extends StatelessWidget {
 }
 
 class _TabItem extends StatefulWidget {
-  const _TabItem({required this.tabs, required this.icon, required this.label, required this.selected, required this.radius, required this.onTap});
+  const _TabItem(
+      {required this.tabs,
+      required this.icon,
+      required this.label,
+      required this.selected,
+      required this.radius,
+      required this.onTap});
   final SkinTabs tabs;
   final IconData icon;
   final String label;
@@ -872,7 +1070,11 @@ class _TabItemState extends State<_TabItem> {
   Widget build(BuildContext context) {
     final tabs = widget.tabs;
     final color = widget.selected ? tabs.selectedText : tabs.text;
-    final wash = _pressed ? 0.20 : _hover ? 0.10 : 0.0;
+    final wash = _pressed
+        ? 0.20
+        : _hover
+            ? 0.10
+            : 0.0;
     final label = Text(
       tabs.caps ? widget.label.toUpperCase() : widget.label,
       maxLines: 1,
@@ -887,7 +1089,9 @@ class _TabItemState extends State<_TabItem> {
     );
     // Words on a chosen tab lie on its own solid surface; the others glow
     // on the bar while the desktop shows through.
-    Widget plated(Widget child) => widget.selected && tabs.selected?.baseColor != null ? child : GlassPlate(surface: tabs.bar, child: child);
+    Widget plated(Widget child) => widget.selected && tabs.selected?.baseColor != null
+        ? child
+        : GlassPlate(surface: tabs.bar, child: child);
     final content = tabs.textOnly
         ? Center(child: plated(label))
         : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -914,17 +1118,23 @@ class _TabItemState extends State<_TabItem> {
           child: Stack(children: [
             Positioned.fill(
               child: Padding(
-                padding: widget.tabs.selected == null ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                padding: widget.tabs.selected == null
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                 child: AnimatedScale(
                   scale: _pressed ? 0.94 : 1,
                   duration: Motion.of(const Duration(milliseconds: 90)),
                   curve: Ease.out,
                   child: SkinBox(
-                    surface: widget.selected ? tabs.selected?.forState(hovered: _hover, pressed: _pressed) : null,
+                    surface: widget.selected
+                        ? tabs.selected?.forState(hovered: _hover, pressed: _pressed)
+                        : null,
                     radius: widget.radius,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: wash == 0 || (widget.selected && tabs.selected != null && !_pressed) ? null : tabs.text.withValues(alpha: wash),
+                        color: wash == 0 || (widget.selected && tabs.selected != null && !_pressed)
+                            ? null
+                            : tabs.text.withValues(alpha: wash),
                         borderRadius: BorderRadius.circular(widget.radius),
                         border: _focused ? Border.all(color: color, width: 2.5) : null,
                       ),
@@ -968,20 +1178,35 @@ class ResizeEdges extends StatelessWidget {
           ? child!
           : Stack(children: [
               child!,
-              _zone(WindowEdge.top, SystemMouseCursors.resizeUp, top: 0, left: _edge, right: _edge, height: _edge),
-              _zone(WindowEdge.bottom, SystemMouseCursors.resizeDown, bottom: 0, left: _edge, right: _edge, height: _edge),
-              _zone(WindowEdge.left, SystemMouseCursors.resizeLeft, left: 0, top: _edge, bottom: _edge, width: _edge),
-              _zone(WindowEdge.right, SystemMouseCursors.resizeRight, right: 0, top: _edge, bottom: _edge, width: _edge),
-              _zone(WindowEdge.topLeft, SystemMouseCursors.resizeUpLeft, top: 0, left: 0, width: _edge * 2, height: _edge * 2),
-              _zone(WindowEdge.topRight, SystemMouseCursors.resizeUpRight, top: 0, right: 0, width: _edge * 2, height: _edge * 2),
-              _zone(WindowEdge.bottomLeft, SystemMouseCursors.resizeDownLeft, bottom: 0, left: 0, width: _edge * 2, height: _edge * 2),
-              _zone(WindowEdge.bottomRight, SystemMouseCursors.resizeDownRight, bottom: 0, right: 0, width: _edge * 2, height: _edge * 2),
+              _zone(WindowEdge.top, SystemMouseCursors.resizeUp,
+                  top: 0, left: _edge, right: _edge, height: _edge),
+              _zone(WindowEdge.bottom, SystemMouseCursors.resizeDown,
+                  bottom: 0, left: _edge, right: _edge, height: _edge),
+              _zone(WindowEdge.left, SystemMouseCursors.resizeLeft,
+                  left: 0, top: _edge, bottom: _edge, width: _edge),
+              _zone(WindowEdge.right, SystemMouseCursors.resizeRight,
+                  right: 0, top: _edge, bottom: _edge, width: _edge),
+              _zone(WindowEdge.topLeft, SystemMouseCursors.resizeUpLeft,
+                  top: 0, left: 0, width: _edge * 2, height: _edge * 2),
+              _zone(WindowEdge.topRight, SystemMouseCursors.resizeUpRight,
+                  top: 0, right: 0, width: _edge * 2, height: _edge * 2),
+              _zone(WindowEdge.bottomLeft, SystemMouseCursors.resizeDownLeft,
+                  bottom: 0, left: 0, width: _edge * 2, height: _edge * 2),
+              _zone(WindowEdge.bottomRight, SystemMouseCursors.resizeDownRight,
+                  bottom: 0, right: 0, width: _edge * 2, height: _edge * 2),
             ]),
       child: child,
     );
   }
 
-  Widget _zone(WindowEdge edge, MouseCursor cursor, {double? top, double? bottom, double? left, double? right, double? width, double? height}) => Positioned(
+  Widget _zone(WindowEdge edge, MouseCursor cursor,
+          {double? top,
+          double? bottom,
+          double? left,
+          double? right,
+          double? width,
+          double? height}) =>
+      Positioned(
         top: top,
         bottom: bottom,
         left: left,
@@ -990,13 +1215,16 @@ class ResizeEdges extends StatelessWidget {
         height: height,
         child: MouseRegion(
           cursor: cursor,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onPanStart: (_) => unawaited(WindowFrame.startResize(edge))),
+          child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (_) => unawaited(WindowFrame.startResize(edge))),
         ),
       );
 }
 
 /// Whether [skin]'s own title bar is in use.
-bool usesSkinTitleBar(Skin? skin, {required bool systemTitleBar}) => skin?.titleBar != null && !systemTitleBar && WindowFrame.supported;
+bool usesSkinTitleBar(Skin? skin, {required bool systemTitleBar}) =>
+    skin?.titleBar != null && !systemTitleBar && WindowFrame.supported;
 
 /// Keyboard shortcuts of the menus also work while the menus are closed.
 Map<ShortcutActivator, VoidCallback> menuShortcuts(List<SkinMenu> menus) => {

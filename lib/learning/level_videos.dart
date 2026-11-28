@@ -50,7 +50,9 @@ int levelTierOf(String language, int? level) {
   if (level == null) return 0;
   return switch (language) {
     // EnglishLevel's index: middle school (A2) to beyond.
-    'en' => level <= EnglishLevel.middleSchool.index ? 0 : (level < EnglishLevel.toeflIelts.index ? 1 : 2),
+    'en' => level <= EnglishLevel.middleSchool.index
+        ? 0
+        : (level < EnglishLevel.toeflIelts.index ? 1 : 2),
     _ => switch (LevelScale.of(language)) {
         LevelScale.hsk => level <= 2 ? 0 : (level <= 4 ? 1 : 2),
         LevelScale.jlpt => level <= 2 ? 0 : (level == 3 ? 1 : 2),
@@ -88,7 +90,12 @@ List<String> gradedLevelQueries(String language, int tier) {
 }
 
 const _gradedQueries = <String, List<String>>{
-  'en': ['VOA Learning English', 'BBC Learning English', 'easy English listening', 'slow English story'],
+  'en': [
+    'VOA Learning English',
+    'BBC Learning English',
+    'easy English listening',
+    'slow English story'
+  ],
   'zh': ['Mandarin Corner', 'Lazy Chinese', '慢速中文', '简单中文 故事'],
   'ja': ['Comprehensible Japanese', 'やさしい日本語', 'ゆっくり日本語', 'にほんごのじかん'],
   'ko': ['Comprehensible Korean', '쉬운 한국어', '천천히 한국어 듣기'],
@@ -172,7 +179,9 @@ const _chineseNames = {
 /// own name where the language has one (N5, HSK 3, TOPIK I), else CEFR.
 String? levelTag(String language, int? level) {
   if (level == null) return null;
-  if (language == 'en') return EnglishLevel.values[level.clamp(0, EnglishLevel.gre.index)].cefr.replaceAll('+', '');
+  if (language == 'en') {
+    return EnglishLevel.values[level.clamp(0, EnglishLevel.gre.index)].cefr.replaceAll('+', '');
+  }
   return switch (LevelScale.of(language)) {
     LevelScale.hsk => 'HSK ${level.clamp(1, 7)}',
     LevelScale.jlpt => 'N${6 - level.clamp(1, 5)}',
@@ -186,7 +195,8 @@ String? levelTag(String language, int? level) {
 /// English words (Chinese ones for Chinese) that explore's search
 /// translation puts into the explanation language, with the level's name
 /// ([tag]) added untranslated.
-List<LessonQuery> lessonQueries(String language, int tier, ExploreLanguage explainedIn, {String? tag}) {
+List<LessonQuery> lessonQueries(String language, int tier, ExploreLanguage explainedIn,
+    {String? tag}) {
   if (explainedIn == ExploreLanguage.zh) {
     final name = _chineseNames[language] ?? language;
     final step = const ['入门', '中级', '高级'][tier.clamp(0, 2)];
@@ -223,7 +233,10 @@ class LessonQuery {
 /// it names it, 1 when it names no level, 0 when it names only others.
 int lessonFit(String title, String? tag) {
   if (tag == null) return 1;
-  final named = [for (final m in _levelNames.allMatches(title.toUpperCase())) m[0]!.replaceAll(RegExp(r'\s+'), '')];
+  final named = [
+    for (final m in _levelNames.allMatches(title.toUpperCase()))
+      m[0]!.replaceAll(RegExp(r'\s+'), '')
+  ];
   if (named.isEmpty) return 1;
   return named.contains(tag.toUpperCase().replaceAll(' ', '')) ? 2 : 0;
 }
@@ -235,7 +248,18 @@ final _levelNames = RegExp(r'\b(?:N[1-5]|HSK\s?[1-9]|TOPIK\s?I{1,2}|[ABC][12])\b
 /// languages written with spaces, Chinese characters, Japanese morae,
 /// Korean syllables. Starting points from studies of speech rate (2026-11
 /// review), to be tuned against the videos learners watch.
-const _everydayPace = {'en': 170, 'es': 170, 'it': 165, 'fr': 165, 'pt': 160, 'de': 140, 'ru': 120, 'zh': 260, 'ja': 400, 'ko': 300};
+const _everydayPace = {
+  'en': 170,
+  'es': 170,
+  'it': 165,
+  'fr': 165,
+  'pt': 160,
+  'de': 140,
+  'ru': 120,
+  'zh': 260,
+  'ja': 400,
+  'ko': 300
+};
 
 /// Slower than this share of the everyday pace is slow, faster than
 /// [_fastPace] fast.
@@ -342,7 +366,9 @@ class LevelFeatures {
         'v': version,
         'l': language,
         'a': automatic,
-        'w': [for (final t in words) [t.text, t.lookup, t.language]],
+        'w': [
+          for (final t in words) [t.text, t.lookup, t.language]
+        ],
         'x': lines,
         's': starts,
         'd': speech,
@@ -353,14 +379,41 @@ class LevelFeatures {
 
   static LevelFeatures? fromJson(Object? raw) {
     if (raw is! Map || raw['v'] != version) return null;
-    final language = raw['l'], automatic = raw['a'], words = raw['w'], lines = raw['x'], starts = raw['s'], speech = raw['d'], units = raw['u'];
-    if (language is! String || automatic is! bool || words is! List || lines is! List || starts is! List || speech is! int || units is! int) return null;
-    if (lines.length != starts.length || words.length > 100000 || lines.length > 100000 || speech < 0 || units < 0) return null;
+    final language = raw['l'],
+        automatic = raw['a'],
+        words = raw['w'],
+        lines = raw['x'],
+        starts = raw['s'],
+        speech = raw['d'],
+        units = raw['u'];
+    if (language is! String ||
+        automatic is! bool ||
+        words is! List ||
+        lines is! List ||
+        starts is! List ||
+        speech is! int ||
+        units is! int) {
+      return null;
+    }
+    if (lines.length != starts.length ||
+        words.length > 100000 ||
+        lines.length > 100000 ||
+        speech < 0 ||
+        units < 0) {
+      return null;
+    }
     double share(Object? v) => v is num && v.isFinite ? v.toDouble().clamp(0, 1) : 0;
     final tokens = <WordToken>[];
     for (final w in words) {
-      if (w is! List || w.length != 3 || w[0] is! String || (w[1] != null && w[1] is! String) || (w[2] != null && w[2] is! String)) return null;
-      tokens.add(WordToken(w[0] as String, null, isWord: true, lookup: w[1] as String?, language: w[2] as String?));
+      if (w is! List ||
+          w.length != 3 ||
+          w[0] is! String ||
+          (w[1] != null && w[1] is! String) ||
+          (w[2] != null && w[2] is! String)) {
+        return null;
+      }
+      tokens.add(WordToken(w[0] as String, null,
+          isWord: true, lookup: w[1] as String?, language: w[2] as String?));
     }
     final rows = <List<int>>[];
     for (final line in lines) {
@@ -389,7 +442,9 @@ class LevelFeatures {
 /// [cues] (start and end in milliseconds, text) cut into words with
 /// [learning]'s dictionaries, a few lines at a time so the interface
 /// never waits. Null when nothing in them is a word of a dictionary.
-Future<LevelFeatures?> levelFeaturesOf(Learning learning, String language, List<(int, int, String)> cues, {required bool automatic}) async {
+Future<LevelFeatures?> levelFeaturesOf(
+    Learning learning, String language, List<(int, int, String)> cues,
+    {required bool automatic}) async {
   final words = <WordToken>[];
   final index = <String, int>{};
   final lines = <List<int>>[];
@@ -439,7 +494,10 @@ Future<LevelFeatures?> levelFeaturesOf(Learning learning, String language, List<
 
 /// How long [cues] are on screen, overlapping ones counted once.
 int speechSpan(List<(int, int, String)> cues) {
-  final spans = [for (final (start, end, _) in cues) if (end > start) (start, end)]..sort((a, b) => a.$1.compareTo(b.$1));
+  final spans = [
+    for (final (start, end, _) in cues)
+      if (end > start) (start, end)
+  ]..sort((a, b) => a.$1.compareTo(b.$1));
   var total = 0;
   int? from, to;
   for (final (start, end) in spans) {
@@ -490,7 +548,13 @@ final _han = RegExp(r'\p{Script=Han}', unicode: true);
 /// What a video's [LevelFeatures] say for one learner.
 @immutable
 class LevelMeasure {
-  const LevelMeasure({required this.known, required this.said, required this.newWords, required this.perMinute, required this.newPerMinute, required this.hardestMinute});
+  const LevelMeasure(
+      {required this.known,
+      required this.said,
+      required this.newWords,
+      required this.perMinute,
+      required this.newPerMinute,
+      required this.hardestMinute});
 
   /// The share of what is said known, each word counted every time.
   final double known;
@@ -514,7 +578,8 @@ class LevelMeasure {
 /// [characters] are the Chinese and Japanese characters of words they
 /// know elsewhere. As `coverage` in the core counts: a new Chinese or
 /// Japanese word made only of known characters counts as half known.
-LevelMeasure measureLevel(LevelFeatures features, bool Function(WordToken word) knows, Set<int> characters) {
+LevelMeasure measureLevel(
+    LevelFeatures features, bool Function(WordToken word) knows, Set<int> characters) {
   final known = [for (final w in features.words) knows(w)];
   final chars = {...characters};
   for (final (i, w) in features.words.indexed) {
@@ -523,7 +588,10 @@ LevelMeasure measureLevel(LevelFeatures features, bool Function(WordToken word) 
   final cjk = features.language == 'zh' || features.language == 'ja';
   final half = [
     for (final (i, w) in features.words.indexed)
-      cjk && !known[i] && w.text.runes.length >= 2 && w.text.runes.every((c) => _han.hasMatch(String.fromCharCode(c)) && chars.contains(c)),
+      cjk &&
+          !known[i] &&
+          w.text.runes.length >= 2 &&
+          w.text.runes.every((c) => _han.hasMatch(String.fromCharCode(c)) && chars.contains(c)),
   ];
   var said = 0;
   var understood = 0.0;
@@ -618,13 +686,25 @@ class LevelReading {
   SpeechPace get pace {
     final everyday = _everydayPace[language] ?? 170;
     final pace = perMinute / everyday;
-    return pace < _slowPace ? SpeechPace.slow : (pace > _fastPace ? SpeechPace.fast : SpeechPace.moderate);
+    return pace < _slowPace
+        ? SpeechPace.slow
+        : (pace > _fastPace ? SpeechPace.fast : SpeechPace.moderate);
   }
 
-  static LevelReading none(String language, int at) =>
-      LevelReading(language: language, known: null, automatic: false, newWords: 0, perMinute: 0, newPerMinute: 0, hardestMinute: null, at: at, stamp: '');
+  static LevelReading none(String language, int at) => LevelReading(
+      language: language,
+      known: null,
+      automatic: false,
+      newWords: 0,
+      perMinute: 0,
+      newPerMinute: 0,
+      hardestMinute: null,
+      at: at,
+      stamp: '');
 
-  static LevelReading of(LevelFeatures features, LevelMeasure measure, {required int at, required String stamp}) => LevelReading(
+  static LevelReading of(LevelFeatures features, LevelMeasure measure,
+          {required int at, required String stamp}) =>
+      LevelReading(
         language: features.language,
         known: measure.known,
         automatic: features.automatic,
@@ -654,11 +734,34 @@ class LevelReading {
 
   static LevelReading? fromJson(Object? raw) {
     if (raw is! Map) return null;
-    final language = raw['l'], known = raw['k'], newWords = raw['n'], per = raw['p'], newPer = raw['q'], hardest = raw['h'], at = raw['t'], stamp = raw['v'], confidence = raw['c'] ?? 100;
-    if (language is! String || language.length > 8 || at is! int || newWords is! int || stamp is! String || stamp.length > 400) return null;
+    final language = raw['l'],
+        known = raw['k'],
+        newWords = raw['n'],
+        per = raw['p'],
+        newPer = raw['q'],
+        hardest = raw['h'],
+        at = raw['t'],
+        stamp = raw['v'],
+        confidence = raw['c'] ?? 100;
+    if (language is! String ||
+        language.length > 8 ||
+        at is! int ||
+        newWords is! int ||
+        stamp is! String ||
+        stamp.length > 400) {
+      return null;
+    }
     bool share(Object? v) => v == null || (v is num && v.isFinite && v >= 0 && v <= 1);
     bool rate(Object? v) => v is num && v.isFinite && v >= 0 && v < 100000;
-    if (!share(known) || !share(hardest) || !rate(per) || !rate(newPer) || confidence is! int || confidence < 0 || confidence > 100) return null;
+    if (!share(known) ||
+        !share(hardest) ||
+        !rate(per) ||
+        !rate(newPer) ||
+        confidence is! int ||
+        confidence < 0 ||
+        confidence > 100) {
+      return null;
+    }
     return LevelReading(
       language: language,
       known: (known as num?)?.toDouble(),
@@ -678,7 +781,15 @@ class LevelReading {
 /// asked about, measured, without subtitles, not answered, skipped for
 /// their channel; and whether it stopped at its budget of new videos
 /// ([LevelVideos.budget]) or because YouTube stopped answering.
-typedef LevelCheck = ({int asked, int measured, int noSubtitles, int failed, int skipped, bool budgetSpent, bool refused});
+typedef LevelCheck = ({
+  int asked,
+  int measured,
+  int noSubtitles,
+  int failed,
+  int skipped,
+  bool budgetSpent,
+  bool refused
+});
 
 /// Reads videos' subtitles in the language learnt, keeps their
 /// [LevelFeatures] (one small file each) and what they told
@@ -766,10 +877,16 @@ class LevelVideos extends ChangeNotifier {
     try {
       if (!await file.exists()) return;
       final text = await file.readAsString();
-      final json = await (text.length < 64 << 10 ? Future.value(jsonDecode(text)) : Isolate.run(() => jsonDecode(text)));
+      final json = await (text.length < 64 << 10
+          ? Future.value(jsonDecode(text))
+          : Isolate.run(() => jsonDecode(text)));
       if (json is! Map) return;
       if (json['language'] case final String picked when picked.length <= 8) language = picked;
-      if (json['explainedIn'] case final String picked) explainedIn = ExploreLanguage.values.where((l) => l.name == picked && l != ExploreLanguage.any).firstOrNull;
+      if (json['explainedIn'] case final String picked) {
+        explainedIn = ExploreLanguage.values
+            .where((l) => l.name == picked && l != ExploreLanguage.any)
+            .firstOrNull;
+      }
       if (json['videos'] case final Map<dynamic, dynamic> videos) {
         for (final MapEntry(:key, :value) in videos.entries) {
           if (!_id.hasMatch('$key')) continue;
@@ -779,7 +896,10 @@ class LevelVideos extends ChangeNotifier {
       if (json['channels'] case final Map<dynamic, dynamic> channels) {
         for (final MapEntry(:key, :value) in channels.entries.take(_channelsKept)) {
           if ('$key'.length > 80 || value is! List || value.length != 2) continue;
-          if (value case [final int read, final int fit] when read >= 0 && fit >= 0 && fit <= read) _channels['$key'] = (read, fit);
+          if (value case [final int read, final int fit]
+              when read >= 0 && fit >= 0 && fit <= read) {
+            _channels['$key'] = (read, fit);
+          }
         }
       }
       if (json['granted'] case final List<dynamic> granted) {
@@ -806,9 +926,11 @@ class LevelVideos extends ChangeNotifier {
 
   /// What the learner knows of [language] now, in a few characters: the
   /// levels, how many words were marked, how many reviewed until known.
-  static String stampOf(Learning learning, KnownWords known) => '${learning.levelKey}|${known.marked}|${known.review.knownKeys.length}';
+  static String stampOf(Learning learning, KnownWords known) =>
+      '${learning.levelKey}|${known.marked}|${known.review.knownKeys.length}';
 
-  File? _featuresFile(String id) => _folder == null ? null : File('${_folder!.path}${Platform.pathSeparator}$id.json.gz');
+  File? _featuresFile(String id) =>
+      _folder == null ? null : File('${_folder!.path}${Platform.pathSeparator}$id.json.gz');
 
   /// The share of a channel's videos read in [language] that a learner
   /// could follow, from 0 to 1; null before any was read.
@@ -907,11 +1029,17 @@ class LevelVideos extends ChangeNotifier {
         asked++;
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         final reading = _readings[item.id];
-        if (reading != null && reading.language == language && reading.known == null && now - reading.at < noSubtitlesFor.inSeconds) {
+        if (reading != null &&
+            reading.language == language &&
+            reading.known == null &&
+            now - reading.at < noSubtitlesFor.inSeconds) {
           none++;
           continue;
         }
-        final cached = reading != null && reading.language == language && reading.known != null && now - reading.at < keptFor.inSeconds;
+        final cached = reading != null &&
+            reading.language == language &&
+            reading.known != null &&
+            now - reading.at < keptFor.inSeconds;
         if (!cached) {
           if (enough?.call() ?? false) break;
           if (_channelGivenUp(language, item.channelId)) {
@@ -928,7 +1056,8 @@ class LevelVideos extends ChangeNotifier {
           }
           fetched++;
         }
-        pending.add(_Pending(_read(item.id, item.channelId, language, learning, known, languages).then((reading) {
+        pending.add(_Pending(
+            _read(item.id, item.channelId, language, learning, known, languages).then((reading) {
           if (reading == null) {
             failed++;
             missedInRow++;
@@ -954,30 +1083,46 @@ class LevelVideos extends ChangeNotifier {
       }
     } finally {
       if (languages != null) languages.keepCaptionTracks--;
-      done?.call((asked: asked, measured: measured, noSubtitles: none, failed: failed, skipped: skipped, budgetSpent: spent, refused: refused));
+      done?.call((
+        asked: asked,
+        measured: measured,
+        noSubtitles: none,
+        failed: failed,
+        skipped: skipped,
+        budgetSpent: spent,
+        refused: refused
+      ));
       if (asked > 0) {
-        logInfo('Level videos $language: measured $measured of $asked in ${(clock.elapsedMilliseconds / 1000).toStringAsFixed(1)} s, '
+        logInfo(
+            'Level videos $language: measured $measured of $asked in ${(clock.elapsedMilliseconds / 1000).toStringAsFixed(1)} s, '
             '$fetched fetched, $none without subtitles in $language, $failed not answered, $skipped skipped for their channel'
             '${spent ? '; stopped at the budget' : ''}${refused ? '; stopped as YouTube stopped answering' : ''}');
       }
     }
   }
 
-  Future<LevelReading?> _read(String id, String? channel, String language, Learning learning, KnownWords known, VideoLanguages? languages) =>
-      _reading[id] ??= _readOnce(id, channel, language, learning, known, languages).whenComplete(() => _reading.remove(id));
+  Future<LevelReading?> _read(String id, String? channel, String language, Learning learning,
+          KnownWords known, VideoLanguages? languages) =>
+      _reading[id] ??= _readOnce(id, channel, language, learning, known, languages)
+          .whenComplete(() => _reading.remove(id));
 
-  Future<LevelReading?> _readOnce(String id, String? channel, String language, Learning learning, KnownWords known, VideoLanguages? languages) async {
+  Future<LevelReading?> _readOnce(String id, String? channel, String language, Learning learning,
+      KnownWords known, VideoLanguages? languages) async {
     final stamp = stampOf(learning, known);
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final reading = _readings[id];
-    final fresh = reading != null && reading.language == language && reading.known != null && now - reading.at < keptFor.inSeconds;
+    final fresh = reading != null &&
+        reading.language == language &&
+        reading.known != null &&
+        now - reading.at < keptFor.inSeconds;
     if (fresh && reading.stamp == stamp) return reading;
     if (fresh) {
       // What the learner knows changed: worked out again from the kept
       // words, without asking YouTube.
       final features = await _loadFeatures(id);
       if (features != null && features.language == language) {
-        final again = LevelReading.of(features, _measure(features, learning, known), at: reading.at, stamp: stamp);
+        final again = LevelReading.of(features, _measure(features, learning, known),
+            at: reading.at, stamp: stamp);
         _keep(id, again);
         return again;
       }
@@ -992,14 +1137,18 @@ class LevelVideos extends ChangeNotifier {
       final subtitles = await _subtitles(id, language, languages?.captionTracks(id));
       if (subtitles == null) return null;
       final (cues, automatic) = subtitles;
-      final features = cues.isEmpty ? null : await levelFeaturesOf(learning, language, cues, automatic: automatic);
+      final features = cues.isEmpty
+          ? null
+          : await levelFeaturesOf(learning, language, cues, automatic: automatic);
       final LevelReading result;
       if (features == null) {
         result = LevelReading.none(language, now);
       } else {
         final measure = _measure(features, learning, known);
         // Too few words to say: a music video, a few lines of speech.
-        result = measure.said < 40 ? LevelReading.none(language, now) : LevelReading.of(features, measure, at: now, stamp: stamp);
+        result = measure.said < 40
+            ? LevelReading.none(language, now)
+            : LevelReading.of(features, measure, at: now, stamp: stamp);
         if (result.known != null) {
           await _saveFeatures(id, features);
           _countChannel(language, channel, measure.known);
@@ -1019,7 +1168,8 @@ class LevelVideos extends ChangeNotifier {
   }
 
   static LevelMeasure _measure(LevelFeatures features, Learning learning, KnownWords known) =>
-      measureLevel(features, (w) => known.knows(w) || learning.belowLevel(w), known.characters(features.language));
+      measureLevel(features, (w) => known.knows(w) || learning.belowLevel(w),
+          known.characters(features.language));
 
   Future<LevelFeatures?> _loadFeatures(String id) async {
     final file = _featuresFile(id);
@@ -1070,12 +1220,15 @@ class LevelVideos extends ChangeNotifier {
   /// [known] are tracks the language check's answer listed. Otherwise
   /// each of YouTube's apps is asked in turn, as one may give subtitles
   /// another holds back.
-  Future<(List<(int, int, String)>, bool)?> _subtitles(String id, String language, List<CaptionTrack>? known) async {
+  Future<(List<(int, int, String)>, bool)?> _subtitles(
+      String id, String language, List<CaptionTrack>? known) async {
     if (known != null) {
       final track = captionTrackIn(known, language);
       if (track == null && known.isNotEmpty) return (const <(int, int, String)>[], false);
       if (track != null) {
-        if (await _fetchCues(id, track, 'the language check') case final cues?) return (cues, track.automatic);
+        if (await _fetchCues(id, track, 'the language check') case final cues?) {
+          return (cues, track.automatic);
+        }
       }
     }
     var answered = false;
@@ -1088,7 +1241,9 @@ class LevelVideos extends ChangeNotifier {
         continue;
       }
       answered = true;
-      final tracks = bytes.length < 32 << 10 ? captionTracksOf(bytes) : await Isolate.run(() => captionTracksOf(bytes));
+      final tracks = bytes.length < 32 << 10
+          ? captionTracksOf(bytes)
+          : await Isolate.run(() => captionTracksOf(bytes));
       final track = captionTrackIn(tracks, language);
       if (track == null) {
         // The same in every app's answer where it gives any.
@@ -1097,7 +1252,8 @@ class LevelVideos extends ChangeNotifier {
       }
       if (await _fetchCues(id, track, 'the ${client.name} app') case final cues?) {
         if (client != _first) {
-          logInfo('Level videos: the ${client.name} app gives subtitles that can be read; asking it first');
+          logInfo(
+              'Level videos: the ${client.name} app gives subtitles that can be read; asking it first');
           _first = client;
         }
         return (cues, track.automatic);
@@ -1112,7 +1268,8 @@ class LevelVideos extends ChangeNotifier {
     try {
       final (status, body) = await getBounded(_client, url, limit: subtitleLimit);
       if (status != 200 || body.isEmpty) {
-        logDebug(() => 'Level videos: subtitles of $id from $from answered HTTP $status with ${body.length} bytes');
+        logDebug(() =>
+            'Level videos: subtitles of $id from $from answered HTTP $status with ${body.length} bytes');
         return null;
       }
       final vtt = utf8.decode(body, allowMalformed: true);
@@ -1137,16 +1294,20 @@ class LevelVideos extends ChangeNotifier {
     final file = _file;
     if (file == null) return;
     try {
-      await writeFileAtomic(file, jsonEncode({
-        'version': 1,
-        if (language != null) 'language': language,
-        if (explainedIn != null) 'explainedIn': explainedIn!.name,
-        'videos': {for (final MapEntry(:key, :value) in _readings.entries) key: value.toJson()},
-        'channels': {for (final MapEntry(:key, value: (read, fit)) in _channels.entries) key: [read, fit]},
-        'granted': _granted.toList(),
-        'grantDay': _grantDay,
-        'grantedOnDay': _grantedOnDay,
-      }));
+      await writeFileAtomic(
+          file,
+          jsonEncode({
+            'version': 1,
+            if (language != null) 'language': language,
+            if (explainedIn != null) 'explainedIn': explainedIn!.name,
+            'videos': {for (final MapEntry(:key, :value) in _readings.entries) key: value.toJson()},
+            'channels': {
+              for (final MapEntry(:key, value: (read, fit)) in _channels.entries) key: [read, fit]
+            },
+            'granted': _granted.toList(),
+            'grantDay': _grantDay,
+            'grantedOnDay': _grantedOnDay,
+          }));
     } catch (e) {
       logError('Could not save the level videos', e);
     }
@@ -1156,13 +1317,19 @@ class LevelVideos extends ChangeNotifier {
   void keepForTest(String id, LevelReading reading) => _readings[id] = reading;
 }
 
-final _cueTime = RegExp(r'^\s*(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})\s+-->\s+(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})');
+final _cueTime = RegExp(
+    r'^\s*(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})\s+-->\s+(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})');
 
 /// A cue's start and end in milliseconds from its WebVTT timing line.
 (int, int)? cueTimes(String timing) {
   final m = _cueTime.firstMatch(timing);
   if (m == null) return null;
-  int at(int from) => ((int.tryParse(m[from] ?? '0') ?? 0) * 3600 + int.parse(m[from + 1]!) * 60 + int.parse(m[from + 2]!)) * 1000 + int.parse(m[from + 3]!);
+  int at(int from) =>
+      ((int.tryParse(m[from] ?? '0') ?? 0) * 3600 +
+              int.parse(m[from + 1]!) * 60 +
+              int.parse(m[from + 2]!)) *
+          1000 +
+      int.parse(m[from + 3]!);
   return (at(1), at(5));
 }
 
@@ -1180,7 +1347,8 @@ final _cueTime = RegExp(r'^\s*(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})\s+-->\s+(?
 /// a little more for a length the learner's [tier] suits and a channel
 /// whose videos fitted before ([channelFit]). Graded listening ([band]
 /// null) is ordered by nearness to 96 % known whatever its band.
-double levelVideoScore(VideoLevel? band, LevelReading reading, {int? seconds, int tier = 1, double? channelFit}) {
+double levelVideoScore(VideoLevel? band, LevelReading reading,
+    {int? seconds, int tier = 1, double? channelFit}) {
   final known = reading.known ?? 0;
   final target = switch (band) {
     VideoLevel.easy => 0.985,

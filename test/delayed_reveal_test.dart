@@ -10,9 +10,11 @@ import 'package:material_ui/material_ui.dart';
 void main() {
   tearDown(() => Motion.reduced = false);
 
-  Future<void> pump(WidgetTester tester, Widget body) => tester.pumpWidget(MaterialApp(theme: buildAppTheme(Colors.red, Brightness.light), home: Scaffold(body: body)));
+  Future<void> pump(WidgetTester tester, Widget body) => tester.pumpWidget(
+      MaterialApp(theme: buildAppTheme(Colors.red, Brightness.light), home: Scaffold(body: body)));
 
-  FadeTransition fadeAbove(WidgetTester tester, Finder finder) => tester.widget<FadeTransition>(find.ancestor(of: finder, matching: find.byType(FadeTransition)).first);
+  FadeTransition fadeAbove(WidgetTester tester, Finder finder) => tester.widget<FadeTransition>(
+      find.ancestor(of: finder, matching: find.byType(FadeTransition)).first);
 
   testWidgets('the skeleton grid shows only once loading takes 400 ms', (tester) async {
     await pump(tester, const CustomScrollView(slivers: [SliverSkeletonGrid()]));
@@ -31,7 +33,8 @@ void main() {
   testWidgets('a load that ends sooner never shows the skeleton', (tester) async {
     await pump(tester, const CustomScrollView(slivers: [SliverSkeletonGrid()]));
     await tester.pump(const Duration(milliseconds: 300));
-    await pump(tester, const CustomScrollView(slivers: [SliverToBoxAdapter(child: Text('Loaded'))]));
+    await pump(
+        tester, const CustomScrollView(slivers: [SliverToBoxAdapter(child: Text('Loaded'))]));
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(Skeleton), findsNothing);
     expect(find.text('Loaded'), findsOneWidget);
@@ -47,13 +50,21 @@ void main() {
 
   testWidgets('an empty state comes in once with a fade and a scale', (tester) async {
     await pump(tester, StatusView(icon: AppIcons.x, title: 'Nothing here'));
-    final scale = tester.widget<ScaleTransition>(find.ancestor(of: find.text('Nothing here'), matching: find.byType(ScaleTransition)).first);
+    final scale = tester.widget<ScaleTransition>(
+        find.ancestor(of: find.text('Nothing here'), matching: find.byType(ScaleTransition)).first);
     expect(scale.scale.value, closeTo(0.92, 0.001));
     await tester.pumpAndSettle();
     expect(scale.scale.value, 1);
     // Built again with other text, it does not come in a second time.
     await pump(tester, StatusView(icon: AppIcons.x, title: 'Still nothing'));
-    expect(tester.widget<ScaleTransition>(find.ancestor(of: find.text('Still nothing'), matching: find.byType(ScaleTransition)).first).scale.value, 1);
+    expect(
+        tester
+            .widget<ScaleTransition>(find
+                .ancestor(of: find.text('Still nothing'), matching: find.byType(ScaleTransition))
+                .first)
+            .scale
+            .value,
+        1);
   });
 
   testWidgets('with motion reduced an empty state is simply there', (tester) async {

@@ -35,10 +35,13 @@ class CommentRating {
       final core = NativeCore.instance;
       final made = _actionFor;
       if (core == null || made == null) return null;
-      return jsonDecode(core.take(core.withText(jsonEncode({'action': action, 'from': from, 'to': to}), made)) ?? 'null') as String?;
+      return jsonDecode(
+          core.take(core.withText(jsonEncode({'action': action, 'from': from, 'to': to}), made)) ??
+              'null') as String?;
     }
 
-    final rating = CommentRating(like: swap(like), unlike: swap(unlike), dislike: swap(dislike), undislike: swap(undislike));
+    final rating = CommentRating(
+        like: swap(like), unlike: swap(unlike), dislike: swap(dislike), undislike: swap(undislike));
     return rating.like == null && rating.dislike == null ? null : rating;
   }
 
@@ -48,7 +51,9 @@ class CommentRating {
     if (_triedActionFor) return _actionForBinding;
     _triedActionFor = true;
     try {
-      return _actionForBinding = NativeCore.instance?.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_comment_action_for');
+      return _actionForBinding = NativeCore.instance?.library.lookupFunction<
+          Pointer<Utf8> Function(Pointer<Uint8>, Size),
+          Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_comment_action_for');
     } catch (_) {
       return null;
     }
@@ -99,25 +104,32 @@ class YoutubeComment {
   final String text;
   final String? avatar;
   final String? channelId;
+
   /// YouTube's own relative time, such as "3天前".
   final String published;
   final String likes;
   final int replyCount;
+
   /// Loads the replies through [YoutubeComments.more].
   final String? repliesToken;
   final bool pinned;
+
   /// The uploader liked it.
   final bool hearted;
+
   /// The picture of whoever hearted it and YouTube's own tooltip, when sent.
   final String? heartAvatar;
   final String? heartTooltip;
   final bool byUploader;
+
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
   final CommentRating? rating;
+
   /// The TV app's page for this one comment, which has its like buttons
   /// when the list it came in does not; read through [YoutubeComments.more].
   final String? detailToken;
+
   /// Its reply box, for the browser sign-in to write a reply in.
   final String? replyParams;
 }
@@ -125,12 +137,14 @@ class YoutubeComment {
 /// One page of comments, the token for the next, and from the first page
 /// the comment count and the tokens for each sort order.
 class CommentPage {
-  const CommentPage(this.comments, this.continuation, {this.count = '', this.topToken, this.newestToken, this.createParams});
+  const CommentPage(this.comments, this.continuation,
+      {this.count = '', this.topToken, this.newestToken, this.createParams});
   final List<YoutubeComment> comments;
   final String? continuation;
   final String count;
   final String? topToken;
   final String? newestToken;
+
   /// The website's comment box, in pages loaded with the cookie sign-in.
   final String? createParams;
 }
@@ -146,10 +160,10 @@ class YoutubeComments {
   final http.Client _client;
 
   static Map<String, String> get _headers => {
-    'User-Agent': YoutubeWeb.userAgent,
-    'Accept-Language': youtubeAcceptLanguage,
-    'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
-  };
+        'User-Agent': YoutubeWeb.userAgent,
+        'Accept-Language': youtubeAcceptLanguage,
+        'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
+      };
 
   String? _apiKey;
   String? _clientVersion;
@@ -182,9 +196,14 @@ class YoutubeComments {
 
   /// The first page of comments under community post [postId].
   Future<CommentPage> post(String postId, {bool newest = false}) async {
-    final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
-    final (token, apiKey, clientVersion, visitorData, detail) = await _readPostInBackground(response.bodyBytes);
+    final response = await _client
+        .get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers)
+        .timeout(const Duration(seconds: 20));
+    if (response.statusCode != 200) {
+      throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+    }
+    final (token, apiKey, clientVersion, visitorData, detail) =
+        await _readPostInBackground(response.bodyBytes);
     _apiKey = apiKey ?? _apiKey;
     _clientVersion = clientVersion ?? _clientVersion;
     _visitorData = visitorData ?? _visitorData;
@@ -195,15 +214,22 @@ class YoutubeComments {
         final answer = await web!.post('browse', {'browseId': 'FEpost_detail', 'params': detail});
         if (answer != null) {
           if (answer.status >= 400 && answer.status < 500) refuseWeb(answer.status, answer.body);
-          final page = answer.status == 200 ? await _readInBackground(answer.body) : const CommentPage([], null);
-          logDebug(() => 'Post $postId signed in: ${answer.status}, sort ${page.topToken != null}, comment box ${page.createParams != null}');
-          if (page.topToken != null || page.comments.isNotEmpty) return await _sorted(page, 'browse', newest, post: true);
+          final page = answer.status == 200
+              ? await _readInBackground(answer.body)
+              : const CommentPage([], null);
+          logDebug(() =>
+              'Post $postId signed in: ${answer.status}, sort ${page.topToken != null}, comment box ${page.createParams != null}');
+          if (page.topToken != null || page.comments.isNotEmpty) {
+            return await _sorted(page, 'browse', newest, post: true);
+          }
         }
       } catch (e) {
         logWarn('Post $postId signed in failed: $e');
       }
     }
-    if (token == null) throw FormatException(tr('This post has no comments section, or comments are turned off'));
+    if (token == null) {
+      throw FormatException(tr('This post has no comments section, or comments are turned off'));
+    }
     final header = await _request('browse', {'continuation': token}, post: true);
     return _sorted(header, 'browse', newest, post: true);
   }
@@ -211,21 +237,27 @@ class YoutubeComments {
   /// The next page after [token], or the replies a comment's
   /// [YoutubeComment.repliesToken] names. [post] says whether the token came
   /// from a community post.
-  Future<CommentPage> more(String token, {bool post = false}) => _request(post ? 'browse' : 'next', {'continuation': token}, post: post);
+  Future<CommentPage> more(String token, {bool post = false}) =>
+      _request(post ? 'browse' : 'next', {'continuation': token}, post: post);
 
   /// The first page is only the header; the sort order's token loads the
   /// comments themselves.
-  Future<CommentPage> _sorted(CommentPage header, String endpoint, bool newest, {bool post = false}) async {
+  Future<CommentPage> _sorted(CommentPage header, String endpoint, bool newest,
+      {bool post = false}) async {
     final token = newest ? header.newestToken ?? header.topToken : header.topToken;
     if (token == null) return header;
     final page = await _request(endpoint, {'continuation': token}, post: post);
     return CommentPage(page.comments, page.continuation,
-        count: header.count, topToken: header.topToken, newestToken: header.newestToken, createParams: header.createParams ?? page.createParams);
+        count: header.count,
+        topToken: header.topToken,
+        newestToken: header.newestToken,
+        createParams: header.createParams ?? page.createParams);
   }
 
   /// Posts [body] to [endpoint], signed in when there is a sign-in YouTube
   /// takes; when it does not, posts [fallback] (or [body]) signed out.
-  Future<CommentPage> _request(String endpoint, Map<String, Object?> body, {Map<String, Object?>? fallback, bool signedOut = false, bool post = false}) async {
+  Future<CommentPage> _request(String endpoint, Map<String, Object?> body,
+      {Map<String, Object?>? fallback, bool signedOut = false, bool post = false}) async {
     final via = signedOut ? null : _via;
     if (via != null) {
       final answer = await via.post(endpoint, body);
@@ -236,24 +268,34 @@ class YoutubeComments {
         }
         if (answer.status != 200) throw StateError(tr('YouTube returned {0}', [answer.status]));
         final page = await _readInBackground(answer.body);
-        if (page.comments.isNotEmpty || page.continuation != null || page.topToken != null || page.count.isNotEmpty) return page;
-        logWarn('Signed in, YouTube answered no comments; trying signed out · ${_start(answer.body)}');
+        if (page.comments.isNotEmpty ||
+            page.continuation != null ||
+            page.topToken != null ||
+            page.count.isNotEmpty) {
+          return page;
+        }
+        logWarn(
+            'Signed in, YouTube answered no comments; trying signed out · ${_start(answer.body)}');
       }
     }
     final response = await _post(endpoint, via == null ? fallback ?? body : body);
-    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+    if (response.statusCode != 200) {
+      throw StateError(tr('YouTube returned {0}', [response.statusCode]));
+    }
     return _readInBackground(response.bodyBytes);
   }
 
   static String _start(List<int> body) {
-    final start = utf8.decode(body.take(600).toList(), allowMalformed: true).replaceAll(RegExp(r'\s+'), ' ');
+    final start =
+        utf8.decode(body.take(600).toList(), allowMalformed: true).replaceAll(RegExp(r'\s+'), ' ');
     return start.length > 300 ? start.substring(0, 300) : start;
   }
 
   /// Stops sending the cookies after YouTube answered [status] to them.
   void refuseWeb(int status, [List<int> body = const []]) {
     webRefused = true;
-    logWarn('YouTube answered $status to the cookie sign-in; comments load signed out · ${_start(body)}');
+    logWarn(
+        'YouTube answered $status to the cookie sign-in; comments load signed out · ${_start(body)}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a
@@ -261,16 +303,29 @@ class YoutubeComments {
   /// same way. [post] is for posts and their comments, which take the
   /// cookie sign-in.
   Future<void> rate(String action, {bool post = false}) async {
-    final answer = await _via?.post('comment/perform_comment_action', {'actions': [action]}, ask: true);
-    if (answer == null) throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    final answer = await _via?.post(
+        'comment/perform_comment_action',
+        {
+          'actions': [action]
+        },
+        ask: true);
+    if (answer == null) {
+      throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    }
     _check(answer, 'a comment action');
   }
 
   /// Writes [text] under the post whose comment box is [params], as the
   /// cookie sign-in.
   Future<void> create(String params, String text) async {
-    final answer = webSignedIn ? await web!.post('comment/create_comment', {'commentText': text, 'createCommentParams': params}, ask: true) : null;
-    if (answer == null) throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    final answer = webSignedIn
+        ? await web!.post(
+            'comment/create_comment', {'commentText': text, 'createCommentParams': params},
+            ask: true)
+        : null;
+    if (answer == null) {
+      throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
+    }
     _check(answer, 'a new comment');
   }
 
@@ -286,8 +341,10 @@ class YoutubeComments {
     final key = _apiKey;
     return _client
         .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
+          Uri.parse(
+              'https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
+          headers: YoutubeWeb.apiHeaders(
+              clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
           body: jsonEncode({
             'context': {
               'client': {
@@ -303,24 +360,37 @@ class YoutubeComments {
         .timeout(const Duration(seconds: 20));
   }
 
-  static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => readBytes(bytes));
+  static Future<CommentPage> _readInBackground(List<int> bytes) =>
+      Isolate.run(() => readBytes(bytes));
 
   // A post page runs to a megabyte: its comments token and client settings
   // are read away from the UI isolate.
-  static Future<(String?, String?, String?, String?, String?)> _readPostInBackground(List<int> bytes) => Isolate.run(() {
+  static Future<(String?, String?, String?, String?, String?)> _readPostInBackground(
+          List<int> bytes) =>
+      Isolate.run(() {
         final html = utf8.decode(bytes, allowMalformed: true);
         String? find(String name) => RegExp('"$name":"([^"]+)"').firstMatch(html)?.group(1);
         final core = NativeCore.instance;
-        final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
-        final detail = RegExp(r'"browseId":"FEpost_detail","params":"([^"]+)"').firstMatch(html)?.group(1);
-        return (token, find('INNERTUBE_API_KEY'), find('INNERTUBE_CLIENT_VERSION'), find('VISITOR_DATA'), detail);
+        final token = core == null
+            ? null
+            : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null')
+                as String?;
+        final detail =
+            RegExp(r'"browseId":"FEpost_detail","params":"([^"]+)"').firstMatch(html)?.group(1);
+        return (
+          token,
+          find('INNERTUBE_API_KEY'),
+          find('INNERTUBE_CLIENT_VERSION'),
+          find('VISITOR_DATA'),
+          detail
+        );
       });
 
   /// The token of a video's comment section, built as yt-dlp's
   /// `_generate_comment_continuation` does, so the watch page need not be
   /// downloaded first.
-  static String videoSectionToken(String videoId) =>
-      base64.encode(utf8.encode('\x12\r\x12\x0b$videoId\x18\x062\'"\x11"\x0b${videoId}0\x00x\x020\x00B\x10comments-section'));
+  static String videoSectionToken(String videoId) => base64.encode(utf8.encode(
+      '\x12\r\x12\x0b$videoId\x18\x062\'"\x11"\x0b${videoId}0\x00x\x020\x00B\x10comments-section'));
 
   /// A `/next` or `/browse` response [body] with comment section items,
   /// read by the native core; empty without it.
@@ -328,7 +398,9 @@ class YoutubeComments {
 
   static CommentPage readBytes(List<int> body) {
     final core = NativeCore.instance;
-    final page = core == null ? null : jsonDecode(core.take(core.withBytes(body, core.youtubeComments)) ?? 'null');
+    final page = core == null
+        ? null
+        : jsonDecode(core.take(core.withBytes(body, core.youtubeComments)) ?? 'null');
     if (page is! Map<String, dynamic>) return const CommentPage([], null);
     return CommentPage(
       [

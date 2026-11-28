@@ -10,7 +10,11 @@ void installLearningPack() {
     id: 'video-words',
     order: 25,
     title: () => tr('Words in this video'),
-    shown: (c) => c.learning.book != null && c.playing != null && c.learningLines.isNotEmpty && _drawerPack(c) == null,
+    shown: (c) =>
+        c.learning.book != null &&
+        c.playing != null &&
+        c.learningLines.isNotEmpty &&
+        _drawerPack(c) == null,
     build: (context, c) => _DrawerVideoWords(controller: c),
   ));
   addLearningDrawerSection(LearningDrawerSection(
@@ -44,19 +48,25 @@ class _StudyLocked extends StatelessWidget {
   final AppController controller;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Icon(AppIcons.lock, size: 16, color: context.colors.outline),
           const SizedBox(width: 6),
-          Expanded(child: Text(tr('Study mode is part of the learning pack'), style: context.text.bodySmall)),
+          Expanded(
+              child: Text(tr('Study mode is part of the learning pack'),
+                  style: context.text.bodySmall)),
         ]),
         const SizedBox(height: 4),
         const LearningPriceTag(size: 14),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 4, children: [
-          FilledButton(onPressed: () => unawaited(buyLearningPack()), child: Text(tr('Buy the learning pack'))),
+          FilledButton(
+              onPressed: () => unawaited(buyLearningPack()),
+              child: Text(tr('Buy the learning pack'))),
           TextButton(
-            onPressed: () => unawaited(claimPurchase(context, controller.learning, afdianFirst: currentLanguage.isChinese)),
+            onPressed: () => unawaited(claimPurchase(context, controller.learning,
+                afdianFirst: currentLanguage.isChinese)),
             child: Text(tr('I bought it: unlock')),
           ),
         ]),
@@ -66,7 +76,8 @@ class _StudyLocked extends StatelessWidget {
 /// The book's words by the video each was heard in, newest first; made
 /// once per change of the book (its list of words is new each time), not
 /// on every rebuild of the drawer.
-Map<String, List<VocabularyWord>> _wordsByVideo(List<VocabularyWord> words) => _byVideo[words] ??= () {
+Map<String, List<VocabularyWord>> _wordsByVideo(List<VocabularyWord> words) =>
+    _byVideo[words] ??= () {
       final by = <String, List<VocabularyWord>>{};
       for (final w in words.reversed) {
         (by[w.videoId] ??= []).add(w);
@@ -90,7 +101,8 @@ class _DrawerVocabulary extends StatelessWidget {
         final here = _wordsByVideo(book.words)[id] ?? const <VocabularyWord>[];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (here.isEmpty)
-            Text(tr('Tap a word in the subtitles, then Add to vocabulary book: it keeps the line and the moment.'),
+            Text(
+                tr('Tap a word in the subtitles, then Add to vocabulary book: it keeps the line and the moment.'),
                 style: context.text.bodySmall?.copyWith(color: context.colors.outline))
           else
             for (final w in here.take(6))
@@ -98,10 +110,16 @@ class _DrawerVocabulary extends StatelessWidget {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,
-                title: Text(w.reading.isEmpty ? w.word : '${w.word}  ${w.reading}', maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: w.meaning.isEmpty ? null : Text(w.meaning, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: Text(formatPlaybackTime(w.at), style: context.text.labelSmall?.copyWith(color: context.colors.outline)),
-                onTap: () => unawaited(controller.seek(w.at > const Duration(seconds: 1) ? w.at - const Duration(seconds: 1) : Duration.zero)),
+                title: Text(w.reading.isEmpty ? w.word : '${w.word}  ${w.reading}',
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: w.meaning.isEmpty
+                    ? null
+                    : Text(w.meaning, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: Text(formatPlaybackTime(w.at),
+                    style: context.text.labelSmall?.copyWith(color: context.colors.outline)),
+                onTap: () => unawaited(controller.seek(w.at > const Duration(seconds: 1)
+                    ? w.at - const Duration(seconds: 1)
+                    : Duration.zero)),
               ),
           Align(
             alignment: Alignment.centerLeft,
@@ -129,11 +147,15 @@ class _DrawerDictionary extends StatelessWidget {
       listenable: learning,
       builder: (context, _) {
         final pack = _drawerPack(controller);
-        if (pack == null) return Text(tr('Ready. Tap any word in the subtitles.'), style: context.text.bodySmall);
+        if (pack == null) {
+          return Text(tr('Ready. Tap any word in the subtitles.'), style: context.text.bodySmall);
+        }
         final state = learning.stateOf(pack);
         final busy = state == PackState.downloading || state == PackState.loading;
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(tr('These subtitles are in {0}. Download its dictionary to tap any word for its meaning, offline.', [_packLanguage(pack)]),
+          Text(
+              tr('These subtitles are in {0}. Download its dictionary to tap any word for its meaning, offline.',
+                  [_packLanguage(pack)]),
               style: context.text.bodySmall),
           const SizedBox(height: 8),
           if (busy)
@@ -148,7 +170,8 @@ class _DrawerDictionary extends StatelessWidget {
               ),
             ),
           if (state == PackState.failed)
-            Text(tr('Failed: {0}', [learning.errorOf(pack) ?? '']), style: TextStyle(color: context.colors.error, fontSize: 12)),
+            Text(tr('Failed: {0}', [learning.errorOf(pack) ?? '']),
+                style: TextStyle(color: context.colors.error, fontSize: 12)),
         ]);
       },
     );
@@ -173,7 +196,10 @@ class _DrawerVideoWords extends StatelessWidget {
       return Row(children: [
         Icon(AppIcons.lock, size: 16, color: context.colors.outline),
         const SizedBox(width: 6),
-        Expanded(child: Text(tr('See how much of this video you understand, and its key new words, with the learning pack'), style: context.text.bodySmall)),
+        Expanded(
+            child: Text(
+                tr('See how much of this video you understand, and its key new words, with the learning pack'),
+                style: context.text.bodySmall)),
       ]);
     }
     final known = knownWordsOf(learning.book!);
@@ -181,11 +207,14 @@ class _DrawerVideoWords extends StatelessWidget {
     return ListenableBuilder(
       listenable: known,
       builder: (context, _) => FutureBuilder<VideoWords?>(
-        future: videoWordsOf(learning, known, controller.playing!.id, [for (final l in lines) l.text]),
+        future:
+            videoWordsOf(learning, known, controller.playing!.id, [for (final l in lines) l.text]),
         builder: (context, snapshot) {
           final words = snapshot.data;
           if (words == null) {
-            return snapshot.connectionState == ConnectionState.done ? const SizedBox.shrink() : const LinearProgressIndicator(minHeight: 2);
+            return snapshot.connectionState == ConnectionState.done
+                ? const SizedBox.shrink()
+                : const LinearProgressIndicator(minHeight: 2);
           }
           final colors = context.colors;
           final (label, color) = switch (words.level) {
@@ -203,38 +232,54 @@ class _DrawerVideoWords extends StatelessWidget {
                   tween: Tween(begin: 0, end: words.known),
                   duration: Motion.of(const Duration(milliseconds: 700)),
                   curve: Ease.curve,
-                  builder: (context, v, _) => Text('${(v * 100).round()}%', style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: color)),
+                  builder: (context, v, _) => Text('${(v * 100).round()}%',
+                      style: context.text.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800, color: color)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(tr('of what is said you know'), style: context.text.bodySmall?.copyWith(color: colors.outline)),
+                    child: Text(tr('of what is said you know'),
+                        style: context.text.bodySmall?.copyWith(color: colors.outline)),
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                  child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text(label,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
                 ),
               ]),
               const SizedBox(height: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(value: words.known, minHeight: 5, color: color, backgroundColor: colors.surfaceContainerHighest),
+                child: LinearProgressIndicator(
+                    value: words.known,
+                    minHeight: 5,
+                    color: color,
+                    backgroundColor: colors.surfaceContainerHighest),
               ),
               const SizedBox(height: 6),
               Text(
-                tr('{0} different words, {1} new to you · {2} lines with just one new word', [words.words, words.newWords, words.oneNew.length]),
+                tr('{0} different words, {1} new to you · {2} lines with just one new word',
+                    [words.words, words.newWords, words.oneNew.length]),
                 style: context.text.bodySmall?.copyWith(color: colors.outline),
               ),
-              if (words.language.isNotEmpty && LevelScale.of(words.language) != null && learning.levelIn(words.language) == null) ...[
+              if (words.language.isNotEmpty &&
+                  LevelScale.of(words.language) != null &&
+                  learning.levelIn(words.language) == null) ...[
                 const SizedBox(height: 4),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
-                    onPressed: () => unawaited(words.language == 'en' ? _pickEnglishLevel(context, learning) : pickLanguageLevel(context, learning, words.language)),
+                    style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                    onPressed: () => unawaited(words.language == 'en'
+                        ? _pickEnglishLevel(context, learning)
+                        : pickLanguageLevel(context, learning, words.language)),
                     icon: Icon(AppIcons.graduationCap, size: 16),
                     label: Text(tr('Set your level for a truer picture')),
                   ),
@@ -242,7 +287,8 @@ class _DrawerVideoWords extends StatelessWidget {
               ],
               if (words.often.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                Text(tr('Learn these first: the new words said most'), style: context.text.labelMedium),
+                Text(tr('Learn these first: the new words said most'),
+                    style: context.text.labelMedium),
                 const SizedBox(height: 6),
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   for (final (token, count) in words.often)
@@ -250,9 +296,12 @@ class _DrawerVideoWords extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       label: Text.rich(TextSpan(children: [
                         TextSpan(text: token.text),
-                        TextSpan(text: ' ×$count', style: TextStyle(fontSize: 11, color: colors.outline)),
+                        TextSpan(
+                            text: ' ×$count',
+                            style: TextStyle(fontSize: 11, color: colors.outline)),
                       ])),
-                      onPressed: () => unawaited(showWordCard(context, controller, token, sentence: _lineWith(lines, token))),
+                      onPressed: () => unawaited(showWordCard(context, controller, token,
+                          sentence: _lineWith(lines, token))),
                     ),
                 ]),
               ],
@@ -265,4 +314,5 @@ class _DrawerVideoWords extends StatelessWidget {
 }
 
 /// The first line saying [token], for its word card.
-String _lineWith(List<SubtitleCue> lines, WordToken token) => lines.firstWhere((l) => l.text.contains(token.text), orElse: () => lines.first).text;
+String _lineWith(List<SubtitleCue> lines, WordToken token) =>
+    lines.firstWhere((l) => l.text.contains(token.text), orElse: () => lines.first).text;

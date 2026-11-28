@@ -46,7 +46,9 @@ class YouTubeAccountApi implements AccountApi {
   Future<({String name, String? avatar, String? likes})> me() async {
     final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
     final items = data['items'];
-    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube account'), avatar: null, likes: null);
+    if (items is! List || items.isEmpty || items.first is! Map) {
+      return (name: tr('YouTube account'), avatar: null, likes: null);
+    }
     final channel = items.first as Map;
     final likes = ((channel['contentDetails'] as Map?)?['relatedPlaylists'] as Map?)?['likes'];
     final snippet = channel['snippet'] as Map?;
@@ -63,7 +65,8 @@ class YouTubeAccountApi implements AccountApi {
   @override
   Future<List<ChannelRef>> subscriptions() async {
     final channels = <ChannelRef>[];
-    await _pages('subscriptions', {'part': 'snippet', 'mine': 'true', 'order': 'alphabetical'}, (item) {
+    await _pages('subscriptions', {'part': 'snippet', 'mine': 'true', 'order': 'alphabetical'},
+        (item) {
       final channel = parseSubscription(item);
       if (channel != null) channels.add(channel);
     });
@@ -83,7 +86,8 @@ class YouTubeAccountApi implements AccountApi {
   @override
   Future<List<VideoItem>> playlistItems(String playlistId) async {
     final videos = <VideoItem>[];
-    await _pages('playlistItems', {'part': 'snippet,contentDetails', 'playlistId': playlistId}, (item) {
+    await _pages('playlistItems', {'part': 'snippet,contentDetails', 'playlistId': playlistId},
+        (item) {
       final video = parsePlaylistItem(item);
       if (video != null) videos.add(video);
     }, limit: maxPlaylistItems);
@@ -94,16 +98,21 @@ class YouTubeAccountApi implements AccountApi {
   Future<VideoRating> rating(String videoId) async {
     final data = await _get('videos/getRating', {'id': videoId});
     final items = data['items'];
-    final rating = items is List && items.isNotEmpty && items.first is Map ? (items.first as Map)['rating'] : null;
+    final rating = items is List && items.isNotEmpty && items.first is Map
+        ? (items.first as Map)['rating']
+        : null;
     return VideoRating.values.where((r) => r.name == rating).firstOrNull ?? VideoRating.none;
   }
 
   @override
-  Future<void> rate(String videoId, VideoRating rating) => _send('POST', 'videos/rate', {'id': videoId, 'rating': rating.name});
+  Future<void> rate(String videoId, VideoRating rating) =>
+      _send('POST', 'videos/rate', {'id': videoId, 'rating': rating.name});
 
   /// Posts a top-level comment under [videoId]; returns its id.
   Future<String?> comment(String videoId, String text) async {
-    final data = await _send('POST', 'commentThreads', {'part': 'snippet'}, {
+    final data = await _send('POST', 'commentThreads', {
+      'part': 'snippet'
+    }, {
       'snippet': {
         'videoId': videoId,
         'topLevelComment': {
@@ -116,14 +125,18 @@ class YouTubeAccountApi implements AccountApi {
 
   /// Replies to comment [parentId]; returns the reply's id.
   Future<String?> reply(String parentId, String text) async {
-    final data = await _send('POST', 'comments', {'part': 'snippet'}, {
+    final data = await _send('POST', 'comments', {
+      'part': 'snippet'
+    }, {
       'snippet': {'parentId': parentId, 'textOriginal': text},
     });
     return data['id']?.toString();
   }
 
   @override
-  Future<void> addToPlaylist(String playlistId, String videoId) => _send('POST', 'playlistItems', {'part': 'snippet'}, {
+  Future<void> addToPlaylist(String playlistId, String videoId) => _send('POST', 'playlistItems', {
+        'part': 'snippet'
+      }, {
         'snippet': {
           'playlistId': playlistId,
           'resourceId': {'kind': 'youtube#video', 'videoId': videoId},
@@ -133,7 +146,9 @@ class YouTubeAccountApi implements AccountApi {
   /// Creates a private playlist; returns it.
   @override
   Future<RemotePlaylist> createPlaylist(String title) async {
-    final data = await _send('POST', 'playlists', {'part': 'snippet,status'}, {
+    final data = await _send('POST', 'playlists', {
+      'part': 'snippet,status'
+    }, {
       'snippet': {'title': title},
       'status': {'privacyStatus': 'private'},
     });
@@ -144,15 +159,20 @@ class YouTubeAccountApi implements AccountApi {
 
   /// The id of the account's subscription to [channelId], if any.
   Future<String?> subscriptionTo(String channelId) async {
-    final data = await _get('subscriptions', {'part': 'id', 'mine': 'true', 'forChannelId': channelId});
+    final data =
+        await _get('subscriptions', {'part': 'id', 'mine': 'true', 'forChannelId': channelId});
     final items = data['items'];
-    return items is List && items.isNotEmpty && items.first is Map ? (items.first as Map)['id']?.toString() : null;
+    return items is List && items.isNotEmpty && items.first is Map
+        ? (items.first as Map)['id']?.toString()
+        : null;
   }
 
   @override
   Future<void> subscribe(String channelId) async {
     try {
-      await _send('POST', 'subscriptions', {'part': 'snippet'}, {
+      await _send('POST', 'subscriptions', {
+        'part': 'snippet'
+      }, {
         'snippet': {
           'resourceId': {'kind': 'youtube#channel', 'channelId': channelId},
         },
@@ -175,14 +195,17 @@ class YouTubeAccountApi implements AccountApi {
     final thumbnails = snippet['thumbnails'];
     final picture = thumbnails is Map ? thumbnails['medium'] ?? thumbnails['default'] : null;
     final avatar = ChannelRef.avatarUrl(picture is Map ? picture['url'] : null);
-    return ChannelRef.isValidId(id) ? ChannelRef(id, snippet['title']?.toString() ?? '', avatar) : null;
+    return ChannelRef.isValidId(id)
+        ? ChannelRef(id, snippet['title']?.toString() ?? '', avatar)
+        : null;
   }
 
   static RemotePlaylist? parsePlaylist(Map<Object?, Object?> item) {
     final id = item['id'];
     if (id is! String || id.isEmpty) return null;
     final count = (item['contentDetails'] as Map?)?['itemCount'];
-    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? tr('Playlist'), count is num ? count.toInt() : 0);
+    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? tr('Playlist'),
+        count is num ? count.toInt() : 0);
   }
 
   /// Deleted and private videos stay in playlists without an owner; they
@@ -191,7 +214,8 @@ class YouTubeAccountApi implements AccountApi {
     final snippet = item['snippet'];
     if (snippet is! Map) return null;
     final resource = snippet['resourceId'];
-    final id = (item['contentDetails'] as Map?)?['videoId'] ?? (resource is Map ? resource['videoId'] : null);
+    final id = (item['contentDetails'] as Map?)?['videoId'] ??
+        (resource is Map ? resource['videoId'] : null);
     if (id is! String || !RegExp(r'^[\w-]{11}$').hasMatch(id)) return null;
     final ownerId = snippet['videoOwnerChannelId']?.toString();
     if (ownerId == null) return null;
@@ -204,11 +228,14 @@ class YouTubeAccountApi implements AccountApi {
     );
   }
 
-  Future<void> _pages(String resource, Map<String, String> query, void Function(Map<Object?, Object?> item) onItem, {int? limit}) async {
+  Future<void> _pages(
+      String resource, Map<String, String> query, void Function(Map<Object?, Object?> item) onItem,
+      {int? limit}) async {
     String? pageToken;
     var seen = 0;
     do {
-      final data = await _get(resource, {...query, 'maxResults': '50', if (pageToken != null) 'pageToken': pageToken});
+      final data = await _get(
+          resource, {...query, 'maxResults': '50', if (pageToken != null) 'pageToken': pageToken});
       for (final item in data['items'] is List ? data['items'] as List : const []) {
         if (item is Map) onItem(item);
         if (limit != null && ++seen >= limit) return;
@@ -219,25 +246,34 @@ class YouTubeAccountApi implements AccountApi {
 
   Future<Map<String, dynamic>> _get(String resource, Map<String, String> query) async {
     final uri = Uri.https('www.googleapis.com', '/youtube/v3/$resource', query);
-    final response = await _client.get(uri, headers: {'Authorization': 'Bearer ${await _accessToken()}'}).timeout(const Duration(seconds: 20));
+    final response = await _client.get(uri, headers: {
+      'Authorization': 'Bearer ${await _accessToken()}'
+    }).timeout(const Duration(seconds: 20));
     // Always UTF-8, whatever the headers say, so titles keep their characters.
     final body = utf8.decode(response.bodyBytes, allowMalformed: true);
-    if (response.statusCode != 200) throw YouTubeApiException(response.statusCode, errorReason(body));
+    if (response.statusCode != 200) {
+      throw YouTubeApiException(response.statusCode, errorReason(body));
+    }
     final data = jsonDecode(body);
     return data is Map<String, dynamic> ? data : const {};
   }
 
   /// A change: [body] as JSON, an empty answer read as an empty map.
-  Future<Map<String, dynamic>> _send(String method, String resource, Map<String, String> query, [Map<String, Object?>? body]) async {
+  Future<Map<String, dynamic>> _send(String method, String resource, Map<String, String> query,
+      [Map<String, Object?>? body]) async {
     final uri = Uri.https('www.googleapis.com', '/youtube/v3/$resource', query);
-    final request = http.Request(method, uri)..headers['Authorization'] = 'Bearer ${await _accessToken()}';
+    final request = http.Request(method, uri)
+      ..headers['Authorization'] = 'Bearer ${await _accessToken()}';
     if (body != null) {
       request.headers['Content-Type'] = 'application/json; charset=utf-8';
       request.bodyBytes = utf8.encode(jsonEncode(body));
     }
-    final response = await http.Response.fromStream(await _client.send(request)).timeout(const Duration(seconds: 20));
+    final response = await http.Response.fromStream(await _client.send(request))
+        .timeout(const Duration(seconds: 20));
     final text = utf8.decode(response.bodyBytes, allowMalformed: true);
-    if (response.statusCode >= 300) throw YouTubeApiException(response.statusCode, errorReason(text));
+    if (response.statusCode >= 300) {
+      throw YouTubeApiException(response.statusCode, errorReason(text));
+    }
     if (text.trim().isEmpty) return const {};
     final data = jsonDecode(text);
     return data is Map<String, dynamic> ? data : const {};
@@ -259,24 +295,30 @@ class YouTubeApiException implements Exception {
   final String? reason;
 
   /// Where a Google Cloud project turns the YouTube Data API on.
-  static const enableApiUrl = 'https://console.cloud.google.com/apis/library/youtube.googleapis.com';
+  static const enableApiUrl =
+      'https://console.cloud.google.com/apis/library/youtube.googleapis.com';
 
   /// What [toString] says when the client's project has not turned the
   /// API on, so the settings page can offer a way there.
-  static String get apiNotEnabled => tr('The Google Cloud project of this client has not enabled YouTube Data API v3. Click "Enable it", check that the project that owns this client is selected at the top, click "Enable", then wait a few minutes and sign in again.');
+  static String get apiNotEnabled => tr(
+      'The Google Cloud project of this client has not enabled YouTube Data API v3. Click "Enable it", check that the project that owns this client is selected at the top, click "Enable", then wait a few minutes and sign in again.');
 
   @override
   String toString() => switch (reason) {
-        'quotaExceeded' || 'dailyLimitExceeded' => tr("Today's YouTube API quota is used up. Please sync again tomorrow."),
+        'quotaExceeded' ||
+        'dailyLimitExceeded' =>
+          tr("Today's YouTube API quota is used up. Please sync again tomorrow."),
         'accessNotConfigured' => apiNotEnabled,
         'youtubeSignupRequired' => tr("This Google account doesn't have a YouTube channel yet"),
-        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr("Edit permission wasn't granted during sign-in. Please sign in to your Google account again"),
+        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr(
+            "Edit permission wasn't granted during sign-in. Please sign in to your Google account again"),
         'commentsDisabled' => tr('Comments are turned off for this video'),
         'videoRatingDisabled' => tr('The uploader turned off likes and dislikes for this video'),
         'forbidden' when status == 403 => tr('YouTube rejected this action'),
         'subscriptionForbidden' => tr("Can't subscribe to this channel"),
         'videoNotFound' => tr('Video not found'),
         _ when status == 401 => tr('Sign-in expired. Please sign in again'),
-        _ => tr('YouTube API request failed (HTTP {0}{1})', [status, reason == null ? '' : ' · $reason']),
+        _ => tr('YouTube API request failed (HTTP {0}{1})',
+            [status, reason == null ? '' : ' · $reason']),
       };
 }

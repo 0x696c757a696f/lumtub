@@ -21,12 +21,16 @@ enum RelayKind { piped, invidious }
 enum PlaybackSource {
   /// The fastest working public Piped server.
   pipedAuto('Piped · Auto-select server'),
+
   /// The Piped server the user named.
   pipedCustom('Piped · Specific server'),
+
   /// The fastest working public Invidious instance.
   invidiousAuto('Invidious · Auto-select instance'),
+
   /// The Invidious instance the user named.
   invidiousCustom('Invidious · Specified instance'),
+
   /// Straight from YouTube through yt-dlp; the default, so no third party
   /// learns what is watched unless YouTube refuses (429) or fails.
   youtube('Connect to YouTube directly (default)');
@@ -82,14 +86,23 @@ List<String> parsePipedInstanceList(String text) {
 
 /// One stream a Piped server lists for a video.
 class PipedStream {
-  const PipedStream({required this.url, required this.codec, this.height = 0, this.bitrate = 0, this.videoOnly = false, this.mime = ''});
+  const PipedStream(
+      {required this.url,
+      required this.codec,
+      this.height = 0,
+      this.bitrate = 0,
+      this.videoOnly = false,
+      this.mime = ''});
   final String url;
+
   /// Normalised to yt-dlp's prefixes: avc1, vp9, av01, mp4a, opus.
   final String codec;
   final int height;
+
   /// Bits per second.
   final int bitrate;
   final bool videoOnly;
+
   /// The container's MIME type, such as video/mp4, when the server gave one.
   final String mime;
 
@@ -98,7 +111,13 @@ class PipedStream {
   static PipedStream? fromRow(List<Object?> row, Iterable<String> trustedHosts, {String? url}) {
     final address = url ?? row[0]! as String;
     if (!isAllowedMediaUrl(address, trustedHosts: trustedHosts)) return null;
-    return PipedStream(url: address, codec: row[1]! as String, height: row[2]! as int, bitrate: row[3]! as int, videoOnly: row[5]! as bool, mime: row[4]! as String);
+    return PipedStream(
+        url: address,
+        codec: row[1]! as String,
+        height: row[2]! as int,
+        bitrate: row[3]! as int,
+        videoOnly: row[5]! as bool,
+        mime: row[4]! as String);
   }
 
   /// The stream in [raw], or null when its address is not an allowed media
@@ -111,14 +130,28 @@ class PipedStream {
     if (codec.startsWith('vp09')) codec = 'vp9';
     final mime = raw['mimeType']?.toString() ?? '';
     if (codec.isEmpty && mime.contains('mp4')) codec = mime.startsWith('audio') ? 'mp4a' : 'avc1';
-    int number(String key) => raw[key] is num ? (raw[key] as num).toInt() : int.tryParse('${raw[key]}') ?? 0;
-    return PipedStream(url: url, codec: codec, height: number('height'), bitrate: number('bitrate'), videoOnly: raw['videoOnly'] == true, mime: mime.split(';').first.trim());
+    int number(String key) =>
+        raw[key] is num ? (raw[key] as num).toInt() : int.tryParse('${raw[key]}') ?? 0;
+    return PipedStream(
+        url: url,
+        codec: codec,
+        height: number('height'),
+        bitrate: number('bitrate'),
+        videoOnly: raw['videoOnly'] == true,
+        mime: mime.split(';').first.trim());
   }
 }
 
 /// What the core read from a Piped or Invidious answer: the stream lists
 /// and the server's error, or null without the core.
-typedef CoreRelayVideo = ({List<List<Object?>> video, List<List<Object?>> audio, List<List<Object?>> muxed, bool live, String? proxyUrl, String? error});
+typedef CoreRelayVideo = ({
+  List<List<Object?>> video,
+  List<List<Object?>> audio,
+  List<List<Object?>> muxed,
+  bool live,
+  String? proxyUrl,
+  String? error
+});
 
 /// [body] read by the core (native/lumtub_core/src/relay_video.rs): null
 /// without the core, and an [error] only when it is no JSON object.
@@ -130,7 +163,14 @@ typedef CoreRelayVideo = ({List<List<Object?>> video, List<List<Object?>> audio,
   final map = jsonDecode(json) as Map<String, dynamic>;
   List<List<Object?>> rows(String key) => [for (final r in map[key] as List) r as List<Object?>];
   return (
-    video: (video: rows('video'), audio: rows('audio'), muxed: rows('muxed'), live: map['live'] == true, proxyUrl: map['proxyUrl'] as String?, error: map['error'] as String?),
+    video: (
+      video: rows('video'),
+      audio: rows('audio'),
+      muxed: rows('muxed'),
+      live: map['live'] == true,
+      proxyUrl: map['proxyUrl'] as String?,
+      error: map['error'] as String?
+    ),
     unread: false,
   );
 }
@@ -140,39 +180,64 @@ class PipedVideo {
   /// [read], the core's reading of a Piped answer from [server]; streams
   /// are kept as in [PipedVideo.fromJson].
   factory PipedVideo.fromCore(String server, CoreRelayVideo read) {
-    final trusted = {Uri.tryParse(server)?.host ?? '', Uri.tryParse('${read.proxyUrl}')?.host ?? ''}..remove('');
+    final trusted = {Uri.tryParse(server)?.host ?? '', Uri.tryParse('${read.proxyUrl}')?.host ?? ''}
+      ..remove('');
     return PipedVideo(
       server: server,
-      video: [for (final r in read.video) if (PipedStream.fromRow(r, trusted) case final s?) s],
-      audio: [for (final r in read.audio) if (PipedStream.fromRow(r, trusted) case final s?) s],
-      muxed: [for (final r in read.muxed) if (PipedStream.fromRow(r, trusted) case final s?) s],
+      video: [
+        for (final r in read.video)
+          if (PipedStream.fromRow(r, trusted) case final s?) s
+      ],
+      audio: [
+        for (final r in read.audio)
+          if (PipedStream.fromRow(r, trusted) case final s?) s
+      ],
+      muxed: [
+        for (final r in read.muxed)
+          if (PipedStream.fromRow(r, trusted) case final s?) s
+      ],
       live: read.live,
     );
   }
 
   /// Streams are kept only on the server's host, its `proxyUrl` host or YouTube's.
   factory PipedVideo.fromJson(String server, Map<String, dynamic> json) {
-    final trusted = {Uri.tryParse(server)?.host ?? '', Uri.tryParse('${json['proxyUrl']}')?.host ?? ''}..remove('');
+    final trusted = {
+      Uri.tryParse(server)?.host ?? '',
+      Uri.tryParse('${json['proxyUrl']}')?.host ?? ''
+    }..remove('');
     PipedStream? parse(Object? s) => PipedStream.tryParse(s, trustedHosts: trusted);
     return PipedVideo(
       server: server,
-      video: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
-          .whereType<PipedStream>()
-          .where((s) => s.videoOnly && s.height > 0)
-          .toList(),
-      audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) parse(s)].whereType<PipedStream>().toList(),
+      video: [
+        for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const [])
+          parse(s)
+      ].whereType<PipedStream>().where((s) => s.videoOnly && s.height > 0).toList(),
+      audio: [
+        for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const [])
+          parse(s)
+      ].whereType<PipedStream>().toList(),
       live: json['livestream'] == true,
-      muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
+      muxed: [
+        for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const [])
+          parse(s)
+      ]
           .whereType<PipedStream>()
           .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
           .toList(),
     );
   }
 
-  const PipedVideo({required this.server, required this.video, required this.audio, this.live = false, this.muxed = const []});
+  const PipedVideo(
+      {required this.server,
+      required this.video,
+      required this.audio,
+      this.live = false,
+      this.muxed = const []});
   final String server;
   final List<PipedStream> video;
   final List<PipedStream> audio;
+
   /// Streams with video and audio in one file (mp4), which a TV can play
   /// from a single address; see `castStreamOf`.
   final List<PipedStream> muxed;
@@ -190,13 +255,23 @@ class PipedVideo {
     if (blocked.isEmpty) return this;
     logWarn('Dropped streams on hosts that point into the local network: ${blocked.join(', ')}');
     bool keep(PipedStream s) => !blocked.contains(Uri.parse(s.url).host.toLowerCase());
-    return PipedVideo(server: server, video: video.where(keep).toList(), audio: audio.where(keep).toList(), muxed: muxed.where(keep).toList(), live: live);
+    return PipedVideo(
+        server: server,
+        video: video.where(keep).toList(),
+        audio: audio.where(keep).toList(),
+        muxed: muxed.where(keep).toList(),
+        live: live);
   }
 
-  List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
+  List<int> get heights =>
+      ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
 
   /// [heights] of the streams [settings] allows.
-  List<int> heightsFor(PlayerSettings settings) => ({for (final s in video) if (FormatPolicy.allowsName(settings, s.codec)) s.height}.toList()..sort((a, b) => b.compareTo(a)));
+  List<int> heightsFor(PlayerSettings settings) => ({
+        for (final s in video)
+          if (FormatPolicy.allowsName(settings, s.codec)) s.height
+      }.toList()
+        ..sort((a, b) => b.compareTo(a)));
 
   /// The video stream for [settings]: the highest allowed height in the
   /// first preferred allowed codec that has one, as the yt-dlp expression would pick.
@@ -209,7 +284,8 @@ class PipedVideo {
       final lowest = streams.map((s) => s.height).reduce((a, b) => a < b ? a : b);
       allowed = streams.where((s) => s.height == lowest).toList();
     }
-    int better(PipedStream a, PipedStream b) => a.height != b.height ? b.height.compareTo(a.height) : b.bitrate.compareTo(a.bitrate);
+    int better(PipedStream a, PipedStream b) =>
+        a.height != b.height ? b.height.compareTo(a.height) : b.bitrate.compareTo(a.bitrate);
     // Quality strategy has no codec preference: the best picture wins.
     if (settings.strategy == PlaybackStrategy.quality) return (allowed..sort(better)).first;
     for (final codec in FormatPolicy.codecOrder(settings)) {
@@ -227,7 +303,8 @@ class PipedVideo {
       AudioQuality.low => 64000,
     };
     final sorted = [...audio]..sort((a, b) => b.bitrate.compareTo(a.bitrate));
-    return sorted.where((s) => limit == null || s.bitrate <= limit * 1.1).firstOrNull ?? sorted.last;
+    return sorted.where((s) => limit == null || s.bitrate <= limit * 1.1).firstOrNull ??
+        sorted.last;
   }
 
   /// An mpv EDL address joining the picked video and audio, or null when
@@ -256,6 +333,7 @@ class PipedStreams extends RelayServers {
     'https://pipedapi.ducks.party',
     'https://pipedapi.kavin.rocks',
   ];
+
   /// The Piped project's table of public instances, and kavin.rocks's live
   /// status list; servers either names are measured with the known ones.
   static const instanceLists = [
@@ -270,8 +348,12 @@ class PipedStreams extends RelayServers {
   @override
   Future<({List<({String url})> video, List<({String url})> audio})> probe(String server) async {
     final video = await _from(server, RelayServers.probeVideo);
-    return (video: [for (final s in video.video) (url: s.url)], audio: [for (final s in video.audio) (url: s.url)]);
+    return (
+      video: [for (final s in video.video) (url: s.url)],
+      audio: [for (final s in video.audio) (url: s.url)]
+    );
   }
+
   @override
   String get pausedMessage => tr('Piped failed repeatedly; skipping it for now');
 
@@ -281,7 +363,9 @@ class PipedStreams extends RelayServers {
     await Future.wait(instanceLists.map((url) async {
       try {
         final response = await client.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
-        if (response.statusCode == 200) found.addAll(parsePipedInstanceList(utf8.decode(response.bodyBytes)));
+        if (response.statusCode == 200) {
+          found.addAll(parsePipedInstanceList(utf8.decode(response.bodyBytes)));
+        }
       } catch (e) {
         logWarn('Could not read the Piped server list $url: $e');
       }
@@ -291,7 +375,8 @@ class PipedStreams extends RelayServers {
 
   /// The streams of [videoId] from [server], or from the fastest servers
   /// in turn when [server] is null.
-  Future<PipedVideo> fetch(String videoId, {String? server}) => guarded(() => _fetch(videoId, server));
+  Future<PipedVideo> fetch(String videoId, {String? server}) =>
+      guarded(() => _fetch(videoId, server));
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
@@ -311,7 +396,9 @@ class PipedStreams extends RelayServers {
 
   /// The streams of [videoId] from [server]; throws when it has none.
   Future<PipedVideo> _from(String server, String videoId) async {
-    final (status, body) = await getBounded(client, Uri.parse('$server/streams/$videoId'), limit: 8 << 20).timeout(const Duration(seconds: 8));
+    final (status, body) =
+        await getBounded(client, Uri.parse('$server/streams/$videoId'), limit: 8 << 20)
+            .timeout(const Duration(seconds: 8));
     if (readRelayVideo(false, body) case final read?) {
       final video = read.video;
       if (status != 200 || video == null) throw StateError(video?.error ?? 'HTTP $status');
@@ -319,7 +406,8 @@ class PipedStreams extends RelayServers {
     }
     final data = await decodeUtf8JsonInBackground(body);
     if (status != 200 || data is! Map<String, dynamic>) {
-      throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP $status');
+      throw StateError(
+          data is Map && data['message'] != null ? '${data['message']}' : 'HTTP $status');
     }
     return PipedVideo.fromJson(server, data).withoutPrivateHosts();
   }

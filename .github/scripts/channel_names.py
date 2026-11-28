@@ -35,7 +35,7 @@ def channel(channel_id):
                 return None, None, f'not found (HTTP {error.code})'
             if attempt == 2:
                 return None, None, f'failed: {error}'
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001, any failure is retried, then reported.
             if attempt == 2:
                 return None, None, f'failed: {error}'
         time.sleep(5 * (attempt + 1))

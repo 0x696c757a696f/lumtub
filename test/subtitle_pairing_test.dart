@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/subtitle_cues.dart';
 
-SubtitleCue cue(int start, int end, String text) => (start: Duration(milliseconds: start), end: Duration(milliseconds: end), text: text);
+SubtitleCue cue(int start, int end, String text) =>
+    (start: Duration(milliseconds: start), end: Duration(milliseconds: end), text: text);
 
 void main() {
   test('second lines land beside the main line spoken with them', () {
@@ -14,10 +15,15 @@ void main() {
 
   test('a line left untranslated joins the next one, which holds its words', () {
     final paired = pairSubtitleCues(
-      [cue(0, 3000, 'Avete davvero fatto pulizia nelle vostre'), cue(3000, 6000, 'relazioni oppure avete semplicemente'), cue(20000, 22000, 'Alone')],
+      [
+        cue(0, 3000, 'Avete davvero fatto pulizia nelle vostre'),
+        cue(3000, 6000, 'relazioni oppure avete semplicemente'),
+        cue(20000, 22000, 'Alone')
+      ],
       [cue(3000, 6000, '你是否真的清理了你们的人际关系，还是刚刚停止')],
     );
-    expect([for (final p in paired) p.cue.text], ['Avete davvero fatto pulizia nelle vostre relazioni oppure avete semplicemente', 'Alone']);
+    expect([for (final p in paired) p.cue.text],
+        ['Avete davvero fatto pulizia nelle vostre relazioni oppure avete semplicemente', 'Alone']);
     expect([for (final p in paired) p.second], ['你是否真的清理了你们的人际关系，还是刚刚停止', null]);
   });
 
@@ -29,10 +35,19 @@ void main() {
 
   test('main lines one translated sentence spans become one row', () {
     final paired = pairSubtitleCues(
-      [cue(0, 2000, 'will continue to strengthen line'), cue(2000, 4000, 'management. By the time we got there,'), cue(4000, 6000, 'they were already at the front')],
+      [
+        cue(0, 2000, 'will continue to strengthen line'),
+        cue(2000, 4000, 'management. By the time we got there,'),
+        cue(4000, 6000, 'they were already at the front')
+      ],
       [cue(0, 4000, '将继续加强一线管理。当我们到达那里时，'), cue(4000, 6000, '他们已经到了最前面')],
     );
-    expect([for (final p in paired) p.cue.text], ['will continue to strengthen line management. By the time we got there,', 'they were already at the front']);
+    expect([
+      for (final p in paired) p.cue.text
+    ], [
+      'will continue to strengthen line management. By the time we got there,',
+      'they were already at the front'
+    ]);
     expect([for (final p in paired) p.second], ['将继续加强一线管理。当我们到达那里时，', '他们已经到了最前面']);
     expect(paired.first.cue.end, const Duration(milliseconds: 4000));
   });

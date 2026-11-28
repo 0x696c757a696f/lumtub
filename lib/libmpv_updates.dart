@@ -8,6 +8,7 @@ import 'app_directories.dart';
 class LibmpvBuild {
   const LibmpvBuild(this.tag, this.variant);
   final String tag;
+
   /// `x86_64-v3` (AVX2), `x86_64` (any x86-64 CPU) or `aarch64` (Windows
   /// on ARM).
   final String variant;
@@ -45,7 +46,8 @@ class LibmpvBuild {
   }
 
   @override
-  bool operator ==(Object other) => other is LibmpvBuild && other.tag == tag && other.variant == variant;
+  bool operator ==(Object other) =>
+      other is LibmpvBuild && other.tag == tag && other.variant == variant;
 
   @override
   int get hashCode => Object.hash(tag, variant);
@@ -81,7 +83,8 @@ bool cpuSupportsX86_64V3() {
   if (!Platform.isWindows) return false;
   try {
     const avx2 = 40; // PF_AVX2_INSTRUCTIONS_AVAILABLE
-    final present = DynamicLibrary.open('kernel32.dll').lookupFunction<_FeatureNative, _FeatureDart>('IsProcessorFeaturePresent');
+    final present = DynamicLibrary.open('kernel32.dll')
+        .lookupFunction<_FeatureNative, _FeatureDart>('IsProcessorFeaturePresent');
     return present(avx2) != 0;
   } catch (_) {
     return false;
@@ -91,12 +94,15 @@ bool cpuSupportsX86_64V3() {
 /// The files shared with the Windows runner (windows/runner/libmpv_loader.cpp)
 /// that choose, confirm and roll back a downloaded libmpv-2.dll.
 class LibmpvState {
-  LibmpvState(this.directory, {String? loadedPath, this.bundled}) : loadedPath = loadedPath ?? Platform.environment['LUMTUB_LIBMPV'];
+  LibmpvState(this.directory, {String? loadedPath, this.bundled})
+      : loadedPath = loadedPath ?? Platform.environment['LUMTUB_LIBMPV'];
 
   /// `components/mpv`.
   final Directory directory;
+
   /// The downloaded DLL the runner loaded for this launch, if any.
   final String? loadedPath;
+
   /// The DLL shipped with the app, or null when its version is unknown.
   final LibmpvBuild? bundled;
 
@@ -124,8 +130,11 @@ class LibmpvState {
     return file.existsSync() ? file.readAsStringSync() : null;
   }
 
-  Set<String> failedPaths() =>
-      _failed ??= (_read('failed.txt') ?? '').split('\n').map((line) => line.trim().toLowerCase()).where((line) => line.isNotEmpty).toSet();
+  Set<String> failedPaths() => _failed ??= (_read('failed.txt') ?? '')
+      .split('\n')
+      .map((line) => line.trim().toLowerCase())
+      .where((line) => line.isNotEmpty)
+      .toSet();
 
   bool hasFailed(String path) => failedPaths().contains(path.toLowerCase());
 

@@ -49,12 +49,15 @@ class ToolPaths {
 
 /// Downloads GitHub release assets to versioned directories and checks SHA-256.
 class ToolManager {
-  ToolManager(this.directories, this.report, {http.Client? client}) : _client = client ?? appHttpClient();
+  ToolManager(this.directories, this.report, {http.Client? client})
+      : _client = client ?? appHttpClient();
   final AppDirectories directories;
+
   /// Shows a message, and writes it to the log in English.
   final void Function(String shown, String logged) report;
 
-  void status(String text, [List<Object?> args = const []]) => report(tr(text, args), trLog(text, args));
+  void status(String text, [List<Object?> args = const []]) =>
+      report(tr(text, args), trLog(text, args));
 
   late final Directory root;
   late final LibmpvState libmpv;
@@ -90,7 +93,8 @@ class ToolManager {
   String? mpvVersion;
 
   /// The libmpv in use, for the status bar and settings.
-  String get libmpvLabel => _systemMpv ? mpvVersion ?? 'libmpv' : 'libmpv ${libmpv.current?.label ?? tr('Built-in')}';
+  String get libmpvLabel =>
+      _systemMpv ? mpvVersion ?? 'libmpv' : 'libmpv ${libmpv.current?.label ?? tr('Built-in')}';
 
   Future<void> initialize() async {
     root = directories.components;
@@ -101,7 +105,8 @@ class ToolManager {
   }
 
   LibmpvBuild? _readBundledLibmpv() {
-    final file = File('${File(Platform.resolvedExecutable).parent.path}${_separator}libmpv-version.txt');
+    final file =
+        File('${File(Platform.resolvedExecutable).parent.path}${_separator}libmpv-version.txt');
     try {
       return file.existsSync() ? LibmpvBuild.fromVersionFile(file.readAsStringSync()) : null;
     } on FileSystemException {
@@ -117,11 +122,15 @@ class ToolManager {
     // yt-dlp runs in the app's own Python; without it streams come from
     // the core alone.
     if (Platform.isIOS) return ToolPaths(mpv: '', ytDlp: await _iosYtDlp());
-    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS, Android and iOS.');
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) {
+      throw UnsupportedError('Lumtub runs on Windows, Linux, macOS, Android and iOS.');
+    }
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
-    if (!_systemMpv && !File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
+    if (!_systemMpv && !File(mpv).existsSync()) {
+      throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
+    }
     if (discover()?.ytDlp.isNotEmpty != true) {
       status('First launch: installing yt-dlp…');
       await _installYtDlp();
@@ -131,7 +140,8 @@ class ToolManager {
     // on it again (offline, it is a 25-second wait every time).
     final denoFailed = File('${root.path}${_separator}deno-failed');
     final failedAt = denoFailed.existsSync() ? denoFailed.lastModifiedSync() : null;
-    if (discover()?.deno == null && (failedAt == null || DateTime.now().difference(failedAt) > const Duration(hours: 6))) {
+    if (discover()?.deno == null &&
+        (failedAt == null || DateTime.now().difference(failedAt) > const Duration(hours: 6))) {
       try {
         status('Installing Deno, needed for YouTube extraction…');
         await _installDeno();
@@ -187,7 +197,8 @@ class ToolManager {
     if (bundled == null) return '';
     try {
       status('Preparing yt-dlp…');
-      final check = await runWithTimeout(bundled, ['--version'], timeout: const Duration(seconds: 60));
+      final check =
+          await runWithTimeout(bundled, ['--version'], timeout: const Duration(seconds: 60));
       if (check.exitCode != 0) throw StateError('${check.stderr}'.trim());
       final tag = _safeTag('${check.stdout}'.trim());
       final dest = Directory('${root.path}${_separator}yt-dlp$_separator$tag');
@@ -203,7 +214,8 @@ class ToolManager {
     }
   }
 
-  String get _bundledMpv => '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}libmpv-2.dll';
+  String get _bundledMpv =>
+      '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}libmpv-2.dll';
 
   ToolPaths? discover() {
     if (!root.existsSync()) return null;
@@ -223,7 +235,10 @@ class ToolManager {
     // thousand files: the answer is kept while the version folders stay.
     final key = '$group/$fileName';
     final folders = dirs.map((d) => d.path).join('|');
-    if (_found[key] case (final known, final path) when known == folders && (path == null || File(path).existsSync())) return path;
+    if (_found[key] case (final known, final path)
+        when known == folders && (path == null || File(path).existsSync())) {
+      return path;
+    }
     String? found;
     search:
     for (final folder in dirs) {
@@ -250,7 +265,9 @@ class ToolManager {
     return parent
         .listSync()
         .whereType<Directory>()
-        .where((d) => !d.path.endsWith('.partial') && !File('${d.path}$_separator$_failedMarker').existsSync())
+        .where((d) =>
+            !d.path.endsWith('.partial') &&
+            !File('${d.path}$_separator$_failedMarker').existsSync())
         .toList()
       ..sort((a, b) => compareVersionFolders(a.path, b.path));
   }
@@ -286,12 +303,16 @@ class ToolManager {
   Future<void> rollBackYtDlp() async {
     final versions = _versions(Directory('${root.path}${_separator}yt-dlp'));
     if (versions.length < 2) return;
-    await File('${versions.first.path}$_separator$_failedMarker').writeAsString(DateTime.now().toIso8601String());
+    await File('${versions.first.path}$_separator$_failedMarker')
+        .writeAsString(DateTime.now().toIso8601String());
   }
 
   Future<void> checkUpdates({bool force = false}) async {
     // Android has no Deno to keep current, and yt-dlp only with its Python.
-    if (Platform.isIOS && IosPython.current == null || Platform.isAndroid && AndroidPython.current == null) return;
+    if (Platform.isIOS && IosPython.current == null ||
+        Platform.isAndroid && AndroidPython.current == null) {
+      return;
+    }
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
     // try waits an hour, as does any check that failed, rather than costing
@@ -299,7 +320,9 @@ class ToolManager {
     if (!force && await stamp.exists()) {
       final [time, ...rest] = (await stamp.readAsString()).trim().split(' ');
       final last = DateTime.tryParse(time);
-      final wait = _ytDlpIsSingleFile || rest.contains('failed') ? const Duration(hours: 1) : const Duration(hours: 24);
+      final wait = _ytDlpIsSingleFile || rest.contains('failed')
+          ? const Duration(hours: 1)
+          : const Duration(hours: 24);
       if (last != null && DateTime.now().difference(last) < wait) return;
     }
     // The ffmpeg earlier versions installed for downloads; the core joins
@@ -328,13 +351,15 @@ class ToolManager {
       status('Update check complete. New versions take effect after restarting the app.');
     } else {
       await stamp.writeAsString('${DateTime.now().toIso8601String()} failed');
-      status('Some components failed to update; current versions are unaffected: {0}', [errors.join(' / ')]);
+      status('Some components failed to update; current versions are unaffected: {0}',
+          [errors.join(' / ')]);
     }
   }
 
   Future<Map<String, dynamic>> _release(String repository, {String? tag}) async {
     final response = await _client.get(
-      Uri.parse('https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
+      Uri.parse(
+          'https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
       headers: {'Accept': 'application/vnd.github+json', 'User-Agent': _userAgent},
     ).timeout(const Duration(seconds: 25));
     if (response.statusCode == 200) return jsonDecode(response.body) as Map<String, dynamic>;
@@ -361,14 +386,17 @@ class ToolManager {
       };
 
   /// Deno's package for this computer.
-  String get _denoPackage => 'deno-${Platform.isWindows ? 'x86_64-pc-windows-msvc' : Platform.isMacOS ? (_macArm64 ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin') : _linuxArm64 ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu'}.zip';
+  String get _denoPackage =>
+      'deno-${Platform.isWindows ? 'x86_64-pc-windows-msvc' : Platform.isMacOS ? (_macArm64 ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin') : _linuxArm64 ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu'}.zip';
 
-  Future<Map<String, dynamic>> _releaseFromSums(String repository, String sumsFile, {String? tag}) async {
+  Future<Map<String, dynamic>> _releaseFromSums(String repository, String sumsFile,
+      {String? tag}) async {
     var name = tag;
     if (name == null) {
-      final request = http.Request('GET', Uri.parse('https://github.com/$repository/releases/latest'))
-        ..followRedirects = false
-        ..headers['User-Agent'] = _userAgent;
+      final request =
+          http.Request('GET', Uri.parse('https://github.com/$repository/releases/latest'))
+            ..followRedirects = false
+            ..headers['User-Agent'] = _userAgent;
       // The Rust client always follows redirects, so the redirect itself is
       // read with Dart's own client, which uses the app's proxy overrides.
       final plain = http.Client();
@@ -382,13 +410,20 @@ class ToolManager {
       if (name == null) throw HttpException('No latest release redirect for $repository');
     }
     final base = 'https://github.com/$repository/releases/download/${Uri.encodeComponent(name)}';
-    final response = await _client.get(Uri.parse('$base/$sumsFile'), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
-    if (response.statusCode != 200) throw HttpException('$sumsFile HTTP ${response.statusCode} for $repository');
+    final response = await _client.get(Uri.parse('$base/$sumsFile'),
+        headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
+    if (response.statusCode != 200) {
+      throw HttpException('$sumsFile HTTP ${response.statusCode} for $repository');
+    }
     return {
       'tag_name': name,
       'assets': [
         for (final (hash, file) in parseSha256Sums(response.body))
-          {'name': file, 'browser_download_url': '$base/${Uri.encodeComponent(file)}', 'digest': 'sha256:$hash'},
+          {
+            'name': file,
+            'browser_download_url': '$base/${Uri.encodeComponent(file)}',
+            'digest': 'sha256:$hash'
+          },
       ],
     };
   }
@@ -399,15 +434,20 @@ class ToolManager {
   /// checked its OpenPGP signature against yt-dlp's pinned key. Throws when
   /// the signature is missing or wrong, or the core cannot check it.
   Future<Map<String, String>> _signedYtDlpSums(String tag) async {
-    if (!RegExp(r'^[0-9A-Za-z._-]{1,100}$').hasMatch(tag)) throw FormatException('Unexpected yt-dlp tag: $tag');
+    if (!RegExp(r'^[0-9A-Za-z._-]{1,100}$').hasMatch(tag)) {
+      throw FormatException('Unexpected yt-dlp tag: $tag');
+    }
     final base = 'https://github.com/$_ytDlpRepository/releases/download/$tag';
     Future<List<int>> fetch(String name, int limit) async {
-      final response = await _client.get(Uri.parse('$base/$name'), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
+      final response = await _client.get(Uri.parse('$base/$name'),
+          headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
       if (response.statusCode != 200) throw HttpException('$name HTTP ${response.statusCode}');
       if (response.bodyBytes.length > limit) throw FormatException('$name is too large');
       return response.bodyBytes;
     }
-    final (sums, signature) = await (fetch('SHA2-256SUMS', 64 << 10), fetch('SHA2-256SUMS.sig', 4096)).wait;
+
+    final (sums, signature) =
+        await (fetch('SHA2-256SUMS', 64 << 10), fetch('SHA2-256SUMS.sig', 4096)).wait;
     final text = utf8.decode(sums);
     final problem = verifyYtDlpSums(text, signature, tag);
     if (problem != null) throw StateError('yt-dlp $tag: $problem');
@@ -419,10 +459,16 @@ class ToolManager {
   /// that is wrong too.
   static String? verifyYtDlpSums(String sums, List<int> signature, String tag) {
     final core = NativeCore.instance;
-    if (core == null || !core.library.providesSymbol('lumtub_ytdlp_sums_verify')) return 'the core that checks signatures is missing';
-    final call = _sumsVerify ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ytdlp_sums_verify');
+    if (core == null || !core.library.providesSymbol('lumtub_ytdlp_sums_verify')) {
+      return 'the core that checks signatures is missing';
+    }
+    final call = _sumsVerify ??= core.library.lookupFunction<
+        Pointer<Utf8> Function(Pointer<Uint8>, Size),
+        Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ytdlp_sums_verify');
     final hex = signature.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    final answer = jsonDecode(core.take(core.withText(jsonEncode({'sums': sums, 'signature': hex, 'tag': tag}), call)) ?? 'null');
+    final answer = jsonDecode(
+        core.take(core.withText(jsonEncode({'sums': sums, 'signature': hex, 'tag': tag}), call)) ??
+            'null');
     if (answer is Map && answer['ok'] == true) return null;
     return answer is Map ? '${answer['error']}' : 'the signature could not be checked';
   }
@@ -447,7 +493,8 @@ class ToolManager {
   /// `hash  name` lines of a SHA-256 sums file.
   static List<(String, String)> parseSha256Sums(String body) => [
         for (final line in body.split('\n'))
-          if (RegExp(r'^([a-fA-F0-9]{64}) [ *]?(\S.*?)\s*$').firstMatch(line) case final m?) (m[1]!.toLowerCase(), m[2]!),
+          if (RegExp(r'^([a-fA-F0-9]{64}) [ *]?(\S.*?)\s*$').firstMatch(line) case final m?)
+            (m[1]!.toLowerCase(), m[2]!),
       ];
 
   Map<String, dynamic> _asset(Map<String, dynamic> release, bool Function(String) accept) {
@@ -461,7 +508,9 @@ class ToolManager {
 
   Uri _assetUri(Map<String, dynamic> asset) {
     final uri = Uri.parse(asset['browser_download_url']?.toString() ?? '');
-    if (uri.scheme != 'https' || uri.host != 'github.com' || (asset['name']?.toString() ?? '').isEmpty) {
+    if (uri.scheme != 'https' ||
+        uri.host != 'github.com' ||
+        (asset['name']?.toString() ?? '').isEmpty) {
       throw const FormatException('Untrusted GitHub asset URL');
     }
     return uri;
@@ -469,11 +518,14 @@ class ToolManager {
 
   /// Downloads a GitHub release [asset] into [into], checked against the
   /// SHA-256 digest GitHub lists for it.
-  Future<File> downloadVerified(Map<String, dynamic> asset, Directory into, void Function(int received, int? total) onProgress) => _downloadVerified(asset, into, onProgress: onProgress);
+  Future<File> downloadVerified(Map<String, dynamic> asset, Directory into,
+          void Function(int received, int? total) onProgress) =>
+      _downloadVerified(asset, into, onProgress: onProgress);
 
   /// Downloads [asset] into [into] and checks its SHA-256: [sha256Hex] when
   /// given (from the release's checksum file), else the digest GitHub lists.
-  Future<File> _downloadVerified(Map<String, dynamic> asset, Directory into, {String? sha256Hex, void Function(int received, int? total)? onProgress}) async {
+  Future<File> _downloadVerified(Map<String, dynamic> asset, Directory into,
+      {String? sha256Hex, void Function(int received, int? total)? onProgress}) async {
     final assetName = asset['name']?.toString() ?? '';
     final uri = _assetUri(asset);
     final digest = sha256Hex == null ? asset['digest']?.toString() ?? '' : 'sha256:$sha256Hex';
@@ -482,7 +534,9 @@ class ToolManager {
     }
     await into.create(recursive: true);
     final file = File('${into.path}${Platform.pathSeparator}$assetName');
-    if (await file.exists() && (await _sha256(file)) == digest.substring(7).toLowerCase()) return file;
+    if (await file.exists() && (await _sha256(file)) == digest.substring(7).toLowerCase()) {
+      return file;
+    }
     final temp = File('${file.path}.download');
     if (await temp.exists()) await temp.delete();
     try {
@@ -516,14 +570,16 @@ class ToolManager {
 
   /// GitHub's downloads answer 502 to 504 now and then; such answers, and
   /// 429, are asked again a few times before the last one is returned.
-  Future<http.StreamedResponse> _sendRetrying(Uri uri, {Map<String, String> headers = const {}}) async {
+  Future<http.StreamedResponse> _sendRetrying(Uri uri,
+      {Map<String, String> headers = const {}}) async {
     const waits = [Duration(seconds: 2), Duration(seconds: 5), Duration(seconds: 10)];
-    for (var attempt = 0; ; attempt++) {
+    for (var attempt = 0;; attempt++) {
       final request = http.Request('GET', uri);
       request.headers['User-Agent'] = _userAgent;
       request.headers.addAll(headers);
       final result = await _client.send(request).timeout(const Duration(seconds: 30));
-      final busy = result.statusCode == 429 || (result.statusCode >= 502 && result.statusCode <= 504);
+      final busy =
+          result.statusCode == 429 || (result.statusCode >= 502 && result.statusCode <= 504);
       if (!busy || attempt >= waits.length) return result;
       await result.stream.drain<void>();
       await Future<void>.delayed(waits[attempt]);
@@ -532,7 +588,8 @@ class ToolManager {
 
   /// A GET of [uri] as component downloads make it, asked again while
   /// GitHub is busy; for data packs ([PackManager]).
-  Future<http.StreamedResponse> sendRetrying(Uri uri, {Map<String, String> headers = const {}}) => _sendRetrying(uri, headers: headers);
+  Future<http.StreamedResponse> sendRetrying(Uri uri, {Map<String, String> headers = const {}}) =>
+      _sendRetrying(uri, headers: headers);
 
   /// [file]'s SHA-256 in lowercase hex.
   Future<String> sha256Of(File file) => _sha256(file);
@@ -541,7 +598,8 @@ class ToolManager {
   /// window keeps drawing; Dart hashes it when the core is missing.
   Future<String> _sha256(File file) async {
     final path = file.path;
-    final native = NativeCore.instance == null ? null : await Isolate.run(() => NativeCore.fileSha256Of(path));
+    final native =
+        NativeCore.instance == null ? null : await Isolate.run(() => NativeCore.fileSha256Of(path));
     return native ?? (await sha256.bind(file.openRead()).first).toString();
   }
 
@@ -572,7 +630,8 @@ class ToolManager {
     try {
       final file = await _downloadYtDlp(release, partial, sums);
       // A build that cannot even report its version is never used.
-      final check = await runWithTimeout(file.path, ['--version'], timeout: const Duration(seconds: 30));
+      final check =
+          await runWithTimeout(file.path, ['--version'], timeout: const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('yt-dlp $tag failed its self-check');
       await partial.rename(dest.path);
     } catch (_) {
@@ -585,15 +644,22 @@ class ToolManager {
   /// The unpacked build (yt-dlp_win.zip). The single-file yt-dlp.exe
   /// unpacks itself to a temp folder on every start, which costs a second
   /// of CPU and a second process for each search or channel page.
-  Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into, Map<String, String> sums) async {
+  Future<File> _downloadYtDlp(
+      Map<String, dynamic> release, Directory into, Map<String, String> sums) async {
     final sha256Hex = sums[ytDlpFolderAsset];
-    if (sha256Hex == null) throw StateError('The signed yt-dlp checksums do not list $ytDlpFolderAsset');
+    if (sha256Hex == null) {
+      throw StateError('The signed yt-dlp checksums do not list $ytDlpFolderAsset');
+    }
     if (_zipApp) {
-      final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'), sha256Hex: sha256Hex);
+      final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset),
+          Directory('${root.path}${_separator}downloads'),
+          sha256Hex: sha256Hex);
       await into.create(recursive: true);
       return app.rename('${into.path}${_separator}yt-dlp');
     }
-    final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'), sha256Hex: sha256Hex);
+    final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset),
+        Directory('${root.path}${_separator}downloads'),
+        sha256Hex: sha256Hex);
     await into.create(recursive: true);
     await _extractZip(archive, into);
     await archive.delete();
@@ -629,15 +695,19 @@ class ToolManager {
   static String get ytDlpFolderAsset => _zipApp
       ? 'yt-dlp'
       : Platform.isWindows
-      ? 'yt-dlp_win.zip'
-      : Platform.isMacOS
-          ? 'yt-dlp_macos.zip'
-          : _linuxArm64
-              ? 'yt-dlp_linux_aarch64.zip'
-              : 'yt-dlp_linux.zip';
+          ? 'yt-dlp_win.zip'
+          : Platform.isMacOS
+              ? 'yt-dlp_macos.zip'
+              : _linuxArm64
+                  ? 'yt-dlp_linux_aarch64.zip'
+                  : 'yt-dlp_linux.zip';
 
   /// The executable's name in the Linux or macOS archive.
-  static String get _ytDlpInArchive => Platform.isMacOS ? 'yt-dlp_macos' : _linuxArm64 ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux';
+  static String get _ytDlpInArchive => Platform.isMacOS
+      ? 'yt-dlp_macos'
+      : _linuxArm64
+          ? 'yt-dlp_linux_aarch64'
+          : 'yt-dlp_linux';
 
   /// Deletes all but the newest [keep] usable versions in [group]; rolled
   /// back versions stay as markers so they are not downloaded again.
@@ -665,11 +735,14 @@ class ToolManager {
     final dll = File('${dest.path}${_separator}libmpv-2.dll');
     if (libmpv.hasFailed(dll.path)) return;
     if (!await dll.exists()) {
-      final names = (release['assets'] as List? ?? const []).whereType<Map<Object?, Object?>>().map((asset) => asset['name']?.toString() ?? '');
+      final names = (release['assets'] as List? ?? const [])
+          .whereType<Map<Object?, Object?>>()
+          .map((asset) => asset['name']?.toString() ?? '');
       final assetName = libmpvAssetName(names, build.variant);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
       status('Downloading libmpv {0}…', [build.label]);
-      final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));
+      final archive = await _downloadVerified(_asset(release, (name) => name == assetName),
+          Directory('${root.path}${_separator}downloads'));
       final partial = Directory('${dest.path}.partial');
       if (await partial.exists()) await partial.delete(recursive: true);
       await partial.create(recursive: true);
@@ -680,9 +753,13 @@ class ToolManager {
           // Windows before 11 23H2 has no 7z support in tar.exe; do not
           // download every new release only to fail again.
           await no7z.writeAsString(DateTime.now().toIso8601String());
-          throw StateError(tr("This version of Windows can't extract 7z files. Still using the built-in libmpv"));
+          throw StateError(tr(
+              "This version of Windows can't extract 7z files. Still using the built-in libmpv"));
         }
-        final found = partial.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}libmpv-2.dll'));
+        final found = partial
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.toLowerCase().endsWith('${_separator}libmpv-2.dll'));
         if (found.isEmpty) throw StateError('libmpv archive $tag has no libmpv-2.dll');
         await dest.create(recursive: true);
         await found.first.copy(dll.path);
@@ -694,7 +771,10 @@ class ToolManager {
     await libmpv.select(dll.path);
     // Keep the running copy and the new one; the loaded DLL cannot be deleted.
     for (final old in group.listSync().whereType<Directory>()) {
-      if (old.path == dest.path || (libmpv.loadedPath?.startsWith('${old.path}$_separator') ?? false)) continue;
+      if (old.path == dest.path ||
+          (libmpv.loadedPath?.startsWith('${old.path}$_separator') ?? false)) {
+        continue;
+      }
       try {
         await old.delete(recursive: true);
       } on FileSystemException {
@@ -706,11 +786,13 @@ class ToolManager {
   Future<void> _installDeno() async {
     final release = await _release('denoland/deno');
     final tag = _safeTag(release['tag_name']);
-    final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
+    final dest =
+        Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}$_separator${_exe('deno')}').exists()) return;
     status('Downloading Deno {0}…', [tag]);
     final asset = _asset(release, (name) => name == _denoPackage);
-    final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
+    final archive =
+        await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     await partial.create(recursive: true);
@@ -730,7 +812,9 @@ class ToolManager {
 
   String _safeTag(Object? value) {
     final tag = value?.toString() ?? '';
-    if (!RegExp(r'^[a-zA-Z0-9._-]{1,100}$').hasMatch(tag)) throw const FormatException('Invalid release tag');
+    if (!RegExp(r'^[a-zA-Z0-9._-]{1,100}$').hasMatch(tag)) {
+      throw const FormatException('Invalid release tag');
+    }
     return tag;
   }
 
@@ -742,7 +826,9 @@ class ToolManager {
     final tar = windowsProgram(r'System32\tar.exe');
     Future<String> run(List<String> arguments) async {
       final result = await Process.run(tar, arguments);
-      if (result.exitCode != 0) throw ProcessException(tar, arguments, result.stderr.toString(), result.exitCode);
+      if (result.exitCode != 0) {
+        throw ProcessException(tar, arguments, result.stderr.toString(), result.exitCode);
+      }
       return result.stdout.toString();
     }
 
@@ -751,7 +837,8 @@ class ToolManager {
     await run(['-xf', archive.path, '-C', into.path, '--', member]);
   }
 
-  static String get _userAgent => Platform.isWindows ? 'Lumtub-Windows/0.1' : 'Lumtub-${Platform.operatingSystem}/0.1';
+  static String get _userAgent =>
+      Platform.isWindows ? 'Lumtub-Windows/0.1' : 'Lumtub-${Platform.operatingSystem}/0.1';
 
   void dispose() => _client.close();
 }

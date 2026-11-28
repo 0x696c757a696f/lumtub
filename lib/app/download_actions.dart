@@ -2,7 +2,8 @@ part of 'app_controller.dart';
 
 /// Saving videos, covers and subtitles, and building the repository and download manager.
 extension DownloadActions on AppController {
-  VideoRepository _repositoryFor(ToolPaths paths, CacheManager cacheManager, PlayerSettings settings) =>
+  VideoRepository _repositoryFor(
+          ToolPaths paths, CacheManager cacheManager, PlayerSettings settings) =>
       VideoRepository(
         paths.ytDlp,
         cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp',
@@ -14,7 +15,8 @@ extension DownloadActions on AppController {
         ..streams.members = (() => webSignIn)
         ..streams.bothFamilies = (() => _bothFamilies)
         ..streams.signInWhenBlocked = (() => this.settings.signInWhenBlocked)
-        ..streams.onSignedInPlay = ((_) => _notice(tr('YouTube took this network for a bot, so this video was asked for with your account')))
+        ..streams.onSignedInPlay = ((_) => _notice(tr(
+            'YouTube took this network for a bot, so this video was asked for with your account')))
         ..streams.onLoudness = _onLoudness;
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
@@ -24,7 +26,8 @@ extension DownloadActions on AppController {
         onFinished: (task) {
           if (!_disposed) _finishedDownloads.add(task);
         },
-        defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
+        defaultDirectory: DownloadManager.defaultDirectoryFor(
+            Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
         // lumtub_core joins the streams, so no ffmpeg is needed.
         join: NativeCore.canJoin
@@ -34,7 +37,9 @@ extension DownloadActions on AppController {
               }
             : null,
         cover: _coverBytes,
-        recorder: NativeCore.canRecord ? CoreRecorder(sources: _liveSources, proxy: () => proxy.url) : null,
+        recorder: NativeCore.canRecord
+            ? CoreRecorder(sources: _liveSources, proxy: () => proxy.url)
+            : null,
         saveSubtitles: _saveDownloadSubtitles,
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
@@ -50,7 +55,10 @@ extension DownloadActions on AppController {
   /// Queues [item] for download, and says so.
   /// A file name for [item]'s [suffix] (such as `.jpg`) in the download folder.
   String _downloadPath(VideoItem item, String suffix) {
-    final title = item.title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final title = item.title
+        .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     final short = title.length > 120 ? title.substring(0, 120).trim() : title;
     final folder = downloads?.directory ?? Directory.systemTemp.path;
     return '$folder${Platform.pathSeparator}${short.isEmpty ? item.id : short} [${item.id}]$suffix';
@@ -72,7 +80,9 @@ extension DownloadActions on AppController {
     for (final name in const ['maxresdefault', 'sddefault', 'hqdefault']) {
       final http.Response response;
       try {
-        response = await _http.get(Uri.https('i.ytimg.com', '/vi/$id/$name.jpg')).timeout(const Duration(seconds: 20));
+        response = await _http
+            .get(Uri.https('i.ytimg.com', '/vi/$id/$name.jpg'))
+            .timeout(const Duration(seconds: 20));
       } catch (_) {
         throw StateError(tr("Couldn't download the cover; check the network or proxy"));
       }
@@ -88,10 +98,18 @@ extension DownloadActions on AppController {
   Future<List<SubtitleOption>> subtitleOptionsFor(VideoItem item) async {
     final known = playing?.id == item.id ? details : null;
     final repository = _repository;
-    final offered = known?.subtitles ?? (repository == null ? const <SubtitleOption>[] : (await repository.details(item.id)).subtitles);
+    final offered = known?.subtitles ??
+        (repository == null
+            ? const <SubtitleOption>[]
+            : (await repository.details(item.id)).subtitles);
     final target = settings.subtitleLanguage.translation;
-    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target, language: known?.language);
-    return [if (translation != null) translation, ...offered.where((o) => o.kind != SubtitleKind.translated)];
+    final translation = hasOwnSubtitle(offered, target)
+        ? null
+        : translationOf(offered, target, language: known?.language);
+    return [
+      if (translation != null) translation,
+      ...offered.where((o) => o.kind != SubtitleKind.translated)
+    ];
   }
 
   /// The subtitles [item] can be downloaded with, for the download dialog.
@@ -104,16 +122,25 @@ extension DownloadActions on AppController {
 
   /// The languages the download dialog offers first: 第一字幕语言, then
   /// the second subtitle's.
-  List<TranslationLanguage> get downloadSubtitleLanguages => {settings.subtitleLanguage.translation, if (settings.secondaryTarget != null) settings.secondaryTarget!}.toList();
+  List<TranslationLanguage> get downloadSubtitleLanguages => {
+        settings.subtitleLanguage.translation,
+        if (settings.secondaryTarget != null) settings.secondaryTarget!
+      }.toList();
 
   /// Writes the subtitles [picked] for [task] beside [stem] and returns
   /// them, a bilingual track first. Read from the `.info.json` yt-dlp left
   /// there, else asked again.
-  Future<List<SavedSubtitle>> _saveDownloadSubtitles(DownloadTask task, String stem, DownloadSubtitles picked, {bool styled = false}) async {
+  Future<List<SavedSubtitle>> _saveDownloadSubtitles(
+      DownloadTask task, String stem, DownloadSubtitles picked,
+      {bool styled = false}) async {
     SubtitleChoices? choices;
     try {
       final info = await decodeJsonInBackground(await File('$stem.info.json').readAsString());
-      if (info is Map) choices = SubtitleChoices(SubtitleOption.listFrom(info['subtitles'], info['automatic_captions']), language: info['language']?.toString());
+      if (info is Map) {
+        choices = SubtitleChoices(
+            SubtitleOption.listFrom(info['subtitles'], info['automatic_captions']),
+            language: info['language']?.toString());
+      }
     } catch (_) {
       // Asked again below.
     }
@@ -157,13 +184,28 @@ extension DownloadActions on AppController {
     if (picked.bilingual) {
       final top = await load(picked.top!), bottom = await load(picked.bottom!);
       if (top != null && bottom != null) {
-        final lines = await bilingualLinesInBackground(parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
+        final lines = await bilingualLinesInBackground(
+            parseSubtitleCues(top.$2), parseSubtitleCues(bottom.$2));
         if (lines.isNotEmpty) {
-          final cues = [for (final l in lines) (start: l.start, end: l.end, text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n'))];
+          final cues = [
+            for (final l in lines)
+              (
+                start: l.start,
+                end: l.end,
+                text: [l.top, l.bottom].where((t) => t.isNotEmpty).join('\n')
+              )
+          ];
           final path = fileFor('${top.$1.language}+${bottom.$1.language}');
           await File(path).writeAsString(picked.srt ? toSrt(cues) : toVtt(cues));
-          final name = '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
-          saved.add((path: path, language: top.$1.language, name: name, lines: true, ass: await styledCopy(path, lines)));
+          final name =
+              '${SubtitleChoices.languageOf(top.$1)} / ${SubtitleChoices.languageOf(bottom.$1)}';
+          saved.add((
+            path: path,
+            language: top.$1.language,
+            name: name,
+            lines: true,
+            ass: await styledCopy(path, lines)
+          ));
           // Each language on its own beside the file, not in it: played
           // offline in Lumtub, they show as first and second subtitle, each
           // in its own style, as they do online.
@@ -184,7 +226,13 @@ extension DownloadActions on AppController {
       final cues = parseSubtitleCues(text);
       await File(path).writeAsString(picked.srt ? toSrt(cues) : text);
       final lines = [for (final c in cues) (start: c.start, end: c.end, top: c.text, bottom: '')];
-      saved.add((path: path, language: option.language, name: SubtitleChoices.labelOf(option), lines: false, ass: await styledCopy(path, lines)));
+      saved.add((
+        path: path,
+        language: option.language,
+        name: SubtitleChoices.labelOf(option),
+        lines: false,
+        ass: await styledCopy(path, lines)
+      ));
     }
     return saved;
   }
@@ -201,11 +249,17 @@ extension DownloadActions on AppController {
 
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
-    if (manager == null || item.isUpcoming || (item.isLive && !manager.canRecord)) return _notice(tr('Live streams cannot be downloaded'));
-    if (item.isLive) {
-      return _notice(manager.add(item, DownloadQuality.best) == null ? tr('Already in the download list') : tr('Recording the live stream; stop it in Downloads'));
+    if (manager == null || item.isUpcoming || (item.isLive && !manager.canRecord)) {
+      return _notice(tr('Live streams cannot be downloaded'));
     }
-    _notice(manager.add(item, quality, selection: selection) == null ? tr('Already in the download list') : tr('Added to downloads'));
+    if (item.isLive) {
+      return _notice(manager.add(item, DownloadQuality.best) == null
+          ? tr('Already in the download list')
+          : tr('Recording the live stream; stop it in Downloads'));
+    }
+    _notice(manager.add(item, quality, selection: selection) == null
+        ? tr('Already in the download list')
+        : tr('Added to downloads'));
   }
 
   /// The picture and sound of live [videoId] to record: the tallest in a
@@ -214,7 +268,8 @@ extension DownloadActions on AppController {
     final repository = _repository;
     if (repository == null) throw StateError(tr('Components are not ready yet'));
     if (fresh) repository.streams.forget(videoId);
-    final video = await repository.streams.resolve(videoId, _format, formatSort: _formatSort, live: true);
+    final video =
+        await repository.streams.resolve(videoId, _format, formatSort: _formatSort, live: true);
     return LiveSplit.pick(video.info, _playback, above: 0);
   }
 
@@ -226,11 +281,19 @@ extension DownloadActions on AppController {
     final info = (await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info;
     // Automatic picks follow the playback order, so a download is in a codec
     // this PC decodes well; the quality strategy takes the best picture.
-    final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
+    final preference = settings.strategy == PlaybackStrategy.quality
+        ? const <VideoCodec>[]
+        : FormatPolicy.codecOrder(settings);
     final formats = await DownloadFormats.parseInBackground(info, preference: preference);
     // lumtub_core joins the streams, and takes AAC, Opus and Dolby sound.
     if (downloads?.join != null && formats.audio.any((a) => a.joins)) {
-      return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.joins) a], preference: formats.preference);
+      return DownloadFormats(
+          formats.video,
+          [
+            for (final a in formats.audio)
+              if (a.joins) a
+          ],
+          preference: formats.preference);
     }
     return formats;
   }

@@ -10,8 +10,12 @@ import '../native_core.dart';
 /// core is missing or cannot read it.
 Object? readInCore(String symbol, List<int> bytes) {
   final core = NativeCore.instance;
-  if (core == null || !core.library.providesSymbol(symbol)) throw FormatException(NativeCore.missingMessage);
-  final call = _calls[symbol] ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>(symbol);
+  if (core == null || !core.library.providesSymbol(symbol)) {
+    throw FormatException(NativeCore.missingMessage);
+  }
+  final call = _calls[symbol] ??= core.library.lookupFunction<
+      Pointer<Utf8> Function(Pointer<Uint8>, Size),
+      Pointer<Utf8> Function(Pointer<Uint8>, int)>(symbol);
   final text = core.take(core.withBytes(bytes, call));
   if (text == null) throw FormatException('No answer from $symbol');
   return jsonDecode(text);

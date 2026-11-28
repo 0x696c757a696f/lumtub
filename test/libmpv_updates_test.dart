@@ -18,14 +18,24 @@ void main() {
       'mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z',
       'mpv-dev-lgpl-x86_64-20261018-git-abc1234.7z',
     ];
-    expect(libmpvAssetName(names, LibmpvBuild.v3Variant), 'mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(names, LibmpvBuild.baseVariant), 'mpv-dev-lgpl-x86_64-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(names, LibmpvBuild.arm64Variant), 'mpv-dev-lgpl-aarch64-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(const ['mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z'], LibmpvBuild.baseVariant), isNull);
+    expect(libmpvAssetName(names, LibmpvBuild.v3Variant),
+        'mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.baseVariant),
+        'mpv-dev-lgpl-x86_64-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.arm64Variant),
+        'mpv-dev-lgpl-aarch64-20261018-git-abc1234.7z');
+    expect(
+        libmpvAssetName(
+            const ['mpv-dev-lgpl-x86_64-v3-20261018-git-abc1234.7z'], LibmpvBuild.baseVariant),
+        isNull);
   });
 
   test('never takes a GPL archive', () {
-    const names = ['mpv-dev-x86_64-20261018-git-abc1234.7z', 'mpv-dev-x86_64-v3-20261018-git-abc1234.7z', 'mpv-dev-aarch64-20261018-git-abc1234.7z'];
+    const names = [
+      'mpv-dev-x86_64-20261018-git-abc1234.7z',
+      'mpv-dev-x86_64-v3-20261018-git-abc1234.7z',
+      'mpv-dev-aarch64-20261018-git-abc1234.7z'
+    ];
     for (final variant in LibmpvBuild.variants) {
       expect(libmpvAssetName(names, variant), isNull);
     }
@@ -109,7 +119,8 @@ void main() {
 
     test('an app update with a newer bundled DLL drops an older download', () async {
       await LibmpvState(dir, bundled: base).select('${dir.path}/20261017-x86_64-v3/libmpv-2.dll');
-      await LibmpvState(dir, bundled: const LibmpvBuild('20261020', LibmpvBuild.baseVariant)).dropIfOutdated();
+      await LibmpvState(dir, bundled: const LibmpvBuild('20261020', LibmpvBuild.baseVariant))
+          .dropIfOutdated();
       expect(exists('use.txt'), isFalse);
       expect(exists('failed.txt'), isFalse);
     });

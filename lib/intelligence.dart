@@ -69,14 +69,19 @@ abstract class IntelligenceProvider {
 
   /// Subtitles for audio in [parts], each with where it starts in the
   /// video; [language] is a hint. [onProgress] counts parts done.
-  Future<Transcript> transcribe(List<SpeechPart> parts, {String? language, void Function(int done, int total)? onProgress, bool Function()? cancelled}) =>
+  Future<Transcript> transcribe(List<SpeechPart> parts,
+          {String? language,
+          void Function(int done, int total)? onProgress,
+          bool Function()? cancelled}) =>
       throw UnsupportedError('$id cannot transcribe');
 
   /// [text] in [target], line for line.
-  Future<String> translate(String text, String target) => throw UnsupportedError('$id cannot translate');
+  Future<String> translate(String text, String target) =>
+      throw UnsupportedError('$id cannot translate');
 
   /// One answer to [prompt] under [system].
-  Future<String> complete(String system, String prompt, {double temperature = 0.3}) => throw UnsupportedError('$id cannot write');
+  Future<String> complete(String system, String prompt, {double temperature = 0.3}) =>
+      throw UnsupportedError('$id cannot write');
 
   /// One vector for each of [texts].
   Future<List<Float32List>> embed(List<String> texts) => throw UnsupportedError('$id cannot embed');
@@ -115,20 +120,30 @@ class Intelligence {
   IntelligenceProvider _for(Capability capability) =>
       providerFor(capability) ??
       (throw TranslationException(switch (capability) {
-        Capability.transcribe => tr('Set up the speech recognition service and key under Translation & AI first'),
-        Capability.complete || Capability.translate => tr('Set up the AI interface and key under Translation & AI first'),
+        Capability.transcribe =>
+          tr('Set up the speech recognition service and key under Translation & AI first'),
+        Capability.complete ||
+        Capability.translate =>
+          tr('Set up the AI interface and key under Translation & AI first'),
         Capability.embed => tr('No AI model on this device can do this yet'),
       }));
 
-  Future<Transcript> transcribe(List<SpeechPart> parts, {String? language, void Function(int done, int total)? onProgress, bool Function()? cancelled}) async =>
-      _for(Capability.transcribe).transcribe(parts, language: language, onProgress: onProgress, cancelled: cancelled);
+  Future<Transcript> transcribe(List<SpeechPart> parts,
+          {String? language,
+          void Function(int done, int total)? onProgress,
+          bool Function()? cancelled}) async =>
+      _for(Capability.transcribe)
+          .transcribe(parts, language: language, onProgress: onProgress, cancelled: cancelled);
 
-  Future<String> translate(String text, String target) async => _for(Capability.translate).translate(text, target);
+  Future<String> translate(String text, String target) async =>
+      _for(Capability.translate).translate(text, target);
 
-  Future<String> complete(String system, String prompt, {double temperature = 0.3}) async => _for(Capability.complete).complete(system, prompt, temperature: temperature);
+  Future<String> complete(String system, String prompt, {double temperature = 0.3}) async =>
+      _for(Capability.complete).complete(system, prompt, temperature: temperature);
 
   /// [IntelligenceProvider.completeBudget] of the provider [complete] uses.
-  int get completeBudget => providerFor(Capability.complete)?.completeBudget ?? IntelligenceProvider.shortBudget;
+  int get completeBudget =>
+      providerFor(Capability.complete)?.completeBudget ?? IntelligenceProvider.shortBudget;
 
   Future<List<Float32List>> embed(List<String> texts) async => _for(Capability.embed).embed(texts);
 }
@@ -167,7 +182,11 @@ class CloudIntelligence extends IntelligenceProvider {
       };
 
   @override
-  int get completeBudget => ai == null ? IntelligenceProvider.shortBudget : longContextModel(ai!.model, ai!.baseUrl) ? IntelligenceProvider.longBudget : IntelligenceProvider.shortBudget;
+  int get completeBudget => ai == null
+      ? IntelligenceProvider.shortBudget
+      : longContextModel(ai!.model, ai!.baseUrl)
+          ? IntelligenceProvider.longBudget
+          : IntelligenceProvider.shortBudget;
 
   /// Whether [model] reads 100,000 tokens or more at once: the hosted
   /// families known to. A model on this computer or the local network is
@@ -176,23 +195,58 @@ class CloudIntelligence extends IntelligenceProvider {
     final host = Uri.tryParse(baseUrl.trim())?.host ?? '';
     if (host.isEmpty || isLocalHost(host)) return false;
     final name = model.toLowerCase();
-    return const ['deepseek', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'o3', 'o4-', 'claude', 'gemini', 'qwen-plus', 'qwen-max', 'qwen-long', 'qwen-turbo', 'qwen-flash', 'qwen3', 'glm-4', 'glm-5', 'kimi', 'moonshot', 'grok', 'mistral-large', 'mistral-medium', 'llama-3.1', 'llama-3.3', 'llama-4', 'command-r', 'minimax']
-        .any(name.contains);
+    return const [
+      'deepseek',
+      'gpt-4o',
+      'gpt-4.1',
+      'gpt-5',
+      'o3',
+      'o4-',
+      'claude',
+      'gemini',
+      'qwen-plus',
+      'qwen-max',
+      'qwen-long',
+      'qwen-turbo',
+      'qwen-flash',
+      'qwen3',
+      'glm-4',
+      'glm-5',
+      'kimi',
+      'moonshot',
+      'grok',
+      'mistral-large',
+      'mistral-medium',
+      'llama-3.1',
+      'llama-3.3',
+      'llama-4',
+      'command-r',
+      'minimax'
+    ].any(name.contains);
   }
 
   @override
-  Future<Transcript> transcribe(List<SpeechPart> parts, {String? language, void Function(int done, int total)? onProgress, bool Function()? cancelled}) async {
+  Future<Transcript> transcribe(List<SpeechPart> parts,
+      {String? language,
+      void Function(int done, int total)? onProgress,
+      bool Function()? cancelled}) async {
     final recognizer = speech;
     if (recognizer == null) return super.transcribe(parts);
-    final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
+    final answers =
+        List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
     var done = 0;
     var next = 0;
     onProgress?.call(0, parts.length);
     Future<void> worker() async {
       while (next < parts.length) {
-        if (cancelled?.call() ?? false) throw TranslationException(tr('Speech recognition was cancelled'));
+        if (cancelled?.call() ?? false) {
+          throw TranslationException(tr('Speech recognition was cancelled'));
+        }
         final i = next++;
-        answers[i] = (offset: parts[i].offset, answer: await recognizer.transcribe(parts[i].file, language: language));
+        answers[i] = (
+          offset: parts[i].offset,
+          answer: await recognizer.transcribe(parts[i].file, language: language)
+        );
         onProgress?.call(++done, parts.length);
       }
     }
@@ -209,9 +263,11 @@ class CloudIntelligence extends IntelligenceProvider {
   }
 
   @override
-  Future<String> translate(String text, String target) => ai == null ? super.translate(text, target) : ai!.translate(text, target);
+  Future<String> translate(String text, String target) =>
+      ai == null ? super.translate(text, target) : ai!.translate(text, target);
 
   @override
-  Future<String> complete(String system, String prompt, {double temperature = 0.3}) =>
-      ai == null ? super.complete(system, prompt) : ai!.complete(system, prompt, temperature: temperature);
+  Future<String> complete(String system, String prompt, {double temperature = 0.3}) => ai == null
+      ? super.complete(system, prompt)
+      : ai!.complete(system, prompt, temperature: temperature);
 }

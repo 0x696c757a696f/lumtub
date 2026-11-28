@@ -42,7 +42,11 @@ void main() {
             response.headers.set('x-method', request.method);
             response.headers.add('set-cookie', 'a=1');
             response.headers.add('set-cookie', 'b=2');
-            response.write(jsonEncode({'body': body, 'agent': request.headers.value('user-agent'), 'type': request.headers.contentType?.mimeType}));
+            response.write(jsonEncode({
+              'body': body,
+              'agent': request.headers.value('user-agent'),
+              'type': request.headers.contentType?.mimeType
+            }));
           case '/gzip':
             response.headers.set('content-encoding', 'gzip');
             response.add(gzip.encode(utf8.encode('压缩的内容' * 1000)));
@@ -102,7 +106,8 @@ void main() {
     test('a request whose body is still being read when the client closes never starts', () async {
       for (final size in [100, 1 << 20]) {
         final client = NativeHttpClient();
-        final request = http.StreamedRequest('POST', base.replace(path: '/count'))..contentLength = size;
+        final request = http.StreamedRequest('POST', base.replace(path: '/count'))
+          ..contentLength = size;
         final refused = expectLater(client.send(request), throwsA(isA<http.ClientException>()));
         await Future<void>.delayed(const Duration(milliseconds: 20));
         client.close();
@@ -134,23 +139,28 @@ void main() {
 
     test('sends a body and headers and reads the answer', () async {
       final client = NativeHttpClient();
-      final response = await client.post(base.replace(path: '/echo'), headers: {'user-agent': 'Lumtub test', 'content-type': 'application/json'}, body: '{"字":1}');
+      final response = await client.post(base.replace(path: '/echo'),
+          headers: {'user-agent': 'Lumtub test', 'content-type': 'application/json'},
+          body: '{"字":1}');
       expect(response.statusCode, 200);
       expect(response.headers['x-method'], 'POST');
       expect(response.headers['set-cookie'], 'a=1,b=2');
-      expect(jsonDecode(response.body), {'body': '{"字":1}', 'agent': 'Lumtub test', 'type': 'application/json'});
+      expect(jsonDecode(response.body),
+          {'body': '{"字":1}', 'agent': 'Lumtub test', 'type': 'application/json'});
     }, skip: NativeHttp.available ? false : 'needs LUMTUB_CORE_DLL');
 
     test('a large file body reaches the server whole', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_http');
       addTearDown(() => dir.delete(recursive: true));
-      final file = File('${dir.path}/audio.bin')..writeAsBytesSync(List.generate(3 << 20, (i) => i * 7 % 251));
+      final file = File('${dir.path}/audio.bin')
+        ..writeAsBytesSync(List.generate(3 << 20, (i) => i * 7 % 251));
       final whole = file.readAsBytesSync();
       var sum = 0;
       for (final b in whole) {
         sum = (sum + b) % 1000003;
       }
-      final sent = http.StreamedRequest('POST', base.replace(path: '/count'))..contentLength = whole.length;
+      final sent = http.StreamedRequest('POST', base.replace(path: '/count'))
+        ..contentLength = whole.length;
       unawaited(file.openRead().pipe(sent.sink));
       final response = await http.Response.fromStream(await NativeHttpClient().send(sent));
       expect(response.statusCode, 200);
@@ -174,7 +184,8 @@ void main() {
       final closed = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
       final port = closed.port;
       await closed.close();
-      await expectLater(client.get(Uri.parse('http://127.0.0.1:$port/')), throwsA(isA<http.ClientException>()));
+      await expectLater(
+          client.get(Uri.parse('http://127.0.0.1:$port/')), throwsA(isA<http.ClientException>()));
       // A raw socket, as HttpServer holds small writes back.
       final raw = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
       raw.listen((socket) {
@@ -184,11 +195,13 @@ void main() {
         socket.listen((_) {
           if (answered) return;
           answered = true;
-          socket.write('HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ntransfer-encoding: chunked\r\n\r\n5\r\nstart\r\n');
+          socket.write(
+              'HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ntransfer-encoding: chunked\r\n\r\n5\r\nstart\r\n');
         }, onError: (Object _) {});
         unawaited(hold.future.then((_) => socket.destroy()));
       });
-      final streamed = await client.send(http.Request('GET', Uri.parse('http://127.0.0.1:${raw.port}/')));
+      final streamed =
+          await client.send(http.Request('GET', Uri.parse('http://127.0.0.1:${raw.port}/')));
       final first = await streamed.stream.first.timeout(const Duration(seconds: 5));
       expect(utf8.decode(first), 'start');
       await raw.close();

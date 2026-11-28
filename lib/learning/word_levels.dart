@@ -87,7 +87,8 @@ class WordLevels {
     return WordLevels._(levels);
   }
 
-  static WordLevels fromBytes(Uint8List gzipped) => parse(utf8.decode(gzip.decode(gzipped), allowMalformed: true));
+  static WordLevels fromBytes(Uint8List gzipped) =>
+      parse(utf8.decode(gzip.decode(gzipped), allowMalformed: true));
 
   /// Reads [file] away from the window's thread.
   static Future<WordLevels> read(File file) async {

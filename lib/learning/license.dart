@@ -41,10 +41,14 @@ class LearningLicense {
     try {
       final payload = base64Url.decode(base64Url.normalize(parts[0]));
       final signature = base64Url.decode(base64Url.normalize(parts[1]));
-      if (!ed25519Verify(publicKey: key, message: [...utf8.encode(_context), ...payload], signature: signature)) return null;
+      if (!ed25519Verify(
+          publicKey: key, message: [...utf8.encode(_context), ...payload], signature: signature)) {
+        return null;
+      }
       final fields = jsonDecode(utf8.decode(payload));
       if (fields is! Map || fields['p'] != 'learn') return null;
-      return LearningLicense(name: '${fields['n'] ?? ''}'.trim(), issued: '${fields['d'] ?? ''}', code: code);
+      return LearningLicense(
+          name: '${fields['n'] ?? ''}'.trim(), issued: '${fields['d'] ?? ''}', code: code);
     } on FormatException {
       return null;
     }
@@ -64,10 +68,14 @@ class SignedSums {
   static const _context = 'lumtub-learning-sums-v1\n';
 
   /// [sums] when [signature] (base64) signs it, else null.
-  static SignedSums? verify(List<int> sums, String signature, {List<int> key = LearningLicense.publicKey}) {
+  static SignedSums? verify(List<int> sums, String signature,
+      {List<int> key = LearningLicense.publicKey}) {
     try {
       final bytes = base64.decode(signature.trim());
-      if (!ed25519Verify(publicKey: key, message: [...utf8.encode(_context), ...sums], signature: bytes)) return null;
+      if (!ed25519Verify(
+          publicKey: key, message: [...utf8.encode(_context), ...sums], signature: bytes)) {
+        return null;
+      }
       return SignedSums._(utf8.decode(sums));
     } on FormatException {
       return null;
@@ -75,7 +83,10 @@ class SignedSums {
   }
 
   /// The SHA-256 sum listed for [name], or null.
-  String? of(String name) => RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true).firstMatch(text)?.group(1);
+  String? of(String name) =>
+      RegExp('^([0-9a-f]{64}) [ *]?${RegExp.escape(name)}\\s*\$', multiLine: true)
+          .firstMatch(text)
+          ?.group(1);
 }
 
 /// The license server's word that a code is active on one device: the
@@ -93,14 +104,18 @@ class ActivationReceipt {
 
   /// The receipt in [text] when it is signed and for [codeId] on
   /// [device], else null.
-  static ActivationReceipt? verify(String text, {required String codeId, required String device, List<int> key = LearningLicense.publicKey}) {
+  static ActivationReceipt? verify(String text,
+      {required String codeId, required String device, List<int> key = LearningLicense.publicKey}) {
     if (!text.startsWith(_prefix)) return null;
     final parts = text.substring(_prefix.length).split('.');
     if (parts.length != 2) return null;
     try {
       final payload = base64Url.decode(base64Url.normalize(parts[0]));
       final signature = base64Url.decode(base64Url.normalize(parts[1]));
-      if (!ed25519Verify(publicKey: key, message: [...utf8.encode(_context), ...payload], signature: signature)) return null;
+      if (!ed25519Verify(
+          publicKey: key, message: [...utf8.encode(_context), ...payload], signature: signature)) {
+        return null;
+      }
       final fields = jsonDecode(utf8.decode(payload));
       if (fields is! Map || fields['c'] != codeId || fields['v'] != device) return null;
       final day = DateTime.tryParse('${fields['t']}');

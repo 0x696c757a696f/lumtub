@@ -8,21 +8,34 @@ extension AccountActions on AppController {
   Future<void> checkHistoryLive() async {
     final store = _history;
     final last = _historyLiveChecked;
-    if (store == null || (last != null && DateTime.now().difference(last) < const Duration(minutes: 10))) return;
-    final marked = [for (final item in store.items) if (item.isLive || item.isUpcoming) item].take(20).toList();
+    if (store == null ||
+        (last != null && DateTime.now().difference(last) < const Duration(minutes: 10))) {
+      return;
+    }
+    final marked = [
+      for (final item in store.items)
+        if (item.isLive || item.isUpcoming) item
+    ].take(20).toList();
     if (marked.isEmpty) return;
     _historyLiveChecked = DateTime.now();
     final states = await mapLimited(marked, 4, (item) async {
       try {
-        final bytes = await _liveProbe.fetch(item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails');
+        final bytes = await _liveProbe.fetch(
+            item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming',
+            expect: 'videoDetails');
         // No videoDetails (a bot check or a removed video) says nothing.
-        if (!utf8.decode(bytes, allowMalformed: true).contains('"videoDetails"')) return item.liveStatus;
+        if (!utf8.decode(bytes, allowMalformed: true).contains('"videoDetails"')) {
+          return item.liveStatus;
+        }
         return await liveStateOf(bytes) ?? 'was_live';
       } catch (_) {
         return item.liveStatus;
       }
     });
-    final changed = {for (final (i, item) in marked.indexed) if (states[i] != item.liveStatus) item.id: states[i]};
+    final changed = {
+      for (final (i, item) in marked.indexed)
+        if (states[i] != item.liveStatus) item.id: states[i]
+    };
     if (changed.isEmpty || _disposed) return;
     logInfo('History: ${changed.length} of ${marked.length} streams marked live changed');
     await store.setLiveStatus(changed);
@@ -98,12 +111,17 @@ extension AccountActions on AppController {
       youtubeHistory?.dispose();
       youtubeHistory = null;
     }
-    return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeAccountFeed.history)), pageSize: 40, name: 'YouTube history')
+    return youtubeHistory ??= VideoListLoader(
+        () => Listing(() => feed.lines(YoutubeAccountFeed.history)),
+        pageSize: 40,
+        name: 'YouTube history')
       ..addListener(_passOn('youtube history'))
       ..loadMore();
   }
 
   /// Whether [playlist] is the account's own, read signed in.
   bool _isAccountPlaylist(PlaylistResult playlist) =>
-      playlist.id == YoutubeAccountFeed.watchLaterId || playlist.id == YoutubeAccountFeed.likedId || youtubePlaylists.any((list) => list.id == playlist.id);
+      playlist.id == YoutubeAccountFeed.watchLaterId ||
+      playlist.id == YoutubeAccountFeed.likedId ||
+      youtubePlaylists.any((list) => list.id == playlist.id);
 }

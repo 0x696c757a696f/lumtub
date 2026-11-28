@@ -19,10 +19,60 @@ class SkinLibrary extends ChangeNotifier {
 
   /// Lumtub's colour schemes as skins: they follow the theme mode and keep
   /// Lumtub's own shapes.
-  static const colorSchemeIds = ['rice-paper', 'candlelight', 'ink-bamboo', 'rime', 'pine-soot', 'night-voyage', 'dusk-hills', 'falling-petals', 'sandstone', 'high-contrast'];
+  static const colorSchemeIds = [
+    'rice-paper',
+    'candlelight',
+    'ink-bamboo',
+    'rime',
+    'pine-soot',
+    'night-voyage',
+    'dusk-hills',
+    'falling-petals',
+    'sandstone',
+    'high-contrast'
+  ];
 
   /// The built-in skins, in the order Settings shows them.
-  static const builtInIds = [...colorSchemeIds, 'aero', 'ocean', 'meadow', 'city', 'azure', 'aquarium', 'aurora', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'pinstripe', 'silver', 'metal', 'holo', 'paper', 'linen', 'shelf', 'handheld', 'scholar', 'softclub', 'obsidian', 'hexatron', 'bento', 'livingroom', 'silkwave', 'flourish', 'homepage', 'cassette', 'clay', 'brutal', 'dunes'];
+  static const builtInIds = [
+    ...colorSchemeIds,
+    'aero',
+    'ocean',
+    'meadow',
+    'city',
+    'azure',
+    'aquarium',
+    'aurora',
+    'chrome',
+    'candy',
+    'disc',
+    'messenger',
+    'player',
+    'desktop',
+    'sixteen',
+    'onebit',
+    'platinum',
+    'pinstripe',
+    'silver',
+    'metal',
+    'holo',
+    'paper',
+    'linen',
+    'shelf',
+    'handheld',
+    'scholar',
+    'softclub',
+    'obsidian',
+    'hexatron',
+    'bento',
+    'livingroom',
+    'silkwave',
+    'flourish',
+    'homepage',
+    'cassette',
+    'clay',
+    'brutal',
+    'dunes'
+  ];
 
   List<Skin> _builtIn = const [];
   List<Skin> _user = const [];
@@ -30,6 +80,7 @@ class SkinLibrary extends ChangeNotifier {
   Directory? _folder;
   StreamSubscription<FileSystemEvent>? _watch;
   Timer? _debounce;
+
   /// Font files read this run, by family, path and version, and the name
   /// each was loaded under.
   final _loadedFonts = <String, String>{};
@@ -41,6 +92,7 @@ class SkinLibrary extends ChangeNotifier {
 
   List<Skin> get builtIn => _builtIn;
   List<Skin> get user => _user;
+
   /// Skin folders that could not be read, with why.
   Map<String, String> get errors => _errors;
   Directory? get folder => _folder;
@@ -63,7 +115,8 @@ class SkinLibrary extends ChangeNotifier {
     final builtIn = <Skin>[];
     for (final id in builtInIds) {
       try {
-        builtIn.add(Skin.parse(decodeJsonc(await assets.loadString('skins/$id/skin.jsonc')), folder: 'skins/$id', builtIn: true));
+        builtIn.add(Skin.parse(decodeJsonc(await assets.loadString('skins/$id/skin.jsonc')),
+            folder: 'skins/$id', builtIn: true));
       } catch (e) {
         logError('Built-in skin $id could not be read', e);
       }
@@ -90,12 +143,19 @@ class SkinLibrary extends ChangeNotifier {
         await File(path).copy('${unpacked.path}${Platform.pathSeparator}skin.jsonc');
       }
       // The skin.jsonc nearest the top is the skin; its folder is copied.
-      final found = await unpacked.list(recursive: true).where((e) => e is File && e.uri.pathSegments.last == 'skin.jsonc').cast<File>().toList();
+      final found = await unpacked
+          .list(recursive: true)
+          .where((e) => e is File && e.uri.pathSegments.last == 'skin.jsonc')
+          .cast<File>()
+          .toList();
       if (found.isEmpty) throw const FormatException('No skin.jsonc in this file');
       found.sort((a, b) => a.uri.pathSegments.length.compareTo(b.uri.pathSegments.length));
       final source = found.first.parent;
-      final skin = Skin.parse(await _readSkinFile(found.first), folder: source.path, builtIn: false);
-      if (builtInIds.contains(skin.id)) throw FormatException('"${skin.id}" is the name of a built-in skin');
+      final skin =
+          Skin.parse(await _readSkinFile(found.first), folder: source.path, builtIn: false);
+      if (builtInIds.contains(skin.id)) {
+        throw FormatException('"${skin.id}" is the name of a built-in skin');
+      }
       final target = Directory('${folder.path}${Platform.pathSeparator}${skin.id}');
       // The skin it replaces is set aside, not deleted, until the new one
       // is in place, and put back if that fails.
@@ -170,7 +230,9 @@ class SkinLibrary extends ChangeNotifier {
 
   /// A skin.jsonc decoded off the UI thread when it is big.
   static Future<Object?> _readSkinFile(File file) async {
-    if (await file.length() > maxSkinFileBytes) throw const FormatException('skin.jsonc is larger than 1 MB');
+    if (await file.length() > maxSkinFileBytes) {
+      throw const FormatException('skin.jsonc is larger than 1 MB');
+    }
     final text = await file.readAsString();
     return text.length < 64 << 10 ? decodeJsonc(text) : Isolate.run(() => decodeJsonc(text));
   }
@@ -196,7 +258,9 @@ class SkinLibrary extends ChangeNotifier {
           skin.loadedFonts[family] = known;
           continue;
         }
-        final loaded = (_fontVersions[family] = (_fontVersions[family] ?? 0) + 1) == 1 ? family : '$family~${_fontVersions[family]}';
+        final loaded = (_fontVersions[family] = (_fontVersions[family] ?? 0) + 1) == 1
+            ? family
+            : '$family~${_fontVersions[family]}';
         final bytes = await File(path).readAsBytes();
         await (FontLoader(loaded)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
         _loadedFonts[key] = loaded;

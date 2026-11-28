@@ -5,7 +5,8 @@ import 'native_core.dart';
 /// One line of a subtitle track with its time span.
 typedef SubtitleCue = ({Duration start, Duration end, String text});
 
-final _timing = RegExp(r'^\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})');
+final _timing =
+    RegExp(r'^\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})');
 final _tag = RegExp(r'<[^>]*>|\{\\[^}]*\}');
 
 /// The cues of a WebVTT or SRT file, in time order, each on one line.
@@ -18,7 +19,8 @@ List<SubtitleCue> parseSubtitleCues(String text) {
   if (json != null) {
     return [
       for (final cue in jsonDecode(json) as List)
-        if (cue case [final int start, final int end, final String line]) (start: Duration(milliseconds: start), end: Duration(milliseconds: end), text: line),
+        if (cue case [final int start, final int end, final String line])
+          (start: Duration(milliseconds: start), end: Duration(milliseconds: end), text: line),
     ];
   }
   return dartSubtitleCues(text);
@@ -28,14 +30,16 @@ List<SubtitleCue> parseSubtitleCues(String text) {
 List<SubtitleCue> dartSubtitleCues(String text) {
   final cues = <SubtitleCue>[];
   String? previous;
-  for (final block in text.replaceAll('\r\n', '\n').replaceAll('\r', '\n').split(RegExp(r'\n{2,}'))) {
+  for (final block
+      in text.replaceAll('\r\n', '\n').replaceAll('\r', '\n').split(RegExp(r'\n{2,}'))) {
     final lines = block.split('\n');
     final at = lines.indexWhere(_timing.hasMatch);
     if (at < 0) continue;
     final match = _timing.firstMatch(lines[at])!;
     var body = [
       for (final line in lines.skip(at + 1))
-        if (_unescape(line.replaceAll(_tag, '')).trim() case final clean when clean.isNotEmpty) clean,
+        if (_unescape(line.replaceAll(_tag, '')).trim() case final clean when clean.isNotEmpty)
+          clean,
     ];
     if (body.isNotEmpty && body.first == previous) body = body.sublist(1);
     if (body.isEmpty) continue;
@@ -87,7 +91,11 @@ Duration _time(String text) {
   return Duration(milliseconds: ((hours * 3600 + minutes * 60) * 1000 + seconds * 1000).round());
 }
 
-String _unescape(String text) => text.replaceAll('&nbsp;', ' ').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+String _unescape(String text) => text
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&');
 
 /// A line of the main subtitle with what the second subtitle says while it
 /// is spoken.
@@ -104,8 +112,11 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> given
   final second = <SubtitleCue>[];
   for (final cue in given) {
     final last = second.lastOrNull;
-    if (last != null && last.text == cue.text && cue.start - last.end <= const Duration(seconds: 1)) {
-      second.last = (start: last.start, end: cue.end > last.end ? cue.end : last.end, text: last.text);
+    if (last != null &&
+        last.text == cue.text &&
+        cue.start - last.end <= const Duration(seconds: 1)) {
+      second.last =
+          (start: last.start, end: cue.end > last.end ? cue.end : last.end, text: last.text);
     } else {
       second.add(cue);
     }
@@ -120,7 +131,8 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> given
     for (var i = from; i < main.length && main[i].start < other.end; i++) {
       final overlap = _overlap(main[i], other);
       // A brush at either end does not tie a main line to this one.
-      if (overlap >= const Duration(milliseconds: 300) && overlap * 10 >= (main[i].end - main[i].start) * 3) {
+      if (overlap >= const Duration(milliseconds: 300) &&
+          overlap * 10 >= (main[i].end - main[i].start) * 3) {
         first ??= i;
         last = i;
       }
@@ -166,9 +178,20 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> given
   final joined = <PairedCue>[];
   for (var i = 0; i < out.length; i++) {
     var row = out[i];
-    while (row.second == null && i + 1 < out.length && out[i + 1].second != null && out[i + 1].cue.start - row.cue.end <= const Duration(seconds: 1) && out[i + 1].cue.end - row.cue.start <= _longestRow) {
+    while (row.second == null &&
+        i + 1 < out.length &&
+        out[i + 1].second != null &&
+        out[i + 1].cue.start - row.cue.end <= const Duration(seconds: 1) &&
+        out[i + 1].cue.end - row.cue.start <= _longestRow) {
       i++;
-      row = (cue: (start: row.cue.start, end: out[i].cue.end, text: joinCueText(row.cue.text, out[i].cue.text)), second: out[i].second);
+      row = (
+        cue: (
+          start: row.cue.start,
+          end: out[i].cue.end,
+          text: joinCueText(row.cue.text, out[i].cue.text)
+        ),
+        second: out[i].second
+      );
     }
     joined.add(row);
   }
@@ -196,15 +219,19 @@ final _wide = RegExp(r'[　-ヿ㐀-鿿豈-﫿＀-￯]');
 /// says with it, one row each, times as `h:mm:ss.mmm`. Starts with a byte
 /// order mark, so spreadsheet programs read it as UTF-8.
 String pairedCuesCsv(List<PairedCue> rows) {
-  String time(Duration d) => '${d.inHours}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}.${(d.inMilliseconds % 1000).toString().padLeft(3, '0')}';
+  String time(Duration d) =>
+      '${d.inHours}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}.${(d.inMilliseconds % 1000).toString().padLeft(3, '0')}';
   String field(String text) {
     final clean = text.replaceAll('\r\n', '\n');
-    return RegExp(r'[",\n\r]').hasMatch(clean) || clean != clean.trim() ? '"${clean.replaceAll('"', '""')}"' : clean;
+    return RegExp(r'[",\n\r]').hasMatch(clean) || clean != clean.trim()
+        ? '"${clean.replaceAll('"', '""')}"'
+        : clean;
   }
 
   final out = StringBuffer('﻿start,end,text,translation\r\n');
   for (final row in rows) {
-    out.write([time(row.cue.start), time(row.cue.end), field(row.cue.text), field(row.second ?? '')].join(','));
+    out.write([time(row.cue.start), time(row.cue.end), field(row.cue.text), field(row.second ?? '')]
+        .join(','));
     out.write('\r\n');
   }
   return out.toString();
@@ -230,7 +257,9 @@ List<PairedCue> sentenceRows(List<PairedCue> rows) {
 
   for (final (i, row) in rows.indexed) {
     final now = cue;
-    cue = now == null ? row.cue : (start: now.start, end: row.cue.end, text: joinCueText(now.text, row.cue.text));
+    cue = now == null
+        ? row.cue
+        : (start: now.start, end: row.cue.end, text: joinCueText(now.text, row.cue.text));
     if (row.second case final words?) second = second == null ? words : joinCueText(second!, words);
     final text = cue!.text;
     final next = i + 1 < rows.length ? rows[i + 1].cue : null;

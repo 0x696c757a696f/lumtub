@@ -34,7 +34,8 @@ class DeArrow extends ChangeNotifier {
 
   /// Turns it on: [titles] and [thumbnails] say, when asked, whether
   /// each part is wanted.
-  void configure(http.Client client, {required bool Function() titles, required bool Function() thumbnails}) {
+  void configure(http.Client client,
+      {required bool Function() titles, required bool Function() thumbnails}) {
     _client = client;
     _titles = titles;
     _thumbnails = thumbnails;
@@ -51,10 +52,11 @@ class DeArrow extends ChangeNotifier {
 
   static String hashPrefix(String videoId) => SponsorBlock.hashPrefix(videoId);
 
-  static Uri requestUri(String videoId) => Uri.https('sponsor.ajay.app', '/api/branding/${hashPrefix(videoId)}');
+  static Uri requestUri(String videoId) =>
+      Uri.https('sponsor.ajay.app', '/api/branding/${hashPrefix(videoId)}');
 
-  static Uri thumbnailUri(String videoId, double time) =>
-      Uri.https('dearrow-thumb.ajay.app', '/api/v1/getThumbnail', {'videoID': videoId, 'time': '$time'});
+  static Uri thumbnailUri(String videoId, double time) => Uri.https(
+      'dearrow-thumb.ajay.app', '/api/v1/getThumbnail', {'videoID': videoId, 'time': '$time'});
 
   /// [videoId]'s branding once looked up; asks for it the first time.
   Branding brandingOf(String videoId) {
@@ -69,7 +71,8 @@ class DeArrow extends ChangeNotifier {
   }
 
   /// The title to show for a video called [title].
-  String titleOf(String videoId, String title) => titlesOn ? brandingOf(videoId).title ?? title : title;
+  String titleOf(String videoId, String title) =>
+      titlesOn ? brandingOf(videoId).title ?? title : title;
 
   /// The frame to show in place of the thumbnail, if one was chosen.
   Uri? thumbnailOf(String videoId) {
@@ -94,7 +97,9 @@ class DeArrow extends ChangeNotifier {
   Future<void> _fetch(String videoId) async {
     var found = Branding.none;
     try {
-      final (status, body) = await getBounded(_client!, requestUri(videoId), limit: 1 << 20, headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
+      final (status, body) = await getBounded(_client!, requestUri(videoId),
+          limit: 1 << 20,
+          headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
       // 404: no video with this prefix has submissions.
       if (status == 200) found = parse(utf8.decode(body, allowMalformed: true), videoId);
     } catch (_) {
@@ -118,8 +123,12 @@ class DeArrow extends ChangeNotifier {
   static Branding parse(String body, String videoId) {
     final core = NativeCore.instance;
     if (core == null) return Branding.none;
-    final answer = jsonDecode(core.take(core.withText('$videoId\n$body', core.dearrowBranding)) ?? '{}') as Map<String, dynamic>;
-    return Branding(title: answer['title'] as String?, thumbnailTime: (answer['thumbnailTime'] as num?)?.toDouble());
+    final answer =
+        jsonDecode(core.take(core.withText('$videoId\n$body', core.dearrowBranding)) ?? '{}')
+            as Map<String, dynamic>;
+    return Branding(
+        title: answer['title'] as String?,
+        thumbnailTime: (answer['thumbnailTime'] as num?)?.toDouble());
   }
 
   @visibleForTesting

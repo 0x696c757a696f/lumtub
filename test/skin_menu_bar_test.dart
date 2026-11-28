@@ -7,11 +7,18 @@ import 'package:lumtub/ui/skin_chrome.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('a menu bar that replaces another keeps its menus clickable in the title bar', (tester) async {
-    final skin = Skin.parse(decodeJsonc(File('skins/desktop/skin.jsonc').readAsStringSync()), folder: 'skins/desktop', builtIn: true);
+  testWidgets('a menu bar that replaces another keeps its menus clickable in the title bar',
+      (tester) async {
+    final skin = Skin.parse(decodeJsonc(File('skins/desktop/skin.jsonc').readAsStringSync()),
+        folder: 'skins/desktop', builtIn: true);
     final bar = skin.forBrightness(Brightness.light).menuBar!;
-    final menus = [SkinMenu('File', [SkinMenuEntry('Quit', () {})])];
-    Widget view(Key key) => MaterialApp(home: Material(child: Column(children: [SkinMenuBarView(key: key, bar: bar, menus: menus, embedded: true)])));
+    final menus = [
+      SkinMenu('File', [SkinMenuEntry('Quit', () {})])
+    ];
+    Widget view(Key key) => MaterialApp(
+        home: Material(
+            child: Column(
+                children: [SkinMenuBarView(key: key, bar: bar, menus: menus, embedded: true)])));
 
     await tester.pumpWidget(view(const ValueKey(1)));
     await tester.pump();

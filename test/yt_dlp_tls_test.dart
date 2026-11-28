@@ -21,10 +21,14 @@ void main() {
     addTearDown(() => folder.deleteSync(recursive: true));
     final root = YtDlpTls.writePlugin(folder, 'source');
     final sep = Platform.pathSeparator;
-    expect(File([root, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep)).readAsStringSync(), 'source');
+    expect(
+        File([root, 'lumtub_tls', 'yt_dlp_plugins', 'extractor', 'lumtub_tls.py'].join(sep))
+            .readAsStringSync(),
+        'source');
     YtDlpTls.plugins = root;
     addTearDown(() => YtDlpTls.plugins = null);
-    expect(YtDlpTls.withPlugin(['--ignore-config', '--no-plugin-dirs', '-j', 'x'], 2), ['--ignore-config', '--no-plugin-dirs', '--plugin-dirs', root, '-j', 'x']);
+    expect(YtDlpTls.withPlugin(['--ignore-config', '--no-plugin-dirs', '-j', 'x'], 2),
+        ['--ignore-config', '--no-plugin-dirs', '--plugin-dirs', root, '-j', 'x']);
   });
 
   test('the plugin is shipped', () {

@@ -23,7 +23,12 @@ import 'tooltip_finder.dart';
 void main() {
   final videos = [
     for (var i = 0; i < 5; i++)
-      VideoItem(id: 'video${i}xxxxx', title: i == 3 ? 'Flutter 教程' : '视频 $i', channel: i == 3 ? '开发者频道' : 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: 200),
+      VideoItem(
+          id: 'video${i}xxxxx',
+          title: i == 3 ? 'Flutter 教程' : '视频 $i',
+          channel: i == 3 ? '开发者频道' : 'Rick Astley',
+          url: 'https://www.youtube.com/watch?v=video${i}xxxxx',
+          duration: 200),
   ];
 
   late Directory dir;
@@ -136,7 +141,13 @@ void main() {
   group('history store', () {
     test('removes some ids and keeps the rest on disk', () async {
       Directory sub(String name) => Directory('${dir.path}/$name')..createSync();
-      final history = HistoryStore(AppDirectories(root: dir, config: sub('c'), data: sub('d'), cache: sub('k'), components: sub('p'), logs: sub('l')));
+      final history = HistoryStore(AppDirectories(
+          root: dir,
+          config: sub('c'),
+          data: sub('d'),
+          cache: sub('k'),
+          components: sub('p'),
+          logs: sub('l')));
       await history.initialize();
       for (final video in videos) {
         await history.record(video);
@@ -205,7 +216,13 @@ void main() {
 
     setUp(() async {
       Directory sub(String name) => Directory('${dir.path}/$name')..createSync();
-      history = HistoryStore(AppDirectories(root: dir, config: sub('c'), data: sub('d'), cache: sub('k'), components: sub('p'), logs: sub('l')));
+      history = HistoryStore(AppDirectories(
+          root: dir,
+          config: sub('c'),
+          data: sub('d'),
+          cache: sub('k'),
+          components: sub('p'),
+          logs: sub('l')));
       await history.initialize();
       for (final video in videos) {
         await history.record(video);
@@ -225,7 +242,12 @@ void main() {
       await history.flush();
       final again = HistoryStore(history.directories);
       await again.initialize();
-      expect(again.watched[videos.first.id]!.difference(history.watched[videos.first.id]!).inSeconds.abs(), lessThan(1));
+      expect(
+          again.watched[videos.first.id]!
+              .difference(history.watched[videos.first.id]!)
+              .inSeconds
+              .abs(),
+          lessThan(1));
       await again.remove({videos.first.id});
       expect(again.watched.containsKey(videos.first.id), isFalse);
     });

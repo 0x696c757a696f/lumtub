@@ -7,8 +7,11 @@ extension SubtitleActions on AppController {
   bool get mainSubtitleAutomatic {
     final track = player?.state.track.subtitle;
     if (track == null) return false;
-    final option = _shownOptions[track.title] ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
-    if (option != null) return option.kind == SubtitleKind.automatic || option.kind == SubtitleKind.speech;
+    final option = _shownOptions[track.title] ??
+        details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option != null) {
+      return option.kind == SubtitleKind.automatic || option.kind == SubtitleKind.speech;
+    }
     return (track.language ?? '').endsWith('-orig');
   }
 
@@ -16,7 +19,9 @@ extension SubtitleActions on AppController {
     final player = this.player;
     if (player == null) return;
     try {
-      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 20));
+      await player.stream.duration
+          .firstWhere((d) => d > Duration.zero)
+          .timeout(const Duration(seconds: 20));
     } on TimeoutException {
       return;
     }
@@ -25,13 +30,15 @@ extension SubtitleActions on AppController {
     if (main == '') {
       await player.setSubtitleTrack(SubtitleTrack.no());
     } else if (main != null) {
-      final option = _shownOptions[main] ?? details?.subtitles.where((o) => o.label == main).firstOrNull;
+      final option =
+          _shownOptions[main] ?? details?.subtitles.where((o) => o.label == main).firstOrNull;
       if (option != null && player.state.track.subtitle.title != main) await showSubtitle(option);
     }
     if (serial != _playSerial || this.player != player) return;
     final second = kept.second;
     if (second != null && secondarySubtitle?.label != second.label) {
-      logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle again');
+      logDebug(
+          () => 'Showing ${second.language} (${second.kind.name}) as the second subtitle again');
       await setSecondarySubtitle(second);
     }
   }
@@ -41,16 +48,27 @@ extension SubtitleActions on AppController {
   Future<void> _addLocalSubtitles(LocalVideo local, int serial) async {
     final player = this.player;
     final platform = player?.platform;
-    if (player == null || platform is! NativePlayer || local.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
-    if (settings.subtitleMode == SubtitleMode.foreign && understands(local.info['language']?.toString(), settings.understood)) return;
+    if (player == null ||
+        platform is! NativePlayer ||
+        local.subtitles.isEmpty ||
+        settings.subtitleMode == SubtitleMode.off) {
+      return;
+    }
+    if (settings.subtitleMode == SubtitleMode.foreign &&
+        understands(local.info['language']?.toString(), settings.understood)) {
+      return;
+    }
     try {
-      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 15));
+      await player.stream.duration
+          .firstWhere((d) => d > Duration.zero)
+          .timeout(const Duration(seconds: 15));
       if (serial != _playSerial) return;
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
       await syncMainSubtitle();
       // A styled ASS beside the file is for other players.
-      for (final other in local.subtitles.where((f) => f != first && !f.path.toLowerCase().endsWith('.ass'))) {
+      for (final other
+          in local.subtitles.where((f) => f != first && !f.path.toLowerCase().endsWith('.ass'))) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
     } catch (e) {
@@ -71,7 +89,11 @@ extension SubtitleActions on AppController {
     try {
       Future<List<Map<dynamic, dynamic>>> tracks() async {
         final list = jsonDecode(await platform.getProperty('track-list'));
-        return [if (list is List<dynamic>) for (final t in list.whereType<Map<dynamic, dynamic>>()) if (t['type'] == 'sub' && t['external-filename'] == path) t];
+        return [
+          if (list is List<dynamic>)
+            for (final t in list.whereType<Map<dynamic, dynamic>>())
+              if (t['type'] == 'sub' && t['external-filename'] == path) t
+        ];
       }
 
       final old = (await tracks()).firstOrNull;
@@ -79,7 +101,8 @@ extension SubtitleActions on AppController {
       final id = '${old['id']}';
       final main = await platform.getProperty('sid');
       final second = await platform.getProperty('secondary-sid');
-      await platform.command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
+      await platform
+          .command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
       final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
       if (added == null) return true;
       final now = '${added['id']}';
@@ -118,7 +141,8 @@ extension SubtitleActions on AppController {
       final sid = await platform.getProperty('sid');
       if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
       if (sid == 'no') return await player.setSubtitleTrack(SubtitleTrack.no());
-      final track = player.state.tracks.subtitle.where((t) => t.id == sid).firstOrNull ?? tracks[sid];
+      final track =
+          player.state.tracks.subtitle.where((t) => t.id == sid).firstOrNull ?? tracks[sid];
       if (track != null) await player.setSubtitleTrack(track);
     } catch (e) {
       logWarn('Could not read the selected subtitle: $e');
@@ -129,7 +153,8 @@ extension SubtitleActions on AppController {
   /// that refused (all of them, after their pauses) are said to be busy,
   /// another translation failure gives its own reason.
   String _subtitleFailure(Object e) => switch (e) {
-        TranslationException(busy: true) => tr('The translation services are busy right now. Try these subtitles again in a minute.'),
+        TranslationException(busy: true) =>
+          tr('The translation services are busy right now. Try these subtitles again in a minute.'),
         TranslationException(:final message) => message,
         _ => tr("Couldn't load these subtitles"),
       };
@@ -161,14 +186,22 @@ extension SubtitleActions on AppController {
     final second = secondarySubtitle;
     // A second subtitle mpv shows that no option names is read as a track.
     final secondId = shown?.second ?? secondaryTrackId;
-    final secondTrack = second != null || secondId == 'no' ? null : shown?.tracks[secondId] ?? player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
-    Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
+    final secondTrack = second != null || secondId == 'no'
+        ? null
+        : shown?.tracks[secondId] ??
+            player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
+    Future<List<SubtitleCue>> secondCues() => second != null
+        ? _optionCues(second)
+        : secondTrack != null
+            ? _trackCues(platform, secondTrack)
+            : Future.value(const []);
     final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
     // A translation on its own, as the first subtitle or as the second
     // with the first one off, is listed with the lines it was made from,
     // which stand first: on top, or alone with 只看第二字幕.
-    Future<List<PairedCue>?> withOriginal(List<SubtitleCue> translation, SubtitleOption? original) async {
+    Future<List<PairedCue>?> withOriginal(
+        List<SubtitleCue> translation, SubtitleOption? original) async {
       if (original == null || mode == SubtitleListMode.first) return null;
       final from = await _optionCues(original);
       if (from.isEmpty) return null;
@@ -181,10 +214,13 @@ extension SubtitleActions on AppController {
 
     if (off && hasSecond) {
       final cues = await secondCues();
-      return await withOriginal(cues, second == null ? null : _originalOf(second)) ?? pairSubtitleCues(cues, const []);
+      return await withOriginal(cues, second == null ? null : _originalOf(second)) ??
+          pairSubtitleCues(cues, const []);
     }
     if (off) return const [];
-    if (hasSecond && mode == SubtitleListMode.second) return pairSubtitleCues(await secondCues(), const []);
+    if (hasSecond && mode == SubtitleListMode.second) {
+      return pairSubtitleCues(await secondCues(), const []);
+    }
     final main = await _trackCues(platform, track);
     if (!hasSecond) {
       final listed = await withOriginal(main, listedOriginalOf(track));
@@ -200,21 +236,31 @@ extension SubtitleActions on AppController {
   Future<({List<SubtitleCue> cues, String? language})> castSubtitleCues() async {
     final player = this.player;
     final platform = player?.platform;
-    if (player == null || platform is! NativePlayer) return (cues: const <SubtitleCue>[], language: null);
+    if (player == null || platform is! NativePlayer) {
+      return (cues: const <SubtitleCue>[], language: null);
+    }
     final shown = await _mpvSubtitles(platform);
     final track = shown?.main ?? player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
     final secondId = shown?.second ?? secondaryTrackId;
-    final secondTrack = second != null || secondId == 'no' ? null : shown?.tracks[secondId] ?? player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
+    final secondTrack = second != null || secondId == 'no'
+        ? null
+        : shown?.tracks[secondId] ??
+            player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
     final main = off ? const <SubtitleCue>[] : await _trackCues(platform, track);
-    final other = second != null ? await _optionCues(second) : secondTrack != null ? await _trackCues(platform, secondTrack) : const <SubtitleCue>[];
+    final other = second != null
+        ? await _optionCues(second)
+        : secondTrack != null
+            ? await _trackCues(platform, secondTrack)
+            : const <SubtitleCue>[];
     final language = off ? second?.language ?? secondTrack?.language : track.language;
     return (cues: castSubtitleLines(main, other), language: language);
   }
 
   /// [chapterTranslation] when it is the playing video's.
-  List<String>? get translatedChapters => playing != null && chapterTranslationOf == playing!.id ? chapterTranslation : null;
+  List<String>? get translatedChapters =>
+      playing != null && chapterTranslationOf == playing!.id ? chapterTranslation : null;
 
   /// Translates the playing video's chapter titles into the language set
   /// for translations. Nothing is sent until asked.
@@ -227,8 +273,11 @@ extension SubtitleActions on AppController {
     chaptersChanged.value++;
     try {
       final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
-      final translated = await translateForeignLines(textTranslator, titles.join('\n'), language, (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne));
-      final lines = ChurchWording.apply(translated, language, rite: playingRite, original: titles.join('\n')).split('\n');
+      final translated = await translateForeignLines(textTranslator, titles.join('\n'), language,
+          (line) => readsAs(line, language, chineseAsOne: preferences.chineseAsOne));
+      final lines =
+          ChurchWording.apply(translated, language, rite: playingRite, original: titles.join('\n'))
+              .split('\n');
       if (playing?.id != id) return;
       _update(() {
         chapterTranslation = lines.length == titles.length ? lines : titles;
@@ -255,13 +304,18 @@ extension SubtitleActions on AppController {
 
   /// The main and second subtitle libmpv shows now, and its subtitle
   /// tracks by id; null when it cannot be asked.
-  Future<({SubtitleTrack main, String second, Map<String, SubtitleTrack> tracks})?> _mpvSubtitles(NativePlayer platform) async {
+  Future<({SubtitleTrack main, String second, Map<String, SubtitleTrack> tracks})?> _mpvSubtitles(
+      NativePlayer platform) async {
     try {
       final tracks = await mpvSubtitleTracks(platform);
       String id(String value) => value.isEmpty || value == 'false' ? 'no' : value;
       final sid = id(await platform.getProperty('sid'));
       final second = id(await platform.getProperty('secondary-sid'));
-      return (main: sid == 'no' ? SubtitleTrack.no() : tracks[sid] ?? SubtitleTrack.no(), second: second, tracks: tracks);
+      return (
+        main: sid == 'no' ? SubtitleTrack.no() : tracks[sid] ?? SubtitleTrack.no(),
+        second: second,
+        tracks: tracks
+      );
     } catch (e) {
       logWarn('Could not read the subtitles shown: $e');
       return null;
@@ -273,20 +327,31 @@ extension SubtitleActions on AppController {
     return originalSubtitle(details?.subtitles ?? const [], language: details?.language);
   }
 
-  Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
+  Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached(
+      '${playing?.id}\u0000${option.url}',
+      () async => File(await _subtitleFile(option)).readAsString());
 
   Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) async {
     // Lumtub's copy of a track is read from the track it copies.
-    if (_subtitleCopies[track.id] case final copy?) track = (await mpvSubtitleTracks(platform))[copy.source] ?? track;
+    if (_subtitleCopies[track.id] case final copy?) {
+      track = (await mpvSubtitleTracks(platform))[copy.source] ?? track;
+    }
     final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
     if (option != null) return _optionCues(option);
     final cues = await _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
       final list = jsonDecode(await platform.getProperty('track-list'));
-      final entry = list is List<dynamic> ? list.whereType<Map<dynamic, dynamic>>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+      final entry = list is List<dynamic>
+          ? list
+              .whereType<Map<dynamic, dynamic>>()
+              .where((t) => t['type'] == 'sub' && '${t['id']}' == track.id)
+              .firstOrNull
+          : null;
       final source = entry?['external-filename'];
       if (source is String && source.startsWith(RegExp('https?://'))) {
         final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
-        if (response.statusCode == 200) return utf8.decode(response.bodyBytes, allowMalformed: true);
+        if (response.statusCode == 200) {
+          return utf8.decode(response.bodyBytes, allowMalformed: true);
+        }
       } else if (source is String && await File(source).exists()) {
         return File(source).readAsString();
       }
@@ -296,7 +361,11 @@ extension SubtitleActions on AppController {
     // A track libmpv's ytdl_hook added has its own title, and its address
     // may be refused; the same language from the list reads the same lines.
     final language = track.language;
-    final same = language == null ? null : details?.subtitles.where((o) => o.kind != SubtitleKind.translated && sameLanguage(o.language, language)).firstOrNull;
+    final same = language == null
+        ? null
+        : details?.subtitles
+            .where((o) => o.kind != SubtitleKind.translated && sameLanguage(o.language, language))
+            .firstOrNull;
     return same == null ? cues : _optionCues(same);
   }
 
@@ -341,11 +410,16 @@ extension SubtitleActions on AppController {
       await rememberSubtitleChoice(primary: true);
       return false;
     }
-    final loaded = [for (final t in player.state.tracks.subtitle) if (t.id != 'no' && t.id != 'auto') t];
+    final loaded = [
+      for (final t in player.state.tracks.subtitle)
+        if (t.id != 'no' && t.id != 'auto') t
+    ];
     final before = _subtitleBeforeOff;
     final track = loaded.where((t) => before != null && t.title == before).firstOrNull;
     final details = this.details;
-    final option = before == null ? null : _shownOptions[before] ?? details?.subtitles.where((o) => o.label == before).firstOrNull;
+    final option = before == null
+        ? null
+        : _shownOptions[before] ?? details?.subtitles.where((o) => o.label == before).firstOrNull;
     if (track != null) {
       await player.setSubtitleTrack(track);
     } else if (option != null) {
@@ -353,12 +427,16 @@ extension SubtitleActions on AppController {
     } else if (loaded.isNotEmpty) {
       await player.setSubtitleTrack(loaded.first);
     } else if (details != null && details.subtitles.isNotEmpty) {
-      await showSubtitle(originalSubtitle(details.subtitles, language: details.language) ?? details.subtitles.first);
+      await showSubtitle(originalSubtitle(details.subtitles, language: details.language) ??
+          details.subtitles.first);
     } else {
       return null;
     }
     final shown = player.state.track.subtitle.title;
-    await rememberSubtitleChoice(primary: true, option: _shownOptions[shown] ?? details?.subtitles.where((o) => o.label == shown).firstOrNull);
+    await rememberSubtitleChoice(
+        primary: true,
+        option:
+            _shownOptions[shown] ?? details?.subtitles.where((o) => o.label == shown).firstOrNull);
     return true;
   }
 
@@ -373,7 +451,8 @@ extension SubtitleActions on AppController {
     bool moved() => this.player != player || serial != _playSerial || playing?.id != videoId;
     _shownOptions[option.label] = option;
     try {
-      final loaded = subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys);
+      final loaded =
+          subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys);
       if (moved()) return;
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
@@ -415,7 +494,9 @@ extension SubtitleActions on AppController {
 
   Future<void> _autoSubtitles(VideoItem item, VideoDetails details, int serial) async {
     final player = this.player;
-    if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) {
+      return;
+    }
     if (_secondaryAutoFor == item.id) return;
     // The details can arrive before libmpv has the file: a subtitle added
     // then is refused, and the second one would show alone.
@@ -424,10 +505,12 @@ extension SubtitleActions on AppController {
     // A video in a language the user understands leaves subtitles off,
     // whatever mpv picked as it loaded; they can still be turned on.
     if (settings.subtitleMode == SubtitleMode.foreign) {
-      final spoken = details.language ?? details.subtitles.where((o) => o.kind == SubtitleKind.automatic).firstOrNull?.language;
+      final spoken = details.language ??
+          details.subtitles.where((o) => o.kind == SubtitleKind.automatic).firstOrNull?.language;
       if (understands(spoken, settings.understood)) {
         _secondaryAutoFor = item.id;
-        logDebug(() => 'Subtitles stay off: ${item.id} is in $spoken, a language the user understands');
+        logDebug(
+            () => 'Subtitles stay off: ${item.id} is in $spoken, a language the user understands');
         try {
           final platform = player.platform;
           if (platform is NativePlayer) await platform.setProperty('sid', 'no');
@@ -450,20 +533,27 @@ extension SubtitleActions on AppController {
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
     // ask it for a few seconds, then pick one here.
-    for (var i = 0; i < 6 && _openedDirect != item.id && !local && !shown(player.state.track.subtitle); i++) {
+    for (var i = 0;
+        i < 6 && _openedDirect != item.id && !local && !shown(player.state.track.subtitle);
+        i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
-      await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
+      await player.stream.track
+          .firstWhere((t) => shown(t.subtitle))
+          .timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
     }
     if (serial != _playSerial || this.player != player || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
     var mainTitle = shown(player.state.track.subtitle) ? player.state.track.subtitle.title : null;
-    var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
+    var mainLanguage =
+        shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     // Offline, a download's saved subtitles are all there is: none is
     // translated, which would need the network.
-    final offline = details.subtitles.isNotEmpty && details.subtitles.every((o) => Uri.tryParse(o.url)?.scheme == 'file');
-    SubtitleOption? pick(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from, String? language}) {
+    final offline = details.subtitles.isNotEmpty &&
+        details.subtitles.every((o) => Uri.tryParse(o.url)?.scheme == 'file');
+    SubtitleOption? pick(List<SubtitleOption> options, TranslationLanguage target,
+        {SubtitleOption? from, String? language}) {
       final option = subtitleIn(options, target, from: from, language: language);
       return offline && option?.kind == SubtitleKind.translated ? null : option;
     }
@@ -477,22 +567,39 @@ extension SubtitleActions on AppController {
     // The second subtitle in the first one's language: the first one shows
     // the language the video is spoken in instead, and when that is the
     // same language too, it shows alone, as the first subtitle.
-    var alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
-    if (alike && target != null && wanted != PlayerSettings.originalSubtitle && original != null && !speaks(original.language, target)) {
+    var alike = wanted == PlayerSettings.originalSubtitle
+        ? settings.subtitleOriginal
+        : !settings.subtitleOriginal && target?.code == first.code;
+    if (alike &&
+        target != null &&
+        wanted != PlayerSettings.originalSubtitle &&
+        original != null &&
+        !speaks(original.language, target)) {
       spoken = original;
       alike = false;
     }
     final mainPlanned = alike
-        ? (wanted == PlayerSettings.originalSubtitle ? original : pick(details.subtitles, target!, language: details.language))
+        ? (wanted == PlayerSettings.originalSubtitle
+            ? original
+            : pick(details.subtitles, target!, language: details.language))
         : spoken ?? pick(details.subtitles, first, language: details.language);
-    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : pick(details.subtitles, target, language: details.language);
+    final secondPlanned = alike
+        ? null
+        : wanted == PlayerSettings.originalSubtitle
+            ? original
+            : target == null
+                ? null
+                : pick(details.subtitles, target, language: details.language);
     // Playback waits only for a subtitle to be translated; one the video
     // has in the language wanted loads while it plays.
-    final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
+    final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) ||
+        secondPlanned?.kind == SubtitleKind.translated;
     if (!translating) _subtitlesSettled(serial);
     if (alike) {
       final only = mainPlanned;
-      if (only != null && only.label != mainTitle && !(manualOnly && only.kind != SubtitleKind.uploaded)) {
+      if (only != null &&
+          only.label != mainTitle &&
+          !(manualOnly && only.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${only.language} (${only.kind.name}) as the only subtitle');
         await showSubtitle(only);
       }
@@ -501,10 +608,18 @@ extension SubtitleActions on AppController {
     // 有人工字幕时开启 takes an uploaded subtitle only, as mpv's own pick
     // through ytdl_hook did.
     final manual = settings.subtitleMode == SubtitleMode.manual;
-    final mainWanted = settings.subtitleMode.anySubtitle || mainTitle != null || (manual && (_openedDirect == item.id || local));
-    if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
+    final mainWanted = settings.subtitleMode.anySubtitle ||
+        mainTitle != null ||
+        (manual && (_openedDirect == item.id || local));
+    if (mainWanted &&
+        (mainTitle == null ||
+            (spoken != null
+                ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage)
+                : !speaks(mainLanguage, first)))) {
       final option = spoken ?? pick(details.subtitles, first, language: details.language);
-      if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
+      if (option != null &&
+          option.label != mainTitle &&
+          !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
         if (serial != _playSerial || this.player != player) return;
@@ -519,7 +634,9 @@ extension SubtitleActions on AppController {
     } else {
       // A translation is of the first subtitle, so the two line up.
       final main = details.subtitles.where((o) => o.label == mainTitle).firstOrNull;
-      option = target == null ? null : pick(details.subtitles, target, from: main, language: details.language);
+      option = target == null
+          ? null
+          : pick(details.subtitles, target, from: main, language: details.language);
       if (option == null || speaks(mainLanguage, target!)) {
         if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;
@@ -549,11 +666,15 @@ extension SubtitleActions on AppController {
         logInfo('Waiting for the subtitle translation before playing');
         _update(() => waitingForSubtitles = true);
       }
-      await ready.future.timeout(AppController.subtitleWait, onTimeout: () => logWarn('Subtitle translation not ready after ${AppController.subtitleWait.inSeconds} s; playing without it'));
+      await ready.future.timeout(AppController.subtitleWait,
+          onTimeout: () => logWarn(
+              'Subtitle translation not ready after ${AppController.subtitleWait.inSeconds} s; playing without it'));
     } finally {
       await watch.cancel();
       // A later video's wait is its own to end.
-      if (waitingForSubtitles && serial == _subtitlesSerial) _update(() => waitingForSubtitles = false);
+      if (waitingForSubtitles && serial == _subtitlesSerial) {
+        _update(() => waitingForSubtitles = false);
+      }
     }
     if (serial != _playSerial || this.player != player || started || playbackError != null) return;
     await player.play();
@@ -564,37 +685,55 @@ extension SubtitleActions on AppController {
   /// or the second. [option] null is 关闭. Saved without a notice.
   Future<void> rememberSubtitleChoice({required bool primary, SubtitleOption? option}) async {
     final details = this.details;
-    final spoken = details == null ? null : originalSubtitle(details.subtitles, language: details.language);
+    final spoken =
+        details == null ? null : originalSubtitle(details.subtitles, language: details.language);
     final original = option != null && spoken != null && option.label == spoken.label;
     PlayerSettings next;
     if (primary) {
       if (option == null) {
         next = settings.copyWith(subtitleMode: SubtitleMode.off);
       } else {
-        final language = SubtitleLanguage.values.where((l) => l != SubtitleLanguage.auto && speaks(option.language, l.translation)).firstOrNull;
+        final language = SubtitleLanguage.values
+            .where((l) => l != SubtitleLanguage.auto && speaks(option.language, l.translation))
+            .firstOrNull;
         // Uploaded subtitles alone would miss the automatic one chosen.
-        final mode = settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded
-            ? SubtitleMode.manual
-            : settings.subtitleMode == SubtitleMode.foreign
-                ? SubtitleMode.foreign
-                : SubtitleMode.always;
+        final mode =
+            settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded
+                ? SubtitleMode.manual
+                : settings.subtitleMode == SubtitleMode.foreign
+                    ? SubtitleMode.foreign
+                    : SubtitleMode.always;
         next = settings.copyWith(
           subtitleMode: mode,
           subtitleOriginal: original,
-          subtitleLanguage: original ? null : language == null || language == settings.subtitleLanguage.resolved ? null : language,
+          subtitleLanguage: original
+              ? null
+              : language == null || language == settings.subtitleLanguage.resolved
+                  ? null
+                  : language,
         );
       }
     } else {
-      final target = option == null ? null : TranslationLanguage.all.where((l) => speaks(option.language, l)).firstOrNull;
+      final target = option == null
+          ? null
+          : TranslationLanguage.all.where((l) => speaks(option.language, l)).firstOrNull;
       next = settings.copyWith(
-        secondarySubtitleLanguage: option == null ? '' : original ? PlayerSettings.originalSubtitle : target?.code,
+        secondarySubtitleLanguage: option == null
+            ? ''
+            : original
+                ? PlayerSettings.originalSubtitle
+                : target?.code,
         // A second subtitle needs the first one on to come back by itself.
-        subtitleMode: option != null && settings.subtitleMode == SubtitleMode.off ? SubtitleMode.always : null,
+        subtitleMode: option != null && settings.subtitleMode == SubtitleMode.off
+            ? SubtitleMode.always
+            : null,
       );
     }
     if (jsonEncode(next.toJson()) == jsonEncode(settings.toJson())) return;
     final player = this.player;
-    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
+    if (player != null) {
+      await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
+    }
     _applied = next;
     _update(() => settings = next);
     if (player != null) _optionsApplied(player);
@@ -609,10 +748,17 @@ extension SubtitleActions on AppController {
     if (option != null) _update(() => secondaryLoading = option);
     try {
       final platform = player.platform;
-      final loaded = option == null || platform is NativePlayer && subtitleTrackOf(await mpvSubtitleTracks(platform), option, leaving: _subtitleCopies.keys) != null;
+      final loaded = option == null ||
+          platform is NativePlayer &&
+              subtitleTrackOf(await mpvSubtitleTracks(platform), option,
+                      leaving: _subtitleCopies.keys) !=
+                  null;
       final file = loaded ? null : await _subtitleFile(option);
       if (this.player != player || serial != _playSerial || playing?.id != videoId) return;
-      if (!await SecondarySubtitle.set(player, option, file: file, leaving: [..._subtitleCopies.keys])) throw StateError('Subtitles not loaded');
+      if (!await SecondarySubtitle.set(player, option,
+          file: file, leaving: [..._subtitleCopies.keys])) {
+        throw StateError('Subtitles not loaded');
+      }
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
@@ -626,11 +772,15 @@ extension SubtitleActions on AppController {
   /// so a main subtitle on two or more lines does not run into it.
   void _placeSecondary(Player player, List<String> lines) {
     if (identical(player, this.player)) _mainSubtitle = lines;
-    if (!settings.libassSubtitles || secondaryTrackId == 'no' || !identical(player, this.player)) return;
+    if (!settings.libassSubtitles || secondaryTrackId == 'no' || !identical(player, this.player)) {
+      return;
+    }
     final platform = player.platform;
     if (platform is! NativePlayer) return;
     final look = _libassLook;
-    final font = settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont);
+    final font = settings.subtitleFont.isEmpty
+        ? 'sans-serif'
+        : PlayerSettings.fontForThisSystem(settings.subtitleFont);
     final position = LibassLayout.secondaryPosition(
       lines.isEmpty ? '' : lines.first,
       position: (100 - _subtitleLift).clamp(0, 100),
@@ -643,7 +793,9 @@ extension SubtitleActions on AppController {
       whole: _subtitleCopies[secondaryTrackId]?.second ?? false,
     );
     // Only scheduled: this runs while media_kit handles an mpv event.
-    unawaited(platform.setProperty('secondary-sub-pos', position.toStringAsFixed(1)).catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
+    unawaited(platform
+        .setProperty('secondary-sub-pos', position.toStringAsFixed(1))
+        .catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
   }
 
   /// On a desktop: the default font in the forms of the subtitle's language.
@@ -662,7 +814,8 @@ extension SubtitleActions on AppController {
     if (!(Platform.isAndroid || Platform.isIOS)) {
       // A desktop: the font follows the track's language, sent once it
       // differs from the one libmpv has.
-      final family = settings.libassSubtitles && identical(player, this.player) ? _drawnFamily : null;
+      final family =
+          settings.libassSubtitles && identical(player, this.player) ? _drawnFamily : null;
       if (family != null && _libassSent['sub-font'] != family) _queueLibassLook();
       return;
     }
@@ -674,14 +827,21 @@ extension SubtitleActions on AppController {
     // Lumtub's copy of the second one also holds the main one's lines,
     // invisible, after a blank line: only its own lines are its font's.
     final own = [
-      for (final (i, line) in lines.indexed) i == 1 && (_subtitleCopies[secondaryTrackId]?.second ?? false) ? secondCopyOwnText(line) : line,
+      for (final (i, line) in lines.indexed)
+        i == 1 && (_subtitleCopies[secondaryTrackId]?.second ?? false)
+            ? secondCopyOwnText(line)
+            : line,
     ];
-    final (:drawable, main: family) = AndroidSubtitleFonts.forLines(own, language: player.state.track.subtitle.language ?? '');
+    final (:drawable, main: family) =
+        AndroidSubtitleFonts.forLines(own, language: player.state.track.subtitle.language ?? '');
     if (!drawable) {
-      logInfo('No one subtitle font draws "${text.length > 40 ? text.substring(0, 40) : text}"; Flutter draws this video\'s subtitles');
+      logInfo(
+          'No one subtitle font draws "${text.length > 40 ? text.substring(0, 40) : text}"; Flutter draws this video\'s subtitles');
       _update(() => libassCantDraw = true);
       for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
-        unawaited(platform.setProperty(name, 'no').catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
+        unawaited(platform
+            .setProperty(name, 'no')
+            .catchError((Object e) => logDebug(() => 'Could not hide $name: $e')));
       }
       // The Flutter view shows the tracks themselves, not Lumtub's copies:
       // the second one's would show the main lines a second time.
@@ -691,7 +851,9 @@ extension SubtitleActions on AppController {
     if (family == null || family == _subtitleFamily) return;
     _subtitleFamily = family;
     _libassSent['sub-font'] = family;
-    unawaited(platform.setProperty('sub-font', family).catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));
+    unawaited(platform
+        .setProperty('sub-font', family)
+        .catchError((Object e) => logDebug(() => 'Could not set the subtitle font: $e')));
     // Its size follows.
     _queueLibassLook();
   }
@@ -708,7 +870,9 @@ extension SubtitleActions on AppController {
     final platform = player?.platform;
     if (platform is! NativePlayer || !settings.libassSubtitles || subtitlesOff) return;
     for (final name in ['sub-visibility', 'secondary-sub-visibility']) {
-      unawaited(platform.setProperty(name, 'yes').catchError((Object e) => logDebug(() => 'Could not show $name: $e')));
+      unawaited(platform
+          .setProperty(name, 'yes')
+          .catchError((Object e) => logDebug(() => 'Could not show $name: $e')));
     }
   }
 
@@ -724,7 +888,9 @@ extension SubtitleActions on AppController {
     if (platform is! NativePlayer) return;
     // 字幕位置 is the margin below; this only lifts above the controls.
     final position = (100 - percent).clamp(0, 100);
-    unawaited(platform.setProperty('sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the subtitles: $e')));
+    unawaited(platform
+        .setProperty('sub-pos', '$position')
+        .catchError((Object e) => logDebug(() => 'Could not move the subtitles: $e')));
     _placeSecondary(player, _mainSubtitle);
   }
 
@@ -736,11 +902,15 @@ extension SubtitleActions on AppController {
       _subtitlesFollowing = false;
       if (!identical(player, this.player)) return;
       if (secondaryTrackId == 'no') {
-        if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
+        if (secondarySubtitle != null && secondaryLoading == null) {
+          _update(() => secondarySubtitle = null);
+        }
       } else if (secondarySubtitle != null) {
         final platform = player.platform;
         try {
-          final title = platform is NativePlayer ? (await mpvSubtitleTracks(platform))[secondaryTrackId]?.title : null;
+          final title = platform is NativePlayer
+              ? (await mpvSubtitleTracks(platform))[secondaryTrackId]?.title
+              : null;
           if (title != null && secondarySubtitle!.label != title) secondarySubtitle = null;
         } catch (e) {
           logDebug(() => 'Could not check the secondary subtitle title: $e');
@@ -757,16 +927,28 @@ extension SubtitleActions on AppController {
   Future<SubtitleOption?> _speechOptionFor(String videoId, VideoDetails details) async {
     if (AppController.hasOwnSubtitles(details)) return null;
     final saved = await speechStore?.of(videoId);
-    return saved == null ? null : SubtitleOption(language: saved.language, name: '', url: saved.file.uri.toString(), kind: SubtitleKind.speech);
+    return saved == null
+        ? null
+        : SubtitleOption(
+            language: saved.language,
+            name: '',
+            url: saved.file.uri.toString(),
+            kind: SubtitleKind.speech);
   }
 
   /// Shows [speech], or its translation into 第一字幕语言, unless subtitles
   /// are off.
   Future<void> _showSpeech(SubtitleOption speech, int serial, {bool asked = false}) async {
     if (settings.subtitleMode == SubtitleMode.off || serial != _playSerial) return;
-    if (!asked && settings.subtitleMode == SubtitleMode.foreign && understands(speech.language, settings.understood)) return;
+    if (!asked &&
+        settings.subtitleMode == SubtitleMode.foreign &&
+        understands(speech.language, settings.understood)) {
+      return;
+    }
     final first = settings.subtitleLanguage.translation;
-    final option = settings.subtitleOriginal || speaks(speech.language, first) ? speech : translationOf([speech], first) ?? speech;
+    final option = settings.subtitleOriginal || speaks(speech.language, first)
+        ? speech
+        : translationOf([speech], first) ?? speech;
     await showSubtitle(option);
   }
 
@@ -779,14 +961,23 @@ extension SubtitleActions on AppController {
     final repository = _repository;
     final paths = this.paths;
     final store = speechStore;
-    if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('No video is playing'));
-    if (speechJob.value != null) throw TranslationException(tr('Another video is being recognized, please wait'));
+    if (item == null || details == null || repository == null || paths == null || store == null) {
+      throw TranslationException(tr('No video is playing'));
+    }
+    if (speechJob.value != null) {
+      throw TranslationException(tr('Another video is being recognized, please wait'));
+    }
     final intelligence = this.intelligence;
-    if (!intelligence.can(Capability.transcribe)) throw TranslationException(tr('Set up the speech recognition service and key under Translation & AI first'));
+    if (!intelligence.can(Capability.transcribe)) {
+      throw TranslationException(
+          tr('Set up the speech recognition service and key under Translation & AI first'));
+    }
     final serial = _playSerial;
     final hint = details.language?.split('-').first.toLowerCase();
-    final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
-    void stage(String text, [int done = 0, int total = 0]) => speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
+    final folder = Directory(
+        '${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
+    void stage(String text, [int done = 0, int total = 0]) =>
+        speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
     try {
       stage(tr('Downloading audio…'));
       final transcript = await jobs.run('speech:${item.id}', (job) async {
@@ -808,11 +999,20 @@ extension SubtitleActions on AppController {
         );
         logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
         return heard;
-      }, lane: intelligence.providerFor(Capability.transcribe)!.offline ? JobLane.heavy : JobLane.network, priority: JobPriority.watching);
-      if (!transcript.vtt.contains('-->')) throw TranslationException(tr('No speech was recognized'));
-      final language = (hint == null || hint.isEmpty ? null : details.language) ?? transcript.language ?? 'und';
-      final file = await store.save(item.id, language, transcript.vtt, origin: transcript.origin.id, model: transcript.model);
-      final option = SubtitleOption(language: language, name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
+      },
+          lane: intelligence.providerFor(Capability.transcribe)!.offline
+              ? JobLane.heavy
+              : JobLane.network,
+          priority: JobPriority.watching);
+      if (!transcript.vtt.contains('-->')) {
+        throw TranslationException(tr('No speech was recognized'));
+      }
+      final language =
+          (hint == null || hint.isEmpty ? null : details.language) ?? transcript.language ?? 'und';
+      final file = await store.save(item.id, language, transcript.vtt,
+          origin: transcript.origin.id, model: transcript.model);
+      final option = SubtitleOption(
+          language: language, name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
       if (serial == _playSerial && playing?.id == item.id) {
         forgetSummary(item.id);
         _update(() => this.details = this.details?.withSpeechSubtitle(option));

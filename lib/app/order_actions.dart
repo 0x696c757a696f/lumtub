@@ -32,7 +32,11 @@ extension OrderActions on AppController {
     final library = this.library;
     if (library == null) return const [];
     final order = preferences.groupOrder;
-    return _memo('groups', (library.revision, identityHashCode(library.feed), order), () => orderGroups(library.channelGroups, order, rank: order == GroupOrder.recent ? _feedRank : const {}));
+    return _memo(
+        'groups',
+        (library.revision, identityHashCode(library.feed), order),
+        () => orderGroups(library.channelGroups, order,
+            rank: order == GroupOrder.recent ? _feedRank : const {}));
   }
 
   /// [channels] (all followed channels, or one group's) in the order chosen
@@ -44,7 +48,15 @@ extension OrderActions on AppController {
     final history = order == ChannelOrder.watched ? this.history : const <VideoItem>[];
     return _memo(
       'channels',
-      (library.revision, identityHashCode(library.feed), order, key, channels.length, history.length, history.firstOrNull?.id),
+      (
+        library.revision,
+        identityHashCode(library.feed),
+        order,
+        key,
+        channels.length,
+        history.length,
+        history.firstOrNull?.id
+      ),
       () => orderChannels(
         channels,
         order,
@@ -72,7 +84,8 @@ extension OrderActions on AppController {
     final library = this.library;
     if (library == null) return const [];
     final order = preferences.playlistOrder;
-    return _memo('playlists', (library.revision, order), () => orderPlaylists(library.playlists, order));
+    return _memo(
+        'playlists', (library.revision, order), () => orderPlaylists(library.playlists, order));
   }
 
   /// The order chosen for playlist [id]'s videos.
@@ -91,14 +104,18 @@ extension OrderActions on AppController {
   List<VideoItem> orderedVideos(String id, List<VideoItem> items) {
     final order = videoOrder(id);
     if (order == VideoOrder.added) return items;
-    return _memo('videos:$id', (library?.revision, order, items.length, identityHashCode(items)), () => orderVideos(items, order));
+    return _memo('videos:$id', (library?.revision, order, items.length, identityHashCode(items)),
+        () => orderVideos(items, order));
   }
 
-  Future<void> setGroupOrder(GroupOrder order) => savePreferences(preferences.copyWith(groupOrder: order));
+  Future<void> setGroupOrder(GroupOrder order) =>
+      savePreferences(preferences.copyWith(groupOrder: order));
 
-  Future<void> setChannelOrder(ChannelOrder order) => savePreferences(preferences.copyWith(channelOrder: order));
+  Future<void> setChannelOrder(ChannelOrder order) =>
+      savePreferences(preferences.copyWith(channelOrder: order));
 
-  Future<void> setPlaylistOrder(PlaylistOrder order) => savePreferences(preferences.copyWith(playlistOrder: order));
+  Future<void> setPlaylistOrder(PlaylistOrder order) =>
+      savePreferences(preferences.copyWith(playlistOrder: order));
 
   /// Shows and plays playlist [id] in [order]; the playlist playing now
   /// follows at once.
@@ -117,7 +134,10 @@ extension OrderActions on AppController {
     library!.arrangeVideos(saved, order);
     if (videoOrder(id) != VideoOrder.added || isReversed(id)) {
       final orders = {...preferences.videoOrders}..remove(id);
-      await savePreferences(preferences.copyWith(videoOrders: orders, reversedPlaylists: [for (final other in preferences.reversedPlaylists) if (other != id) other]));
+      await savePreferences(preferences.copyWith(videoOrders: orders, reversedPlaylists: [
+        for (final other in preferences.reversedPlaylists)
+          if (other != id) other
+      ]));
     }
     _followOrder(id);
   }

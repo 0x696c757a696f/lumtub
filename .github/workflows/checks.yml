@@ -136,6 +136,10 @@ jobs:
       - name: Analyze the Dart sources
         run: flutter analyze
 
+      # 100 columns, from analysis_options.yaml.
+      - name: Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
   linux:
     name: Tests (Linux)
     runs-on: ubuntu-24.04

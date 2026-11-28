@@ -28,6 +28,7 @@ class LibraryController extends ChangeNotifier {
   final LibraryStore store;
   late final _feed = ChannelFeed(_client);
   late final _avatars = ChannelAvatars(_client);
+
   /// Channels whose picture was looked up this session, found or not.
   final _avatarTried = <String>{};
   bool _fillingAvatars = false;
@@ -35,6 +36,7 @@ class LibraryController extends ChangeNotifier {
 
   List<VideoItem> feed = const [];
   bool loadingFeed = false;
+
   /// Channels whose latest videos could not be loaded.
   List<String> feedFailures = const [];
   DateTime? _feedLoadedAt;
@@ -199,7 +201,12 @@ class LibraryController extends ChangeNotifier {
     // A list changed meanwhile (a video added while the dialog was open)
     // keeps what [order] lacks at the end and drops what is gone.
     final now = list.toSet();
-    final kept = [for (final entry in order) if (now.remove(entry)) entry, for (final entry in list) if (now.contains(entry)) entry];
+    final kept = [
+      for (final entry in order)
+        if (now.remove(entry)) entry,
+      for (final entry in list)
+        if (now.contains(entry)) entry
+    ];
     var same = kept.length == list.length;
     for (var i = 0; same && i < kept.length; i++) {
       same = identical(kept[i], list[i]);
@@ -227,7 +234,8 @@ class LibraryController extends ChangeNotifier {
       if (at >= 0) {
         // Keep pictures and names current for channels already followed.
         final known = store.channels[at];
-        if (channel.avatar != null && (channel.avatar != known.avatar || channel.name != known.name)) {
+        if (channel.avatar != null &&
+            (channel.avatar != known.avatar || channel.name != known.name)) {
           store.channels[at] = channel;
           updated = true;
         }
@@ -270,7 +278,8 @@ class LibraryController extends ChangeNotifier {
   /// the user's own playlists are not touched.
   void mirrorRemotePlaylists(Map<String, ({String name, List<VideoItem> items})> remote) {
     final playlists = store.playlists;
-    playlists.removeWhere((playlist) => isRemote(playlist) && !remote.containsKey(playlist.id.substring(remotePrefix.length)));
+    playlists.removeWhere((playlist) =>
+        isRemote(playlist) && !remote.containsKey(playlist.id.substring(remotePrefix.length)));
     for (final MapEntry(key: id, value: (:name, :items)) in remote.entries) {
       final index = playlists.indexWhere((playlist) => playlist.id == '$remotePrefix$id');
       final copy = LocalPlaylist(id: '$remotePrefix$id', name: name, items: List.of(items));
@@ -299,7 +308,8 @@ class LibraryController extends ChangeNotifier {
   /// Loads the newest uploads of every followed channel, at most once per
   /// [interval] unless [force]d. Each channel's feed is tried first; yt-dlp is
   /// the fallback when YouTube's feed is unavailable.
-  Future<void> refreshFeed({bool force = false, Duration interval = const Duration(minutes: 10)}) async {
+  Future<void> refreshFeed(
+      {bool force = false, Duration interval = const Duration(minutes: 10)}) async {
     if (loadingFeed) return;
     final loadedAt = _feedLoadedAt;
     if (!force && loadedAt != null && DateTime.now().difference(loadedAt) < interval) return;
@@ -309,13 +319,15 @@ class LibraryController extends ChangeNotifier {
     notifyListeners();
     // What was live at the last look is asked about again at once, while
     // the feeds load, so the 直播 marks are right before the feed is in.
-    final early = _checkLive([for (final MapEntry(:key, :value) in store.liveVideos.entries) (key, value.$1)]);
+    final early = _checkLive(
+        [for (final MapEntry(:key, :value) in store.liveVideos.entries) (key, value.$1)]);
     final failures = <String>[];
     // A few requests at a time: hundreds of imported subscriptions would
     // otherwise open hundreds of connections at once and, where the feed
     // fails, start as many yt-dlp processes.
     final feedErrors = <int, Object>{};
-    final results = await mapLimited([for (var i = 0; i < channels.length; i++) i], feedConcurrency, (i) async {
+    final results =
+        await mapLimited([for (var i = 0; i < channels.length; i++) i], feedConcurrency, (i) async {
       try {
         return await _feed.latest(channels[i], fresh: force);
       } catch (e) {
@@ -323,7 +335,10 @@ class LibraryController extends ChangeNotifier {
         return null;
       }
     });
-    final missing = [for (final (i, list) in results.indexed) if (list == null) i];
+    final missing = [
+      for (final (i, list) in results.indexed)
+        if (list == null) i
+    ];
     // yt-dlp is the slow, heavy fallback: two at a time, for a few channels.
     final fallback = await mapLimited(missing.take(maxFeedFallbacks).toList(), 2, (i) async {
       try {
@@ -339,7 +354,8 @@ class LibraryController extends ChangeNotifier {
         // Why each channel failed, for the log: a channel gone or renamed
         // fails here every time.
         final channel = channels[i];
-        logWarn('Could not load the uploads of ${channel.name} (${channel.id}): feed: ${feedErrors[i]}; yt-dlp: $e');
+        logWarn(
+            'Could not load the uploads of ${channel.name} (${channel.id}): feed: ${feedErrors[i]}; yt-dlp: $e');
         return null;
       }
     });
@@ -347,9 +363,15 @@ class LibraryController extends ChangeNotifier {
       final list = n < fallback.length ? fallback[n] : null;
       results[i] = list;
       if (list == null) failures.add(channels[i].name.isEmpty ? channels[i].id : channels[i].name);
-      if (list == null && n >= fallback.length) logWarn('Could not load the uploads of ${channels[i].name} (${channels[i].id}): feed: ${feedErrors[i]}');
+      if (list == null && n >= fallback.length) {
+        logWarn(
+            'Could not load the uploads of ${channels[i].name} (${channels[i].id}): feed: ${feedErrors[i]}');
+      }
     }
-    final merged = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
+    final merged = mergeFeeds([
+      for (final list in results)
+        if (list != null) list
+    ]).take(maxFeedItems).toList();
     feed = _marked(merged) ?? merged;
     feedFailures = failures;
     loadingFeed = false;
@@ -378,8 +400,10 @@ class LibraryController extends ChangeNotifier {
   /// Channels streaming now, as far as is known: from the feed, and from
   /// the last look until it is checked again.
   Set<String> get liveChannels => {
-        for (final item in feed) if (item.isLive && item.channelId != null) item.channelId!,
-        for (final (channel, status) in store.liveVideos.values) if (status == 'is_live') channel,
+        for (final item in feed)
+          if (item.isLive && item.channelId != null) item.channelId!,
+        for (final (channel, status) in store.liveVideos.values)
+          if (status == 'is_live') channel,
       };
 
   /// Marks the feed's videos that are live now or about to be: channel
@@ -389,7 +413,9 @@ class LibraryController extends ChangeNotifier {
     final since = DateTime.now().subtract(liveWindow);
     final checked = [
       for (final item in feed)
-        if (!_checked.containsKey(item.id) && (store.liveVideos.containsKey(item.id) || (item.published?.isAfter(since) ?? false))) (item.id, item.channelId),
+        if (!_checked.containsKey(item.id) &&
+            (store.liveVideos.containsKey(item.id) || (item.published?.isAfter(since) ?? false)))
+          (item.id, item.channelId),
     ];
     await _checkLive(checked);
   }
@@ -402,7 +428,9 @@ class LibraryController extends ChangeNotifier {
       final (id, channel) = video;
       String? state;
       try {
-        state = await liveStateOf(await _probe.fetch(id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails'));
+        state = await liveStateOf(await _probe.fetch(
+            id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming',
+            expect: 'videoDetails'));
       } catch (_) {
         // Offline or refused: what was known stays.
         return;
@@ -434,9 +462,13 @@ class LibraryController extends ChangeNotifier {
     var changed = false;
     final marked = <VideoItem>[];
     for (final item in items) {
-      var state = _checked.containsKey(item.id) ? _checked[item.id] : store.liveVideos[item.id]?.$2 ?? item.liveStatus;
+      var state = _checked.containsKey(item.id)
+          ? _checked[item.id]
+          : store.liveVideos[item.id]?.$2 ?? item.liveStatus;
       // A stream that was on and is not any more has ended.
-      if (state == null && (item.isLive || item.isUpcoming || item.liveStatus == 'was_live')) state = 'was_live';
+      if (state == null && (item.isLive || item.isUpcoming || item.liveStatus == 'was_live')) {
+        state = 'was_live';
+      }
       if (state != item.liveStatus) {
         changed = true;
         marked.add(item.withLiveStatus(state));
@@ -453,7 +485,10 @@ class LibraryController extends ChangeNotifier {
     if (_fillingAvatars) return;
     _fillingAvatars = true;
     try {
-      final queue = [for (final channel in store.channels) if (channel.avatar == null && _avatarTried.add(channel.id)) channel];
+      final queue = [
+        for (final channel in store.channels)
+          if (channel.avatar == null && _avatarTried.add(channel.id)) channel
+      ];
       // Where each one was; the list can change while the pictures are
       // asked for, so a place is checked before it is used.
       final places = {for (final (i, channel) in store.channels.indexed) channel.id: i};
@@ -464,7 +499,9 @@ class LibraryController extends ChangeNotifier {
           try {
             final avatar = await _avatars.fetch(channel);
             var at = places[channel.id] ?? -1;
-            if (at < 0 || at >= store.channels.length || store.channels[at].id != channel.id) at = store.channels.indexWhere((c) => c.id == channel.id);
+            if (at < 0 || at >= store.channels.length || store.channels[at].id != channel.id) {
+              at = store.channels.indexWhere((c) => c.id == channel.id);
+            }
             if (avatar != null && at >= 0 && store.channels[at].avatar == null) {
               store.channels[at] = ChannelRef(channel.id, store.channels[at].name, avatar);
               found = true;
@@ -489,15 +526,19 @@ class LibraryController extends ChangeNotifier {
   /// the dated ones.
   /// Feed requests in flight at once.
   static const feedConcurrency = 8;
+
   /// Channels whose feed failed that yt-dlp is asked about, per refresh.
   static const maxFeedFallbacks = 12;
+
   /// The newest videos kept from all the feeds together.
   static const maxFeedItems = 1500;
 
   static List<VideoItem> mergeFeeds(List<List<VideoItem>> perChannel) {
     final seen = <String>{};
-    final all = [for (final list in perChannel) ...list].where((item) => seen.add(item.id)).toList();
-    final dated = all.where((item) => item.published != null).toList()..sort((a, b) => b.published!.compareTo(a.published!));
+    final all =
+        [for (final list in perChannel) ...list].where((item) => seen.add(item.id)).toList();
+    final dated = all.where((item) => item.published != null).toList()
+      ..sort((a, b) => b.published!.compareTo(a.published!));
     return [...dated, ...all.where((item) => item.published == null)];
   }
 
@@ -514,7 +555,9 @@ class LibraryController extends ChangeNotifier {
 Future<String?> liveStateOf(List<int> bytes) async {
   // A whole answer, when YouTube refused the field mask, runs to a few
   // hundred kilobytes.
-  final data = bytes.length > 64 * 1024 ? await Isolate.run(() => jsonDecode(utf8.decode(bytes))) : jsonDecode(utf8.decode(bytes));
+  final data = bytes.length > 64 * 1024
+      ? await Isolate.run(() => jsonDecode(utf8.decode(bytes)))
+      : jsonDecode(utf8.decode(bytes));
   final details = data is Map<String, dynamic> ? data['videoDetails'] : null;
   if (details is! Map<String, dynamic>) return null;
   if (details['isLive'] == true) return 'is_live';

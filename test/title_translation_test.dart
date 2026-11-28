@@ -26,8 +26,16 @@ void main() {
   late _Recorder translator;
   late TitleTranslations titles;
 
-  void configure({TitleTranslation mode = TitleTranslation.replace, Object setup = 'a', bool Function(String)? needs}) =>
-      titles.configure(mode: mode, translator: translator, target: 'en', needs: needs ?? (t) => !t.startsWith('EN '), setup: setup);
+  void configure(
+          {TitleTranslation mode = TitleTranslation.replace,
+          Object setup = 'a',
+          bool Function(String)? needs}) =>
+      titles.configure(
+          mode: mode,
+          translator: translator,
+          target: 'en',
+          needs: needs ?? (t) => !t.startsWith('EN '),
+          setup: setup);
 
   setUp(() {
     translator = _Recorder();
@@ -112,7 +120,8 @@ void main() {
       configure(setup: 'b');
       old.complete('stale');
       async.elapse(const Duration(seconds: 1));
-      expect(titles.lookup('Bonjour'), 'Hello', reason: 'the answer asked under the old setup is dropped');
+      expect(titles.lookup('Bonjour'), 'Hello',
+          reason: 'the answer asked under the old setup is dropped');
 
       translator.fail = true;
       titles.listen('Ciao', () {});
@@ -161,12 +170,18 @@ void main() {
     });
   });
 
-  testWidgets('a title on screen shows its translation, the original on hover, and goes back when off', (tester) async {
+  testWidgets(
+      'a title on screen shows its translation, the original on hover, and goes back when off',
+      (tester) async {
     final translator = _Recorder();
-    void set(TitleTranslation mode) => titleTranslations.configure(mode: mode, translator: translator, target: 'en', needs: (_) => true, setup: 'widget');
+    void set(TitleTranslation mode) => titleTranslations.configure(
+        mode: mode, translator: translator, target: 'en', needs: (_) => true, setup: 'widget');
     set(TitleTranslation.replace);
     addTearDown(() => set(TitleTranslation.off));
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox(width: 300, child: TitleText('Bonjour', maxLines: 2, style: TextStyle())))));
+    await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+            body: SizedBox(
+                width: 300, child: TitleText('Bonjour', maxLines: 2, style: TextStyle())))));
     expect(find.text('Bonjour'), findsOneWidget);
     // The dwell is measured on the wall clock.
     await tester.pump(const Duration(milliseconds: 300));

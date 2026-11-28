@@ -4,13 +4,16 @@ import 'models.dart';
 
 /// A playlist a video was played from, in the order it plays.
 class PlayingList {
-  const PlayingList({required this.id, required this.title, required this.items, this.reversed = false});
+  const PlayingList(
+      {required this.id, required this.title, required this.items, this.reversed = false});
 
   /// The playlist's id, under which its order is remembered.
   final String id;
   final String title;
+
   /// The videos in the playlist's own order.
   final List<VideoItem> items;
+
   /// Played last to first (倒序).
   final bool reversed;
 
@@ -18,7 +21,8 @@ class PlayingList {
   /// costs nothing however long the playlist.
   List<VideoItem> get ordered => reversed ? _Reversed(items) : items;
 
-  PlayingList withReversed(bool reversed) => PlayingList(id: id, title: title, items: items, reversed: reversed);
+  PlayingList withReversed(bool reversed) =>
+      PlayingList(id: id, title: title, items: items, reversed: reversed);
 }
 
 /// [_items] last to first, read through without copying.
@@ -36,5 +40,6 @@ class _Reversed extends ListBase<VideoItem> {
   VideoItem operator [](int index) => _items[_items.length - 1 - index];
 
   @override
-  void operator []=(int index, VideoItem value) => throw UnsupportedError('a reversed playlist cannot be changed');
+  void operator []=(int index, VideoItem value) =>
+      throw UnsupportedError('a reversed playlist cannot be changed');
 }

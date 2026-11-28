@@ -37,7 +37,8 @@ void main() {
   });
 
   test('CC-CEDICT lines found by both scripts, comments left out', () {
-    final d = ChineseDictionary.parse('# CC-CEDICT\n傳統 传统 [chuan2 tong3] /tradition/\n中 中 [zhong1] /middle/\nbroken line\n');
+    final d = ChineseDictionary.parse(
+        '# CC-CEDICT\n傳統 传统 [chuan2 tong3] /tradition/\n中 中 [zhong1] /middle/\nbroken line\n');
     expect(d.size, 2);
     expect(d.lookup('传统').single.traditional, '傳統');
     expect(d.lookup('傳統').single.simplified, '传统');

@@ -27,12 +27,19 @@ class Device {
         logWarn('Could not ask whether this is a TV: $e');
       }
       try {
-        captionScale = (await const MethodChannel('lumtub/windows_shell').invokeMethod<double>('captionScale') ?? 1).clamp(0.25, 4.0);
+        captionScale = (await const MethodChannel('lumtub/windows_shell')
+                    .invokeMethod<double>('captionScale') ??
+                1)
+            .clamp(0.25, 4.0);
       } catch (e) {
         logWarn('Could not read the system caption size: $e');
       }
     }
-    Skin.formFactor = tv ? 'tv' : tablet ? 'tablet' : 'mobile';
+    Skin.formFactor = tv
+        ? 'tv'
+        : tablet
+            ? 'tablet'
+            : 'mobile';
   }
 
   /// A screen whose shorter side is at least 600 logical pixels, as
@@ -48,7 +55,10 @@ class Device {
   /// A phone held in the hand: touch, and a screen too narrow for
   /// dialogs in the middle, so panels come up from the bottom edge where
   /// the thumb is.
-  static bool phone(BuildContext context) => (Platform.isAndroid || Platform.isIOS) && !tv && MediaQuery.sizeOf(context).shortestSide < 600;
+  static bool phone(BuildContext context) =>
+      (Platform.isAndroid || Platform.isIOS) &&
+      !tv &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
 
   /// On a TV something must hold focus for the remote's arrows to move:
   /// the first control, once the first page is shown.
@@ -60,7 +70,10 @@ class Device {
       if (focus == null || focus == FocusManager.instance.rootScope || focus is FocusScopeNode) {
         // The root scope has no context to find a traversal order in, so
         // take the first control that can hold focus, in tree order.
-        FocusManager.instance.rootScope.traversalDescendants.where((node) => node.context?.mounted ?? false).firstOrNull?.requestFocus();
+        FocusManager.instance.rootScope.traversalDescendants
+            .where((node) => node.context?.mounted ?? false)
+            .firstOrNull
+            ?.requestFocus();
       }
     });
   }

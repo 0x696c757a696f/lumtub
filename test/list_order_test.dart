@@ -8,8 +8,16 @@ import 'package:lumtub/library_store.dart';
 import 'package:lumtub/list_order.dart';
 import 'package:lumtub/models.dart';
 
-VideoItem video(String id, {String title = '', int? duration, DateTime? published, String? channelId}) =>
-    VideoItem(id: id, title: title, channel: '', url: 'https://www.youtube.com/watch?v=$id', duration: duration, published: published, channelId: channelId);
+VideoItem video(String id,
+        {String title = '', int? duration, DateTime? published, String? channelId}) =>
+    VideoItem(
+        id: id,
+        title: title,
+        channel: '',
+        url: 'https://www.youtube.com/watch?v=$id',
+        duration: duration,
+        published: published,
+        channelId: channelId);
 
 String channelId(int i) => 'UC${'$i'.padLeft(22, '0')}';
 
@@ -17,9 +25,11 @@ void main() {
   test('names sort by letters, ignoring case, and numbers by value', () {
     final names = ['part 10', 'Part 2', 'apple', 'Banana', 'part 02', 'part 1', '学习', 'Zoo'];
     final sorted = [for (final n in names) NameKey(n)]..sort();
-    expect([for (final k in sorted) k.text], ['apple', 'Banana', 'part 1', 'Part 2', 'part 02', 'part 10', 'Zoo', '学习']);
+    expect([for (final k in sorted) k.text],
+        ['apple', 'Banana', 'part 1', 'Part 2', 'part 02', 'part 10', 'Zoo', '学习']);
     // A number too long for any integer type still compares.
-    expect(NameKey('a 99999999999999999999999').compareTo(NameKey('a 100000000000000000000000')), lessThan(0));
+    expect(NameKey('a 99999999999999999999999').compareTo(NameKey('a 100000000000000000000000')),
+        lessThan(0));
   });
 
   test('groups by name, size and newest video; custom keeps the stored order', () {
@@ -41,18 +51,26 @@ void main() {
     final channels = [for (var i = 0; i < 5; i++) ChannelRef(channelId(i), 'Channel ${5 - i}')];
     final rank = {channelId(3): 0, channelId(1): 1, channelId(4): 2};
     final recent = orderChannels(channels, ChannelOrder.recent, rank: rank, live: {channelId(0)});
-    expect([for (final c in recent) c.id], [channelId(0), channelId(3), channelId(1), channelId(4), channelId(2)]);
-    expect([for (final c in orderChannels(channels, ChannelOrder.name)) c.name], ['Channel 1', 'Channel 2', 'Channel 3', 'Channel 4', 'Channel 5']);
+    expect([for (final c in recent) c.id],
+        [channelId(0), channelId(3), channelId(1), channelId(4), channelId(2)]);
+    expect([for (final c in orderChannels(channels, ChannelOrder.name)) c.name],
+        ['Channel 1', 'Channel 2', 'Channel 3', 'Channel 4', 'Channel 5']);
     expect(orderChannels(channels, ChannelOrder.followed).first, channels.last);
-    final history = [video('a', channelId: channelId(2)), video('b', channelId: channelId(2)), video('c', channelId: channelId(4))];
+    final history = [
+      video('a', channelId: channelId(2)),
+      video('b', channelId: channelId(2)),
+      video('c', channelId: channelId(4))
+    ];
     final watched = orderChannels(channels, ChannelOrder.watched, watched: countByChannel(history));
     expect([for (final c in watched) c.id].take(2), [channelId(2), channelId(4)]);
   });
 
   test('playlists by name, date made and size; YouTube copies after own lists', () {
     final old = LocalPlaylist(id: 1000.toRadixString(36), name: 'b', items: [video('1')]);
-    final fresh = LocalPlaylist(id: 2000.toRadixString(36), name: 'A', items: [video('1'), video('2')]);
-    final remote = LocalPlaylist(id: '${remotePlaylistPrefix}PL1', name: 'c', items: [video('1'), video('2'), video('3')]);
+    final fresh =
+        LocalPlaylist(id: 2000.toRadixString(36), name: 'A', items: [video('1'), video('2')]);
+    final remote = LocalPlaylist(
+        id: '${remotePlaylistPrefix}PL1', name: 'c', items: [video('1'), video('2'), video('3')]);
     final lists = [old, remote, fresh];
     expect(orderPlaylists(lists, PlaylistOrder.name), [fresh, old, remote]);
     expect(orderPlaylists(lists, PlaylistOrder.created), [fresh, old, remote]);
@@ -83,7 +101,10 @@ void main() {
     expect(back.channelOrder, ChannelOrder.watched);
     expect(back.playlistOrder, PlaylistOrder.size);
     expect(back.videoOrders, {'favorites': VideoOrder.duration});
-    final fresh = AppPreferences.fromJson({'groupOrder': 'nonsense', 'videoOrders': {'x': 'nonsense', 'y': 'title'}});
+    final fresh = AppPreferences.fromJson({
+      'groupOrder': 'nonsense',
+      'videoOrders': {'x': 'nonsense', 'y': 'title'}
+    });
     expect(fresh.groupOrder, GroupOrder.manual);
     expect(fresh.channelOrder, ChannelOrder.recent);
     expect(fresh.videoOrders, {'y': VideoOrder.title});
@@ -133,19 +154,34 @@ void main() {
       for (final (i, length) in [30, 300, 120].indexed) {
         library.addToPlaylist(playlist, video('v$i', duration: length));
       }
-      controller.preferences = controller.preferences.copyWith(videoOrders: {playlist.id: VideoOrder.duration});
-      expect([for (final v in controller.orderedVideos(playlist.id, playlist.items)) v.duration], [300, 120, 30]);
-      await controller.arrangeVideos(playlist.id, [playlist.items[2], playlist.items[0], playlist.items[1]]);
+      controller.preferences =
+          controller.preferences.copyWith(videoOrders: {playlist.id: VideoOrder.duration});
+      expect([for (final v in controller.orderedVideos(playlist.id, playlist.items)) v.duration],
+          [300, 120, 30]);
+      await controller
+          .arrangeVideos(playlist.id, [playlist.items[2], playlist.items[0], playlist.items[1]]);
       expect(controller.videoOrder(playlist.id), VideoOrder.added);
       expect([for (final v in playlist.items) v.duration], [120, 30, 300]);
     });
   });
 
   test('sorting 20,000 entries stays quick', () {
-    final channels = [for (var i = 0; i < 20000; i++) ChannelRef(channelId(i), 'Channel ${(i * 7919) % 20000}')];
-    final history = [for (var i = 0; i < 5000; i++) video('h$i', channelId: channelId((i * 31) % 20000))];
-    final feed = [for (var i = 0; i < 20000; i++) video('f$i', channelId: channelId((i * 13) % 20000))];
-    final videos = [for (var i = 0; i < 20000; i++) video('v$i', title: 'Video ${(i * 7919) % 20000}', duration: (i * 37) % 3600, published: DateTime(2020).add(Duration(hours: (i * 101) % 50000)))];
+    final channels = [
+      for (var i = 0; i < 20000; i++) ChannelRef(channelId(i), 'Channel ${(i * 7919) % 20000}')
+    ];
+    final history = [
+      for (var i = 0; i < 5000; i++) video('h$i', channelId: channelId((i * 31) % 20000))
+    ];
+    final feed = [
+      for (var i = 0; i < 20000; i++) video('f$i', channelId: channelId((i * 13) % 20000))
+    ];
+    final videos = [
+      for (var i = 0; i < 20000; i++)
+        video('v$i',
+            title: 'Video ${(i * 7919) % 20000}',
+            duration: (i * 37) % 3600,
+            published: DateTime(2020).add(Duration(hours: (i * 101) % 50000)))
+    ];
     final timer = Stopwatch()..start();
     final times = <String, int>{};
     void time(String name, void Function() run) {
@@ -154,9 +190,11 @@ void main() {
       times[name] = timer.elapsedMilliseconds;
     }
 
-    time('channels by newest', () => orderChannels(channels, ChannelOrder.recent, rank: rankInFeed(feed)));
+    time('channels by newest',
+        () => orderChannels(channels, ChannelOrder.recent, rank: rankInFeed(feed)));
     time('channels by name', () => orderChannels(channels, ChannelOrder.name));
-    time('channels by watch count', () => orderChannels(channels, ChannelOrder.watched, watched: countByChannel(history)));
+    time('channels by watch count',
+        () => orderChannels(channels, ChannelOrder.watched, watched: countByChannel(history)));
     time('videos by title', () => orderVideos(videos, VideoOrder.title));
     time('videos by date', () => orderVideos(videos, VideoOrder.published));
     time('videos by length', () => orderVideos(videos, VideoOrder.duration));

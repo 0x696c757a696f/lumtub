@@ -7,13 +7,15 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('a skin picture stays up while the window rebuilds', (tester) async {
-    final layer = ImagePaint('${Directory.current.path}/skins/aquarium/day.jpg', builtIn: false, fit: 'cover', opacity: 1);
+    final layer = ImagePaint('${Directory.current.path}/skins/aquarium/day.jpg',
+        builtIn: false, fit: 'cover', opacity: 1);
     late StateSetter rebuild;
     var n = 0;
     await tester.pumpWidget(StatefulBuilder(builder: (context, setState) {
       rebuild = setState;
       n++;
-      return Directionality(textDirection: TextDirection.ltr, child: SkinLayers([layer], key: ValueKey(n > 100)));
+      return Directionality(
+          textDirection: TextDirection.ltr, child: SkinLayers([layer], key: ValueKey(n > 100)));
     }));
     // Decoding happens off the test's fake clock.
     for (var i = 0; i < 50 && tester.widget<RawImage>(find.byType(RawImage)).image == null; i++) {
@@ -24,7 +26,8 @@ void main() {
     for (var i = 0; i < 3; i++) {
       rebuild(() {});
       await tester.pump();
-      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull, reason: 'frame after rebuild $i');
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull,
+          reason: 'frame after rebuild $i');
     }
   });
 
@@ -33,6 +36,7 @@ void main() {
     final b = BoxDecodedImage(FileImage(File('x.jpg')), width: 512, height: 256, cover: true);
     expect(a, b);
     expect(a.hashCode, b.hashCode);
-    expect(a == BoxDecodedImage(FileImage(File('x.jpg')), width: 768, height: 256, cover: true), isFalse);
+    expect(a == BoxDecodedImage(FileImage(File('x.jpg')), width: 768, height: 256, cover: true),
+        isFalse);
   });
 }

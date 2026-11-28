@@ -11,6 +11,7 @@ class ReplyThread {
   String? next;
   bool loading = false;
   String? error;
+
   /// The ids of [replies] as [_seenOf] held them.
   final _seen = <String>{};
   List<YoutubeComment>? _seenOf;
@@ -19,19 +20,24 @@ class ReplyThread {
 /// Adds [page]'s comments not in [list] yet to it; [seen] holds the ids of
 /// [list] when it is [seenOf], and is made again otherwise. The comments
 /// already there are not read again for each page.
-List<YoutubeComment> _appendNew(List<YoutubeComment> list, List<YoutubeComment> page, Set<String> seen, List<YoutubeComment>? seenOf) {
+List<YoutubeComment> _appendNew(List<YoutubeComment> list, List<YoutubeComment> page,
+    Set<String> seen, List<YoutubeComment>? seenOf) {
   if (!identical(seenOf, list)) {
     seen
       ..clear()
       ..addAll(list.map((c) => c.id));
   }
-  final added = [for (final c in page) if (seen.add(c.id)) c];
+  final added = [
+    for (final c in page)
+      if (seen.add(c.id)) c
+  ];
   return added.isEmpty ? list : [...list, ...added];
 }
 
 /// Pages through the comments under a video or a community post.
 class CommentsLoader extends ChangeNotifier {
-  CommentsLoader(this._source, {this.videoId, this.postId}) : assert((videoId == null) != (postId == null));
+  CommentsLoader(this._source, {this.videoId, this.postId})
+      : assert((videoId == null) != (postId == null));
 
   final YoutubeComments _source;
   final String? videoId;
@@ -47,6 +53,7 @@ class CommentsLoader extends ChangeNotifier {
   final replies = <String, ReplyThread>{};
   int _generation = 0;
   bool _disposed = false;
+
   /// The ids of [comments] as [_seenOf] held them.
   final _seen = <String>{};
   List<YoutubeComment>? _seenOf;
@@ -57,19 +64,25 @@ class CommentsLoader extends ChangeNotifier {
   /// Like buttons found for comments their list came without, by id: the
   /// TV app gives them only on the page of one comment.
   final _found = <String, CommentRating>{};
+
   /// A comment with buttons, whose actions others' are made from.
   (String, CommentRating)? _template;
 
   /// `like`, `dislike` or empty for [comment], as last pressed here.
-  String ratingOf(YoutubeComment comment) => _rated[comment.id] ?? comment.rating?.state ?? _found[comment.id]?.state ?? '';
+  String ratingOf(YoutubeComment comment) =>
+      _rated[comment.id] ?? comment.rating?.state ?? _found[comment.id]?.state ?? '';
 
   /// `like`, `dislike` or empty for [comment] when it was loaded.
-  String loadedRatingOf(YoutubeComment comment) => comment.rating?.state ?? _found[comment.id]?.state ?? '';
+  String loadedRatingOf(YoutubeComment comment) =>
+      comment.rating?.state ?? _found[comment.id]?.state ?? '';
 
   /// Whether [comment] can be liked: its buttons came with it, or can be
   /// found or made signed in.
   bool canRate(YoutubeComment comment) =>
-      comment.rating != null || _found.containsKey(comment.id) || ((_post ? _source.webSignedIn : _source.signedIn) && (comment.detailToken != null || _template != null));
+      comment.rating != null ||
+      _found.containsKey(comment.id) ||
+      ((_post ? _source.webSignedIn : _source.signedIn) &&
+          (comment.detailToken != null || _template != null));
 
   void _learn(Iterable<YoutubeComment> comments) {
     for (final c in comments) {
@@ -183,7 +196,12 @@ class CommentsLoader extends ChangeNotifier {
     loadingAll = true;
     _notify();
     try {
-      while (loadingAll && !_disposed && generation == _generation && hasMore && error == null && comments.length < most) {
+      while (loadingAll &&
+          !_disposed &&
+          generation == _generation &&
+          hasMore &&
+          error == null &&
+          comments.length < most) {
         if (loading) {
           await Future<void>.delayed(const Duration(milliseconds: 100));
           continue;
@@ -219,7 +237,14 @@ class CommentsLoader extends ChangeNotifier {
       if (generation != _generation) return;
       _learn(page.comments);
       // The TV app's replies page starts with the comment itself.
-      final replies = _appendNew(thread.replies, [for (final c in page.comments) if (c.id != comment.id) c], thread._seen, thread._seenOf);
+      final replies = _appendNew(
+          thread.replies,
+          [
+            for (final c in page.comments)
+              if (c.id != comment.id) c
+          ],
+          thread._seen,
+          thread._seenOf);
       thread
         ..replies = replies
         .._seenOf = replies
@@ -291,4 +316,7 @@ bool commentMatches(YoutubeComment comment, List<String> words) {
 }
 
 /// [query] as the lower-case words [commentMatches] looks for.
-List<String> commentQueryWords(String query) => [for (final word in query.toLowerCase().split(RegExp(r'\s+'))) if (word.isNotEmpty) word];
+List<String> commentQueryWords(String query) => [
+      for (final word in query.toLowerCase().split(RegExp(r'\s+')))
+        if (word.isNotEmpty) word
+    ];

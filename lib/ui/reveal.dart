@@ -18,7 +18,8 @@ class Reveal extends StatefulWidget {
   static const scale = 0.98;
 
   /// Whether content built now at [context] should come in.
-  static bool animates(BuildContext context, {bool enabled = true}) => enabled && !Motion.reduced && !PageSwitcher.entering(context);
+  static bool animates(BuildContext context, {bool enabled = true}) =>
+      enabled && !Motion.reduced && !PageSwitcher.entering(context);
 
   @override
   State<Reveal> createState() => _RevealState();
@@ -46,7 +47,8 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) => FadeTransition(opacity: _opacity, child: ScaleTransition(scale: _scale, child: widget.child));
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _opacity, child: ScaleTransition(scale: _scale, child: widget.child));
 }
 
 /// [Reveal] for a sliver, such as a grid of results: it only fades, as one
@@ -80,7 +82,8 @@ class _SliverRevealState extends State<SliverReveal> with SingleTickerProviderSt
   }
 
   @override
-  Widget build(BuildContext context) => SliverFadeTransition(opacity: _opacity, sliver: widget.sliver);
+  Widget build(BuildContext context) =>
+      SliverFadeTransition(opacity: _opacity, sliver: widget.sliver);
 }
 
 /// One of two or more faces, such as a button's icon for on and off: a
@@ -98,7 +101,8 @@ class Swap extends StatelessWidget {
         switchOutCurve: Ease.out,
         transitionBuilder: (child, animation) => FadeTransition(
           opacity: animation,
-          child: ScaleTransition(scale: Tween(begin: scale, end: 1.0).animate(animation), child: child),
+          child: ScaleTransition(
+              scale: Tween(begin: scale, end: 1.0).animate(animation), child: child),
         ),
         child: child,
       );

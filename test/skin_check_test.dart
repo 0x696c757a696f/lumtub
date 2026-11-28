@@ -15,7 +15,8 @@ void main() {
     }
     for (final device in ['desktop', 'mobile', 'tablet', 'tv']) {
       Skin.formFactor = device;
-      final skin = Skin.parse(decodeJsonc(File('$path/skin.jsonc').readAsStringSync()), folder: path, builtIn: false);
+      final skin = Skin.parse(decodeJsonc(File('$path/skin.jsonc').readAsStringSync()),
+          folder: path, builtIn: false);
       skin
         ..buttonText
         ..primaryButtonText

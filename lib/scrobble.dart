@@ -11,7 +11,8 @@ import 'secure_store.dart';
 
 /// A song as ListenBrainz is told about it.
 class ScrobbleTrack {
-  const ScrobbleTrack({required this.artist, required this.title, required this.videoId, this.album, this.length});
+  const ScrobbleTrack(
+      {required this.artist, required this.title, required this.videoId, this.album, this.length});
   final String artist;
   final String title;
   final String? album;
@@ -19,7 +20,12 @@ class ScrobbleTrack {
   final Duration? length;
 
   @override
-  bool operator ==(Object other) => other is ScrobbleTrack && other.artist == artist && other.title == title && other.album == album && other.videoId == videoId;
+  bool operator ==(Object other) =>
+      other is ScrobbleTrack &&
+      other.artist == artist &&
+      other.title == title &&
+      other.album == album &&
+      other.videoId == videoId;
 
   @override
   int get hashCode => Object.hash(artist, title, album, videoId);
@@ -43,15 +49,25 @@ ScrobbleTrack? scrobbleTrackOf(VideoItem item, VideoDetails? details, {Duration?
   final title = (details?.title.isNotEmpty ?? false ? details!.title : item.title).trim();
   final channel = (details?.channel.isNotEmpty ?? false ? details!.channel : item.channel).trim();
   final music = details?.music ?? const MusicTags();
-  ScrobbleTrack song(String artist, String name, [String? album]) =>
-      ScrobbleTrack(artist: artist.trim(), title: name.trim(), album: album?.trim(), videoId: item.id, length: duration);
+  ScrobbleTrack song(String artist, String name, [String? album]) => ScrobbleTrack(
+      artist: artist.trim(),
+      title: name.trim(),
+      album: album?.trim(),
+      videoId: item.id,
+      length: duration);
 
-  if (music.track != null && music.artists.isNotEmpty) return song(music.artists.join(', '), music.track!, music.album);
+  if (music.track != null && music.artists.isNotEmpty) {
+    return song(music.artists.join(', '), music.track!, music.album);
+  }
 
   final description = details?.description ?? item.description ?? '';
   if (description.startsWith('Provided to YouTube by')) {
     // Auto-generated: "Track · Artist · Artist" on its own line, then the album.
-    final lines = const LineSplitter().convert(description).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final lines = const LineSplitter()
+        .convert(description)
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
     for (var i = 1; i < lines.length; i++) {
       final parts = lines[i].split(' · ');
       if (parts.length < 2) continue;
@@ -60,21 +76,31 @@ ScrobbleTrack? scrobbleTrackOf(VideoItem item, VideoDetails? details, {Duration?
     }
   }
 
-  if (channel.endsWith(' - Topic') && channel.length > 8) return song(channel.substring(0, channel.length - 8), cleanSongTitle(title));
+  if (channel.endsWith(' - Topic') && channel.length > 8) {
+    return song(channel.substring(0, channel.length - 8), cleanSongTitle(title));
+  }
 
   final official = _officialMarker.hasMatch(title);
   if (!music.inMusicCategory && !official) return null;
   if (splitArtistTitle(title) case (final artist, final name)?) return song(artist, name);
   if (!official && !_vevo.hasMatch(channel)) return null;
   final name = cleanSongTitle(title);
-  var artist = channel.replaceFirst(RegExp(r'\s*(official|officiel|oficial)$', caseSensitive: false), '').trim();
+  var artist = channel
+      .replaceFirst(RegExp(r'\s*(official|officiel|oficial)$', caseSensitive: false), '')
+      .trim();
   // "TaylorSwiftVEVO" names the artist without spaces.
-  if (_vevo.hasMatch(artist)) artist = artist.replaceFirst(_vevo, '').replaceAllMapped(RegExp(r'(\p{Ll})(\p{Lu})', unicode: true), (m) => '${m[1]} ${m[2]}');
+  if (_vevo.hasMatch(artist)) {
+    artist = artist
+        .replaceFirst(_vevo, '')
+        .replaceAllMapped(RegExp(r'(\p{Ll})(\p{Lu})', unicode: true), (m) => '${m[1]} ${m[2]}');
+  }
   if (name.isEmpty || artist.isEmpty) return null;
   return song(artist, name);
 }
 
-final _officialMarker = RegExp(r'[(\[【「]\s*(official\s+(music\s+)?(video|audio|lyric video|visuali[sz]er|mv)|music video|lyric video|visuali[sz]er|m/?v)\s*[)\]】」]', caseSensitive: false);
+final _officialMarker = RegExp(
+    r'[(\[【「]\s*(official\s+(music\s+)?(video|audio|lyric video|visuali[sz]er|mv)|music video|lyric video|visuali[sz]er|m/?v)\s*[)\]】」]',
+    caseSensitive: false);
 final _vevo = RegExp(r'\s*VEVO$');
 
 /// "Artist - Title (Official Video)" as artist and title, or null when the
@@ -93,7 +119,11 @@ final _vevo = RegExp(r'\s*VEVO$');
 /// "(Live)" or "(feat. …)" is part of the song and stays.
 String cleanSongTitle(String title) {
   var name = title;
-  name = name.replaceAll(RegExp(r'\s*[(\[【「][^)\]】」]*(official|video|audio|lyric|visuali[sz]er|\bm/?v\b|\bhd\b|\bhq\b|\b4k\b|1080p|remaster|color coded)[^)\]】」]*[)\]】」]', caseSensitive: false), '');
+  name = name.replaceAll(
+      RegExp(
+          r'\s*[(\[【「][^)\]】」]*(official|video|audio|lyric|visuali[sz]er|\bm/?v\b|\bhd\b|\bhq\b|\b4k\b|1080p|remaster|color coded)[^)\]】」]*[)\]】」]',
+          caseSensitive: false),
+      '');
   name = name.replaceFirst(RegExp(r'\s+[|｜].*$'), '');
   name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
   // Quotes around the title: Artist - "Song"
@@ -111,8 +141,10 @@ Duration scrobbleThreshold(Duration length) {
 class ScrobbleException implements Exception {
   const ScrobbleException(this.message, {this.badToken = false, this.retry = false});
   final String message;
+
   /// The token was refused: nothing more is sent until it is replaced.
   final bool badToken;
+
   /// Worth sending again later: no network, a busy server.
   final bool retry;
 
@@ -137,14 +169,21 @@ class ListenBrainzApi {
   Future<String> validate(String token) async {
     final http.Response response;
     try {
-      response = await _client.get(Uri.https(host, '/1/validate-token'), headers: _headers(token)).timeout(const Duration(seconds: 15));
+      response = await _client
+          .get(Uri.https(host, '/1/validate-token'), headers: _headers(token))
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       throw ScrobbleException('$e', retry: true);
     }
     final data = _json(response.body);
-    if (response.statusCode == 200 && data['valid'] == true && data['user_name'] is String) return data['user_name'] as String;
-    if (response.statusCode == 200 || response.statusCode == 401) throw const ScrobbleException('The token was not accepted', badToken: true);
-    throw ScrobbleException('ListenBrainz HTTP ${response.statusCode}', retry: response.statusCode == 429 || response.statusCode >= 500);
+    if (response.statusCode == 200 && data['valid'] == true && data['user_name'] is String) {
+      return data['user_name'] as String;
+    }
+    if (response.statusCode == 200 || response.statusCode == 401) {
+      throw const ScrobbleException('The token was not accepted', badToken: true);
+    }
+    throw ScrobbleException('ListenBrainz HTTP ${response.statusCode}',
+        retry: response.statusCode == 429 || response.statusCode >= 500);
   }
 
   /// Sends [listens] as [type]: playing_now, single or import.
@@ -152,16 +191,19 @@ class ListenBrainzApi {
     final http.Response response;
     try {
       response = await _client
-          .post(Uri.https(host, '/1/submit-listens'), headers: _headers(token), body: jsonEncode({'listen_type': type, 'payload': listens}))
+          .post(Uri.https(host, '/1/submit-listens'),
+              headers: _headers(token), body: jsonEncode({'listen_type': type, 'payload': listens}))
           .timeout(const Duration(seconds: 20));
     } catch (e) {
       throw ScrobbleException('$e', retry: true);
     }
     if (response.statusCode == 200) return;
     final reason = _json(response.body)['error'];
-    final message = 'ListenBrainz HTTP ${response.statusCode}${reason is String ? ': $reason' : ''}';
+    final message =
+        'ListenBrainz HTTP ${response.statusCode}${reason is String ? ': $reason' : ''}';
     if (response.statusCode == 401) throw ScrobbleException(message, badToken: true);
-    throw ScrobbleException(message, retry: response.statusCode == 429 || response.statusCode >= 500);
+    throw ScrobbleException(message,
+        retry: response.statusCode == 429 || response.statusCode >= 500);
   }
 
   static Map<String, dynamic> _json(String body) {
@@ -211,6 +253,7 @@ class Scrobbler {
 
   String? _token;
   String? user;
+
   /// Set when ListenBrainz refused the token after it was saved.
   bool tokenRefused = false;
   final _queue = <Map<String, dynamic>>[];
@@ -294,7 +337,11 @@ class Scrobbler {
     if (_track != track) _track = track;
     final length = track.length;
     // Looped or played again from the start after nearly finishing: a new listen.
-    if (length != null && position < const Duration(seconds: 3) && _lastPosition > length - const Duration(seconds: 10)) _restart();
+    if (length != null &&
+        position < const Duration(seconds: 3) &&
+        _lastPosition > length - const Duration(seconds: 10)) {
+      _restart();
+    }
     _lastPosition = position;
     final now = _clock();
     final last = _tick;

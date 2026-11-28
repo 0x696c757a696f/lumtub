@@ -9,7 +9,9 @@ extension SearchActions on AppController {
     if (asUrl != null) {
       // A link names no video: its title and channel are asked first, so
       // the watch page, the history and the home page show them, not the id.
-      final known = [...history, if (playing case final p?) p].where((item) => item.id == asUrl && !isLinkPlaceholder(item)).firstOrNull;
+      final known = [...history, if (playing case final p?) p]
+          .where((item) => item.id == asUrl && !isLinkPlaceholder(item))
+          .firstOrNull;
       await play(known ?? await linkVideo(_http, asUrl) ?? linkPlaceholder(asUrl));
       return;
     }
@@ -34,7 +36,8 @@ extension SearchActions on AppController {
         }
         return;
       case PlaylistLink(:final id):
-        openYoutubePlaylist(await linkPlaylist(_http, id) ?? PlaylistResult(id: id, title: tr('Playlist')));
+        openYoutubePlaylist(
+            await linkPlaylist(_http, id) ?? PlaylistResult(id: id, title: tr('Playlist')));
         return;
       case null:
     }
@@ -47,7 +50,8 @@ extension SearchActions on AppController {
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory && !incognito) unawaited(searchHistory?.add(query));
-    final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
+    final sp =
+        searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
       if (keep) {
@@ -59,7 +63,8 @@ extension SearchActions on AppController {
       _query = query;
       searchFilter = chosen;
       searchResults?.dispose();
-      searchResults = VideoListLoader(() => sp == null ? repository.search(query) : repository.search(query, sp: sp))
+      searchResults = VideoListLoader(
+          () => sp == null ? repository.search(query) : repository.search(query, sp: sp))
         ..addListener(_passOn('search'))
         ..loadMore();
     });
@@ -82,34 +87,54 @@ extension SearchActions on AppController {
 
   /// Videos of [items] that pass the privacy and content filters. The
   /// subscriptions feed is filtered only when [AppPreferences.filterSubscriptions].
-  List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false, bool search = false}) {
+  List<VideoItem> visible(List<VideoItem> items,
+      {bool subscriptions = false, bool search = false}) {
     final prefs = preferences;
     // Pages filter their lists on every rebuild, and a feed runs to a
     // thousand items: the answer is kept while the list and the preferences
     // stay. Hiding watched videos also follows which videos are finished.
     final ai = _aiFilter;
-    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null, ai?.version);
+    final key = (
+      prefs,
+      subscriptions,
+      search,
+      search ? _query : null,
+      prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null,
+      ai?.version
+    );
     if (_visible[items] case (final known, final kept) when known == key) return kept;
     var kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
     // Subscribed channels are the viewer's own choice.
     if (ai != null && ai.mode != AiFilterMode.off && !subscriptions) {
-      bool followed(VideoItem item) => item.channelId != null && (library?.isFollowing(item.channelId!) ?? false);
-      kept = [for (final item in kept) if (followed(item) || !ai.hides(item)) item];
+      bool followed(VideoItem item) =>
+          item.channelId != null && (library?.isFollowing(item.channelId!) ?? false);
+      kept = [
+        for (final item in kept)
+          if (followed(item) || !ai.hides(item)) item
+      ];
       ai.check(kept.where((item) => !followed(item)));
     }
     _visible[items] = (key, kept);
     return kept;
   }
 
-  List<VideoItem> _filter(List<VideoItem> items, AppPreferences prefs, {required bool subscriptions, required bool search}) {
-    if (subscriptions && !prefs.filterSubscriptions) return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
+  List<VideoItem> _filter(List<VideoItem> items, AppPreferences prefs,
+      {required bool subscriptions, required bool search}) {
+    if (subscriptions && !prefs.filterSubscriptions) {
+      return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
+    }
     final library = this.library;
     // Blocked groups show in a search only for their channel's exact name,
     // channels not to recommend in any search; followed channels are the
     // user's choice and stay.
     bool hidden(VideoItem item) =>
         !subscriptions &&
-        ((prefs.blocksGroup(item) && !(search && isExactName(item.channel, _query))) || (!search && prefs.isUnrecommended(item.channelId)));
-    return items.where((item) => !hidden(item) && prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)).toList();
+        ((prefs.blocksGroup(item) && !(search && isExactName(item.channel, _query))) ||
+            (!search && prefs.isUnrecommended(item.channelId)));
+    return items
+        .where((item) =>
+            !hidden(item) &&
+            prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false))
+        .toList();
   }
 }

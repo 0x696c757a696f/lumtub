@@ -34,7 +34,8 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
   }
 
   Future<void> _add(PlayerAction action) async {
-    final combo = await showDialog<KeyCombo>(context: context, builder: (context) => const _KeyCapture());
+    final combo =
+        await showDialog<KeyCombo>(context: context, builder: (context) => const _KeyCapture());
     if (combo == null || !mounted) return;
     final prefs = _controller.preferences;
     final now = shortcutKeys(prefs.shortcutKeys);
@@ -42,7 +43,9 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
     final from = actionOfKey(now, combo, page: action.page);
     _save(
       withShortcutKeys(prefs.shortcutKeys, action, [...now[action]!, combo]),
-      from == null ? null : tr('{0} was taken from "{1}"', [combo.label, shortcutActionLabel(from, prefs)]),
+      from == null
+          ? null
+          : tr('{0} was taken from "{1}"', [combo.label, shortcutActionLabel(from, prefs)]),
     );
   }
 
@@ -59,44 +62,72 @@ class _ShortcutSettingsState extends State<_ShortcutSettings> {
             title: Text(tr('Customize shortcuts')),
             content: SizedBox(
               width: 520,
-              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text(tr('0-9 and the media keys stay as they are.'), style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
-                if (_note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_note!, style: TextStyle(color: colors.primary, fontSize: 12))),
-                const SizedBox(height: 8),
-                for (final page in [false, true]) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 4),
-                    child: Text(page ? tr('Every page') : tr('Player'), style: Theme.of(context).textTheme.titleSmall),
-                  ),
-                  for (final action in PlayerAction.values.where((a) => a.page == page))
-                  Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(children: [
-                        Expanded(child: Text(shortcutActionLabel(action, prefs))),
-                        Flexible(child: Wrap(spacing: 4, runSpacing: 4, alignment: WrapAlignment.end, children: [
-                          for (final combo in keys[action]!)
-                            InputChip(
-                              label: Text(combo.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(tr('0-9 and the media keys stay as they are.'),
+                        style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
+                    if (_note != null)
+                      Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child:
+                              Text(_note!, style: TextStyle(color: colors.primary, fontSize: 12))),
+                    const SizedBox(height: 8),
+                    for (final page in [false, true]) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12, bottom: 4),
+                        child: Text(page ? tr('Every page') : tr('Player'),
+                            style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      for (final action in PlayerAction.values.where((a) => a.page == page))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(children: [
+                            Expanded(child: Text(shortcutActionLabel(action, prefs))),
+                            Flexible(
+                                child: Wrap(
+                                    spacing: 4,
+                                    runSpacing: 4,
+                                    alignment: WrapAlignment.end,
+                                    children: [
+                                  for (final combo in keys[action]!)
+                                    InputChip(
+                                      label: Text(combo.label,
+                                          style: const TextStyle(
+                                              fontSize: 12, fontWeight: FontWeight.w600)),
+                                      visualDensity: VisualDensity.compact,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      deleteButtonTooltipMessage: tr('Remove'),
+                                      onDeleted: () =>
+                                          _save(withShortcutKeys(prefs.shortcutKeys, action, [
+                                        for (final k in keys[action]!)
+                                          if (k != combo) k
+                                      ])),
+                                    ),
+                                ])),
+                            IconButton(
+                                tooltip: tr('Add a key'),
+                                visualDensity: VisualDensity.compact,
+                                icon: Icon(AppIcons.plus, size: 16),
+                                onPressed: () => _add(action)),
+                            IconButton(
+                              tooltip: tr('Reset'),
                               visualDensity: VisualDensity.compact,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              deleteButtonTooltipMessage: tr('Remove'),
-                              onDeleted: () => _save(withShortcutKeys(prefs.shortcutKeys, action, [for (final k in keys[action]!) if (k != combo) k])),
+                              icon: Icon(AppIcons.arrowCounterClockwise, size: 16),
+                              onPressed: _same(keys[action]!, defaults[action]!)
+                                  ? null
+                                  : () => _save(resetShortcutKeys(prefs.shortcutKeys, action)),
                             ),
-                        ])),
-                        IconButton(tooltip: tr('Add a key'), visualDensity: VisualDensity.compact, icon: Icon(AppIcons.plus, size: 16), onPressed: () => _add(action)),
-                        IconButton(
-                          tooltip: tr('Reset'),
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(AppIcons.arrowCounterClockwise, size: 16),
-                          onPressed: _same(keys[action]!, defaults[action]!) ? null : () => _save(resetShortcutKeys(prefs.shortcutKeys, action)),
+                          ]),
                         ),
-                      ]),
-                    ),
-                ],
-              ]),
+                    ],
+                  ]),
             ),
             actions: [
-              TextButton(onPressed: prefs.shortcutKeys.isEmpty ? null : () => _save(const {}), child: Text(tr('Reset all'))),
+              TextButton(
+                  onPressed: prefs.shortcutKeys.isEmpty ? null : () => _save(const {}),
+                  child: Text(tr('Reset all'))),
               FilledButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
             ],
           );
@@ -136,7 +167,9 @@ class _KeyCaptureState extends State<_KeyCapture> {
         onKeyEvent: _onKey,
         child: AlertDialog(
           title: Text(tr('Press a key')),
-          content: Text(_fixed ? tr('0-9 and the media keys stay as they are; press another key.') : tr('Press the key or key combination to use.')),
+          content: Text(_fixed
+              ? tr('0-9 and the media keys stay as they are; press another key.')
+              : tr('Press the key or key combination to use.')),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel')))],
         ),
       );

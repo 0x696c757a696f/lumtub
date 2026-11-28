@@ -3,10 +3,15 @@ import 'package:lumtub/ui/edge_swipe_back.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  Future<int> swipe(WidgetTester tester, {required Offset from, required double by, bool canGoBack = true}) async {
+  Future<int> swipe(WidgetTester tester,
+      {required Offset from, required double by, bool canGoBack = true}) async {
     var backs = 0;
     await tester.pumpWidget(MaterialApp(
-      home: EdgeSwipeBack(enabled: true, canGoBack: () => canGoBack, onBack: () => backs++, child: const SizedBox.expand()),
+      home: EdgeSwipeBack(
+          enabled: true,
+          canGoBack: () => canGoBack,
+          onBack: () => backs++,
+          child: const SizedBox.expand()),
     ));
     // Slow, so only the distance decides.
     await tester.timedDragFrom(from, Offset(by, 0), const Duration(seconds: 1));

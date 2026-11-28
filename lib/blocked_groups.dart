@@ -23,9 +23,11 @@ class BlockLists {
   static final BlockLists instance = _read();
 
   final List<BlockedGroup> all;
+
   /// When the lists were last changed, in seconds since 1970; 0 when not
   /// known.
   final int version;
+
   /// Whether they came from a download rather than this build.
   final bool downloaded;
 
@@ -53,7 +55,10 @@ class BlockLists {
     return [for (var i = 0; i < hex.length; i += 2) int.parse(hex.substring(i, i + 2), radix: 16)];
   }
 
-  List<BlockedGroup> inCategory(String category) => [for (final list in all) if (list.categories.contains(category)) list];
+  List<BlockedGroup> inCategory(String category) => [
+        for (final list in all)
+          if (list.categories.contains(category)) list
+      ];
 }
 
 /// Movements that governments or the mainstream churches have called
@@ -111,18 +116,23 @@ class BlockedGroup {
   /// Saved in the preferences when the user ticks or unticks it: the list
   /// file's id (older names are carried over by block_list_renames.dart).
   final String name;
+
   /// The list file's id.
   final String id;
   final String _label;
   String get label => tr(_label);
   final List<String> categories;
+
   /// hide, quiet, demote or label.
   final String action;
+
   /// On for a new install (only safety lists may be).
   final bool defaultOn;
+
   /// Ticked when its category is turned on; `suggested: no` in its file
   /// leaves it for the user to tick.
   final bool onByDefault;
+
   /// How the group's members relate to a government, shown in settings.
   final String? note;
   final List<BlockEntry> entries;
@@ -132,6 +142,7 @@ class BlockedGroup {
 enum BlockKind {
   /// A channel's name, or the start of it ("RT Documentary" for RT).
   channel('Channel names'),
+
   /// A channel's whole name and nothing longer.
   exact('Whole channel name'),
   handle('@handles'),
@@ -144,7 +155,12 @@ enum BlockKind {
 
 /// One record of a block list: a channel by its names, @handles and ids.
 class BlockEntry {
-  const BlockEntry(this.group, this.kind, this.forms, {required this.key, this.prefixes = const [], this.names = const [], this.handles = const [], this.ids = const []});
+  const BlockEntry(this.group, this.kind, this.forms,
+      {required this.key,
+      this.prefixes = const [],
+      this.names = const [],
+      this.handles = const [],
+      this.ids = const []});
 
   factory BlockEntry.fromRecord(String group, String list, Map<String, dynamic> record) {
     List<String> strings(String key) => (record[key] as List<dynamic>?)?.cast<String>() ?? const [];
@@ -160,7 +176,12 @@ class BlockEntry {
     return BlockEntry(
       group,
       kind,
-      [...forms, if (kind != BlockKind.exact) ...names, if (kind != BlockKind.handle) ...handles, if (kind != BlockKind.id) ...ids],
+      [
+        ...forms,
+        if (kind != BlockKind.exact) ...names,
+        if (kind != BlockKind.handle) ...handles,
+        if (kind != BlockKind.id) ...ids
+      ],
       key: '$list/${record['slug']}',
       prefixes: prefixes,
       names: names,
@@ -171,9 +192,11 @@ class BlockEntry {
 
   final String group;
   final BlockKind kind;
+
   /// Its spellings, the first shown.
   final List<String> forms;
   String get label => forms.first;
+
   /// Saved in AppPreferences.allowedEntries when the user unticks it.
   final String key;
   final List<String> prefixes;
@@ -186,7 +209,8 @@ class BlockEntry {
 /// and entries the user unticked. Built once per preferences; the matching
 /// is done by lumtub_core (native/lumtub_core/src/filter.rs).
 class BlockMatcher implements Finalizable {
-  factory BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
+  factory BlockMatcher(List<BlockedGroup> groups,
+      {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
     final channels = <String>{}, exact = <String>{}, handles = <String>{}, ids = <String>{};
     for (final group in groups) {
       if (allowedGroups.contains(group.name)) continue;
@@ -200,7 +224,12 @@ class BlockMatcher implements Finalizable {
     }
     final core = NativeCore.instance;
     if (core == null) return BlockMatcher._(null, nullptr);
-    final json = jsonEncode({'channels': channels.toList(), 'exact': exact.toList(), 'handles': handles.toList(), 'ids': ids.toList()});
+    final json = jsonEncode({
+      'channels': channels.toList(),
+      'exact': exact.toList(),
+      'handles': handles.toList(),
+      'ids': ids.toList()
+    });
     final handle = core.withText(json, core.blocksNew);
     final matcher = BlockMatcher._(core, handle);
     if (handle != nullptr) core.blocksFinalizer.attach(matcher, handle.cast());

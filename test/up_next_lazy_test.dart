@@ -17,7 +17,15 @@ void main() {
     tester.view.physicalSize = const Size(400, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final videos = [for (var i = 0; i < 200; i++) VideoItem(id: 'video${i.toString().padLeft(6, '0')}', title: 'Video $i', channel: 'C', url: 'u$i', duration: 60)];
+    final videos = [
+      for (var i = 0; i < 200; i++)
+        VideoItem(
+            id: 'video${i.toString().padLeft(6, '0')}',
+            title: 'Video $i',
+            channel: 'C',
+            url: 'u$i',
+            duration: 60)
+    ];
     final controller = AppController();
     controller.queue = videos;
     controller.playing = videos.first;
@@ -28,11 +36,21 @@ void main() {
     expect(built, lessThan(30));
   });
 
-  testWidgets('a long playlist builds only the tiles on screen, the playing one marked in either order', (tester) async {
+  testWidgets(
+      'a long playlist builds only the tiles on screen, the playing one marked in either order',
+      (tester) async {
     tester.view.physicalSize = const Size(400, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final videos = [for (var i = 0; i < 3000; i++) VideoItem(id: 'video${i.toString().padLeft(6, '0')}', title: 'Video $i', channel: 'C', url: 'u$i', duration: 60)];
+    final videos = [
+      for (var i = 0; i < 3000; i++)
+        VideoItem(
+            id: 'video${i.toString().padLeft(6, '0')}',
+            title: 'Video $i',
+            channel: 'C',
+            url: 'u$i',
+            duration: 60)
+    ];
     final controller = AppController();
     controller.playingList = PlayingList(id: 'PL1', title: 'Long list', items: videos);
     controller.playing = videos[2];
@@ -49,8 +67,9 @@ void main() {
     expect(find.text('Video 2999'), findsOneWidget, reason: 'the last video plays first');
   });
 
-    testWidgets('a blurred translation is revealed by focus and toggled by Enter', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: TranslationView(style: TranslationStyle.blur, child: Text('hello')))));
+  testWidgets('a blurred translation is revealed by focus and toggled by Enter', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(body: TranslationView(style: TranslationStyle.blur, child: Text('hello')))));
     bool blurred() => tester.widget<ImageFiltered>(find.byType(ImageFiltered)).enabled;
     expect(blurred(), isTrue);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);

@@ -21,8 +21,20 @@ import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:material_ui/material_ui.dart';
 
-const _video = VideoItem(id: 'abcdefghijk', title: 'How lighthouses are built', channel: 'Coast Stories', url: 'u', duration: 185, viewCount: 12000);
-const _live = VideoItem(id: 'live0000000', title: 'Harbour camera', channel: 'Port Authority', url: 'u', liveStatus: 'is_live', membersOnly: true);
+const _video = VideoItem(
+    id: 'abcdefghijk',
+    title: 'How lighthouses are built',
+    channel: 'Coast Stories',
+    url: 'u',
+    duration: 185,
+    viewCount: 12000);
+const _live = VideoItem(
+    id: 'live0000000',
+    title: 'Harbour camera',
+    channel: 'Port Authority',
+    url: 'u',
+    liveStatus: 'is_live',
+    membersOnly: true);
 
 void main() {
   setUpAll(loadTranslations);
@@ -32,17 +44,30 @@ void main() {
     debugTouchFirst = null;
   });
 
-  Widget host(Widget child, {double scale = 1, Size size = const Size(1280, 800), AppController? controller}) => MaterialApp(
+  Widget host(Widget child,
+          {double scale = 1, Size size = const Size(1280, 800), AppController? controller}) =>
+      MaterialApp(
         theme: buildAppTheme(Colors.blue, Brightness.light),
-        builder: (context, page) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: page!),
+        builder: (context, page) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+            child: page!),
         home: Scaffold(body: VideoActions(controller: controller ?? AppController(), child: child)),
       );
 
   testWidgets('a video card is one stop that says what the eye reads on it', (tester) async {
     final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(host(Align(alignment: Alignment.topLeft, child: SizedBox(width: 320, height: 300, child: VideoCard(item: _video, onOpen: () {}, reason: 'Popular')))));
-    final data = tester.getSemantics(find.bySemanticsLabel(RegExp('^How lighthouses'))).getSemanticsData();
-    expect(data.label, allOf(contains('How lighthouses are built'), contains('Coast Stories'), contains('Length 3:05'), contains('views')));
+    await tester.pumpWidget(host(Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+            width: 320,
+            height: 300,
+            child: VideoCard(item: _video, onOpen: () {}, reason: 'Popular')))));
+    final data =
+        tester.getSemantics(find.bySemanticsLabel(RegExp('^How lighthouses'))).getSemanticsData();
+    expect(
+        data.label,
+        allOf(contains('How lighthouses are built'), contains('Coast Stories'),
+            contains('Length 3:05'), contains('views')));
     expect(data.hasAction(SemanticsAction.tap), isTrue);
     expect(data.hasAction(SemanticsAction.longPress), isTrue);
     expect(data.customSemanticsActionIds, isNotEmpty, reason: 'the menu is offered as an action');
@@ -53,7 +78,9 @@ void main() {
 
   testWidgets('a live members-only card says so in words, not only in colour', (tester) async {
     final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(host(Align(alignment: Alignment.topLeft, child: SizedBox(width: 320, height: 300, child: VideoCard(item: _live, onOpen: () {})))));
+    await tester.pumpWidget(host(Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(width: 320, height: 300, child: VideoCard(item: _live, onOpen: () {})))));
     final label = tester.getSemantics(find.bySemanticsLabel(RegExp('^Harbour camera'))).label;
     expect(label, allOf(contains('Live now'), contains('Members only')));
     semantics.dispose();
@@ -65,13 +92,22 @@ void main() {
       VideoRow(item: _video, onOpen: () {}, layout: VideoLayout.list),
       SizedBox(width: 400, child: CompactVideoTile(item: _video, onOpen: () {})),
     ])));
-    expect(find.bySemanticsLabel(RegExp('^How lighthouses are built, Coast Stories')), findsNWidgets(2));
+    expect(find.bySemanticsLabel(RegExp('^How lighthouses are built, Coast Stories')),
+        findsNWidgets(2));
     semantics.dispose();
   });
 
   for (final layout in VideoLayout.values) {
-    for (final (width, height, scale, tv) in [(360.0, 780.0, 2.0, false), (800.0, 1280.0, 2.0, false), (960.0, 540.0, 2.0, true), (1280.0, 800.0, 2.0, false), (1920.0, 1080.0, 2.0, false), (1280.0, 800.0, 1.0, false)]) {
-      testWidgets('video ${layout.name} at text ×$scale, $width wide${tv ? ' on a TV' : ''}, fits', (tester) async {
+    for (final (width, height, scale, tv) in [
+      (360.0, 780.0, 2.0, false),
+      (800.0, 1280.0, 2.0, false),
+      (960.0, 540.0, 2.0, true),
+      (1280.0, 800.0, 2.0, false),
+      (1920.0, 1080.0, 2.0, false),
+      (1280.0, 800.0, 1.0, false)
+    ]) {
+      testWidgets('video ${layout.name} at text ×$scale, $width wide${tv ? ' on a TV' : ''}, fits',
+          (tester) async {
         videoLayout = layout;
         Device.tv = tv;
         addTearDown(() => Device.tv = false);
@@ -80,7 +116,13 @@ void main() {
         addTearDown(tester.view.reset);
         await tester.pumpWidget(host(
           scale: scale,
-          CustomScrollView(slivers: [SliverVideoGrid(items: const [_video, _live, _video, _live], onOpen: (_) {}, watched: const {'abcdefghijk': 'yesterday'}, reasons: const {'live0000000': 'Popular'})]),
+          CustomScrollView(slivers: [
+            SliverVideoGrid(
+                items: const [_video, _live, _video, _live],
+                onOpen: (_) {},
+                watched: const {'abcdefghijk': 'yesterday'},
+                reasons: const {'live0000000': 'Popular'})
+          ]),
         ));
         expect(tester.takeException(), isNull);
       });
@@ -99,7 +141,8 @@ void main() {
   };
   for (final MapEntry(key: name, value: page) in pages.entries) {
     for (final brightness in Brightness.values) {
-      testWidgets('the $name page names its buttons and keeps text readable, ${brightness.name}', (tester) async {
+      testWidgets('the $name page names its buttons and keeps text readable, ${brightness.name}',
+          (tester) async {
         final semantics = tester.ensureSemantics();
         tester.view.physicalSize = const Size(1280, 900);
         tester.view.devicePixelRatio = 1;
@@ -124,13 +167,16 @@ void main() {
     }
   }
 
-  testWidgets('video cards meet the label guideline and, on touch, the tap target ones', (tester) async {
+  testWidgets('video cards meet the label guideline and, on touch, the tap target ones',
+      (tester) async {
     final semantics = tester.ensureSemantics();
     debugTouchFirst = true;
     tester.view.physicalSize = const Size(390, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(host(CustomScrollView(slivers: [SliverVideoGrid(items: const [_video, _live], onOpen: (_) {})])));
+    await tester.pumpWidget(host(CustomScrollView(slivers: [
+      SliverVideoGrid(items: const [_video, _live], onOpen: (_) {})
+    ])));
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));

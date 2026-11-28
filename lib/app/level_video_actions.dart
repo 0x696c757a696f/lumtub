@@ -5,16 +5,21 @@ part of 'app_controller.dart';
 /// disposes of them.
 extension LevelVideoActions on AppController {
   /// The dictionary [language]'s words are cut and counted with.
-  DictionaryPack? levelDictionary(String language) => DictionaryPack.values.where((p) => p.language == language).firstOrNull;
+  DictionaryPack? levelDictionary(String language) =>
+      DictionaryPack.values.where((p) => p.language == language).firstOrNull;
 
   /// Why videos spoken in [language] cannot be measured now; null when
   /// they can. Without the pack (trial used up) they still can, a few a
   /// day ([LevelVideos.freeLeft]), once its dictionary is here.
   LevelVideosBlock? levelVideosBlock(String language) {
-    if (!levelVideosAvailable || _repository == null || _videoLanguages == null) return LevelVideosBlock.unavailable;
+    if (!levelVideosAvailable || _repository == null || _videoLanguages == null) {
+      return LevelVideosBlock.unavailable;
+    }
     if (!learningOn) return LevelVideosBlock.learningOff;
     final pack = levelDictionary(language);
-    if (pack == null || learning.stateOf(pack) != PackState.ready || learning.book == null) return LevelVideosBlock.dictionary;
+    if (pack == null || learning.stateOf(pack) != PackState.ready || learning.book == null) {
+      return LevelVideosBlock.dictionary;
+    }
     return null;
   }
 
@@ -23,8 +28,12 @@ extension LevelVideoActions on AppController {
   ExploreLanguage get interfaceExploreLanguage {
     final hl = youtubeHl;
     final base = hl.split('-').first;
-    return ExploreLanguage.values.where((l) => l != ExploreLanguage.any && l.youtubeHl == hl).firstOrNull ??
-        ExploreLanguage.values.where((l) => l != ExploreLanguage.any && (l.youtubeHl == base || l.code == base)).firstOrNull ??
+    return ExploreLanguage.values
+            .where((l) => l != ExploreLanguage.any && l.youtubeHl == hl)
+            .firstOrNull ??
+        ExploreLanguage.values
+            .where((l) => l != ExploreLanguage.any && (l.youtubeHl == base || l.code == base))
+            .firstOrNull ??
         ExploreLanguage.en;
   }
 
@@ -45,7 +54,8 @@ extension LevelVideoActions on AppController {
   Listing _withoutPortraits(Listing listing) {
     final thumbnails = thumbnailDirectory;
     if (preferences.feedVertical != FeedLevel.drop || thumbnails == null) return listing;
-    return listing.refined((lines) => PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
+    return listing.refined((lines) =>
+        PortraitThumbnails.drop(lines, (id) => PortraitThumbnails.check(id, thumbnails)));
   }
 
   /// Videos spoken in [language], of [kind] graded or native. Measured by
@@ -58,7 +68,9 @@ extension LevelVideoActions on AppController {
   /// Without the pack only [LevelVideos.freeLeft] new native videos are
   /// shown. [checked] hears how far the search got.
   VideoListLoader? spokenVideoList(String language, LevelVideoKind kind,
-      {VideoLevel band = VideoLevel.right, int rounds = 1, void Function(LevelCheck check)? checked}) {
+      {VideoLevel band = VideoLevel.right,
+      int rounds = 1,
+      void Function(LevelCheck check)? checked}) {
     assert(kind != LevelVideoKind.lessons);
     final repository = _repository;
     final languages = _videoLanguages;
@@ -72,21 +84,34 @@ extension LevelVideoActions on AppController {
     final picked = preferences.exploreRegion.gl;
     final region = picked.isNotEmpty ? picked : spoken.homeCountry;
     final tier = levelTierOf(language, learning.levelIn(language));
-    final steps = kind == LevelVideoKind.graded ? [gradedLevelQueries(language, tier)] : nativeLevelQueries(language, tier);
+    final steps = kind == LevelVideoKind.graded
+        ? [gradedLevelQueries(language, tier)]
+        : nativeLevelQueries(language, tier);
     final known = book == null ? null : knownWordsOf(book);
     final sp = searchParams(type: SearchFilter.videos)!;
     final free = measure && kind == LevelVideoKind.native && !learning.unlocked;
-    var total = (asked: 0, measured: 0, noSubtitles: 0, failed: 0, skipped: 0, budgetSpent: false, refused: false);
+    var total = (
+      asked: 0,
+      measured: 0,
+      noSubtitles: 0,
+      failed: 0,
+      skipped: 0,
+      budgetSpent: false,
+      refused: false
+    );
 
     Listing step(List<String> queries) {
       final anchor = spoken.searchAnchor;
       final words = [for (final q in queries) anchor == null ? q : '$q $anchor'];
-      logInfo('Level videos (${kind.name}) in ${spoken.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl $hl, gl ${region ?? '-'})');
-      final listing = _withoutPortraits(repository.searchMix(words, sp: sp, region: region, hl: hl));
+      logInfo(
+          'Level videos (${kind.name}) in ${spoken.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl $hl, gl ${region ?? '-'})');
+      final listing =
+          _withoutPortraits(repository.searchMix(words, sp: sp, region: region, hl: hl));
       if (languages == null) return listing;
       // Only videos heard in the language: a translated title, or
       // subtitles in it on a video spoken in another, never let one in.
-      Stream<String> heard(Stream<String> lines) => languages.only(lines, spoken, listedInLanguage: true);
+      Stream<String> heard(Stream<String> lines) =>
+          languages.only(lines, spoken, listedInLanguage: true);
       if (!measure) return listing.refined(heard);
       return listing.refined((lines) => levelVideos.measured(
             heard(lines),
@@ -120,7 +145,9 @@ extension LevelVideoActions on AppController {
       () {
         var listing = step(steps.first);
         for (final next in steps.skip(1)) {
-          listing = listing.followedBy(() => step(next), switched: () => logInfo('Level videos in ${spoken.name}: ran out, searching the next words'));
+          listing = listing.followedBy(() => step(next),
+              switched: () =>
+                  logInfo('Level videos in ${spoken.name}: ran out, searching the next words'));
         }
         return listing;
       },
@@ -133,13 +160,16 @@ extension LevelVideoActions on AppController {
       rank: measure
           ? (item) => switch (reading(item)) {
                 final r? => levelVideoScore(kind == LevelVideoKind.graded ? null : band, r,
-                    seconds: item.duration, tier: tier, channelFit: levelVideos.channelFit(language, item.channelId)),
+                    seconds: item.duration,
+                    tier: tier,
+                    channelFit: levelVideos.channelFit(language, item.channelId)),
                 null => -1,
               }
           : null,
       fill: 8,
       readAhead: languages == null,
-      name: 'Level videos ${kind.name} ${spoken.name}${kind == LevelVideoKind.native ? ' ${band.name}' : ''}',
+      name:
+          'Level videos ${kind.name} ${spoken.name}${kind == LevelVideoKind.native ? ' ${band.name}' : ''}',
     )..loadMore();
   }
 
@@ -163,15 +193,19 @@ extension LevelVideoActions on AppController {
         // words, phrase by phrase and kept on disk; the level's own name
         // (N5, HSK 3) is added untranslated.
         final asked = [for (final q in queries) q.words];
-        final translated = queries.every((q) => !q.translated) ? asked : await _searchWordsIn(asked, explainedIn);
+        final translated =
+            queries.every((q) => !q.translated) ? asked : await _searchWordsIn(asked, explainedIn);
         final anchor = explainedIn.searchAnchor;
         final words = [
           for (final (i, q) in queries.indexed)
-            if (q.withTag(translated[i]) case final w) anchor == null || w.contains(anchor) ? w : '$w $anchor',
+            if (q.withTag(translated[i]) case final w)
+              anchor == null || w.contains(anchor) ? w : '$w $anchor',
         ];
-        logInfo('Lessons of $language in ${explainedIn.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl $hl, gl ${region ?? '-'})');
+        logInfo(
+            'Lessons of $language in ${explainedIn.name}: searching ${words.map((w) => '"$w"').join(', ')} (hl $hl, gl ${region ?? '-'})');
         return repository.searchMix(words, sp: sp, region: region, hl: hl);
-      })).refined((lines) => check ? languages.only(lines, explainedIn, listedInLanguage: true) : lines),
+      })).refined(
+          (lines) => check ? languages.only(lines, explainedIn, listedInLanguage: true) : lines),
       where: (item) => _levelVideoShown(item) && (check || explainedIn.matches(item.title)),
       rank: (item) => lessonFit(item.title, tag).toDouble(),
       fill: 8,

@@ -19,9 +19,8 @@ class CacheManager {
   static const downloadFolders = {'temp', 'yt-dlp'};
   final AppDirectories directories;
 
-  Directory rootFor(PlayerSettings settings) => settings.cachePath == null
-      ? directories.cache
-      : Directory(settings.cachePath!);
+  Directory rootFor(PlayerSettings settings) =>
+      settings.cachePath == null ? directories.cache : Directory(settings.cachePath!);
 
   Future<Directory> prepare(PlayerSettings settings) async {
     final root = rootFor(settings);
@@ -87,7 +86,8 @@ class CacheManager {
   /// runs, is skipped rather than stopping the rest. Returns the bytes freed
   /// and how many files were left. Folders named in [keep] are left alone,
   /// as `temp` and `yt-dlp` are while a download uses them.
-  Future<({int freed, int skipped})> clear(PlayerSettings settings, {Set<String> keep = const {}}) async {
+  Future<({int freed, int skipped})> clear(PlayerSettings settings,
+      {Set<String> keep = const {}}) async {
     final root = await prepare(settings);
     var freed = 0;
     var skipped = 0;
@@ -105,7 +105,8 @@ class CacheManager {
           skipped++;
         }
       }
-      final folders = entries.whereType<Directory>().toList()..sort((a, b) => b.path.length.compareTo(a.path.length));
+      final folders = entries.whereType<Directory>().toList()
+        ..sort((a, b) => b.path.length.compareTo(a.path.length));
       for (final folder in folders) {
         try {
           await folder.delete();
@@ -124,15 +125,22 @@ class CacheManager {
   /// emptied. If anything fails, or [commit] throws, the old folders stay as
   /// they were, whatever was already in [to] is restored, and the error is
   /// rethrown.
-  Future<void> migrate(PlayerSettings from, PlayerSettings to, {Future<void> Function()? commit, @visibleForTesting String? tag}) async {
-    if (nested(from, to)) throw FileSystemException('The new cache location is inside the old cache, or the other way round', rootFor(to).path);
+  Future<void> migrate(PlayerSettings from, PlayerSettings to,
+      {Future<void> Function()? commit, @visibleForTesting String? tag}) async {
+    if (nested(from, to)) {
+      throw FileSystemException(
+          'The new cache location is inside the old cache, or the other way round',
+          rootFor(to).path);
+    }
     final oldRoot = await prepare(from);
     final newRoot = await prepare(to);
     tag ??= '${DateTime.now().microsecondsSinceEpoch}';
-    String at(Directory root, String name, [String suffix = '']) => '${root.path}${Platform.pathSeparator}$name$suffix';
+    String at(Directory root, String name, [String suffix = '']) =>
+        '${root.path}${Platform.pathSeparator}$name$suffix';
     final names = [
       for (final name in managedFolders)
-        if (at(oldRoot, name) != at(newRoot, name) && await Directory(at(oldRoot, name)).exists()) name,
+        if (at(oldRoot, name) != at(newRoot, name) && await Directory(at(oldRoot, name)).exists())
+          name,
     ];
     final staged = <String, Directory>{};
     final backups = <String, Directory>{};
@@ -151,7 +159,9 @@ class CacheManager {
         final temp = staged[name] = Directory(at(newRoot, name, '.migrating-$tag'));
         await _copyDirectory(source, temp);
         final (expected, actual) = (await _inventory(source), await _inventory(temp));
-        if (!_sameInventory(expected, actual)) throw FileSystemException('Copied cache does not match the original', source.path);
+        if (!_sameInventory(expected, actual)) {
+          throw FileSystemException('Copied cache does not match the original', source.path);
+        }
       }
       for (final name in names) {
         final destination = Directory(at(newRoot, name));
@@ -172,7 +182,11 @@ class CacheManager {
       for (final name in names) {
         if (!placed.contains(name)) {
           final backup = backups[name];
-          if (backup != null && await backup.exists() && !await Directory(at(newRoot, name)).exists()) await backup.rename(at(newRoot, name));
+          if (backup != null &&
+              await backup.exists() &&
+              !await Directory(at(newRoot, name)).exists()) {
+            await backup.rename(at(newRoot, name));
+          }
         }
         await discard(staged[name] ?? Directory(at(newRoot, name, '.migrating-$tag')));
       }
@@ -195,7 +209,8 @@ class CacheManager {
     return found;
   }
 
-  bool _sameInventory(Map<String, int> a, Map<String, int> b) => a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
+  bool _sameInventory(Map<String, int> a, Map<String, int> b) =>
+      a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 
   Future<void> _copyDirectory(Directory from, Directory to) async {
     await to.create(recursive: true);

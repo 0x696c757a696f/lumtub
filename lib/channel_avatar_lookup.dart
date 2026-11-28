@@ -20,6 +20,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
 
   /// Pictures kept; the oldest go first.
   static const keep = 2000;
+
   /// Lookups at once.
   static const parallel = 2;
 
@@ -55,7 +56,9 @@ class ChannelAvatarLookup extends ChangeNotifier {
         _known.clear();
         for (final entry in saved.entries) {
           final url = ChannelRef.avatarUrl(entry.value);
-          if (ChannelRef.isValidId(entry.key.toString()) && url != null) _known[entry.key.toString()] = url;
+          if (ChannelRef.isValidId(entry.key.toString()) && url != null) {
+            _known[entry.key.toString()] = url;
+          }
         }
         _known
           ..removeWhere((id, _) => found.containsKey(id))

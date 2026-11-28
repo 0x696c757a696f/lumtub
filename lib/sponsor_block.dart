@@ -12,11 +12,14 @@ class SkipSegment {
   final Duration end;
   final String category;
 
-  bool contains(Duration position) => position >= start && position < end - const Duration(milliseconds: 500);
+  bool contains(Duration position) =>
+      position >= start && position < end - const Duration(milliseconds: 500);
 }
 
 /// Labels for the categories Lumtub can skip.
-final sponsorCategories = {for (final entry in sponsorCategoryNames.entries) entry.key: entry.value.$1};
+final sponsorCategories = {
+  for (final entry in sponsorCategoryNames.entries) entry.key: entry.value.$1
+};
 
 /// Looks up skip segments from the public SponsorBlock API.
 ///
@@ -32,7 +35,8 @@ class SponsorBlock {
     return core.take(core.withText(videoId, core.hashPrefix))!;
   }
 
-  static Uri requestUri(String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) =>
+  static Uri requestUri(String videoId,
+          [Set<String> categories = PlayerSettings.defaultSponsorCategories]) =>
       Uri.https('sponsor.ajay.app', '/api/skipSegments/${hashPrefix(videoId)}', {
         'categories': jsonEncode(categories.toList()),
       });
@@ -41,7 +45,8 @@ class SponsorBlock {
   /// downloading it, asks once.
   final _known = <String, List<SkipSegment>>{};
 
-  Future<List<SkipSegment>> segments(String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) async {
+  Future<List<SkipSegment>> segments(String videoId,
+      [Set<String> categories = PlayerSettings.defaultSponsorCategories]) async {
     if (categories.isEmpty || NativeCore.instance == null) return const [];
     final key = '$videoId ${(categories.toList()..sort()).join(',')}';
     if (_known[key] case final known?) return known;
@@ -51,20 +56,24 @@ class SponsorBlock {
   }
 
   Future<List<SkipSegment>> _fetch(String videoId, Set<String> categories) async {
-    final response = await _client.get(requestUri(videoId, categories), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
+    final response = await _client.get(requestUri(videoId, categories),
+        headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
     // 404 means no video with this prefix has segments.
     if (response.statusCode == 404) return const [];
     if (response.statusCode != 200) throw StateError('SponsorBlock HTTP ${response.statusCode}');
     return parse(response.body, videoId, categories);
   }
 
-  static List<SkipSegment> parse(String body, String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) {
+  static List<SkipSegment> parse(String body, String videoId,
+      [Set<String> categories = PlayerSettings.defaultSponsorCategories]) {
     final core = NativeCore.instance;
     if (core == null) return const [];
     final ask = jsonEncode({'answer': body, 'videoId': videoId, 'categories': categories.toList()});
     final answer = jsonDecode(core.take(core.withText(ask, core.sponsorSegments)) ?? '[]') as List;
     return [
-      for (final s in answer.cast<Map<String, dynamic>>()) SkipSegment(Duration(milliseconds: s['start'] as int), Duration(milliseconds: s['end'] as int), s['category'] as String),
+      for (final s in answer.cast<Map<String, dynamic>>())
+        SkipSegment(Duration(milliseconds: s['start'] as int),
+            Duration(milliseconds: s['end'] as int), s['category'] as String),
     ];
   }
 }

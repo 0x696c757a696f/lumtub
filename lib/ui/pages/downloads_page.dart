@@ -19,7 +19,8 @@ import '../theme.dart';
 
 /// Asks what to download [item] as, then queues it; a live stream starts
 /// recording.
-Future<void> showDownloadChoice(BuildContext context, AppController controller, VideoItem item) async {
+Future<void> showDownloadChoice(
+    BuildContext context, AppController controller, VideoItem item) async {
   // A live stream is recorded as it comes, in the best the settings allow.
   if (item.isLive) return controller.download(item, DownloadQuality.best);
   final choice = await showPanel<DownloadChoice>(
@@ -40,7 +41,8 @@ Future<void> showDownloadChoice(BuildContext context, AppController controller, 
 }
 
 /// Runs [save] and says where the file went, with a button to show it.
-Future<void> _saveExtra(BuildContext context, AppController controller, Future<String> Function() save) async {
+Future<void> _saveExtra(
+    BuildContext context, AppController controller, Future<String> Function() save) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
   try {
     final path = await save();
@@ -48,10 +50,15 @@ Future<void> _saveExtra(BuildContext context, AppController controller, Future<S
       content: Text(tr('Saved: {0}', [path.split(Platform.pathSeparator).last])),
       // With an action Flutter keeps a snack bar until it is closed.
       persist: false,
-      action: Platform.isWindows || Platform.isLinux || Platform.isMacOS ? SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
+      action: Platform.isWindows || Platform.isLinux || Platform.isMacOS
+          ? SnackBarAction(
+              label: tr('Open folder'),
+              onPressed: () => unawaited(openInExplorer(path, select: true)))
+          : null,
     ));
   } catch (e) {
-    messenger?.showSnackBar(SnackBar(content: Text(tr('Could not save: {0}', ['$e'.replaceFirst('Bad state: ', '')]))));
+    messenger?.showSnackBar(
+        SnackBar(content: Text(tr('Could not save: {0}', ['$e'.replaceFirst('Bad state: ', '')]))));
   }
 }
 
@@ -70,9 +77,11 @@ Future<void> _chooseSubtitle(BuildContext context, AppController controller, Vid
     messenger?.showSnackBar(SnackBar(content: Text(tr('This video has no subtitles'))));
     return;
   }
-  final picked = await showDialog<(SubtitleOption, bool)>(context: context, builder: (context) => _SubtitleSaveDialog(options: options));
+  final picked = await showDialog<(SubtitleOption, bool)>(
+      context: context, builder: (context) => _SubtitleSaveDialog(options: options));
   if (picked == null || !context.mounted) return;
-  await _saveExtra(context, controller, () => controller.saveSubtitle(item, picked.$1, srt: picked.$2));
+  await _saveExtra(
+      context, controller, () => controller.saveSubtitle(item, picked.$1, srt: picked.$2));
 }
 
 class _SubtitleSaveDialog extends StatefulWidget {
@@ -92,35 +101,45 @@ class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
         title: Text(tr('Download subtitles')),
         content: SizedBox(
           width: dialogWidth(context, 420),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Flexible(
-              child: SingleChildScrollView(
-                child: RadioGroup<SubtitleOption>(
-                  groupValue: _option,
-                  onChanged: (v) => setState(() => _option = v ?? _option),
-                  child: Column(children: [
-                    for (final o in widget.options)
-                      RadioListTile<SubtitleOption>(
-                        dense: true,
-                        value: o,
-                        title: Text(o.kind == SubtitleKind.translated ? tr('{0} (YouTube translation)', [SubtitleOption.languageName(o.language, o.name)]) : o.label),
-                      ),
-                  ]),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: RadioGroup<SubtitleOption>(
+                      groupValue: _option,
+                      onChanged: (v) => setState(() => _option = v ?? _option),
+                      child: Column(children: [
+                        for (final o in widget.options)
+                          RadioListTile<SubtitleOption>(
+                            dense: true,
+                            value: o,
+                            title: Text(o.kind == SubtitleKind.translated
+                                ? tr('{0} (YouTube translation)',
+                                    [SubtitleOption.languageName(o.language, o.name)])
+                                : o.label),
+                          ),
+                      ]),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SegmentedButton<bool>(
-              showSelectedIcon: false,
-              segments: const [ButtonSegment(value: true, label: Text('SRT')), ButtonSegment(value: false, label: Text('WebVTT'))],
-              selected: {_srt},
-              onSelectionChanged: (v) => setState(() => _srt = v.first),
-            ),
-          ]),
+                const SizedBox(height: 12),
+                SegmentedButton<bool>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(value: true, label: Text('SRT')),
+                    ButtonSegment(value: false, label: Text('WebVTT'))
+                  ],
+                  selected: {_srt},
+                  onSelectionChanged: (v) => setState(() => _srt = v.first),
+                ),
+              ]),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          FilledButton(onPressed: () => Navigator.pop(context, (_option, _srt)), child: Text(tr('Save'))),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, (_option, _srt)), child: Text(tr('Save'))),
         ],
       );
 }
@@ -141,7 +160,10 @@ Future<void> openInExplorer(String path, {bool select = false}) async {
 /// same name in the working folder or on PATH is never started instead.
 String _explorer() {
   final root = Platform.environment['SystemRoot'] ?? '';
-  final windows = RegExp(r'^[A-Za-z]:\\[^<>:"/|?*\x00-\x1f]*$').hasMatch(root) && !root.contains('..') ? root : r'C:\Windows';
+  final windows =
+      RegExp(r'^[A-Za-z]:\\[^<>:"/|?*\x00-\x1f]*$').hasMatch(root) && !root.contains('..')
+          ? root
+          : r'C:\Windows';
   return '${windows.endsWith(r'\') ? windows.substring(0, windows.length - 1) : windows}\\explorer.exe';
 }
 
@@ -155,7 +177,9 @@ class DownloadsPage extends StatelessWidget {
     final manager = controller.downloads;
     if (manager == null) return const SizedBox.shrink();
     // Progress ticks reach only this page, not the whole app.
-    return ListenableBuilder(listenable: Listenable.merge([manager, manager.progress]), builder: (context, _) => _page(context, manager));
+    return ListenableBuilder(
+        listenable: Listenable.merge([manager, manager.progress]),
+        builder: (context, _) => _page(context, manager));
   }
 
   Widget _page(BuildContext context, DownloadManager manager) {
@@ -172,11 +196,12 @@ class DownloadsPage extends StatelessWidget {
               label: Text(tr('Change location')),
             ),
             // Android has no file manager to hand the folder to.
-            if (!Platform.isAndroid && !Platform.isIOS) FilledButton.tonalIcon(
-              onPressed: () => unawaited(openInExplorer(manager.directory)),
-              icon: Icon(AppIcons.arrowSquareOut),
-              label: Text(tr('Open folder')),
-            ),
+            if (!Platform.isAndroid && !Platform.isIOS)
+              FilledButton.tonalIcon(
+                onPressed: () => unawaited(openInExplorer(manager.directory)),
+                icon: Icon(AppIcons.arrowSquareOut),
+                label: Text(tr('Open folder')),
+              ),
           ]),
         ),
       ),
@@ -192,13 +217,15 @@ class DownloadsPage extends StatelessWidget {
           child: StatusView(
             icon: AppIcons.arrowCircleDown,
             title: tr('No downloads yet'),
-            message: tr('Choose "Download" in a video\'s menu or on its watch page. The video is saved on this computer and plays offline afterwards.'),
+            message: tr(
+                'Choose "Download" in a video\'s menu or on its watch page. The video is saved on this computer and plays offline afterwards.'),
           ),
         )
       else
         SliverList.builder(
           itemCount: tasks.length,
-          itemBuilder: (context, i) => _DownloadTile(controller: controller, manager: manager, task: tasks[i]),
+          itemBuilder: (context, i) =>
+              _DownloadTile(controller: controller, manager: manager, task: tasks[i]),
         ),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
@@ -211,10 +238,12 @@ class DownloadsPage extends StatelessWidget {
 }
 
 /// "1.2 MB/s", or empty when yt-dlp gave no speed.
-String formatSpeed(double? bytesPerSecond) => bytesPerSecond == null ? '' : '${formatBytes(bytesPerSecond.round())}/s';
+String formatSpeed(double? bytesPerSecond) =>
+    bytesPerSecond == null ? '' : '${formatBytes(bytesPerSecond.round())}/s';
 
 /// "1:05" for [seconds], or empty when unknown.
-String formatEta(int? seconds) => seconds == null ? '' : formatPlaybackTime(Duration(seconds: seconds));
+String formatEta(int? seconds) =>
+    seconds == null ? '' : formatPlaybackTime(Duration(seconds: seconds));
 
 class _DownloadTile extends StatelessWidget {
   const _DownloadTile({required this.controller, required this.manager, required this.task});
@@ -228,7 +257,9 @@ class _DownloadTile extends StatelessWidget {
         return tr('Waiting');
       case DownloadStatus.downloading when task.item.isLive:
         if (task.finishing) return tr('Saving the recording…');
-        return [tr('Recording'), formatBytes(task.downloaded), formatSpeed(task.speed)].where((s) => s.isNotEmpty).join(' · ');
+        return [tr('Recording'), formatBytes(task.downloaded), formatSpeed(task.speed)]
+            .where((s) => s.isNotEmpty)
+            .join(' · ');
       case DownloadStatus.downloading:
         final parts = [
           if (task.fraction != null) '${(task.fraction! * 100).toStringAsFixed(1)}%',
@@ -274,11 +305,14 @@ class _DownloadTile extends StatelessWidget {
 
   Widget _statusText(TextStyle style) {
     final path = task.filePath;
-    if (task.status != DownloadStatus.done || path == null) return Text(_status(), maxLines: 2, overflow: TextOverflow.ellipsis, style: style);
+    if (task.status != DownloadStatus.done || path == null) {
+      return Text(_status(), maxLines: 2, overflow: TextOverflow.ellipsis, style: style);
+    }
     return FutureBuilder<int?>(
       future: _sizeOf(path),
       initialData: _knownSizes[path],
-      builder: (context, size) => Text(_status(size.data), maxLines: 2, overflow: TextOverflow.ellipsis, style: style),
+      builder: (context, size) =>
+          Text(_status(size.data), maxLines: 2, overflow: TextOverflow.ellipsis, style: style),
     );
   }
 
@@ -288,7 +322,8 @@ class _DownloadTile extends StatelessWidget {
     final item = task.item;
     final failed = task.status == DownloadStatus.failed;
     final running = task.status == DownloadStatus.downloading;
-    IconButton button(IconData icon, String tooltip, VoidCallback onPressed) => IconButton(tooltip: tooltip, icon: Icon(icon), onPressed: onPressed);
+    IconButton button(IconData icon, String tooltip, VoidCallback onPressed) =>
+        IconButton(tooltip: tooltip, icon: Icon(icon), onPressed: onPressed);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding, vertical: 4),
       leading: ClipRRect(
@@ -299,7 +334,8 @@ class _DownloadTile extends StatelessWidget {
           child: Image(
             color: context.pictureWarmth,
             colorBlendMode: BlendMode.multiply,
-            image: ResizeImage.resizeIfNeeded((96 * MediaQuery.devicePixelRatioOf(context)).ceil(), null, CachedThumbnail(item.thumbnail, null)),
+            image: ResizeImage.resizeIfNeeded((96 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+                null, CachedThumbnail(item.thumbnail, null)),
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => ColoredBox(color: colors.surfaceContainerHighest),
           ),
@@ -309,27 +345,47 @@ class _DownloadTile extends StatelessWidget {
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _statusText(TextStyle(color: failed ? colors.error : null)),
         if (running || task.status == DownloadStatus.paused)
-          Padding(padding: const EdgeInsets.only(top: 4), child: LinearProgressIndicator(value: task.fraction, minHeight: 3)),
+          Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: LinearProgressIndicator(value: task.fraction, minHeight: 3)),
       ]),
       onTap: task.status == DownloadStatus.done ? () => controller.play(item) : null,
-      trailing: _actions(context, [
-        if (task.active && task.item.isLive && !task.finishing) (AppIcons.stop, tr('Stop recording and save'), () => manager.pause(task.id)),
-        if (task.active && !task.item.isLive) (AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
-        if (task.status == DownloadStatus.paused && !task.item.isLive) (AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
-        if ((task.active || task.status == DownloadStatus.paused) && !task.finishing) (AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
-        if (failed || task.status == DownloadStatus.cancelled) (AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
-        if (task.status == DownloadStatus.done && task.filePath != null && !Platform.isAndroid && !Platform.isIOS)
-          (AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),
-        if (!task.active) (AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
-      ], button),
+      trailing: _actions(
+          context,
+          [
+            if (task.active && task.item.isLive && !task.finishing)
+              (AppIcons.stop, tr('Stop recording and save'), () => manager.pause(task.id)),
+            if (task.active && !task.item.isLive)
+              (AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
+            if (task.status == DownloadStatus.paused && !task.item.isLive)
+              (AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
+            if ((task.active || task.status == DownloadStatus.paused) && !task.finishing)
+              (AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
+            if (failed || task.status == DownloadStatus.cancelled)
+              (AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
+            if (task.status == DownloadStatus.done &&
+                task.filePath != null &&
+                !Platform.isAndroid &&
+                !Platform.isIOS)
+              (
+                AppIcons.folderOpen,
+                tr('Show in folder'),
+                () => unawaited(openInExplorer(task.filePath!, select: true))
+              ),
+            if (!task.active) (AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
+          ],
+          button),
     );
   }
 
   /// The task's buttons; on a phone all but the first go in a menu, so
   /// the title keeps room to be read.
-  Widget _actions(BuildContext context, List<(IconData, String, VoidCallback)> actions, IconButton Function(IconData, String, VoidCallback) button) {
+  Widget _actions(BuildContext context, List<(IconData, String, VoidCallback)> actions,
+      IconButton Function(IconData, String, VoidCallback) button) {
     if (actions.length <= 2 || MediaQuery.sizeOf(context).width >= 600) {
-      return Row(mainAxisSize: MainAxisSize.min, children: [for (final (icon, tooltip, onPressed) in actions) button(icon, tooltip, onPressed)]);
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        for (final (icon, tooltip, onPressed) in actions) button(icon, tooltip, onPressed)
+      ]);
     }
     final (icon, tooltip, onPressed) = actions.first;
     return Row(mainAxisSize: MainAxisSize.min, children: [
@@ -339,7 +395,10 @@ class _DownloadTile extends StatelessWidget {
         onSelected: (action) => action(),
         itemBuilder: (_) => [
           for (final (icon, label, onPressed) in actions.skip(1))
-            PopupMenuItem(value: onPressed, child: Row(children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)])),
+            PopupMenuItem(
+                value: onPressed,
+                child:
+                    Row(children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)])),
         ],
       ),
     ]);
@@ -348,7 +407,9 @@ class _DownloadTile extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context) async {
     // A task nothing was saved for yet goes at once; one with part of a
     // file is asked about, as a mis-tap could lose hours of downloading.
-    if (task.status != DownloadStatus.done && task.downloaded <= 0) return unawaited(manager.remove(task.id, deleteFiles: true));
+    if (task.status != DownloadStatus.done && task.downloaded <= 0) {
+      return unawaited(manager.remove(task.id, deleteFiles: true));
+    }
     final choice = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -356,8 +417,12 @@ class _DownloadTile extends StatelessWidget {
         content: Text(tr('Remove it from the list only, or also delete the video file on disk.')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Remove from list only'))),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete the files too'))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(tr('Remove from list only'))),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(tr('Delete the files too'))),
         ],
       ),
     );

@@ -42,6 +42,7 @@ class SubscriptionsPage extends StatefulWidget {
 
 class _SubscriptionsPageState extends State<SubscriptionsPage> {
   ChannelRef? _selected;
+
   /// The 订阅分组 shown, or null for every channel.
   ChannelGroup? _group;
   double _railWidth = _ChannelStrip.railWidth;
@@ -76,13 +77,18 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     final key = (channels, channels.length, group, revision);
     if (key == _groupKey) return _groupKept;
     _groupKey = key;
-    return _groupKept = [for (final c in channels) if (group.channels.contains(c.id)) c];
+    return _groupKept = [
+      for (final c in channels)
+        if (group.channels.contains(c.id)) c
+    ];
   }
 
-  static Set<String> _idsOf(List<ChannelRef> channels) => _channelIds[channels] ??= {for (final c in channels) c.id};
+  static Set<String> _idsOf(List<ChannelRef> channels) =>
+      _channelIds[channels] ??= {for (final c in channels) c.id};
   static final _channelIds = Expando<Set<String>>();
 
-  List<VideoItem> _feedFor(List<VideoItem> all, ChannelRef? selected, ChannelGroup? group, int revision, SearchDuration length) {
+  List<VideoItem> _feedFor(List<VideoItem> all, ChannelRef? selected, ChannelGroup? group,
+      int revision, SearchDuration length) {
     final key = (all, selected?.id, group, group == null ? null : revision, length);
     if (key == _feedKey) return _feedKept;
     // One pass over the feed, whatever is picked.
@@ -91,14 +97,24 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         ? all
         : [
             for (final item in all)
-              if ((selected != null ? item.channelId == selected.id : group == null || group.channels.contains(item.channelId)) && (any || length.admits(item.duration))) item,
+              if ((selected != null
+                      ? item.channelId == selected.id
+                      : group == null || group.channels.contains(item.channelId)) &&
+                  (any || length.admits(item.duration)))
+                item,
           ];
     _feedKey = key;
     // Streams that are on now come first.
-    return _feedKept = [for (final item in chosen) if (item.isLive) item, for (final item in chosen) if (!item.isLive) item];
+    return _feedKept = [
+      for (final item in chosen)
+        if (item.isLive) item,
+      for (final item in chosen)
+        if (!item.isLive) item
+    ];
   }
 
-  void _select(ChannelRef? channel) => setState(() => _selected = channel == _selected ? null : channel);
+  void _select(ChannelRef? channel) =>
+      setState(() => _selected = channel == _selected ? null : channel);
 
   @override
   Widget build(BuildContext context) {
@@ -110,19 +126,28 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       return StatusView(
         icon: AppIcons.stack,
         title: tr('No followed channels yet'),
-        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also import your follow list from a NewPipe, FreeTube or Google Takeout file, or sign in to YouTube to import your subscriptions. Your follow list is stored only on this device.'),
+        message: tr(
+            'Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also import your follow list from a NewPipe, FreeTube or Google Takeout file, or sign in to YouTube to import your subscriptions. Your follow list is stored only on this device.'),
         action: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
-          FilledButton.icon(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), label: Text(tr('Import from file'))),
+          FilledButton.icon(
+              onPressed: () => importSubscriptionsFromFile(context, library),
+              icon: Icon(AppIcons.downloadSimple),
+              label: Text(tr('Import from file'))),
           if (!(controller.account?.active ?? false))
-            FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
+            FilledButton.tonalIcon(
+                onPressed: () => controller.navigate(PageMode.settings),
+                icon: Icon(AppIcons.signIn),
+                label: Text(tr('Sign in and import subscriptions'))),
         ]),
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
-    final inGroup = controller.orderedChannels(_groupChannels(channels, group, library.revision), key: group);
+    final inGroup =
+        controller.orderedChannels(_groupChannels(channels, group, library.revision), key: group);
     final picked = _selected;
     final selected = picked != null && _idsOf(inGroup).contains(picked.id) ? picked : null;
-    final feed = _feedFor(controller.visible(library.feed, subscriptions: true), selected, group, library.revision, controller.preferences.feedLength);
+    final feed = _feedFor(controller.visible(library.feed, subscriptions: true), selected, group,
+        library.revision, controller.preferences.feedLength);
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
           itemWidth: vertical ? _railWidth - 12 : 72,
@@ -134,7 +159,11 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           onSelect: _select,
           onShowAll: () => showDialog<void>(
             context: context,
-            builder: (_) => _AllChannels(channels: inGroup, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
+            builder: (_) => _AllChannels(
+                channels: inGroup,
+                thumbnails: controller.thumbnailDirectory,
+                onSelect: _select,
+                onOpen: controller.openChannel),
           ),
         );
     // A wide window lists the channels down the left, as Bilibili's 动态 does.
@@ -144,90 +173,134 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       if (!wide) return page;
       return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         SizedBox(width: _railWidth, child: strip(vertical: true)),
-        _RailResizeHandle(onDrag: (delta) => setState(() => _railWidth = (_railWidth + delta).clamp(_ChannelStrip.railWidth, 360).toDouble())),
+        _RailResizeHandle(
+            onDrag: (delta) => setState(() =>
+                _railWidth = (_railWidth + delta).clamp(_ChannelStrip.railWidth, 360).toDouble())),
         Expanded(child: page),
       ]);
     });
   }
 
-  Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels, ChannelRef? selected, List<VideoItem> feed, Widget? strip, ChannelGroup? group) {
+  Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels,
+      ChannelRef? selected, List<VideoItem> feed, Widget? strip, ChannelGroup? group) {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
-      SliverToBoxAdapter(child: PageHeader(
+      SliverToBoxAdapter(
+          child: PageHeader(
         tr('Subscriptions'),
         subtitle: tr('{0} channels · Saved on this device only', [channels.length]),
         trailing: library.loadingFeed
-            ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+            ? const Padding(
+                padding: EdgeInsets.all(12),
+                child: SizedBox(
+                    width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : Row(mainAxisSize: MainAxisSize.min, children: [
-                IconButton(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), tooltip: tr('Import from file')),
-                IconButton(onPressed: () => exportSubscriptionsToFile(context, library), icon: Icon(AppIcons.fileArrowUp), tooltip: tr('Export subscriptions')),
-                TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+                IconButton(
+                    onPressed: () => importSubscriptionsFromFile(context, library),
+                    icon: Icon(AppIcons.downloadSimple),
+                    tooltip: tr('Import from file')),
+                IconButton(
+                    onPressed: () => exportSubscriptionsToFile(context, library),
+                    icon: Icon(AppIcons.fileArrowUp),
+                    tooltip: tr('Export subscriptions')),
+                TextButton.icon(
+                    onPressed: () => library.refreshFeed(force: true),
+                    icon: Icon(AppIcons.arrowsClockwise),
+                    label: Text(tr('Refresh'))),
               ]),
       )),
-      SliverToBoxAdapter(child: _GroupChips(
+      SliverToBoxAdapter(
+          child: _GroupChips(
         groups: controller.orderedGroups,
         channelOrder: _ChannelOrderMenu(controller: controller),
         length: LengthMenu(
           value: controller.preferences.feedLength,
-          onSelected: (length) => unawaited(controller.savePreferences(controller.preferences.copyWith(feedLength: length))),
+          onSelected: (length) => unawaited(
+              controller.savePreferences(controller.preferences.copyWith(feedLength: length))),
         ),
         selected: group,
         onSelect: (g) => setState(() {
           _group = g;
           _selected = null;
         }),
-        onManage: () => showSheet<void>(context, (_) => _ManageGroups(controller: controller, library: library, channels: channels)),
+        onManage: () => showSheet<void>(context,
+            (_) => _ManageGroups(controller: controller, library: library, channels: channels)),
       )),
       if (strip != null) SliverToBoxAdapter(child: strip),
       if (selected != null)
-        SliverToBoxAdapter(child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+        SliverToBoxAdapter(
+            child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
           // The buttons go under the title when a translation or a narrow
           // window leaves the title too little room beside them.
-          child: Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, spacing: 8, runSpacing: 4, children: [
-            Text(
-              tr('New from {0}', [selected.name.isEmpty ? selected.id : selected.name]),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
-              FilledButton.tonalIcon(
-                onPressed: () => controller.openChannel(selected),
-                icon: Icon(AppIcons.caretRight),
-                label: Text(tr('Open channel')),
-              ),
-            ]),
-          ]),
+          child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                Text(
+                  tr('New from {0}', [selected.name.isEmpty ? selected.id : selected.name]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
+                  FilledButton.tonalIcon(
+                    onPressed: () => controller.openChannel(selected),
+                    icon: Icon(AppIcons.caretRight),
+                    label: Text(tr('Open channel')),
+                  ),
+                ]),
+              ]),
         )),
       if (library.feedFailures.isNotEmpty && selected == null)
-        SliverToBoxAdapter(child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+        SliverToBoxAdapter(
+            child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
           child: ErrorBanner(
             library.feedFailures.length > 5
-                ? tr('{0} and others, {1} channels in all, could not be loaded', [library.feedFailures.take(5).join(tr(', ')), library.feedFailures.length])
-                : tr("Couldn't load these channels right now: {0}", [library.feedFailures.join(tr(', '))]),
+                ? tr('{0} and others, {1} channels in all, could not be loaded',
+                    [library.feedFailures.take(5).join(tr(', ')), library.feedFailures.length])
+                : tr("Couldn't load these channels right now: {0}",
+                    [library.feedFailures.join(tr(', '))]),
             onRetry: () => library.refreshFeed(force: true),
           ),
         )),
       if (feed.isNotEmpty)
-        SliverVideoGrid(items: feed, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: feed))
+        SliverVideoGrid(
+            items: feed,
+            thumbnails: controller.thumbnailDirectory,
+            onOpen: (item) => controller.play(item, from: feed))
       else if (library.loadingFeed)
         const SliverSkeletonGrid()
       else if (group != null && group.channels.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(
-          icon: AppIcons.folderOpen,
-          title: tr('This group has no channels yet'),
-          action: FilledButton.tonal(onPressed: () => showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('Choose channels'))),
-        ))
+        SliverFillRemaining(
+            hasScrollBody: false,
+            child: StatusView(
+              icon: AppIcons.folderOpen,
+              title: tr('This group has no channels yet'),
+              action: FilledButton.tonal(
+                  onPressed: () => showSheet<void>(context,
+                      (_) => _GroupChannels(library: library, group: group, channels: channels)),
+                  child: Text(tr('Choose channels'))),
+            ))
       else if (selected != null)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(
-          icon: AppIcons.tray,
-          title: tr('No recent videos from this channel'),
-          action: FilledButton.tonal(onPressed: () => controller.openChannel(selected), child: Text(tr('Open the channel for all its videos'))),
-        ))
+        SliverFillRemaining(
+            hasScrollBody: false,
+            child: StatusView(
+              icon: AppIcons.tray,
+              title: tr('No recent videos from this channel'),
+              action: FilledButton.tonal(
+                  onPressed: () => controller.openChannel(selected),
+                  child: Text(tr('Open the channel for all its videos'))),
+            ))
       else
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.tray, title: tr('No new videos yet'))),
+        SliverFillRemaining(
+            hasScrollBody: false,
+            child: StatusView(icon: AppIcons.tray, title: tr('No new videos yet'))),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
   }
@@ -235,10 +308,18 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
 
 /// 全部 and each 订阅分组 as chips, with the button that edits them.
 class _GroupChips extends StatelessWidget {
-  const _GroupChips({required this.groups, required this.channelOrder, required this.length, required this.selected, required this.onSelect, required this.onManage});
+  const _GroupChips(
+      {required this.groups,
+      required this.channelOrder,
+      required this.length,
+      required this.selected,
+      required this.onSelect,
+      required this.onManage});
   final List<ChannelGroup> groups;
+
   /// The menu that orders the channels below.
   final Widget channelOrder;
+
   /// The menu that picks the length of the videos shown.
   final Widget length;
   final ChannelGroup? selected;
@@ -255,9 +336,13 @@ class _GroupChips extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 8),
         child: FilterFlow(children: [
           if (groups.isNotEmpty) ...[
-            ChoiceChip(label: Text(tr('All')), selected: selected == null, onSelected: (_) => _pick(null)),
+            ChoiceChip(
+                label: Text(tr('All')), selected: selected == null, onSelected: (_) => _pick(null)),
             for (final group in groups)
-              ChoiceChip(label: Text('${group.name} · ${group.channels.length}'), selected: selected == group, onSelected: (_) => _pick(selected == group ? null : group)),
+              ChoiceChip(
+                  label: Text('${group.name} · ${group.channels.length}'),
+                  selected: selected == group,
+                  onSelected: (_) => _pick(selected == group ? null : group)),
           ],
           TextButton.icon(
             onPressed: onManage,
@@ -308,7 +393,9 @@ class _ManageGroups extends StatelessWidget {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
-            TextButton(onPressed: () => Navigator.pop(context, fields.single.text), child: Text(tr('Confirm'))),
+            TextButton(
+                onPressed: () => Navigator.pop(context, fields.single.text),
+                child: Text(tr('Confirm'))),
           ],
         ),
       ),
@@ -320,7 +407,9 @@ class _ManageGroups extends StatelessWidget {
     final order = [...shown];
     order.insert(to, order.removeAt(from));
     library.arrangeGroups(order);
-    if (controller.preferences.groupOrder != GroupOrder.manual) unawaited(controller.setGroupOrder(GroupOrder.manual));
+    if (controller.preferences.groupOrder != GroupOrder.manual) {
+      unawaited(controller.setGroupOrder(GroupOrder.manual));
+    }
   }
 
   @override
@@ -329,66 +418,88 @@ class _ManageGroups extends StatelessWidget {
         builder: (context, _) {
           final groups = controller.orderedGroups;
           return PanelDialog(
-          title: Text(tr('Subscription groups')),
-          content: SizedBox(
-            width: dialogWidth(context, 420),
-            child: groups.isEmpty
-                ? Text(tr("Sort the channels you follow into groups, such as “Learning” or “Music”, and see one group's new videos at a time on the Subscriptions page."), style: TextStyle(color: context.colors.outline, height: 1.5))
-                : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    if (groups.length > 1)
-                      SortMenu<GroupOrder>(
-                        tooltip: tr('Group order'),
-                        values: GroupOrder.values,
-                        value: controller.preferences.groupOrder,
-                        labelOf: (order) => order.label,
-                        onSelected: controller.setGroupOrder,
-                      ),
-                    Flexible(child: ReorderableListView.builder(
-                      shrinkWrap: true,
-                      buildDefaultDragHandles: false,
-                      itemCount: groups.length,
-                      onReorderItem: (from, to) => _move(groups, from, to),
-                      itemBuilder: (context, i) {
-                        final group = groups[i];
-                        return ListTile(
-                        key: ObjectKey(group),
-                        contentPadding: EdgeInsets.zero,
-                        leading: groups.length > 1
-                            ? ReorderableDragStartListener(index: i, child: Tooltip(message: tr('Drag to reorder'), child: Padding(padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))))
-                            : Icon(AppIcons.folder),
-                        title: Text(group.name),
-                        subtitle: Text(tr('{0} channels', [group.channels.length])),
-                        onTap: () => showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels)),
-                        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                          IconButton(
-                            tooltip: tr('Rename'),
-                            icon: Icon(AppIcons.pencilLine),
-                            onPressed: () async {
-                              final name = await _askName(context, initial: group.name);
-                              if (name != null && name.trim().isNotEmpty) library.renameGroup(group, name);
+            title: Text(tr('Subscription groups')),
+            content: SizedBox(
+              width: dialogWidth(context, 420),
+              child: groups.isEmpty
+                  ? Text(
+                      tr(
+                          "Sort the channels you follow into groups, such as “Learning” or “Music”, and see one group's new videos at a time on the Subscriptions page."),
+                      style: TextStyle(color: context.colors.outline, height: 1.5))
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                          if (groups.length > 1)
+                            SortMenu<GroupOrder>(
+                              tooltip: tr('Group order'),
+                              values: GroupOrder.values,
+                              value: controller.preferences.groupOrder,
+                              labelOf: (order) => order.label,
+                              onSelected: controller.setGroupOrder,
+                            ),
+                          Flexible(
+                              child: ReorderableListView.builder(
+                            shrinkWrap: true,
+                            buildDefaultDragHandles: false,
+                            itemCount: groups.length,
+                            onReorderItem: (from, to) => _move(groups, from, to),
+                            itemBuilder: (context, i) {
+                              final group = groups[i];
+                              return ListTile(
+                                key: ObjectKey(group),
+                                contentPadding: EdgeInsets.zero,
+                                leading: groups.length > 1
+                                    ? ReorderableDragStartListener(
+                                        index: i,
+                                        child: Tooltip(
+                                            message: tr('Drag to reorder'),
+                                            child: Padding(
+                                                padding: const EdgeInsets.all(4),
+                                                child: Icon(AppIcons.dotsSixVertical))))
+                                    : Icon(AppIcons.folder),
+                                title: Text(group.name),
+                                subtitle: Text(tr('{0} channels', [group.channels.length])),
+                                onTap: () => showSheet<void>(
+                                    context,
+                                    (_) => _GroupChannels(
+                                        library: library, group: group, channels: channels)),
+                                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                                  IconButton(
+                                    tooltip: tr('Rename'),
+                                    icon: Icon(AppIcons.pencilLine),
+                                    onPressed: () async {
+                                      final name = await _askName(context, initial: group.name);
+                                      if (name != null && name.trim().isNotEmpty) {
+                                        library.renameGroup(group, name);
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                      tooltip: tr('Delete group'),
+                                      icon: Icon(AppIcons.trash),
+                                      onPressed: () => library.removeGroup(group)),
+                                ]),
+                              );
                             },
-                          ),
-                          IconButton(tooltip: tr('Delete group'), icon: Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
+                          )),
                         ]),
-                      );
-                      },
-                    )),
-                  ]),
-          ),
-          actions: [
-            TextButton.icon(
-              onPressed: () async {
-                final name = await _askName(context);
-                if (name == null || name.trim().isEmpty || !context.mounted) return;
-                final group = library.addGroup(name);
-                await showSheet<void>(context, (_) => _GroupChannels(library: library, group: group, channels: channels));
-              },
-              icon: Icon(AppIcons.plus),
-              label: Text(tr('New group')),
             ),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
-          ],
-        );
+            actions: [
+              TextButton.icon(
+                onPressed: () async {
+                  final name = await _askName(context);
+                  if (name == null || name.trim().isEmpty || !context.mounted) return;
+                  final group = library.addGroup(name);
+                  await showSheet<void>(context,
+                      (_) => _GroupChannels(library: library, group: group, channels: channels));
+                },
+                icon: Icon(AppIcons.plus),
+                label: Text(tr('New group')),
+              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
+            ],
+          );
         },
       );
 }
@@ -411,7 +522,10 @@ class _GroupChannelsState extends State<_GroupChannels> {
   Widget build(BuildContext context) {
     final group = widget.group;
     final filter = _filter.toLowerCase();
-    final shown = [for (final c in widget.channels) if (filter.isEmpty || c.name.toLowerCase().contains(filter)) c];
+    final shown = [
+      for (final c in widget.channels)
+        if (filter.isEmpty || c.name.toLowerCase().contains(filter)) c
+    ];
     return ListenableBuilder(
       listenable: widget.library,
       builder: (context, _) => PanelDialog(
@@ -421,11 +535,16 @@ class _GroupChannelsState extends State<_GroupChannels> {
           height: 480,
           child: Column(children: [
             TextField(
-              decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Filter channels'), border: const OutlineInputBorder()),
+              decoration: InputDecoration(
+                  isDense: true,
+                  prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
+                  hintText: tr('Filter channels'),
+                  border: const OutlineInputBorder()),
               onChanged: (v) => setState(() => _filter = v.trim()),
             ),
             const SizedBox(height: 8),
-            Expanded(child: ListView.builder(
+            Expanded(
+                child: ListView.builder(
               itemCount: shown.length,
               itemBuilder: (context, index) {
                 final channel = shown[index];
@@ -433,7 +552,8 @@ class _GroupChannelsState extends State<_GroupChannels> {
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   value: group.channels.contains(channel.id),
-                  title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text(channel.name.isEmpty ? channel.id : channel.name,
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   onChanged: (v) => widget.library.setInGroup(group, channel.id, v ?? false),
                 );
               },
@@ -447,16 +567,29 @@ class _GroupChannelsState extends State<_GroupChannels> {
 }
 
 File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
-    thumbnails == null || channel.avatar == null ? null : File('${thumbnails.path}${Platform.pathSeparator}avatar_${channel.id}.jpg');
+    thumbnails == null || channel.avatar == null
+        ? null
+        : File('${thumbnails.path}${Platform.pathSeparator}avatar_${channel.id}.jpg');
 
 /// The followed channels as a row of avatars with names, scrolled by the
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll, this.vertical = false, this.itemWidth = 72});
+  const _ChannelStrip(
+      {required this.channels,
+      required this.feed,
+      required this.live,
+      required this.selected,
+      required this.thumbnails,
+      required this.onSelect,
+      required this.onShowAll,
+      this.vertical = false,
+      this.itemWidth = 72});
+
   /// Already in the order chosen for them.
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
+
   /// Channels streaming now.
   final Set<String> live;
   final ChannelRef? selected;
@@ -506,7 +639,11 @@ class _ChannelStripState extends State<_ChannelStrip> {
     // A channel picked from the full list shows up front, so the row says
     // what the videos below are narrowed to.
     if (selected != null && !ordered.take(_ChannelStrip.shown).contains(selected)) {
-      ordered = [selected, for (final channel in ordered) if (channel != selected) channel];
+      ordered = [
+        selected,
+        for (final channel in ordered)
+          if (channel != selected) channel
+      ];
     }
     final fresh = DateTime.now().subtract(const Duration(days: 2));
     final showAll = _StripItem(
@@ -514,12 +651,14 @@ class _ChannelStripState extends State<_ChannelStrip> {
       width: widget.itemWidth,
       selected: false,
       onTap: widget.onShowAll,
-      avatar: (radius) => CircleAvatar(radius: radius, child: Icon(AppIcons.listMagnifyingGlass, size: radius)),
+      avatar: (radius) =>
+          CircleAvatar(radius: radius, child: Icon(AppIcons.listMagnifyingGlass, size: radius)),
     );
     if (widget.vertical) {
       // The full list stays in reach at the bottom, however long the column.
       return Column(children: [
-        Expanded(child: ListView(
+        Expanded(
+            child: ListView(
           controller: _scroll,
           padding: const EdgeInsets.only(top: 8),
           children: _items(ordered, selected, latest, fresh, live),
@@ -538,13 +677,16 @@ class _ChannelStripState extends State<_ChannelStrip> {
     ]);
   }
 
-  List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh, Set<String> live) => [
+  List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest,
+          DateTime fresh, Set<String> live) =>
+      [
         _StripItem(
           label: tr('All'),
           width: widget.itemWidth,
           selected: selected == null,
           onTap: () => widget.onSelect(null),
-          avatar: (radius) => CircleAvatar(radius: radius, child: Icon(AppIcons.stackSimpleFill, size: radius)),
+          avatar: (radius) =>
+              CircleAvatar(radius: radius, child: Icon(AppIcons.stackSimpleFill, size: radius)),
         ),
         for (final channel in ordered.take(_ChannelStrip.shown))
           _StripItem(
@@ -554,19 +696,28 @@ class _ChannelStripState extends State<_ChannelStrip> {
             fresh: latest[channel.id]?.isAfter(fresh) ?? false,
             live: live.contains(channel.id),
             onTap: () => widget.onSelect(channel),
-            avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel), channelId: channel.id),
+            avatar: (radius) => ChannelAvatar(
+                name: channel.name,
+                radius: radius,
+                image: channel.avatar,
+                cacheFile: _avatarFile(widget.thumbnails, channel),
+                channelId: channel.id),
           ),
       ];
 
-  Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh, Set<String> live) {
+  Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest,
+      DateTime fresh, Set<String> live) {
     return Listener(
       // A mouse wheel turns vertically; the row moves sideways with it.
       onPointerSignal: (event) {
-        if (event is! PointerScrollEvent || !_scroll.hasClients || event.scrollDelta.dy == 0) return;
+        if (event is! PointerScrollEvent || !_scroll.hasClients || event.scrollDelta.dy == 0) {
+          return;
+        }
         final position = _scroll.position;
         if (position.maxScrollExtent <= 0) return;
         GestureBinding.instance.pointerSignalResolver.register(event, (_) {
-          _scroll.jumpTo((position.pixels + event.scrollDelta.dy).clamp(0, position.maxScrollExtent));
+          _scroll
+              .jumpTo((position.pixels + event.scrollDelta.dy).clamp(0, position.maxScrollExtent));
         });
       },
       child: SizedBox(
@@ -587,11 +738,19 @@ class _ChannelStripState extends State<_ChannelStrip> {
 }
 
 class _StripItem extends StatelessWidget {
-  const _StripItem({required this.label, required this.width, required this.selected, required this.onTap, required this.avatar, this.fresh = false, this.live = false});
+  const _StripItem(
+      {required this.label,
+      required this.width,
+      required this.selected,
+      required this.onTap,
+      required this.avatar,
+      this.fresh = false,
+      this.live = false});
   final String label;
   final double width;
   final bool selected;
   final bool fresh;
+
   /// Streaming now: a red ring and a 直播 tag, as YouTube shows it.
   final bool live;
   final VoidCallback onTap;
@@ -613,7 +772,15 @@ class _StripItem extends StatelessWidget {
             Stack(clipBehavior: Clip.none, children: [
               Container(
                 padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: selected ? colors.primary : live ? _liveRed : Colors.transparent, width: 2)),
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: selected
+                            ? colors.primary
+                            : live
+                                ? _liveRed
+                                : Colors.transparent,
+                        width: 2)),
                 child: avatar(22),
               ),
               if (live)
@@ -621,18 +788,33 @@ class _StripItem extends StatelessWidget {
                   left: 0,
                   right: 0,
                   bottom: -6,
-                  child: Center(child: Container(
+                  child: Center(
+                      child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(color: _liveRed, borderRadius: BorderRadius.circular(4), border: Border.all(color: colors.surface, width: 1.5)),
-                    child: Text(tr('Live'), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, height: 1.2)),
+                    decoration: BoxDecoration(
+                        color: _liveRed,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: colors.surface, width: 1.5)),
+                    child: Text(tr('Live'),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            height: 1.2)),
                   )),
                 )
               else if (fresh)
-                PositionedDirectional(end: 2, top: 2, child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(color: colors.primary, shape: BoxShape.circle, border: Border.all(color: colors.surface, width: 2)),
-                )),
+                PositionedDirectional(
+                    end: 2,
+                    top: 2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                          color: colors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.surface, width: 2)),
+                    )),
             ]),
             const SizedBox(height: 4),
             Padding(
@@ -642,7 +824,10 @@ class _StripItem extends StatelessWidget {
                 maxLines: width > 100 ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: selected ? colors.primary : colors.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w600 : null),
               ),
             ),
             const SizedBox(height: 4),
@@ -673,7 +858,11 @@ class _RailResizeHandle extends StatelessWidget {
 /// Every followed channel, in a list that can be searched by name. Picking
 /// one narrows the subscriptions page to it; the arrow opens its page.
 class _AllChannels extends StatefulWidget {
-  const _AllChannels({required this.channels, required this.thumbnails, required this.onSelect, required this.onOpen});
+  const _AllChannels(
+      {required this.channels,
+      required this.thumbnails,
+      required this.onSelect,
+      required this.onOpen});
   final List<ChannelRef> channels;
   final Directory? thumbnails;
   final ValueChanged<ChannelRef> onSelect;
@@ -704,7 +893,8 @@ class _AllChannelsState extends State<_AllChannels> {
     };
     if (direction == 0) return KeyEventResult.ignored;
     final position = _list.position;
-    final to = (position.pixels + direction * position.viewportDimension * KeyScroll.page).clamp(position.minScrollExtent, position.maxScrollExtent);
+    final to = (position.pixels + direction * position.viewportDimension * KeyScroll.page)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
     unawaited(position.animateTo(to, duration: KeyScroll.duration, curve: Curves.easeOutCubic));
     return KeyEventResult.handled;
   }
@@ -722,47 +912,53 @@ class _AllChannelsState extends State<_AllChannels> {
         skipTraversal: true,
         onKeyEvent: _onKey,
         child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              autofocus: true,
-              onChanged: (value) => setState(() => _query = value),
-              decoration: InputDecoration(
-                prefixIcon: Icon(AppIcons.magnifyingGlass),
-                hintText: tr('Search {0} followed channels', [widget.channels.length]),
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
+          child: Column(children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: TextField(
+                autofocus: true,
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(AppIcons.magnifyingGlass),
+                  hintText: tr('Search {0} followed channels', [widget.channels.length]),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: matches.isEmpty
-                ? Center(child: Text(tr('No matching channels')))
-                : ListView.builder(
-                    controller: _list,
-                    itemCount: matches.length,
-                    itemBuilder: (context, i) {
-                      final channel = matches[i];
-                      return ListTile(
-                        leading: ChannelAvatar(name: channel.name, radius: 18, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel), channelId: channel.id),
-                        title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        trailing: IconButton(
-                          tooltip: tr('Open channel'),
-                          icon: Icon(AppIcons.arrowSquareOut),
-                          onPressed: () {
+            Expanded(
+              child: matches.isEmpty
+                  ? Center(child: Text(tr('No matching channels')))
+                  : ListView.builder(
+                      controller: _list,
+                      itemCount: matches.length,
+                      itemBuilder: (context, i) {
+                        final channel = matches[i];
+                        return ListTile(
+                          leading: ChannelAvatar(
+                              name: channel.name,
+                              radius: 18,
+                              image: channel.avatar,
+                              cacheFile: _avatarFile(widget.thumbnails, channel),
+                              channelId: channel.id),
+                          title: Text(channel.name.isEmpty ? channel.id : channel.name,
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                          trailing: IconButton(
+                            tooltip: tr('Open channel'),
+                            icon: Icon(AppIcons.arrowSquareOut),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              widget.onOpen(channel);
+                            },
+                          ),
+                          onTap: () {
                             Navigator.pop(context);
-                            widget.onOpen(channel);
+                            widget.onSelect(channel);
                           },
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          widget.onSelect(channel);
-                        },
-                      );
-                    },
-                  ),
-          ),
-        ]),
+                        );
+                      },
+                    ),
+            ),
+          ]),
         ),
       ),
     );
@@ -780,11 +976,23 @@ class PlaylistsPage extends StatelessWidget {
     if (library == null) return const SizedBox.shrink();
     final entries = [
       (AppController.favoritesPlaylistId, tr('Favorites'), library.favorites, AppIcons.heartFill),
-      (AppController.watchLaterPlaylistId, tr('Watch later'), library.watchLater, AppIcons.clockFill),
-      for (final playlist in controller.orderedPlaylists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? AppIcons.monitorPlay : AppIcons.playlist),
+      (
+        AppController.watchLaterPlaylistId,
+        tr('Watch later'),
+        library.watchLater,
+        AppIcons.clockFill
+      ),
+      for (final playlist in controller.orderedPlaylists)
+        (
+          playlist.id,
+          playlist.name,
+          playlist.items,
+          LibraryController.isRemote(playlist) ? AppIcons.monitorPlay : AppIcons.playlist
+        ),
     ];
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
-      SliverToBoxAdapter(child: PageHeader(
+      SliverToBoxAdapter(
+          child: PageHeader(
         tr('Playlist'),
         subtitle: tr('Saved on this device only'),
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -801,7 +1009,8 @@ class PlaylistsPage extends StatelessWidget {
           ],
           FilledButton.tonalIcon(
             onPressed: () async {
-              final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
+              final name = await promptText(context,
+                  title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
               if (name != null) library.createPlaylist(name);
             },
             icon: Icon(AppIcons.plus),
@@ -823,9 +1032,11 @@ class PlaylistsPage extends StatelessWidget {
         },
       ),
       if (library.playlists.isEmpty)
-        SliverToBoxAdapter(child: Padding(
+        SliverToBoxAdapter(
+            child: Padding(
           padding: const EdgeInsets.all(AppStyle.pagePadding),
-          child: Text(tr('Right-click any video to add it to favorites or a playlist.'), style: TextStyle(color: context.colors.onSurfaceVariant)),
+          child: Text(tr('Right-click any video to add it to favorites or a playlist.'),
+              style: TextStyle(color: context.colors.onSurfaceVariant)),
         )),
       if (controller.accountFeed?.available ?? false) ..._youtubePlaylists(context),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
@@ -856,12 +1067,19 @@ class PlaylistsPage extends StatelessWidget {
       ...controller.youtubePlaylists,
     ];
     return [
-      SliverToBoxAdapter(child: PageHeader(
+      SliverToBoxAdapter(
+          child: PageHeader(
         tr('YouTube account'),
         subtitle: tr('Playlists saved on YouTube'),
         trailing: controller.youtubePlaylistsLoading
-            ? const Padding(padding: EdgeInsets.all(8), child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: controller.loadYoutubePlaylists, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            ? const Padding(
+                padding: EdgeInsets.all(8),
+                child: SizedBox.square(
+                    dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+            : TextButton.icon(
+                onPressed: controller.loadYoutubePlaylists,
+                icon: Icon(AppIcons.arrowsClockwise),
+                label: Text(tr('Refresh'))),
       )),
       SliverVideoLayout(
         count: lists.length,
@@ -873,7 +1091,11 @@ class PlaylistsPage extends StatelessWidget {
             remote: true,
             count: list.count,
             thumbnailUrl: list.thumbnail,
-            icon: switch (list.id) { YoutubeAccountFeed.watchLaterId => AppIcons.clockFill, YoutubeAccountFeed.likedId => AppIcons.thumbsUpFill, _ => AppIcons.monitorPlay },
+            icon: switch (list.id) {
+              YoutubeAccountFeed.watchLaterId => AppIcons.clockFill,
+              YoutubeAccountFeed.likedId => AppIcons.thumbsUpFill,
+              _ => AppIcons.monitorPlay
+            },
             thumbnails: controller.thumbnailDirectory,
             onOpen: () => controller.openYoutubePlaylist(list),
           );
@@ -900,9 +1122,18 @@ class SliverVideoLayout extends StatelessWidget {
 }
 
 class _PlaylistCard extends StatelessWidget {
-  const _PlaylistCard({required this.name, required this.items, required this.icon, required this.thumbnails, required this.onOpen, this.remote = false, this.count, this.thumbnailUrl});
+  const _PlaylistCard(
+      {required this.name,
+      required this.items,
+      required this.icon,
+      required this.thumbnails,
+      required this.onOpen,
+      this.remote = false,
+      this.count,
+      this.thumbnailUrl});
   final String name;
   final List<VideoItem> items;
+
   /// A playlist kept on YouTube, whose videos are not loaded: [count] is
   /// how many it holds, if known, and [thumbnailUrl] its cover.
   final bool remote;
@@ -927,17 +1158,35 @@ class _PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (thumbnailUrl case final url? when items.isEmpty)
-                  Image(color: context.pictureWarmth, colorBlendMode: BlendMode.multiply, image: ResizeImage.resizeIfNeeded(480, null, CachedThumbnail(url, thumbnails == null ? null : CachedThumbnail.fileForUrl(thumbnails!, url))), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
+                  Image(
+                      color: context.pictureWarmth,
+                      colorBlendMode: BlendMode.multiply,
+                      image: ResizeImage.resizeIfNeeded(
+                          480,
+                          null,
+                          CachedThumbnail(
+                              url,
+                              thumbnails == null
+                                  ? null
+                                  : CachedThumbnail.fileForUrl(thumbnails!, url))),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, _, __) => ColoredBox(
+                          color: colors.surfaceContainerHighest,
+                          child: Icon(icon, size: 40, color: colors.outline)))
                 else if (items.isEmpty)
-                  ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline))
+                  ColoredBox(
+                      color: colors.surfaceContainerHighest,
+                      child: Icon(icon, size: 40, color: colors.outline))
                 else
                   Image(
                     color: context.pictureWarmth,
                     colorBlendMode: BlendMode.multiply,
                     image: thumbnailFor(items.first, thumbnails),
                     fit: BoxFit.cover,
-                    frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync, under: ColoredBox(color: colors.surfaceContainerHighest)),
-                    errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
+                    frameBuilder: (context, child, frame, sync) => fadeInFrame(child, frame, sync,
+                        under: ColoredBox(color: colors.surfaceContainerHighest)),
+                    errorBuilder: (context, _, __) =>
+                        ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                 PositionedDirectional(
                   end: 0,
@@ -949,18 +1198,29 @@ class _PlaylistCard extends StatelessWidget {
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(icon, color: Colors.white),
                       const SizedBox(height: 4),
-                      if (_shownCount case final shown?) Text('$shown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      if (_shownCount case final shown?)
+                        Text('$shown',
+                            style:
+                                const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                     ]),
                   ),
                 ),
               ]),
             ),
           ),
-          Expanded(child: Padding(
+          Expanded(
+              child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.onSurface))),
-              if (_shownCount case final shown?) Text(tr('{0} videos', [shown]), style: TextStyle(fontSize: 12, color: colors.outline)),
+              Expanded(
+                  child: Text(name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600, color: colors.onSurface))),
+              if (_shownCount case final shown?)
+                Text(tr('{0} videos', [shown]),
+                    style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
         ]),
@@ -989,32 +1249,51 @@ class PlaylistDetailPage extends StatelessWidget {
         action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('Back'))),
       );
     }
-    final saved = favorites ? library.favorites : later ? library.watchLater : playlist!.items;
+    final saved = favorites
+        ? library.favorites
+        : later
+            ? library.watchLater
+            : playlist!.items;
     final reversed = controller.isReversed(id);
-    final view = playlistView((id, library.revision, library.store.finishedVersion), controller.orderedVideos(id, saved), reversed: reversed, progressOf: library.progressOf);
+    final view = playlistView(
+        (id, library.revision, library.store.finishedVersion), controller.orderedVideos(id, saved),
+        reversed: reversed, progressOf: library.progressOf);
     final own = view.own;
     final items = view.items;
     // A copy of one of the account's YouTube playlists takes a dragged
     // order only when it can be sent to YouTube; the next sync would undo
     // it otherwise.
     final account = controller.account;
-    final remoteId = playlist != null && LibraryController.isRemote(playlist) ? playlist.id.substring(LibraryController.remotePrefix.length) : null;
+    final remoteId = playlist != null && LibraryController.isRemote(playlist)
+        ? playlist.id.substring(LibraryController.remotePrefix.length)
+        : null;
     final arrangeable = remoteId == null || (account?.canReorder(remoteId) ?? false);
     final uploadable = remoteId == null && own.isNotEmpty && (account?.canAct ?? false);
-    final name = favorites ? tr('Favorites') : later ? tr('Watch later') : playlist!.name;
+    final name = favorites
+        ? tr('Favorites')
+        : later
+            ? tr('Watch later')
+            : playlist!.name;
     void remove(VideoItem item) => favorites
         ? library.toggleFavorite(item)
         : later
             ? library.removeWatchLater(item.id)
             : library.removeFromPlaylist(playlist!, item);
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
-      SliverToBoxAdapter(child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
+      SliverToBoxAdapter(
+          child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(
+            AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Builder(builder: (context) {
           final title = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text(name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             Text(
-              playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
+              playlist != null && LibraryController.isRemote(playlist)
+                  ? tr('{0} videos · From your YouTube account, updated on sync', [items.length])
+                  : tr('{0} videos · Saved on this device only', [items.length]),
               style: TextStyle(color: context.colors.onSurfaceVariant),
             ),
             if (view.length case final length?)
@@ -1030,31 +1309,65 @@ class PlaylistDetailPage extends StatelessWidget {
                 onSelected: (order) => unawaited(controller.setVideoOrder(id, order)),
                 reversed: reversed,
                 onReversed: (back) => unawaited(controller.setReversed(id, back)),
-                onArrange: arrangeable ? () => _arrange(context, id, name, items, remoteId: remoteId) : null,
+                onArrange: arrangeable
+                    ? () => _arrange(context, id, name, items, remoteId: remoteId)
+                    : null,
               ),
             FilledButton.icon(
               onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
               icon: const Icon(AppIcons.playFill),
               label: Text(tr('Play all')),
             ),
-            if (later && items.isNotEmpty) TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
-            if (uploadable) IconButton(tooltip: tr('Upload to YouTube'), onPressed: () => _upload(context, name, items), icon: Icon(AppIcons.monitorArrowUp)),
+            if (later && items.isNotEmpty)
+              TextButton.icon(
+                  onPressed: () => _clearLater(context, library),
+                  icon: Icon(AppIcons.trashSimple),
+                  label: Text(tr('Clear all'))),
+            if (uploadable)
+              IconButton(
+                  tooltip: tr('Upload to YouTube'),
+                  onPressed: () => _upload(context, name, items),
+                  icon: Icon(AppIcons.monitorArrowUp)),
             if (playlist != null) ...[
-              IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
-              IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
+              IconButton(
+                  tooltip: tr('Rename'),
+                  onPressed: () => _rename(context, library, playlist),
+                  icon: Icon(AppIcons.pencilSimple)),
+              IconButton(
+                  tooltip: tr('Delete playlist'),
+                  onPressed: () => _delete(context, library, playlist),
+                  icon: Icon(AppIcons.trash)),
             ],
           ];
           return BackHeading(onBack: controller.goBack, title: title, buttons: buttons);
         }),
       )),
       if (items.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(
-          icon: favorites ? AppIcons.heart : later ? AppIcons.clock : AppIcons.listPlus,
-          title: favorites ? tr('No favorite videos yet') : later ? tr('Watch later is empty') : tr('This playlist is empty'),
-          message: later ? tr('Right-click any video and choose "Watch later", or use the button on the watch page, to keep videos here for later.') : tr('Right-click any video, or tap the button on the player page, to add it here.'),
-        ))
+        SliverFillRemaining(
+            hasScrollBody: false,
+            child: StatusView(
+              icon: favorites
+                  ? AppIcons.heart
+                  : later
+                      ? AppIcons.clock
+                      : AppIcons.listPlus,
+              title: favorites
+                  ? tr('No favorite videos yet')
+                  : later
+                      ? tr('Watch later is empty')
+                      : tr('This playlist is empty'),
+              message: later
+                  ? tr(
+                      'Right-click any video and choose "Watch later", or use the button on the watch page, to keep videos here for later.')
+                  : tr(
+                      'Right-click any video, or tap the button on the player page, to add it here.'),
+            ))
       else
-        SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(id, name, own, start: item), onRemove: remove),
+        SliverVideoGrid(
+            items: items,
+            thumbnails: controller.thumbnailDirectory,
+            onOpen: (item) => controller.playList(id, name, own, start: item),
+            onRemove: remove),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
   }
@@ -1063,7 +1376,8 @@ class PlaylistDetailPage extends StatelessWidget {
   /// shown.
   /// For a copy of a YouTube playlist ([remoteId]), the order goes to
   /// YouTube too.
-  Future<void> _arrange(BuildContext context, String id, String name, List<VideoItem> shown, {String? remoteId}) async {
+  Future<void> _arrange(BuildContext context, String id, String name, List<VideoItem> shown,
+      {String? remoteId}) async {
     final order = await showArrangeDialog<VideoItem>(
       context,
       title: tr('Arrange “{0}”', [name]),
@@ -1085,7 +1399,9 @@ class PlaylistDetailPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(tr('Upload to YouTube')),
-        content: Text(tr('This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.', [name, shown.length])),
+        content: Text(tr(
+            'This makes a new private playlist “{0}” in your YouTube account with these {1} videos, in the order shown. The list here stays as it is.',
+            [name, shown.length])),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
           FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Upload'))),
@@ -1096,31 +1412,47 @@ class PlaylistDetailPage extends StatelessWidget {
   }
 
   Future<void> _clearLater(BuildContext context, LibraryController library) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('Clear Watch later?')),
-      content: Text(tr('Only this list is cleared; videos and watch history are not affected.')),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
-      ],
-    ));
+    final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: Text(tr('Clear Watch later?')),
+              content:
+                  Text(tr('Only this list is cleared; videos and watch history are not affected.')),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
+              ],
+            ));
     if (confirmed ?? false) library.clearWatchLater();
   }
 
-  Future<void> _rename(BuildContext context, LibraryController library, LocalPlaylist playlist) async {
-    final name = await promptText(context, title: tr('Rename playlist'), hint: tr('Playlist name'), confirm: tr('Save'), initial: playlist.name);
+  Future<void> _rename(
+      BuildContext context, LibraryController library, LocalPlaylist playlist) async {
+    final name = await promptText(context,
+        title: tr('Rename playlist'),
+        hint: tr('Playlist name'),
+        confirm: tr('Save'),
+        initial: playlist.name);
     if (name != null) library.renamePlaylist(playlist, name);
   }
 
-  Future<void> _delete(BuildContext context, LibraryController library, LocalPlaylist playlist) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('Delete "{0}"?', [playlist.name])),
-      content: Text(tr('Only deletes this playlist. Videos and watch history are not affected.')),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete'))),
-      ],
-    ));
+  Future<void> _delete(
+      BuildContext context, LibraryController library, LocalPlaylist playlist) async {
+    final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: Text(tr('Delete "{0}"?', [playlist.name])),
+              content: Text(
+                  tr('Only deletes this playlist. Videos and watch history are not affected.')),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete'))),
+              ],
+            ));
     if (confirmed ?? false) {
       library.deletePlaylist(playlist);
       controller.goBack();

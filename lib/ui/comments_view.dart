@@ -26,20 +26,33 @@ import 'translatable.dart';
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
 class CommentsSection extends StatefulWidget {
-  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.creator, this.onSeek, this.scrollable = false, this.sliver = false, this.padding = EdgeInsets.zero});
+  const CommentsSection(
+      {super.key,
+      required this.controller,
+      this.videoId,
+      this.postId,
+      this.creator,
+      this.onSeek,
+      this.scrollable = false,
+      this.sliver = false,
+      this.padding = EdgeInsets.zero});
   final AppController controller;
+
   /// Scrolls by itself and builds only the comments on screen; otherwise it
   /// sits in the page's own scrolling column.
   final bool scrollable;
+
   /// A sliver in the page's own scroll view, built only as far as it is
   /// scrolled into view; it loads once it first comes near the screen.
   final bool sliver;
   final EdgeInsets padding;
   final String? videoId;
   final String? postId;
+
   /// The channel of the video or post, whose picture marks the comments
   /// it liked.
   final ChannelRef? creator;
+
   /// Seeks the video when a timestamp in a comment is clicked.
   final void Function(Duration position)? onSeek;
 
@@ -48,8 +61,10 @@ class CommentsSection extends StatefulWidget {
 }
 
 class _CommentsSectionState extends State<CommentsSection> {
-  late final _loader = CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId);
+  late final _loader =
+      CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId);
   bool _asked = false;
+
   /// Whether comments were listed at the last build, and whether the
   /// first ones are being built now: those come in where the spinner was;
   /// ones scrolled to later are simply there.
@@ -67,8 +82,10 @@ class _CommentsSectionState extends State<CommentsSection> {
     _asked = true;
     unawaited(_loader.loadMore());
   }
+
   /// The comment a reply is being written to.
   String? _replyingTo;
+
   /// 搜索评论: open, and the words looked for.
   bool _searching = false;
   List<String> _words = const [];
@@ -101,9 +118,15 @@ class _CommentsSectionState extends State<CommentsSection> {
   /// those that do not match. A page loaded onto the end is filtered alone,
   /// not the whole list again for every page.
   List<YoutubeComment> _shownOf(List<YoutubeComment> comments, AppPreferences prefs) {
-    bool keep(YoutubeComment c) => !prefs.blocksCommenter(c.author, c.channelId) && (_words.isEmpty || _matches(c));
+    bool keep(YoutubeComment c) =>
+        !prefs.blocksCommenter(c.author, c.channelId) && (_words.isEmpty || _matches(c));
     // A search also looks in replies, which load apart: it filters anew.
-    if (_words.isNotEmpty) return [for (final c in comments) if (keep(c)) c];
+    if (_words.isNotEmpty) {
+      return [
+        for (final c in comments)
+          if (keep(c)) c
+      ];
+    }
     final from = _from;
     final grown = identical(_shownBy, prefs) &&
         from.isNotEmpty &&
@@ -112,7 +135,11 @@ class _CommentsSectionState extends State<CommentsSection> {
         identical(comments[from.length - 1], from.last);
     final shown = grown && comments.length == from.length
         ? _shown
-        : [if (grown) ..._shown, for (var i = grown ? from.length : 0; i < comments.length; i++) if (keep(comments[i])) comments[i]];
+        : [
+            if (grown) ..._shown,
+            for (var i = grown ? from.length : 0; i < comments.length; i++)
+              if (keep(comments[i])) comments[i]
+          ];
     _from = comments;
     _shown = shown;
     _shownBy = prefs;
@@ -121,7 +148,8 @@ class _CommentsSectionState extends State<CommentsSection> {
 
   /// [comment], or one of its loaded replies, holds the words searched.
   bool _matches(YoutubeComment comment) =>
-      commentMatches(comment, _words) || (_loader.replies[comment.id]?.replies.any((reply) => commentMatches(reply, _words)) ?? false);
+      commentMatches(comment, _words) ||
+      (_loader.replies[comment.id]?.replies.any((reply) => commentMatches(reply, _words)) ?? false);
 
   Widget _searchBar(BuildContext context) {
     final loader = _loader;
@@ -131,32 +159,43 @@ class _CommentsSectionState extends State<CommentsSection> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         CallbackShortcuts(
           bindings: {const SingleActivator(LogicalKeyboardKey.escape): _toggleSearch},
-          child: OwnScrollMemory(child: TextField(
-          controller: _search,
-          autofocus: true,
-          decoration: InputDecoration(
-            isDense: true,
-            prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
-            hintText: tr('Search comment text or authors'),
-            border: const OutlineInputBorder(),
-            suffixIcon: IconButton(tooltip: tr('Close search'), icon: Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
-          ),
-          onChanged: (text) => setState(() => _words = commentQueryWords(text)),
-        )),
+          child: OwnScrollMemory(
+              child: TextField(
+            controller: _search,
+            autofocus: true,
+            decoration: InputDecoration(
+              isDense: true,
+              prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
+              hintText: tr('Search comment text or authors'),
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                  tooltip: tr('Close search'),
+                  icon: Icon(AppIcons.x, size: 18),
+                  onPressed: _toggleSearch),
+            ),
+            onChanged: (text) => setState(() => _words = commentQueryWords(text)),
+          )),
         ),
         const SizedBox(height: 4),
         // The button goes under the line when a translation leaves the line
         // too little room beside it.
-        Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 2, children: [
-          Text(
-            loader.loadingAll ? tr('Loading all comments… {0} so far', [loader.comments.length]) : tr('Searching the {0} comments loaded', [loader.comments.length]),
-            style: TextStyle(color: colors.outline, fontSize: 12),
-          ),
-          if (loader.loadingAll)
-            TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('Stop')))
-          else if (loader.hasMore)
-            TextButton(onPressed: loader.loadAll, child: Text(tr('Load all comments and search'))),
-        ]),
+        Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 2,
+            children: [
+              Text(
+                loader.loadingAll
+                    ? tr('Loading all comments… {0} so far', [loader.comments.length])
+                    : tr('Searching the {0} comments loaded', [loader.comments.length]),
+                style: TextStyle(color: colors.outline, fontSize: 12),
+              ),
+              if (loader.loadingAll)
+                TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('Stop')))
+              else if (loader.hasMore)
+                TextButton(
+                    onPressed: loader.loadAll, child: Text(tr('Load all comments and search'))),
+            ]),
       ]),
     );
   }
@@ -175,7 +214,9 @@ class _CommentsSectionState extends State<CommentsSection> {
       );
 
   Future<bool> _post(String text) async {
-    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, text: text, createParams: _loader.createParams) ?? false;
+    final posted = await widget.controller.account?.postComment(
+            videoId: widget.videoId!, text: text, createParams: _loader.createParams) ??
+        false;
     if (posted) _loader.addOwn(_own(text.trim()));
     return posted;
   }
@@ -192,7 +233,12 @@ class _CommentsSectionState extends State<CommentsSection> {
   }
 
   Future<bool> _reply(YoutubeComment parent, String text) async {
-    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, parentId: parent.id, text: text, replyParams: parent.replyParams) ?? false;
+    final posted = await widget.controller.account?.postComment(
+            videoId: widget.videoId!,
+            parentId: parent.id,
+            text: text,
+            replyParams: parent.replyParams) ??
+        false;
     if (posted) {
       _loader.addOwnReply(parent, _own(text.trim()));
       if (mounted) setState(() => _replyingTo = null);
@@ -205,7 +251,9 @@ class _CommentsSectionState extends State<CommentsSection> {
   ChurchRite? get _rite {
     final c = widget.controller;
     final creator = ChurchWording.riteOf(widget.creator?.name ?? '');
-    if (widget.videoId != null) return (widget.videoId == c.playing?.id ? c.playingRite : null) ?? creator;
+    if (widget.videoId != null) {
+      return (widget.videoId == c.playing?.id ? c.playingRite : null) ?? creator;
+    }
     return creator ?? (c.channel?.id == widget.creator?.id ? c.channelRite : null);
   }
 
@@ -222,7 +270,9 @@ class _CommentsSectionState extends State<CommentsSection> {
           onSeek: widget.onSeek,
           creator: widget.creator,
           reply: reply,
-          onReply: _canWrite && !reply && !c.id.startsWith('own:') ? () => setState(() => _replyingTo = _replyingTo == c.id ? null : c.id) : null,
+          onReply: _canWrite && !reply && !c.id.startsWith('own:')
+              ? () => setState(() => _replyingTo = _replyingTo == c.id ? null : c.id)
+              : null,
         );
     final error = thread?.error;
     return [
@@ -230,33 +280,48 @@ class _CommentsSectionState extends State<CommentsSection> {
       if (_replyingTo == comment.id)
         Padding(
           padding: const EdgeInsetsDirectional.only(start: 44, bottom: 8),
-          child: CommentComposer(hint: tr('Reply to {0}…', [comment.author]), autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
+          child: CommentComposer(
+              hint: tr('Reply to {0}…', [comment.author]),
+              autofocus: true,
+              onSubmit: (text) => _reply(comment, text),
+              onCancel: () => setState(() => _replyingTo = null)),
         ),
       // Replies sit together on a quiet panel under the comment they
       // answer, so a long thread still reads as one.
       // The panel comes in, then grows as more replies arrive.
       if (thread != null)
-        Reveal(child: Padding(
+        Reveal(
+            child: Padding(
           padding: const EdgeInsetsDirectional.only(start: 44, bottom: 8),
           child: DecoratedBox(
-            decoration: BoxDecoration(color: context.colors.onSurface.withValues(alpha: 0.05), borderRadius: AppStyle.cardRadius),
+            decoration: BoxDecoration(
+                color: context.colors.onSurface.withValues(alpha: 0.05),
+                borderRadius: AppStyle.cardRadius),
             child: AnimatedSize(
               duration: Motion.of(Ease.move),
               curve: Ease.curve,
               alignment: Alignment.topCenter,
               child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(10, 2, 8, 2),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                for (final reply in thread.replies) tile(reply, reply: true),
-                thread.loading
-                    ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-                    : error != null
-                        ? ErrorBanner(tr("Couldn't load replies: {0}", [error]), onRetry: () => loader.loadReplies(comment))
-                        : thread.next != null
-                            ? TextButton(onPressed: () => loader.loadReplies(comment), child: Text(tr('More replies')))
-                            : const SizedBox.shrink(),
-              ]),
-            ),
+                padding: const EdgeInsetsDirectional.fromSTEB(10, 2, 8, 2),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  for (final reply in thread.replies) tile(reply, reply: true),
+                  thread.loading
+                      ? const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2)))
+                      : error != null
+                          ? ErrorBanner(tr("Couldn't load replies: {0}", [error]),
+                              onRetry: () => loader.loadReplies(comment))
+                          : thread.next != null
+                              ? TextButton(
+                                  onPressed: () => loader.loadReplies(comment),
+                                  child: Text(tr('More replies')))
+                              : const SizedBox.shrink(),
+                ]),
+              ),
             ),
           ),
         )),
@@ -275,14 +340,19 @@ class _CommentsSectionState extends State<CommentsSection> {
               final order = SegmentedButton<bool>(
                 showSelectedIcon: false,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: [ButtonSegment(value: false, label: Text(tr('Popular'))), ButtonSegment(value: true, label: Text(tr('Latest')))],
+                segments: [
+                  ButtonSegment(value: false, label: Text(tr('Popular'))),
+                  ButtonSegment(value: true, label: Text(tr('Latest')))
+                ],
                 selected: {loader.newest},
                 onSelectionChanged: (value) {
                   Haptics.select();
                   unawaited(loader.setNewest(value.first));
                 },
               );
-              final title = Text(loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
+              final title = Text(
+                  loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]),
+                  style: Theme.of(context).textTheme.titleMedium);
               final search = IconButton(
                 tooltip: tr('Search comments'),
                 isSelected: _searching,
@@ -291,16 +361,35 @@ class _CommentsSectionState extends State<CommentsSection> {
               );
               final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
               return constraints.maxWidth >= 520
-                  ? HeadingLine(children: [title, Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [immersive, search, order])])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [immersive, search, order])]);
+                  ? HeadingLine(children: [
+                      title,
+                      Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [immersive, search, order])
+                    ])
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      title,
+                      const SizedBox(height: 8),
+                      Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [immersive, search, order])
+                    ]);
             }),
             const SizedBox(height: 8),
             // Each in a slot of its own, so opening the search keeps what
             // is being written in the composer.
             if (_searching) _searchBar(context) else const SizedBox.shrink(),
-            if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post, thanksFor: widget.videoId)
-            else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create)
-            else const SizedBox.shrink(),
+            if (_canWrite)
+              CommentComposer(
+                  hint: tr('Add a comment…'), onSubmit: _post, thanksFor: widget.videoId)
+            else if (loader.canCreate)
+              CommentComposer(hint: tr('Add a comment…'), onSubmit: _create)
+            else
+              const SizedBox.shrink(),
           ];
           if (loader.comments.isNotEmpty && !_listed) {
             _arriving = true;
@@ -311,32 +400,66 @@ class _CommentsSectionState extends State<CommentsSection> {
           final shown = _shownOf(loader.comments, prefs);
           final footer = <Widget>[
             if (loader.loading)
-              const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
+              const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                      child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)
-              ErrorBanner(loader.comments.isEmpty ? tr("Couldn't load comments: {0}", [error]) : tr("Couldn't load more comments: {0}", [error]), onRetry: () => loader.loadMore(retry: true))
+              ErrorBanner(
+                  loader.comments.isEmpty
+                      ? tr("Couldn't load comments: {0}", [error])
+                      : tr("Couldn't load more comments: {0}", [error]),
+                  onRetry: () => loader.loadMore(retry: true))
             else if (loader.started && loader.comments.isEmpty)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('No comments yet, or comments are turned off'), style: TextStyle(color: colors.outline)))
+              Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(tr('No comments yet, or comments are turned off'),
+                      style: TextStyle(color: colors.outline)))
             else if (_words.isNotEmpty && shown.isEmpty && !loader.loadingAll)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('No match in the comments loaded'), style: TextStyle(color: colors.outline)))
+              Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(tr('No match in the comments loaded'),
+                      style: TextStyle(color: colors.outline)))
             else if (loader.hasMore)
-              Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('Load more comments')))),
+              Center(
+                  child: TextButton(
+                      onPressed: loader.loadMore, child: Text(tr('Load more comments')))),
           ];
           Widget item(BuildContext context, int index) {
             // Not during the build that asked for it.
             if (!_asked) scheduleMicrotask(_load);
             if (index < header.length) return header[index];
             index -= header.length;
-            if (index < shown.length) return Reveal(enabled: _arriving, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index])));
+            if (index < shown.length) {
+              return Reveal(
+                  enabled: _arriving,
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _thread(context, shown[index])));
+            }
             return footer[index - shown.length];
           }
+
           final count = header.length + shown.length + footer.length;
-          if (widget.sliver) return SliverPadding(padding: widget.padding, sliver: SliverList.builder(itemCount: count, itemBuilder: item));
+          if (widget.sliver) {
+            return SliverPadding(
+                padding: widget.padding,
+                sliver: SliverList.builder(itemCount: count, itemBuilder: item));
+          }
           if (!widget.scrollable) {
             return Padding(
               padding: widget.padding,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 ...header,
-                for (final comment in shown) Reveal(enabled: _arriving, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, comment))),
+                for (final comment in shown)
+                  Reveal(
+                      enabled: _arriving,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _thread(context, comment))),
                 ...footer,
               ]),
             );
@@ -347,7 +470,15 @@ class _CommentsSectionState extends State<CommentsSection> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, required this.loader, required this.controller, this.rite, this.onSeek, this.creator, this.reply = false, this.onReply});
+  const _CommentTile(
+      {required this.comment,
+      required this.loader,
+      required this.controller,
+      this.rite,
+      this.onSeek,
+      this.creator,
+      this.reply = false,
+      this.onReply});
   final ChannelRef? creator;
   final YoutubeComment comment;
   final CommentsLoader loader;
@@ -370,21 +501,28 @@ class _CommentTile extends StatelessWidget {
       // From a page over the app (a post's comments), go back to it first.
       if (ModalRoute.of(context) case final route? when !route.isFirst) Navigator.of(context).pop();
       if (known) {
-        controller.openChannel(ChannelRef(channelId, comment.author.replaceFirst(RegExp(r'^@'), '')));
+        controller
+            .openChannel(ChannelRef(channelId, comment.author.replaceFirst(RegExp(r'^@'), '')));
       } else {
         unawaited(controller.openChannelByHandle(comment.author));
       }
     }
+
     return Padding(
       padding: const EdgeInsetsDirectional.only(top: 8, bottom: 8),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
           customBorder: const CircleBorder(),
           onTap: canOpen ? openAuthor : null,
-          child: ChannelAvatar(name: comment.author.replaceFirst(RegExp(r'^@'), ''), image: comment.avatar, channelId: comment.avatar == null ? channelId : null, radius: reply ? 12 : 16),
+          child: ChannelAvatar(
+              name: comment.author.replaceFirst(RegExp(r'^@'), ''),
+              image: comment.avatar,
+              channelId: comment.avatar == null ? channelId : null,
+              radius: reply ? 12 : 16),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SelectionArea(
             child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               if (comment.pinned) Text(tr('Pinned'), style: small.copyWith(color: colors.primary)),
@@ -393,7 +531,14 @@ class _CommentTile extends StatelessWidget {
                 child: GestureDetector(
                   onTap: canOpen ? openAuthor : null,
                   excludeFromSemantics: true,
-                  child: Semantics(link: canOpen, onTap: canOpen ? openAuthor : null, child: Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null))),
+                  child: Semantics(
+                      link: canOpen,
+                      onTap: canOpen ? openAuthor : null,
+                      child: Text(comment.author,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: comment.byUploader ? colors.primary : null))),
                 ),
               ),
               Text(comment.published, style: small),
@@ -404,7 +549,12 @@ class _CommentTile extends StatelessWidget {
             controller: controller,
             rite: rite,
             text: comment.text,
-            builder: (context, text) => SelectionArea(child: LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal)),
+            builder: (context, text) => SelectionArea(
+                child: LinkedText(text,
+                    style: const TextStyle(height: 1.45),
+                    emojis: comment.emojis,
+                    onTime: onSeek ?? (_) {},
+                    onLink: openExternal)),
           ),
           const SizedBox(height: 4),
           Row(children: [
@@ -419,7 +569,9 @@ class _CommentTile extends StatelessWidget {
               // As YouTube shows it: the creator's picture with a heart.
               Builder(builder: (context) {
                 final name = creator?.name;
-                final label = name != null && name.isNotEmpty ? tr('Hearted by {0}', [name]) : (comment.heartTooltip ?? tr('Liked by creator'));
+                final label = name != null && name.isNotEmpty
+                    ? tr('Hearted by {0}', [name])
+                    : (comment.heartTooltip ?? tr('Liked by creator'));
                 final image = comment.heartAvatar ?? creator?.avatar;
                 return Tooltip(
                   message: label,
@@ -429,11 +581,19 @@ class _CommentTile extends StatelessWidget {
                       width: 26,
                       height: 24,
                       child: Stack(clipBehavior: Clip.none, children: [
-                        ExcludeSemantics(child: ChannelAvatar(name: name ?? '', image: image, channelId: creator?.id, radius: 11)),
+                        ExcludeSemantics(
+                            child: ChannelAvatar(
+                                name: name ?? '',
+                                image: image,
+                                channelId: creator?.id,
+                                radius: 11)),
                         PositionedDirectional(
                           end: 0,
                           bottom: -1,
-                          child: Icon(AppIcons.heartFill, size: 12, color: colors.error, shadows: [Shadow(color: colors.surface, blurRadius: 2)]),
+                          child: Icon(AppIcons.heartFill,
+                              size: 12,
+                              color: colors.error,
+                              shadows: [Shadow(color: colors.surface, blurRadius: 2)]),
                         ),
                       ]),
                     ),
@@ -444,7 +604,9 @@ class _CommentTile extends StatelessWidget {
             if (onReply != null) ...[
               const SizedBox(width: 8),
               TextButton(
-                style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8)),
                 onPressed: onReply,
                 child: Text(tr('Reply'), style: const TextStyle(fontSize: 12)),
               ),
@@ -465,9 +627,19 @@ class _CommentTile extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Text(comment.replyCount > 0 ? tr('{0} replies', [comment.replyCount]) : tr('View replies'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.primary)),
+                        Text(
+                            comment.replyCount > 0
+                                ? tr('{0} replies', [comment.replyCount])
+                                : tr('View replies'),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600, color: colors.primary)),
                         const SizedBox(width: 2),
-                        Icon(Directionality.of(context) == TextDirection.rtl ? AppIcons.caretLeft : AppIcons.caretRight, size: 14, color: colors.primary),
+                        Icon(
+                            Directionality.of(context) == TextDirection.rtl
+                                ? AppIcons.caretLeft
+                                : AppIcons.caretRight,
+                            size: 14,
+                            color: colors.primary),
                       ]),
                     ),
                   ),
@@ -475,7 +647,8 @@ class _CommentTile extends StatelessWidget {
               )
             else
               TextButton.icon(
-                style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
                 onPressed: () => loader.collapse(comment),
                 icon: Icon(AppIcons.caretUp, size: 18),
                 label: Text(tr('Hide replies')),
@@ -488,8 +661,15 @@ class _CommentTile extends StatelessWidget {
 
 /// A field for writing a comment or reply, with 发布 and, for replies, 取消.
 class CommentComposer extends StatefulWidget {
-  const CommentComposer({super.key, required this.hint, required this.onSubmit, this.onCancel, this.autofocus = false, this.thanksFor});
+  const CommentComposer(
+      {super.key,
+      required this.hint,
+      required this.onSubmit,
+      this.onCancel,
+      this.autofocus = false,
+      this.thanksFor});
   final String hint;
+
   /// Posts the text; returns whether it went through.
   final Future<bool> Function(String text) onSubmit;
   final VoidCallback? onCancel;
@@ -530,7 +710,8 @@ class _CommentComposerState extends State<CommentComposer> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        OwnScrollMemory(child: TextField(
+        OwnScrollMemory(
+            child: TextField(
           controller: _text,
           focusNode: _focus,
           autofocus: widget.autofocus,
@@ -568,13 +749,22 @@ class _CommentComposerState extends State<CommentComposer> {
                 overflowSpacing: 4,
                 overflowAlignment: OverflowBarAlignment.end,
                 children: [
-                  if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('Cancel'), textAlign: TextAlign.center)),
+                  if (widget.onCancel != null)
+                    TextButton(
+                        style: _compact,
+                        onPressed: _sending ? null : widget.onCancel,
+                        child: Text(tr('Cancel'), textAlign: TextAlign.center)),
                   ListenableBuilder(
                     listenable: _text,
                     builder: (context, _) => FilledButton(
                       style: _compact,
                       onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
-                      child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Publish'), textAlign: TextAlign.center),
+                      child: _sending
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text(tr('Publish'), textAlign: TextAlign.center),
                     ),
                   ),
                 ],

@@ -6,13 +6,16 @@ import 'package:lumtub/app_directories.dart';
 import 'package:lumtub/learning/learning.dart';
 import 'package:lumtub/learning/word_token.dart';
 
-String _day(int fromToday) => DateTime.now().add(Duration(days: fromToday)).toIso8601String().substring(0, 10);
+String _day(int fromToday) =>
+    DateTime.now().add(Duration(days: fromToday)).toIso8601String().substring(0, 10);
 
 Future<Learning> _learning(Map<String, Object?>? trial) async {
   final root = Directory.systemTemp.createTempSync('trial');
   addTearDown(() => root.deleteSync(recursive: true));
   Directory('${root.path}/config').createSync(recursive: true);
-  if (trial != null) File('${root.path}/config/learning.json').writeAsStringSync(jsonEncode({'trial': trial}));
+  if (trial != null) {
+    File('${root.path}/config/learning.json').writeAsStringSync(jsonEncode({'trial': trial}));
+  }
   final learning = Learning();
   await learning.start(AppDirectories.at(root));
   return learning;
@@ -50,7 +53,12 @@ void main() {
   });
 
   test('turning the clock back does not give the day back', () async {
-    final used = await _learning({'taken': Learning.trialTotal, 'seen': _day(2), 'day': _day(2), 'used': Learning.trialPerDay});
+    final used = await _learning({
+      'taken': Learning.trialTotal,
+      'seen': _day(2),
+      'day': _day(2),
+      'used': Learning.trialPerDay
+    });
     expect(await used.takeLookup('new'), isFalse);
   });
 

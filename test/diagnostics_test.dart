@@ -3,7 +3,10 @@ import 'package:lumtub/app/app_controller.dart';
 
 void main() {
   test('copied errors keep only the host of an address', () {
-    expect(diagnosticText('ClientException: refused, uri=https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1&sig=SECRET&n=x'), 'ClientException: refused, uri=rr3---sn-abc.googlevideo.com');
+    expect(
+        diagnosticText(
+            'ClientException: refused, uri=https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1&sig=SECRET&n=x'),
+        'ClientException: refused, uri=rr3---sn-abc.googlevideo.com');
     expect(diagnosticText('timed out\n  after 10 s'), 'timed out after 10 s');
   });
 
@@ -13,7 +16,8 @@ void main() {
   });
 
   test('reads Cloudflare\'s trace answer', () {
-    final trace = readTrace('fl=1\nh=www.cloudflare.com\nip=198.51.100.7\nts=1\nloc=JP\nwarp=off\n');
+    final trace =
+        readTrace('fl=1\nh=www.cloudflare.com\nip=198.51.100.7\nts=1\nloc=JP\nwarp=off\n');
     expect(trace?.ip, '198.51.100.7');
     expect(trace?.country, 'JP');
     expect(readTrace('<html>blocked</html>'), isNull);

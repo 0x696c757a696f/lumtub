@@ -57,7 +57,8 @@ final humanitiesTopics = <ExploreTopic>[
       ExploreSub('New Testament', 'New Testament lecture 新约'),
       ExploreSub('Biblical languages', 'Biblical Hebrew Koine Greek 圣经原文'),
     ]),
-    const ExploreSub('Fundamental theology', 'fundamental theology revelation faith and reason 基本神学'),
+    const ExploreSub(
+        'Fundamental theology', 'fundamental theology revelation faith and reason 基本神学'),
     const ExploreSub('Patristics', 'patristics Church Fathers lecture 教父学'),
     const ExploreSub('Church history', 'church history lecture 教会史'),
     const ExploreSub('Moral theology', 'moral theology lecture 伦理神学'),
@@ -128,7 +129,8 @@ final socialScienceTopics = <ExploreTopic>[
     const ExploreSub('Psychoanalysis', 'psychoanalysis Freud Jung lecture 精神分析'),
     const ExploreSub('Neuropsychology', 'neuropsychology lecture 神经心理学'),
     const ExploreSub('Educational psychology', 'educational psychology lecture 教育心理学'),
-    const ExploreSub('Organizational psychology', 'industrial organizational psychology lecture 管理心理学'),
+    const ExploreSub(
+        'Organizational psychology', 'industrial organizational psychology lecture 管理心理学'),
     const ExploreSub('Positive psychology', 'positive psychology lecture 积极心理学'),
     const ExploreSub('Research methods', 'psychology research methods statistics 心理学研究方法'),
     const ExploreSub('Psychology of religion', 'psychology of religion lecture 宗教心理学'),
@@ -166,7 +168,8 @@ final socialScienceTopics = <ExploreTopic>[
   ]),
   ExploreTopic('Anthropology', AppIcons.userCircle, '人类学 anthropology lecture', subs: [
     const ExploreSub('Cultural anthropology', 'cultural anthropology lecture 文化人类学'),
-    const ExploreSub('Physical anthropology', 'biological anthropology human evolution lecture 体质人类学'),
+    const ExploreSub(
+        'Physical anthropology', 'biological anthropology human evolution lecture 体质人类学'),
     const ExploreSub('Anthropology of religion', 'anthropology of religion lecture 宗教人类学'),
   ]),
   ExploreTopic('Geography', AppIcons.globe, '地理学 geography lecture', subs: [
@@ -262,47 +265,57 @@ final engineeringTopics = <ExploreTopic>[
     const ExploreSub('Cryptography', 'cryptography lecture 密码学'),
     const ExploreSub('Network security', 'network security course 网络安全 课程'),
     const ExploreSub('Web security', 'web security OWASP lecture Web安全'),
-    const ExploreSub('Reverse engineering & binaries', 'reverse engineering binary exploitation 逆向工程 二进制安全'),
+    const ExploreSub(
+        'Reverse engineering & binaries', 'reverse engineering binary exploitation 逆向工程 二进制安全'),
     const ExploreSub('System security', 'operating system security lecture 系统安全'),
     const ExploreSub('Penetration testing', 'penetration testing course 渗透测试'),
     const ExploreSub('CTF', 'CTF writeup walkthrough'),
     const ExploreSub('Security conferences', 'DEF CON Black Hat talk 安全大会'),
   ]),
-  ExploreTopic('Electrical engineering', AppIcons.circuitry, '电子工程 electrical engineering lecture', subs: [
-    const ExploreSub('Circuits', 'circuit analysis lecture 电路'),
-    const ExploreSub('Signals & systems', 'signals and systems lecture 信号与系统'),
-    const ExploreSub('Semiconductors & chips', 'semiconductor chip design lecture 半导体 芯片'),
-    const ExploreSub('Communications', 'communication engineering lecture 通信原理'),
-    const ExploreSub('Power systems', 'power systems engineering lecture 电力系统'),
-    const ExploreSub('Embedded systems', 'embedded systems course 嵌入式'),
-  ]),
-  ExploreTopic('Mechanical engineering', AppIcons.gear, '机械工程 mechanical engineering lecture', subs: [
-    const ExploreSub('Engineering mechanics', 'engineering mechanics statics dynamics 工程力学'),
-    const ExploreSub('Fluid mechanics', 'fluid mechanics lecture 流体力学'),
-    const ExploreSub('Manufacturing', 'manufacturing engineering lecture 制造'),
-    const ExploreSub('Thermal engineering', 'heat transfer thermal engineering lecture 传热学'),
-    const ExploreSub('Mechanical design', 'mechanical design machine elements lecture 机械设计'),
-  ]),
-  ExploreTopic('Civil engineering & architecture', AppIcons.buildings, '土木工程 建筑学 civil engineering architecture lecture', subs: [
-    const ExploreSub('Structural engineering', 'structural engineering lecture 结构工程'),
-    const ExploreSub('Architecture', 'architecture lecture 建筑学'),
-    const ExploreSub('Urban planning', 'urban planning lecture 城市规划'),
-  ]),
+  ExploreTopic('Electrical engineering', AppIcons.circuitry, '电子工程 electrical engineering lecture',
+      subs: [
+        const ExploreSub('Circuits', 'circuit analysis lecture 电路'),
+        const ExploreSub('Signals & systems', 'signals and systems lecture 信号与系统'),
+        const ExploreSub('Semiconductors & chips', 'semiconductor chip design lecture 半导体 芯片'),
+        const ExploreSub('Communications', 'communication engineering lecture 通信原理'),
+        const ExploreSub('Power systems', 'power systems engineering lecture 电力系统'),
+        const ExploreSub('Embedded systems', 'embedded systems course 嵌入式'),
+      ]),
+  ExploreTopic('Mechanical engineering', AppIcons.gear, '机械工程 mechanical engineering lecture',
+      subs: [
+        const ExploreSub('Engineering mechanics', 'engineering mechanics statics dynamics 工程力学'),
+        const ExploreSub('Fluid mechanics', 'fluid mechanics lecture 流体力学'),
+        const ExploreSub('Manufacturing', 'manufacturing engineering lecture 制造'),
+        const ExploreSub('Thermal engineering', 'heat transfer thermal engineering lecture 传热学'),
+        const ExploreSub('Mechanical design', 'mechanical design machine elements lecture 机械设计'),
+      ]),
+  ExploreTopic('Civil engineering & architecture', AppIcons.buildings,
+      '土木工程 建筑学 civil engineering architecture lecture',
+      subs: [
+        const ExploreSub('Structural engineering', 'structural engineering lecture 结构工程'),
+        const ExploreSub('Architecture', 'architecture lecture 建筑学'),
+        const ExploreSub('Urban planning', 'urban planning lecture 城市规划'),
+      ]),
   ExploreTopic('Control & robotics', AppIcons.robot, '自动化 控制理论 robotics lecture', subs: [
     const ExploreSub('Control theory', 'control theory lecture 控制理论'),
     const ExploreSub('Robotics', 'robotics course lecture 机器人学'),
   ]),
-  ExploreTopic('Aerospace engineering', AppIcons.airplaneTakeoff, '航空航天 aerospace engineering lecture', subs: [
-    const ExploreSub('Aerodynamics', 'aerodynamics lecture 空气动力学'),
-    const ExploreSub('Rocket propulsion', 'rocket propulsion lecture 火箭推进'),
-    const ExploreSub('Orbital mechanics', 'orbital mechanics lecture 轨道力学'),
-  ]),
+  ExploreTopic(
+      'Aerospace engineering', AppIcons.airplaneTakeoff, '航空航天 aerospace engineering lecture',
+      subs: [
+        const ExploreSub('Aerodynamics', 'aerodynamics lecture 空气动力学'),
+        const ExploreSub('Rocket propulsion', 'rocket propulsion lecture 火箭推进'),
+        const ExploreSub('Orbital mechanics', 'orbital mechanics lecture 轨道力学'),
+      ]),
   ExploreTopic('Materials science', AppIcons.drop, '材料科学 materials science lecture'),
   ExploreTopic('Chemical engineering', AppIcons.flask, '化学工程 chemical engineering lecture'),
   ExploreTopic('Energy engineering', AppIcons.sunHorizon, '能源工程 energy engineering lecture'),
-  ExploreTopic('Environmental engineering', AppIcons.tree, '环境工程 environmental engineering lecture'),
-  const ExploreTopic('Biomedical engineering', AppIcons.heartFill, '生物医学工程 biomedical engineering lecture'),
-  ExploreTopic('Industrial engineering', AppIcons.chartLine, '工业工程 运筹学 operations research lecture'),
+  ExploreTopic(
+      'Environmental engineering', AppIcons.tree, '环境工程 environmental engineering lecture'),
+  const ExploreTopic(
+      'Biomedical engineering', AppIcons.heartFill, '生物医学工程 biomedical engineering lecture'),
+  ExploreTopic(
+      'Industrial engineering', AppIcons.chartLine, '工业工程 运筹学 operations research lecture'),
 ];
 
 /// 医学: medicine and the health sciences.
@@ -328,7 +341,8 @@ final medicineTopics = <ExploreTopic>[
   ExploreTopic('Pharmacology', AppIcons.drop, '药理学 pharmacology lecture'),
   ExploreTopic('Public health', AppIcons.shield, '公共卫生 public health epidemiology lecture'),
   ExploreTopic('Medical ethics', AppIcons.handHeart, '医学伦理 bioethics lecture'),
-  ExploreTopic('Traditional Chinese medicine', AppIcons.drop, '中医 讲座 traditional Chinese medicine lecture'),
+  ExploreTopic(
+      'Traditional Chinese medicine', AppIcons.drop, '中医 讲座 traditional Chinese medicine lecture'),
   ExploreTopic('Nursing', AppIcons.handHeart, '护理学 nursing lecture'),
   ExploreTopic('Dentistry', AppIcons.smiley, '口腔医学 dentistry lecture'),
   ExploreTopic('Nutrition science', AppIcons.forkKnife, '营养学 nutrition science lecture'),
@@ -342,48 +356,67 @@ final academicLiveTopics = <ExploreTopic>[
   ExploreTopic('Space & observatories', AppIcons.moonStars, 'NASA live launch observatory live'),
   ExploreTopic('Science talks', AppIcons.lightbulb, 'science talk live 科学 直播'),
   ExploreTopic('Thesis defenses', AppIcons.sealCheck, 'PhD defense live 博士答辩 直播'),
-  ExploreTopic('Museum & library talks', AppIcons.bank, 'museum talk library lecture live 博物馆 讲座 直播'),
+  ExploreTopic(
+      'Museum & library talks', AppIcons.bank, 'museum talk library lecture live 博物馆 讲座 直播'),
 ];
 
 /// 前沿研究: this year's research as the people doing it present it, in
 /// seminars, colloquia, conference talks and paper walkthroughs, rather
 /// than courses on settled knowledge. Searched within the past year.
 final frontierTopics = <ExploreTopic>[
-  ExploreTopic('AI & machine learning', AppIcons.robot, 'machine learning research talk paper NeurIPS ICML ICLR 人工智能 前沿', subs: [
-    const ExploreSub('Large language models', 'large language models research talk paper 大模型 论文'),
-    const ExploreSub('Reinforcement learning', 'reinforcement learning research talk paper'),
-    const ExploreSub('Computer vision', 'computer vision research talk CVPR paper'),
-    const ExploreSub('AI safety & alignment', 'AI alignment safety research talk'),
-    const ExploreSub('Robotics', 'robotics research talk RSS CoRL paper 机器人 前沿'),
-  ]),
-  ExploreTopic('Physics', AppIcons.lightning, 'physics colloquium research seminar new results 物理 前沿', subs: [
-    const ExploreSub('Particle physics', 'particle physics seminar CERN new results'),
-    const ExploreSub('Quantum physics', 'quantum physics research seminar quantum computing results 量子'),
-    const ExploreSub('Condensed matter', 'condensed matter physics seminar superconductivity'),
-    const ExploreSub('Fusion & plasma', 'fusion energy plasma physics research update'),
-  ]),
-  ExploreTopic('Astronomy & space', AppIcons.moonStars, 'astronomy colloquium JWST new discovery research 天文 前沿', subs: [
-    const ExploreSub('Cosmology', 'cosmology seminar new results dark energy dark matter'),
-    const ExploreSub('Exoplanets', 'exoplanet research talk JWST'),
-    const ExploreSub('Gravitational waves', 'gravitational waves LIGO research talk'),
-  ]),
+  ExploreTopic('AI & machine learning', AppIcons.robot,
+      'machine learning research talk paper NeurIPS ICML ICLR 人工智能 前沿',
+      subs: [
+        const ExploreSub(
+            'Large language models', 'large language models research talk paper 大模型 论文'),
+        const ExploreSub('Reinforcement learning', 'reinforcement learning research talk paper'),
+        const ExploreSub('Computer vision', 'computer vision research talk CVPR paper'),
+        const ExploreSub('AI safety & alignment', 'AI alignment safety research talk'),
+        const ExploreSub('Robotics', 'robotics research talk RSS CoRL paper 机器人 前沿'),
+      ]),
+  ExploreTopic(
+      'Physics', AppIcons.lightning, 'physics colloquium research seminar new results 物理 前沿',
+      subs: [
+        const ExploreSub('Particle physics', 'particle physics seminar CERN new results'),
+        const ExploreSub(
+            'Quantum physics', 'quantum physics research seminar quantum computing results 量子'),
+        const ExploreSub('Condensed matter', 'condensed matter physics seminar superconductivity'),
+        const ExploreSub('Fusion & plasma', 'fusion energy plasma physics research update'),
+      ]),
+  ExploreTopic('Astronomy & space', AppIcons.moonStars,
+      'astronomy colloquium JWST new discovery research 天文 前沿',
+      subs: [
+        const ExploreSub('Cosmology', 'cosmology seminar new results dark energy dark matter'),
+        const ExploreSub('Exoplanets', 'exoplanet research talk JWST'),
+        const ExploreSub('Gravitational waves', 'gravitational waves LIGO research talk'),
+      ]),
   ExploreTopic('Mathematics', AppIcons.graph, 'mathematics seminar new proof colloquium 数学 前沿'),
-  ExploreTopic('Life sciences', AppIcons.tree, 'biology research seminar new discovery 生命科学 前沿', subs: [
-    const ExploreSub('Genetics & genomics', 'genomics CRISPR gene editing research talk 基因'),
-    const ExploreSub('Neuroscience', 'neuroscience research seminar brain new findings 神经科学'),
-    const ExploreSub('Evolution', 'evolutionary biology research talk new findings'),
-    const ExploreSub('Synthetic biology', 'synthetic biology research talk'),
-  ]),
-  ExploreTopic('Medical research', AppIcons.heart, 'medical research clinical trial results grand rounds 医学 前沿', subs: [
-    const ExploreSub('Cancer research', 'cancer research new treatment trial results talk'),
-    const ExploreSub('Vaccines & infectious disease', 'vaccine infectious disease research talk'),
-    const ExploreSub('Aging & longevity', 'aging longevity research talk'),
-  ]),
-  ExploreTopic('Chemistry & materials', AppIcons.flask, 'chemistry materials science research seminar new 材料 前沿'),
+  ExploreTopic('Life sciences', AppIcons.tree, 'biology research seminar new discovery 生命科学 前沿',
+      subs: [
+        const ExploreSub('Genetics & genomics', 'genomics CRISPR gene editing research talk 基因'),
+        const ExploreSub('Neuroscience', 'neuroscience research seminar brain new findings 神经科学'),
+        const ExploreSub('Evolution', 'evolutionary biology research talk new findings'),
+        const ExploreSub('Synthetic biology', 'synthetic biology research talk'),
+      ]),
+  ExploreTopic('Medical research', AppIcons.heart,
+      'medical research clinical trial results grand rounds 医学 前沿',
+      subs: [
+        const ExploreSub('Cancer research', 'cancer research new treatment trial results talk'),
+        const ExploreSub(
+            'Vaccines & infectious disease', 'vaccine infectious disease research talk'),
+        const ExploreSub('Aging & longevity', 'aging longevity research talk'),
+      ]),
+  ExploreTopic('Chemistry & materials', AppIcons.flask,
+      'chemistry materials science research seminar new 材料 前沿'),
   ExploreTopic('Climate & Earth', AppIcons.globe, 'climate science research talk new study 气候 前沿'),
-  ExploreTopic('Energy & engineering', AppIcons.gear, 'engineering research breakthrough battery energy research talk 工程 前沿'),
-  ExploreTopic('Computing', AppIcons.code, 'computer science research talk systems security paper 计算机 前沿'),
-  ExploreTopic('Social sciences', AppIcons.chartBar, 'social science research seminar new study economics psychology 社科 前沿'),
-  ExploreTopic('Humanities', AppIcons.scroll, 'humanities research lecture new findings archaeology discovery 人文 前沿'),
-  ExploreTopic('Theology & religious studies', AppIcons.handsPraying, 'theology research conference paper religious studies new scholarship 神学 研究'),
+  ExploreTopic('Energy & engineering', AppIcons.gear,
+      'engineering research breakthrough battery energy research talk 工程 前沿'),
+  ExploreTopic(
+      'Computing', AppIcons.code, 'computer science research talk systems security paper 计算机 前沿'),
+  ExploreTopic('Social sciences', AppIcons.chartBar,
+      'social science research seminar new study economics psychology 社科 前沿'),
+  ExploreTopic('Humanities', AppIcons.scroll,
+      'humanities research lecture new findings archaeology discovery 人文 前沿'),
+  ExploreTopic('Theology & religious studies', AppIcons.handsPraying,
+      'theology research conference paper religious studies new scholarship 神学 研究'),
 ];

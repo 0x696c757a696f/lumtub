@@ -34,13 +34,20 @@ class _MiniProgressLineState extends State<MiniProgressLine> {
         initialData: player.state.position,
         builder: (context, _) {
           final total = player.state.duration.inMilliseconds;
-          double fraction(Duration d) => total <= 0 ? 0 : (d.inMilliseconds / total).clamp(0.0, 1.0);
+          double fraction(Duration d) =>
+              total <= 0 ? 0 : (d.inMilliseconds / total).clamp(0.0, 1.0);
           return SizedBox(
             height: MiniProgressLine.height,
             child: Stack(fit: StackFit.expand, children: [
               const ColoredBox(color: Color(0x33FFFFFF)),
-              FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: fraction(player.state.buffer), child: ColoredBox(color: color.withValues(alpha: 0.4))),
-              FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: fraction(player.state.position), child: ColoredBox(color: color)),
+              FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: fraction(player.state.buffer),
+                  child: ColoredBox(color: color.withValues(alpha: 0.4))),
+              FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: fraction(player.state.position),
+                  child: ColoredBox(color: color)),
             ]),
           );
         },

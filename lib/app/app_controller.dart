@@ -183,12 +183,27 @@ part 'video_details.dart';
 part 'volume_balance_actions.dart';
 part 'window_actions.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, downloads, learning, settings, channel, playlist, youtubePlaylist }
+enum PageMode {
+  home,
+  explore,
+  subscriptions,
+  history,
+  playlists,
+  downloads,
+  learning,
+  settings,
+  channel,
+  playlist,
+  youtubePlaylist
+}
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier with _ExploreState {
-  AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore {
-    deArrow.configure(_http, titles: () => settings.deArrowTitles, thumbnails: () => settings.deArrowThumbnails);
+  AppController(
+      {this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore})
+      : _appearanceStore = appearanceStore {
+    deArrow.configure(_http,
+        titles: () => settings.deArrowTitles, thumbnails: () => settings.deArrowThumbnails);
     _applyAppearanceGlobals(appearance);
   }
 
@@ -222,15 +237,18 @@ class AppController extends ChangeNotifier with _ExploreState {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
+
   /// Lumtub's own updates; null until the components are ready.
   AppUpdater? appUpdater;
 
   /// Daily download of the signed block lists; set once ready.
   BlockListUpdates? blockListUpdates;
   String status = tr('Preparing the Windows native player…');
+
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
   String? playbackError;
+
   /// Whether [playbackError] is a live stream that has not started yet and
   /// is retried by itself.
   bool get waitingForStart => playbackError != null && _waitingForStart;
@@ -263,16 +281,21 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The open channel page and its uploads.
   ChannelRef? channel;
   VideoListLoader? channelVideos;
+
   /// What the channel page is searching for; null lists the uploads.
   String? channelQuery;
+
   /// The id of the open playlist page: a [LocalPlaylist] id, or
   /// [favoritesPlaylistId].
   String? openPlaylistId;
   static const favoritesPlaylistId = 'favorites';
+
   /// 稍后观看 opens on the same page as a playlist.
   static const watchLaterPlaylistId = 'watch_later';
+
   /// Where 返回 goes: earlier pages and videos.
   final _back = BackStack();
+
   /// Set while going back, so the step back is not itself remembered.
   bool _restoring = false;
 
@@ -283,11 +306,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
   ChannelSort channelSort = ChannelSort.latest;
+
   /// The length of video the open channel tab shows.
   SearchDuration channelLength = SearchDuration.any;
+
   /// The reading behind a Longest or Shortest order (最长, 最短), for its
   /// progress.
   ChannelLengths? channelLengths;
+
   /// When the system last said it is short of memory.
   DateTime? _lastMemoryPressure;
   PostsLoader? channelPosts;
@@ -308,17 +334,22 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// 置顶: the window stays above the others.
   bool pinned = false;
+
   /// 画中画: a small borderless window above the others, showing only the
   /// video in its own ratio (ui/pip_view.dart).
   bool pip = false;
+
   /// 应用内小窗: [playing] keeps playing in a floating card over the other
   /// pages instead of on the watch page (ui/mini_player.dart).
   bool mini = false;
+
   /// 听视频: mpv decodes no picture, which saves power and bandwidth.
   bool audioOnly = false;
 
   void togglePinned() {
-    if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('Could not keep the window on top'));
+    if (!AppWindow.setTopmost(!pinned || pip)) {
+      return _notice(tr('Could not keep the window on top'));
+    }
     _update(() => pinned = !pinned);
     if (pinned) _noteWaylandTop();
   }
@@ -345,7 +376,11 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   void _tellSoftwareQuality() {
     if (_softwareQualityTelling || _disposed || preferences.softwareQualityTold) return;
-    if (settings.maxHeight != 0 || settings.strategy != PlaybackStrategy.auto || settings.hwdec == 'no') return;
+    if (settings.maxHeight != 0 ||
+        settings.strategy != PlaybackStrategy.auto ||
+        settings.hwdec == 'no') {
+      return;
+    }
     if (!availableHeights.any((h) => h > 1080)) return;
     // On an iPhone or iPad only where the chip has no VP9 decoder (before
     // the A12): a newer chip has one, which iOS 26.2 opens to apps and the
@@ -379,7 +414,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (!_batteryPending) return;
     _batteryPending = false;
     unawaited(() async {
-      final free = await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('batteryUnrestricted').catchError((Object e) {
+      final free = await const MethodChannel('lumtub/windows_shell')
+          .invokeMethod<bool>('batteryUnrestricted')
+          .catchError((Object e) {
         logDebug(() => 'Could not ask about battery optimisation: $e');
         return true;
       });
@@ -393,7 +430,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// optimisation (or its list of apps).
   Future<void> askBatteryUnrestricted() async {
     try {
-      await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('askBatteryUnrestricted');
+      await const MethodChannel('lumtub/windows_shell')
+          .invokeMethod<bool>('askBatteryUnrestricted');
     } catch (e) {
       logWarn('Could not open the battery settings: $e');
     }
@@ -408,7 +446,8 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Whether leaving the watch page now keeps the video in the mini player.
   bool get _keepsPlaying =>
-      playing != null && (mini || (preferences.miniPlayer && player != null && playbackError == null));
+      playing != null &&
+      (mini || (preferences.miniPlayer && player != null && playbackError == null));
 
   VideoOutputSize? _outputSize;
 
@@ -447,6 +486,7 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+
   /// [queue]'s first index of each id, and [upNext] for [_upNextFor]; made
   /// again when [queue] is another list (QueueActions).
   List<VideoItem>? _indexedQueue;
@@ -455,9 +495,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   List<VideoItem>? _upNextOf;
   String? _upNextFor;
   List<VideoItem> _upNext = const [];
+
   /// The playlist the playing video was opened from, for the watch page's
   /// playlist panel; null when it came from anywhere else.
   PlayingList? playingList;
+
   /// Videos lined up by hand; they play before [upNext].
   final playQueue = PlayQueue();
   VideoDetails? details;
@@ -502,7 +544,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     ChurchWording.noteChannel(open.id, rite);
     return rite;
   }
+
   List<LiveChatMessage> replayChat = const [];
+
   /// Recent Super Chats of the live chat, newest first, with when each
   /// leaves the strip over the chat.
   List<(LiveChatMessage, DateTime)> chatTicker = const [];
@@ -511,14 +555,18 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// second: only the chat panel listens, not the whole app.
   final chatMessages = ValueNotifier(0);
   bool loadingReplayChat = false;
+
   /// While a chat replay is still being read after its first messages.
   bool loadingMoreChat = false;
   String? replayChatError;
+
   /// The view the chat shows; null when it offers only one, or is read
   /// through yt-dlp, which shows YouTube's default.
   ChatView? chatViewShown;
+
   /// Who may write in the live chat, when not everyone may.
   String? chatRestricted;
+
   /// The chat's last mode change: slow mode, subscribers-only or
   /// members-only mode turned on or off.
   LiveChatMessage? chatMode;
@@ -529,34 +577,47 @@ class AppController extends ChangeNotifier with _ExploreState {
   final _currentChatIds = <String>{};
   final _chatRemoved = <String>{};
   final _chatRemovedAuthors = <String>{};
+
   /// The live chat's first answer since it started: what was said before,
   /// shown in the chat but not flown across the picture.
   bool _chatHistory = false;
   late final _chatFeed = LiveChatFeed(_http);
+
   /// The audio language chosen for one video in the player ('' for its
   /// original sound), which lasts until another video plays.
   (String, String)? _audioPick;
+
   /// The audio languages the playing video offers; empty when it has one.
   List<AudioLanguage> availableAudioLanguages = const [];
+
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
+
   /// The most frames a second of [availableHeights], where above 30.
   Map<int, int> availableFrameRates = const {};
+
   /// Heights for the quality menu: automatic, then only what the playing
   /// video offers (just automatic until that is known).
-  List<int> get qualityChoices => [0, ...({...availableHeights}.toList()..sort((a, b) => b.compareTo(a)))];
+  List<int> get qualityChoices => [
+        0,
+        ...({...availableHeights}.toList()..sort((a, b) => b.compareTo(a)))
+      ];
 
   /// The video opened from addresses resolved ahead of libmpv, if any.
   String? _openedResolved;
+
   /// The video last opened from a Piped or Invidious server, so a failure
   /// falls back to YouTube (or the other one) once.
   String? _openedVia;
   String? _openedOrigin;
+
   /// The video playing from its downloaded file, if any.
   String? _openedLocal;
+
   /// The servers tried for the video being opened, and the 429 YouTube
   /// answered it with, which lets both be tried whatever 播放来源 says.
   final _relaysTried = <RelayKind>{};
+
   /// What YouTube said when it would not play the video, so Piped and
   /// Invidious stand in for it.
   PlaybackFailure? _youtubeRefused;
@@ -584,7 +645,8 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// This PC's address on the network [device] is on.
   static Future<String> _addressFacing(CastDevice device) async {
-    final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
+    final socket =
+        await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
     final here = socket.address.address;
     socket.destroy();
     return here;
@@ -601,17 +663,21 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Registers a cast stream away from the UI isolate. A static function so
   /// the closure sent to the isolate captures nothing but [ask]; one made
   /// inside [_joinedCast] would carry its timer along, which cannot be sent.
-  static Future<String> _castRegister(String ask) => Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}');
+  static Future<String> _castRegister(String ask) =>
+      Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}');
 
   /// The Piped servers, for 设置 › Piped 服务器.
   PipedStreams get piped => _piped;
+
   /// The Invidious instances, for 设置 › Invidious 实例.
   InvidiousStreams get invidious => _invidious;
+
   /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
   StreamRelay? _relay;
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
+
   /// The Windows accent colour, once read, for [AppearanceSettings.systemAccent].
   Color? windowsAccent;
 
@@ -619,7 +685,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   AppPreferencesStore? _preferencesStore;
 
   /// The seed colour the theme is built from.
-  Color get accentColor => appearance.systemAccent && windowsAccent != null ? windowsAccent! : appearance.accent;
+  Color get accentColor =>
+      appearance.systemAccent && windowsAccent != null ? windowsAccent! : appearance.accent;
 
   static void _applyAppearanceGlobals(AppearanceSettings appearance) {
     VideoItem.thumbnailFile = appearance.effectiveThumbnails.file;
@@ -630,6 +697,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   int _playSerial = 0;
+
   /// The [_playSerial] libmpv's file was opened for: until the video asked
   /// for opens, what the file before it reports (its end, an error, a
   /// stall) is not about that video.
@@ -639,9 +707,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   final _playerSubscriptions = <StreamSubscription<Object?>>[];
   double _volumeBeforeMute = 100;
   bool _libmpvConfirmed = false;
+
   /// The video whose position is being recorded; null while switching, so
   /// positions of the previous file are not credited to the next.
   VideoItem? _tracking;
+
   /// The song [_tracking] was taken for, worked out once for its details and length.
   (String, VideoDetails?, Duration, ScrobbleTrack?)? _scrobbleFor;
   DateTime _lastProgressSave = DateTime(0);
@@ -651,14 +721,20 @@ class AppController extends ChangeNotifier with _ExploreState {
   PlayerSettings? _applied;
   final _skipped = <SkipSegment>{};
   final _http = appHttpClient();
+
   /// Sprite sheets of the progress bar's preview frames.
   late final storyboardSheets = StoryboardSheets(_http);
   late final _google = GoogleTranslator(_http);
+
   /// Translations already made, kept for a week in the cache folder.
   TranslationCache _translationCache = TranslationCache();
+
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = CachingTranslator(_googleFirst, _translationCache, preferences.translation.cacheScope, batch: true);
+  late Translator translator = CachingTranslator(
+      _googleFirst, _translationCache, preferences.translation.cacheScope,
+      batch: true);
+
   /// Behind comments, descriptions, chapter titles, chat and search words:
   /// the service chosen, as for subtitles, batched. With Google's free
   /// endpoint chosen, Microsoft's free one takes a text only while Google
@@ -673,17 +749,33 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   String _translationSetupNow() {
     final p = preferences;
-    return [identityHashCode(textTranslator), p.translateTarget, p.immersiveTarget, p.chineseAsOne, p.skipSameLanguage, p.bilingualTranslation, p.translationFirst, p.translationStyle.name, ...p.neverTranslate].join('|');
+    return [
+      identityHashCode(textTranslator),
+      p.translateTarget,
+      p.immersiveTarget,
+      p.chineseAsOne,
+      p.skipSameLanguage,
+      p.bilingualTranslation,
+      p.translationFirst,
+      p.translationStyle.name,
+      ...p.neverTranslate
+    ].join('|');
   }
+
   late final _microsoftFree = MicrosoftTranslator(_http);
   late final _googleFirst = FallbackTranslator(_google, _microsoftFree);
+
   /// MyMemory takes short texts last, when both others refuse; its email
   /// (optional, for a larger allowance) is kept with the keys.
-  late final _myMemory = MyMemoryTranslator(_http, email: () => translationKeys[TranslationService.mymemory.name] ?? '');
-  late final _googleThenOthers = FallbackTranslator(_google, FallbackTranslator(_microsoftFree, _myMemory));
+  late final _myMemory = MyMemoryTranslator(_http,
+      email: () => translationKeys[TranslationService.mymemory.name] ?? '');
+  late final _googleThenOthers =
+      FallbackTranslator(_google, FallbackTranslator(_microsoftFree, _myMemory));
+
   /// For the words Explore searches with, not shown as translations:
   /// Microsoft's first, keeping Google's allowance for what is shown.
-  late final _microsoftFirst = FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
+  late final _microsoftFirst =
+      FallbackTranslator(_microsoftFree, FallbackTranslator(_google, _myMemory));
 
   /// Titles in lists translated (列表标题翻译), kept apart so they do not
   /// push subtitles and comments out of [_translationCache].
@@ -704,8 +796,13 @@ class AppController extends ChangeNotifier with _ExploreState {
       // With Google's free endpoint chosen, titles go to it and then
       // Microsoft's, never MyMemory, whose small daily allowance is kept
       // for what is asked for by hand.
-      final inner = p.translation.service == TranslationService.google ? _googleFirst : text is CachingTranslator ? text.inner : text;
-      _titleTranslator = CachingTranslator(inner, _titleCache, p.translation.cacheScope, batch: inner is! AiTranslator);
+      final inner = p.translation.service == TranslationService.google
+          ? _googleFirst
+          : text is CachingTranslator
+              ? text.inner
+              : text;
+      _titleTranslator = CachingTranslator(inner, _titleCache, p.translation.cacheScope,
+          batch: inner is! AiTranslator);
     }
     final target = p.immersiveTarget;
     final known = {target, ...p.neverTranslate};
@@ -715,20 +812,30 @@ class AppController extends ChangeNotifier with _ExploreState {
       mode: p.titleTranslation,
       translator: _titleTranslator!,
       target: target,
-      needs: (title) => letters.hasMatch(title) && !known.any((language) => readsAs(title, language, chineseAsOne: chineseAsOne)),
+      needs: (title) =>
+          letters.hasMatch(title) &&
+          !known.any((language) => readsAs(title, language, chineseAsOne: chineseAsOne)),
       setup: translationSetup.value,
     );
   }
 
   Translator _textTranslatorOf(Translator translator) => switch (preferences.translation.service) {
-        TranslationService.google => CachingTranslator(_googleThenOthers, _translationCache, preferences.translation.cacheScope, batch: true),
-        TranslationService.mymemory => CachingTranslator(FallbackTranslator(_myMemory, _googleFirst), _translationCache, preferences.translation.cacheScope, batch: true),
+        TranslationService.google => CachingTranslator(
+            _googleThenOthers, _translationCache, preferences.translation.cacheScope,
+            batch: true),
+        TranslationService.mymemory => CachingTranslator(
+            FallbackTranslator(_myMemory, _googleFirst),
+            _translationCache,
+            preferences.translation.cacheScope,
+            batch: true),
         _ => translator,
       };
+
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};
   SecureJsonFile? _translationKeyFile;
+
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
 
@@ -736,6 +843,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// its own character forms; empty where unknown.
   String get mainSubtitleLanguage => player?.state.track.subtitle.language ?? '';
   String get secondSubtitleLanguage => secondarySubtitle?.language ?? '';
+
   /// mpv's `secondary-sid` as it last said: 'no' when no second subtitle
   /// shows. It can show one this controller did not choose, such as one
   /// mpv brought back by itself.
@@ -743,12 +851,15 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Whether a second subtitle shows.
   bool get secondaryOn => secondarySubtitle != null || secondaryTrackId != 'no';
+
   /// The second subtitle being fetched or translated, shown as loading in
   /// the 字幕 panel rather than as 关闭.
   SubtitleOption? secondaryLoading;
+
   /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
   /// off stays off.
   String? _secondaryAutoFor;
+
   /// Settles once the subtitles shown by themselves for the video of
   /// [_subtitlesSerial] are on, or are known not to need a translation.
   Completer<void> _subtitlesReady = Completer<void>()..complete();
@@ -756,6 +867,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   String? _lastMpvLine;
+
   /// yt-dlp and libmpv error lines for the video being opened, which name
   /// the cause libmpv's own error message usually leaves out.
   final _recentErrors = <String>[];
@@ -763,6 +875,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// No prefetching until then, after YouTube answered 429.
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
+
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
   SearchPhrases? _searchPhrases;
@@ -774,10 +887,13 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// the dropped-frame checks: the first picture of a run compiles the
   /// shaders and drops frames that later ones do not.
   DateTime _openedAt = DateTime(2000);
+
   /// The video libmpv was last told to open; its file loads after.
   String? _openIssued;
+
   /// Ten-second windows in a row that dropped a tenth of the frames or more.
   int _dropStreak = 0;
+
   /// The quality automatic playback is lowered to for this run after
   /// frames kept dropping; 0 while it is not.
   int _droppedCap = 0;
@@ -789,12 +905,15 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _dropTimer;
   Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
+
   /// Holds back resolving the next video until this one plays steadily.
   final _settled = SettledPlayback();
+
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
   final _resumePoint = ResumePoint();
   String? _relayed;
+
   /// The video opened from its stream addresses rather than through
   /// ytdl_hook, which then adds no subtitle tracks of its own.
   String? _openedDirect;
@@ -806,29 +925,39 @@ class AppController extends ChangeNotifier with _ExploreState {
   int _startAttempts = 0;
   bool _recovering = false;
   bool _shutDown = false;
+
   /// The start-up under way, so a retry joins it instead of running twice.
   Future<void>? _initializing;
   late final _sponsorBlock = SponsorBlock(_http);
+
   /// 听歌记录: songs listened to, told to ListenBrainz once a token is given.
   late final scrobbler = Scrobbler(_http, version: appVersion);
   late final _returnDislike = ReturnDislike(_http);
+
   /// Each channel's last speed and volume; see [ChannelPlayback].
   ChannelPlayback? channelPlayback;
+
   /// 语音识别 subtitles made for videos that had none, kept on this computer.
   SpeechSubtitleStore? speechStore;
+
   /// The 语音识别 running now: the video, what it is doing, parts done of
   /// how many. Its own notifier, so progress repaints only what shows it.
   final speechJob = ValueNotifier<({String videoId, String stage, int done, int total})?>(null);
+
   /// 观看统计's watch time.
   WatchTime? watchTime;
+
   /// The channel whose speed and volume changes are remembered now; null
   /// while a video opens and its own settings are applied.
   String? _playbackChannel;
+
   /// The volume a channel with none of its own plays at: the last chosen.
   double? _sessionVolume;
+
   /// Playing time not yet added to [watchTime], and when it was counted.
   int _watchMs = 0;
   DateTime? _watchTick;
+
   /// Return YouTube Dislike's estimate for the video playing, when on.
   DislikeCount? dislikes;
   bool _disposed = false;
@@ -837,14 +966,17 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// One-off messages the UI shows as snack bars.
   Stream<String> get notices => _notices.stream;
   final _linkedPosts = StreamController<(CommunityPost, ChannelRef)>.broadcast();
+
   /// Posts opened from a pasted link, for the UI to show on a page of
   /// their own.
   Stream<(CommunityPost, ChannelRef)> get linkedPosts => _linkedPosts.stream;
   final _finishedDownloads = StreamController<DownloadTask>.broadcast();
+
   /// Downloads as they finish, for a notice that can open the file.
   Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+
   /// Changes whenever [history] does, entries changed in place included.
   int get historyRevision => _history?.revision ?? 0;
 
@@ -864,15 +996,23 @@ class AppController extends ChangeNotifier with _ExploreState {
   SearchFilter searchFilter = SearchFilter.all;
 
   List<VideoItem> get results => searchResults?.items ?? const [];
+
   /// The search's channels, without blocked groups unless one is named
   /// exactly.
   List<ChannelResult> get channelResults => [
         for (final c in searchResults?.channels ?? const <ChannelResult>[])
-          if (!preferences.isBlocked(c.ref.id) && !preferences.isBlockedName(c.ref.name) && (!preferences.blocksChannel(c.ref.name, id: c.ref.id, handle: c.handle) || isExactName(c.ref.name, _query) || isExactName(c.handle ?? '', _query))) c,
+          if (!preferences.isBlocked(c.ref.id) &&
+              !preferences.isBlockedName(c.ref.name) &&
+              (!preferences.blocksChannel(c.ref.name, id: c.ref.id, handle: c.handle) ||
+                  isExactName(c.ref.name, _query) ||
+                  isExactName(c.handle ?? '', _query)))
+            c,
       ];
   List<PlaylistResult> get playlistResults => [
         for (final p in searchResults?.playlists ?? const <PlaylistResult>[])
-          if (!preferences.isBlockedName(p.channel) && (!preferences.blocksChannel(p.channel) || isExactName(p.channel, _query))) p,
+          if (!preferences.isBlockedName(p.channel) &&
+              (!preferences.blocksChannel(p.channel) || isExactName(p.channel, _query)))
+            p,
       ];
   bool get searching => searchResults?.loading ?? false;
   String? get searchError => searchResults?.error;
@@ -950,7 +1090,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     _update(() => incognito = value);
     _translationCache.persist = !value;
     _titleCache.persist = !value;
-    _notice(value ? tr('Incognito mode is on: nothing you watch or search now will be remembered') : tr('Incognito mode is off'));
+    _notice(value
+        ? tr('Incognito mode is on: nothing you watch or search now will be remembered')
+        : tr('Incognito mode is off'));
     logInfo(value ? 'Incognito on' : 'Incognito off');
   }
 
@@ -968,28 +1110,37 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The explore page's 类型 and 视角 lists for [section]. The rest of the
   /// explore page is in explore_controller.dart.
-  static List<WordFilter> formatsOf(ExploreSection section) => section.isFaith ? FaithFormat.values : ContentFormat.values;
-  static List<WordFilter> viewsOf(ExploreSection section) => section.isFaith ? FaithView.values : ContentView.values;
+  static List<WordFilter> formatsOf(ExploreSection section) =>
+      section.isFaith ? FaithFormat.values : ContentFormat.values;
+  static List<WordFilter> viewsOf(ExploreSection section) =>
+      section.isFaith ? FaithView.values : ContentView.values;
 
   /// 为你推荐 in a zone: title words and channels like the history's
   /// first, then more viewed.
   static double exploreScore(TasteProfile taste, VideoItem item) {
     final views = item.viewCount ?? item.watching ?? 0;
-    return 0.55 * taste.titleMatch(item) + 0.35 * max(0.0, taste.channelAffinity(item)) + 0.1 * min(1.0, log(views + 1) / ln10 / 7);
+    return 0.55 * taste.titleMatch(item) +
+        0.35 * max(0.0, taste.channelAffinity(item)) +
+        0.1 * min(1.0, log(views + 1) / ln10 / 7);
   }
 
   static String? parseYoutubeId(String input) {
     // A link copied without its scheme is the same video.
     final text = input.trim();
-    final url = Uri.tryParse(RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
+    final url = Uri.tryParse(
+        RegExp(r'^[a-z]+://', caseSensitive: false).hasMatch(text) ? text : 'https://$text');
     if (url == null || url.scheme != 'https') return null;
     if (url.host == 'youtu.be') {
       final id = url.pathSegments.isNotEmpty ? url.pathSegments.first : '';
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
     }
-    if (const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}.contains(url.host)) {
+    if (const {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'}
+        .contains(url.host)) {
       final id = url.queryParameters['v'] ??
-          ((url.pathSegments.length >= 2 && (url.pathSegments.first == 'shorts' || url.pathSegments.first == 'live')) ? url.pathSegments[1] : '');
+          ((url.pathSegments.length >= 2 &&
+                  (url.pathSegments.first == 'shorts' || url.pathSegments.first == 'live'))
+              ? url.pathSegments[1]
+              : '');
       return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
     }
     return null;
@@ -1000,34 +1151,42 @@ class AppController extends ChangeNotifier with _ExploreState {
   DanmakuOverlay? get _danmaku => danmakuShown.value;
   set _danmaku(DanmakuOverlay? overlay) => danmakuShown.value = overlay;
   String? _danmakuFor;
+
   /// The timed comments flown on a video without a chat, and its id.
   List<LiveChatMessage> _commentDanmaku = const [];
   String? _commentDanmakuFor;
 
   static String _clock(Duration d) {
     final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return d.inHours > 0 ? '${d.inHours}:${d.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${d.inMinutes}:$seconds';
+    return d.inHours > 0
+        ? '${d.inHours}:${d.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds'
+        : '${d.inMinutes}:$seconds';
   }
 
   /// The subtitles shown in this video, by label, so a reopened video can
   /// show them again.
   final _shownOptions = <String, SubtitleOption>{};
+
   /// The main subtitle's title when the subtitle key last turned it off.
   String? _subtitleBeforeOff;
 
   /// The play whose first open already tried a quick start.
   int? _quickSerial;
+
   /// The play whose refused addresses were already resolved once more.
   int? _resolvedAgain;
+
   /// The answer the opened addresses came from.
   ResolvedVideo? _openedVideo;
 
   /// The live stream opened as its picture and sound above 1080p, joined
   /// fragment by fragment in the relay (see [LiveSplit]).
   String? _liveSplit;
+
   /// The live stream whose split picture and sound failed soon after
   /// opening twice, so it plays from HLS instead, up to 1080p.
   String? _liveSplitOff;
+
   /// The live stream whose split picture and sound failed soon after
   /// opening once: it gets one more try before HLS.
   String? _liveSplitBroke;
@@ -1035,8 +1194,13 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Whether Piped or Invidious may play what YouTube would not. Not for
   /// what the video itself is (private, upcoming, no allowed format) or for
   /// a network that is down.
-  static bool _serversMayHelp(FailureKind kind) =>
-      const {FailureKind.rateLimited, FailureKind.botCheck, FailureKind.challenge, FailureKind.forbidden, FailureKind.unknown}.contains(kind);
+  static bool _serversMayHelp(FailureKind kind) => const {
+        FailureKind.rateLimited,
+        FailureKind.botCheck,
+        FailureKind.challenge,
+        FailureKind.forbidden,
+        FailureKind.unknown
+      }.contains(kind);
 
   /// [_serversMayHelp] for [kind], and the user allows falling back to
   /// Piped and Invidious when YouTube refuses.
@@ -1049,18 +1213,23 @@ class AppController extends ChangeNotifier with _ExploreState {
     _http,
     Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
     () => translator,
-    byTranslator: () => preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
+    byTranslator: () =>
+        preferences.subtitlesByService && !preferences.translation.service.subtitlesOnGoogle,
     position: () => player?.state.position ?? Duration.zero,
     playing: () => playing?.id,
-    wording: (text, target, original) => ChurchWording.apply(text, target, rite: playingRite, original: original),
+    wording: (text, target, original) =>
+        ChurchWording.apply(text, target, rite: playingRite, original: original),
     onUpdated: _subtitleFileUpdated,
   );
 
   final _cues = <String, List<SubtitleCue>>{};
+
   /// Subtitle files that could not be read, by the key of [_cues].
   final _cueMisses = <String, int>{};
+
   /// Bumped when a subtitle file was read again, as the lines in it grew.
   int _cueGeneration = 0;
+
   /// The lines 每句说完暂停 and stepping by line go by, and what they were
   /// read for (LearningActions).
   List<SubtitleCue> _learningLines = const [];
@@ -1072,14 +1241,18 @@ class AppController extends ChangeNotifier with _ExploreState {
   StreamSubscription<Duration>? _lineOnce;
   final _linePause = LinePause();
   final _reveal = TranslationReveal();
+
   /// Whether the blurred second subtitle (模糊翻译) shows plainly now.
   final translationShown = ValueNotifier<bool>(false);
+
   /// 跟读录音: the take and the microphone, made when first used.
   Shadowing? _shadowing;
+
   /// The line the take is of, and the player that plays the take.
   SubtitleCue? _shadowLine;
   Player? _shadowPlayer;
   int _shadowSerial = 0;
+
   /// What 跟读录音 is doing now.
   final shadowStage = ValueNotifier(ShadowStage.idle);
 
@@ -1091,11 +1264,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// what the study changed for a while (StudyActions).
   StudyRun? _studyRun;
   StudyStore? _studyStore;
+
   /// Bumped as the study moves on, for its bar.
   final studyChanged = ValueNotifier<int>(0);
+
   /// 盲听 and 复听 hide the subtitles.
   bool studyHidesSubtitles = false;
   final _studyOwner = Object();
+
   /// iOS's picture-in-picture window, while it hides the subtitles.
   final _iosPipOwner = Object();
   double? _studyRateBefore;
@@ -1106,6 +1282,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   List<String>? chapterTranslation;
   String? chapterTranslationOf;
   bool translatingChapters = false;
+
   /// Bumped when [chapterTranslation] or [translatingChapters] changes,
   /// for the chapter menu, which does not rebuild with everything else.
   final chaptersChanged = ValueNotifier<int>(0);
@@ -1120,36 +1297,47 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool waitingForSubtitles = false;
 
   bool _subtitlesFollowing = false;
+
   /// How far, in percent of the picture's height, subtitles drawn by mpv
   /// are raised while the player's controls cover the bottom.
   int _subtitleLift = 0;
+
   /// The main subtitle mpv shows now, for placing the second one.
   List<String> _mainSubtitle = const [];
+
   /// The player the subtitles are drawn in, as the Flutter subtitle view
   /// sizes text there; null until one is laid out.
   ({Size view, double textScale, double paddingScale})? _subtitleView;
+
   /// The subtitle options last sent to libmpv for the player's size.
   Map<String, String> _libassSent = {};
   Timer? _libassLookTimer;
+
   /// The player whose libmpv was asked whether it has secondary-sub-scale
   /// (mpv 0.42 on; the iOS and Android builds are older), and the answer.
   /// Without it the second subtitle's copy carries its own size.
   Player? _secondScaleAsked;
   bool _secondScaleMissing = false;
+
   /// Second subtitles drawn in their own font and color: each copy's track
   /// id, with the track it copies and the style it has.
   final Map<String, ({String source, String key, bool second, String file})> _subtitleCopies = {};
+
   /// Where the quick copy of the second subtitle starts (_copyFor).
   Duration _quickFrom = Duration.zero;
+
   /// Tracks that fit on screen as they are while libmpv draws.
   final Set<String> _plainFits = {};
   Future<void> _restyling = Future.value();
   int _copySerial = 0;
+
   /// mpv's `sid` as it last said.
   String _mainTrackId = 'no';
   int _copyFiles = 0;
+
   /// The family libmpv draws subtitles in on Android, picked by their text.
   String? _subtitleFamily;
+
   /// On Android: libmpv met subtitles no one font can draw, so Flutter's
   /// subtitle view draws this video's instead.
   bool libassCantDraw = false;
@@ -1164,8 +1352,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get subtitlesOff => _subtitlesOffIn.isNotEmpty;
 
   bool _backgroundAudioOnly = false;
+
   /// The background cache is in force (_backgroundCache).
   bool _smallCache = false;
+
   /// iPhone and iPad: following the player for picture in picture.
   _IosPipSync? _iosPip;
   bool _iosAutoPip = false;
@@ -1180,18 +1370,19 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool get stopsAfterEnd =>
       sleepAfterCurrent ||
       playQueue.isEmpty &&
-      switch (settings.playOrder) {
-        PlayOrder.pause => true,
-        PlayOrder.singleCycle || PlayOrder.listCycle => false,
-        PlayOrder.listOrder => upNext.isEmpty,
-        PlayOrder.autoPlayRelated => !hasNext,
-      };
+          switch (settings.playOrder) {
+            PlayOrder.pause => true,
+            PlayOrder.singleCycle || PlayOrder.listCycle => false,
+            PlayOrder.listOrder => upNext.isEmpty,
+            PlayOrder.autoPlayRelated => !hasNext,
+          };
 
   /// SponsorBlock segments of the playing video, for the progress bar.
   List<SkipSegment> get segments => _segments;
 
   /// When the sleep timer pauses playback; null when it is off.
   DateTime? sleepAt;
+
   /// Pause once the current video ends instead of at [sleepAt].
   bool sleepAfterCurrent = false;
   Timer? _sleepTimer;
@@ -1232,7 +1423,11 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The one queue for AI work: one heavy job on this device at a time,
   /// background work only on mains power and outside low resource use.
-  late final jobs = JobQueue(backgroundPaused: () => Power.saving || appearance.lowResource || settings.strategy == PlaybackStrategy.lowResource);
+  late final jobs = JobQueue(
+      backgroundPaused: () =>
+          Power.saving ||
+          appearance.lowResource ||
+          settings.strategy == PlaybackStrategy.lowResource);
 
   /// The AI work, done by what is set up now: today the services under
   /// 翻译与 AI, later the system's models and downloaded packs.
@@ -1240,7 +1435,12 @@ class AppController extends ChangeNotifier with _ExploreState {
     final config = preferences.translation;
     return Intelligence([
       CloudIntelligence(
-        speech: speechReady(config, translationKeys) ? SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel) : null,
+        speech: speechReady(config, translationKeys)
+            ? SpeechRecognizer(_http,
+                baseUrl: config.effectiveSpeechBaseUrl,
+                key: speechKeyFor(config, translationKeys),
+                model: config.effectiveSpeechModel)
+            : null,
         ai: aiServiceFor(config, translationKeys, _http),
       ),
     ]);
@@ -1268,7 +1468,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   int cjkFontsRevision = 0;
 
   /// Whether [details] has subtitles other than 语音识别's.
-  static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
+  static bool hasOwnSubtitles(VideoDetails? details) =>
+      details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
 
   /// The video's brightness, within [pictureLimit], as 画面与音画同步调节 keeps it.
   int get brightness => settings.picture['brightness'] ?? 0;
@@ -1289,14 +1490,21 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// libmpv's own connection as a fallback.
   bool get _strictTls => settings.certificateRoots != 'system' || settings.postQuantum == 'require';
 
-  String _formatFor(String? id) => FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
+  String _formatFor(String? id) =>
+      FormatPolicy.expression(_playback, audioLanguage: _audioLanguageFor(id));
 
   /// The audio language for the video [id], empty for its original sound.
   // Described sound, when wanted, before any dub: yt-dlp falls back to the
   // usual order for a video without it, so nothing is asked twice.
-  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings, pick: id != null && _audioPick?.$1 == id ? _audioPick!.$2 : wantsAudioDescription ? 'desc' : null);
+  String _audioLanguageFor(String? id) => FormatPolicy.dubLanguage(settings,
+      pick: id != null && _audioPick?.$1 == id
+          ? _audioPick!.$2
+          : wantsAudioDescription
+              ? 'desc'
+              : null);
 
-  bool get wantsAudioDescription => preferences.audioDescription || Accessibility.systemAudioDescription;
+  bool get wantsAudioDescription =>
+      preferences.audioDescription || Accessibility.systemAudioDescription;
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
 
@@ -1305,7 +1513,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   PlayerSettings get _playback {
     if (_benchmark case final fixed?) return fixed;
     final playback = FormatPolicy.forDisplay(settings, _displayHeight);
-    if (_droppedCap == 0 || settings.maxHeight != 0 || (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) return playback;
+    if (_droppedCap == 0 ||
+        settings.maxHeight != 0 ||
+        (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) {
+      return playback;
+    }
     return playback.copyWith(maxHeight: _droppedCap);
   }
 
@@ -1345,7 +1557,6 @@ class AppController extends ChangeNotifier with _ExploreState {
   Timer? _appearanceSaveTimer;
 
   ToolManager? get tools => _tools;
-
 
   /// Whether a crop check for a changed picture size is already scheduled.
   bool _cropFitting = false;
@@ -1402,9 +1613,18 @@ class AppController extends ChangeNotifier with _ExploreState {
       tools?.libmpvLabel ?? 'libmpv',
       'yt-dlp ${tools?.ytDlpVersion ?? 'Not installed'}',
       'Deno ${tools?.denoVersion ?? 'Not installed'}',
-      tr('Hardware decoding setting {0} · current {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
-      tr('Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}', [settings.maxHeight == 0 ? tr('Auto') : '${settings.maxHeight}p', settings.strategy.label, FormatPolicy.disabledNames(settings).isEmpty ? tr('None') : FormatPolicy.disabledNames(settings), settings.audioQuality.label]),
-      tr('Cache {0} · {1} s · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
+      tr('Hardware decoding setting {0} · current {1} · {2}',
+          [settings.hwdec, currentCodec, currentHwdec]),
+      tr('Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}', [
+        settings.maxHeight == 0 ? tr('Auto') : '${settings.maxHeight}p',
+        settings.strategy.label,
+        FormatPolicy.disabledNames(settings).isEmpty
+            ? tr('None')
+            : FormatPolicy.disabledNames(settings),
+        settings.audioQuality.label
+      ]),
+      tr('Cache {0} · {1} s · {2} MB',
+          [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
       tr('Data folder {0}', [directories?.root.path ?? tr('Unknown')]),
     ].join('\n');
   }
@@ -1497,14 +1717,17 @@ enum LocalData {
 /// Reads the libraries in [folder], libmpv at [mpv] and the system shader
 /// compiler, so making the video output does not wait for the disk.
 /// Returns the bytes read.
-int Function() _readingPlayerFiles(String folder, String? mpv) => () => _readPlayerFiles(folder, mpv);
+int Function() _readingPlayerFiles(String folder, String? mpv) =>
+    () => _readPlayerFiles(folder, mpv);
 
 int _readPlayerFiles(String folder, String? mpv) {
   final files = <File>[
     for (final entry in Directory(folder).listSync())
       if (entry is File && entry.path.toLowerCase().endsWith('.dll')) entry,
-    if (mpv != null && mpv.isNotEmpty && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
-    if (Platform.isWindows) File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
+    if (mpv != null && mpv.isNotEmpty && !mpv.toLowerCase().startsWith(folder.toLowerCase()))
+      File(mpv),
+    if (Platform.isWindows)
+      File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
   ];
   var total = 0;
   for (final file in files) {

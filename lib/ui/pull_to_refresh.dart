@@ -8,7 +8,8 @@ import 'key_scroll.dart';
 /// for a second press of the page's navigation button or F5. The mouse
 /// wheel only scrolls, as it does elsewhere on the desktop.
 class PullToRefresh extends StatefulWidget {
-  const PullToRefresh({super.key, required this.enabled, required this.onRefresh, required this.child});
+  const PullToRefresh(
+      {super.key, required this.enabled, required this.onRefresh, required this.child});
 
   /// Off on pages with nothing to load again; the page keeps its state
   /// either way.
@@ -64,7 +65,9 @@ class _PullToRefreshState extends State<PullToRefresh> {
   void refresh() {
     if (!widget.enabled || _running != null) return;
     final position = _position();
-    if (position != null && position.pixels > position.minScrollExtent) position.jumpTo(position.minScrollExtent);
+    if (position != null && position.pixels > position.minScrollExtent) {
+      position.jumpTo(position.minScrollExtent);
+    }
     unawaited(_indicator.currentState?.show());
   }
 
@@ -79,10 +82,15 @@ class _PullToRefreshState extends State<PullToRefresh> {
     void visit(Element element) {
       if (element case StatefulElement(state: final ScrollableState scrollable)) {
         final position = scrollable.position;
-        if (position.axis == Axis.vertical && position.hasViewportDimension && (found == null || position.viewportDimension > found!.viewportDimension)) found = position;
+        if (position.axis == Axis.vertical &&
+            position.hasViewportDimension &&
+            (found == null || position.viewportDimension > found!.viewportDimension)) {
+          found = position;
+        }
       }
       element.visitChildren(visit);
     }
+
     context.visitChildElements(visit);
     return found;
   }
@@ -91,7 +99,8 @@ class _PullToRefreshState extends State<PullToRefresh> {
   Widget build(BuildContext context) => RefreshIndicator(
         key: _indicator,
         onRefresh: _refresh,
-        notificationPredicate: (notification) => widget.enabled && notification.depth == 0 && notification.metrics.axis == Axis.vertical,
+        notificationPredicate: (notification) =>
+            widget.enabled && notification.depth == 0 && notification.metrics.axis == Axis.vertical,
         child: widget.child,
       );
 }

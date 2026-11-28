@@ -20,7 +20,13 @@ Uint8List picture(bool Function(int x, int y) busy) {
   return rgba;
 }
 
-String line(String id) => jsonEncode({'_type': 'url', 'ie_key': 'Youtube', 'id': id, 'title': id, 'url': 'https://www.youtube.com/watch?v=$id'});
+String line(String id) => jsonEncode({
+      '_type': 'url',
+      'ie_key': 'Youtube',
+      'id': id,
+      'title': id,
+      'url': 'https://www.youtube.com/watch?v=$id'
+    });
 
 void main() {
   const w = PortraitThumbnails.width, h = PortraitThumbnails.height;
@@ -28,7 +34,10 @@ void main() {
   test('a portrait frame between flat or blurred sides is told apart from an ordinary picture', () {
     expect(PortraitThumbnails.judge(picture((x, y) => x > w * 0.34 && x < w * 0.66), w, h), isTrue);
     // A blurred background still changes a little.
-    expect(PortraitThumbnails.judge(picture((x, y) => (x > w * 0.34 && x < w * 0.66) || (x + y) % 23 == 0), w, h), isTrue);
+    expect(
+        PortraitThumbnails.judge(
+            picture((x, y) => (x > w * 0.34 && x < w * 0.66) || (x + y) % 23 == 0), w, h),
+        isTrue);
     expect(PortraitThumbnails.judge(picture((x, y) => true), w, h), isFalse);
     // Busy on one side only, as a speaker beside a slide.
     expect(PortraitThumbnails.judge(picture((x, y) => x > w * 0.3), w, h), isFalse);
@@ -36,7 +45,9 @@ void main() {
     expect(PortraitThumbnails.judge(picture((x, y) => false), w, h), isFalse);
   });
 
-  test('portrait videos leave a listing in order, other lines stay, and few thumbnails are looked at once', () async {
+  test(
+      'portrait videos leave a listing in order, other lines stay, and few thumbnails are looked at once',
+      () async {
     final asked = <String>[];
     var open = 0, most = 0;
     final answers = <String, Completer<bool>>{};
@@ -51,7 +62,8 @@ void main() {
     final source = StreamController<String>();
     final shown = <String>[];
     final done = Completer<void>();
-    PortraitThumbnails.drop(source.stream, portrait, parallel: 3).listen(shown.add, onDone: done.complete);
+    PortraitThumbnails.drop(source.stream, portrait, parallel: 3)
+        .listen(shown.add, onDone: done.complete);
     for (final id in ids) {
       source.add(line(id));
     }
@@ -67,11 +79,17 @@ void main() {
     }
     await done.future;
     expect(most, lessThanOrEqualTo(3));
-    expect(shown, [for (final (i, id) in ids.indexed) if (i.isEven) line(id), '{"_type": "playlist"}']);
+    expect(shown, [
+      for (final (i, id) in ids.indexed)
+        if (i.isEven) line(id),
+      '{"_type": "playlist"}'
+    ]);
   });
 
   test('a thumbnail that fails to load or check keeps its video', () async {
-    final shown = await PortraitThumbnails.drop(Stream.fromIterable([line('aaaaaaaaaaa'), line('bbbbbbbbbbb')]), (id) async => id.startsWith('a') ? throw StateError('offline') : false).toList();
+    final shown = await PortraitThumbnails.drop(
+        Stream.fromIterable([line('aaaaaaaaaaa'), line('bbbbbbbbbbb')]),
+        (id) async => id.startsWith('a') ? throw StateError('offline') : false).toList();
     expect(shown, hasLength(2));
   });
 }

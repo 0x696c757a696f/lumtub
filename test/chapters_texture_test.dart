@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_aspect.dart';
@@ -17,7 +16,11 @@ void main() {
     });
 
     test('a single chapter is not a chapter list', () {
-      expect(Chapter.listFrom([{'start_time': 0, 'title': 'All'}]), isEmpty);
+      expect(
+          Chapter.listFrom([
+            {'start_time': 0, 'title': 'All'}
+          ]),
+          isEmpty);
       expect(Chapter.listFrom(null), isEmpty);
     });
 
@@ -27,7 +30,15 @@ void main() {
         {'start_time': 60, 'title': 'B'},
       ]);
       expect(Chapter.at(chapters, const Duration(seconds: 5)), isNull);
-      expect([for (final s in [0, 10, 59, 60, 900]) Chapter.indexAt(chapters, Duration(seconds: s))], [-1, 0, 0, 1, 1]);
+      expect([
+        for (final s in [0, 10, 59, 60, 900]) Chapter.indexAt(chapters, Duration(seconds: s))
+      ], [
+        -1,
+        0,
+        0,
+        1,
+        1
+      ]);
       expect(Chapter.indexAt(const [], Duration.zero), -1);
       expect(Chapter.at(chapters, const Duration(seconds: 10))?.title, 'A');
       expect(Chapter.at(chapters, const Duration(minutes: 5))?.title, 'B');
@@ -46,7 +57,8 @@ void main() {
   });
 
   group('videoAspectFor', () {
-    test('follows the current video, so a portrait video after a landscape one is not stretched', () {
+    test('follows the current video, so a portrait video after a landscape one is not stretched',
+        () {
       expect(videoAspectFor(null, 1920, 1080), closeTo(16 / 9, 0.001));
       expect(videoAspectFor(null, 1080, 1920), closeTo(9 / 16, 0.001));
     });

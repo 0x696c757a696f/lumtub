@@ -8,7 +8,9 @@ class KWinKeepAbove {
   KWinKeepAbove._();
 
   /// Whether this is a KDE Plasma desktop.
-  static bool get available => Platform.isLinux && (Platform.environment['XDG_CURRENT_DESKTOP'] ?? '').toUpperCase().split(':').contains('KDE');
+  static bool get available =>
+      Platform.isLinux &&
+      (Platform.environment['XDG_CURRENT_DESKTOP'] ?? '').toUpperCase().split(':').contains('KDE');
 
   /// The KWin script that sets keepAbove to [above] on the windows of
   /// process [processId], for KWin 6 (windowList) and 5 (clientList).
@@ -22,7 +24,8 @@ for (const window of windows) {
   static int _serial = 0;
 
   /// The script number in loadScript's answer, such as `(int32 3,)`.
-  static int? scriptId(String answer) => int.tryParse(RegExp(r'(-?\d+)\s*,').firstMatch(answer)?.group(1) ?? '');
+  static int? scriptId(String answer) =>
+      int.tryParse(RegExp(r'(-?\d+)\s*,').firstMatch(answer)?.group(1) ?? '');
 
   /// Keeps the window above the others or lets it go; false when KWin
   /// could not be asked.
@@ -33,10 +36,12 @@ for (const window of windows) {
     final file = File('${folder.path}/keep-above.js');
     try {
       await file.writeAsString(script(pid, above));
-      final loaded = await _call('/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, name]);
+      final loaded =
+          await _call('/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, name]);
       final id = loaded == null ? null : scriptId(loaded);
       if (id == null || id < 0) return false;
-      final ran = await _call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ?? await _call('/$id', 'org.kde.kwin.Script.run', const []);
+      final ran = await _call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ??
+          await _call('/$id', 'org.kde.kwin.Script.run', const []);
       await _call('/Scripting', 'org.kde.kwin.Scripting.unloadScript', [name]);
       return ran != null;
     } catch (_) {
@@ -51,7 +56,17 @@ for (const window of windows) {
   }
 
   static Future<String?> _call(String path, String method, List<String> arguments) async {
-    final result = await Process.run('gdbus', ['call', '--session', '--dest', 'org.kde.KWin', '--object-path', path, '--method', method, ...arguments]);
+    final result = await Process.run('gdbus', [
+      'call',
+      '--session',
+      '--dest',
+      'org.kde.KWin',
+      '--object-path',
+      path,
+      '--method',
+      method,
+      ...arguments
+    ]);
     return result.exitCode == 0 ? '${result.stdout}' : null;
   }
 }
@@ -95,10 +110,12 @@ if (workspace.windowList) {
       folder = await Directory.systemTemp.createTemp('lumtub-kwin-');
       final file = File('${folder.path}/minimize-to-tray.js');
       await file.writeAsString(script(pid));
-      final loaded = await KWinKeepAbove._call('/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, _name]);
+      final loaded = await KWinKeepAbove._call(
+          '/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, _name]);
       final id = loaded == null ? null : KWinKeepAbove.scriptId(loaded);
       if (id == null || id < 0) return;
-      await KWinKeepAbove._call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ?? await KWinKeepAbove._call('/$id', 'org.kde.kwin.Script.run', const []);
+      await KWinKeepAbove._call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ??
+          await KWinKeepAbove._call('/$id', 'org.kde.kwin.Script.run', const []);
     } catch (e) {
       logDebug(() => 'Could not run the KWin keep-above script: $e');
     } finally {

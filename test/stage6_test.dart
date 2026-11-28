@@ -13,7 +13,14 @@ void main() {
           '{"access_token": "ya29.zzz"} Authorization: Bearer ya29.qqq '
           'Failed to open https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1&sig=ABC';
       final redacted = AppLog.redact(line);
-      for (final secret in ['4/0Ab-secret', '1//abc', 'ya29.zzz', 'ya29.qqq', 'sig=ABC', 'expire=1']) {
+      for (final secret in [
+        '4/0Ab-secret',
+        '1//abc',
+        'ya29.zzz',
+        'ya29.qqq',
+        'sig=ABC',
+        'expire=1'
+      ]) {
         expect(redacted, isNot(contains(secret)));
       }
       expect(redacted, contains('rr3---sn-abc.googlevideo.com'));
@@ -23,9 +30,14 @@ void main() {
     test('hides the same with the native core', () {
       expect(NativeCore.instance, isNotNull);
       expect(AppLog.nativeRedact, isNotNull);
-      const line = 'refresh_token=1//abc Bearer ya29.qqq https://rr3---sn-abc.googlevideo.com/videoplayback?sig=ABC 播放失败';
-      expect(AppLog.redact(line), 'refresh_token=*** Bearer *** https://rr3---sn-abc.googlevideo.com/… 播放失败');
-    }, skip: Platform.environment['LUMTUB_CORE_DLL'] == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : null);
+      const line =
+          'refresh_token=1//abc Bearer ya29.qqq https://rr3---sn-abc.googlevideo.com/videoplayback?sig=ABC 播放失败';
+      expect(AppLog.redact(line),
+          'refresh_token=*** Bearer *** https://rr3---sn-abc.googlevideo.com/… 播放失败');
+    },
+        skip: Platform.environment['LUMTUB_CORE_DLL'] == null
+            ? 'needs lumtub_core (LUMTUB_CORE_DLL)'
+            : null);
 
     test('appends lines and rotates a large log', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
@@ -136,13 +148,16 @@ void main() {
     test('tells an early end from a real one', () {
       const duration = Duration(minutes: 10);
       expect(PlaybackRecovery.endedEarly(const Duration(minutes: 4), duration), isTrue);
-      expect(PlaybackRecovery.endedEarly(const Duration(minutes: 9, seconds: 57), duration), isFalse);
+      expect(
+          PlaybackRecovery.endedEarly(const Duration(minutes: 9, seconds: 57), duration), isFalse);
       expect(PlaybackRecovery.endedEarly(Duration.zero, duration), isFalse);
-      expect(PlaybackRecovery.endedEarly(const Duration(seconds: 5), const Duration(seconds: 20)), isFalse);
+      expect(PlaybackRecovery.endedEarly(const Duration(seconds: 5), const Duration(seconds: 20)),
+          isFalse);
     });
 
     test('recovers from stream errors only', () {
-      expect(PlaybackRecovery.isNetworkError('Failed to open https://rr1.googlevideo.com/x'), isTrue);
+      expect(
+          PlaybackRecovery.isNetworkError('Failed to open https://rr1.googlevideo.com/x'), isTrue);
       expect(PlaybackRecovery.isNetworkError('HTTP error 403 Forbidden'), isTrue);
       expect(PlaybackRecovery.isNetworkError('tcp: Connection reset by peer'), isTrue);
       expect(PlaybackRecovery.isNetworkError('Can not open external file subs.vtt'), isFalse);
@@ -175,8 +190,15 @@ void main() {
     expect(rows['Bitrate'], 'Video 2512 kbps · Audio —');
     expect(rows['Buffering'], '31.4 s');
     expect(rows['Download speed'], '3.0 MB/s');
-    expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['Decoding'], 'Software decoding');
-    expect(Map.fromEntries(statsRows({'video-format': 'vp9'}).map((r) => MapEntry(r.$1, r.$2)))['Videos'], 'vp9', reason: 'libmpv without video-codec, as on Android');
+    expect(
+        Map.fromEntries(
+            statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['Decoding'],
+        'Software decoding');
+    expect(
+        Map.fromEntries(
+            statsRows({'video-format': 'vp9'}).map((r) => MapEntry(r.$1, r.$2)))['Videos'],
+        'vp9',
+        reason: 'libmpv without video-codec, as on Android');
   });
 }
 

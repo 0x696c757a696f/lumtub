@@ -47,13 +47,15 @@ class YoutubeAccountFeed {
     for (var page = 0; page < pages; page++) {
       final answer = await signIn.post('browse', body, hl: 'en');
       if (answer == null) {
-        logInfo('Signed-in page $browseId not read: signed out, or the saved sign-in stayed locked');
+        logInfo(
+            'Signed-in page $browseId not read: signed out, or the saved sign-in stayed locked');
         return;
       }
       if (answer.status != 200) throw StateError('YouTube answered ${answer.status} for $browseId');
       final data = await read(answer.body);
       if (data == null) throw StateError('YouTube sent a page that is not JSON for $browseId');
-      for (final entry in (data['entries'] as List<dynamic>? ?? const []).whereType<Map<dynamic, dynamic>>()) {
+      for (final entry
+          in (data['entries'] as List<dynamic>? ?? const []).whereType<Map<dynamic, dynamic>>()) {
         final id = '${entry['id'] ?? ''}';
         final day = entry.remove('shelf');
         if (!seen.add(id)) continue;
@@ -86,7 +88,9 @@ class YoutubeAccountFeed {
     final found = <(String, String)>[];
     await for (final line in lines('VL$playlistId', shorts: true, pages: 100)) {
       final entry = jsonDecode(line);
-      if (entry is Map && entry['id'] is String && entry['playlist_set_id'] is String) found.add((entry['id'] as String, entry['playlist_set_id'] as String));
+      if (entry is Map && entry['id'] is String && entry['playlist_set_id'] is String) {
+        found.add((entry['id'] as String, entry['playlist_set_id'] as String));
+      }
     }
     return found;
   }
@@ -96,7 +100,10 @@ class YoutubeAccountFeed {
   Future<List<PlaylistResult>> accountPlaylists() async {
     final found = <PlaylistResult>[];
     await for (final line in lines(playlists, pages: 5)) {
-      if (parseListingEntry(line) case final PlaylistResult list when PlaylistResult.isValidId(list.id)) found.add(list);
+      if (parseListingEntry(line) case final PlaylistResult list
+          when PlaylistResult.isValidId(list.id)) {
+        found.add(list);
+      }
     }
     return found;
   }
@@ -106,7 +113,8 @@ class YoutubeAccountFeed {
     final found = <ChannelRef>[];
     await for (final line in lines(channels, pages: 50)) {
       if (parseListingEntry(line) case final ChannelResult channel) {
-        found.add(ChannelRef(channel.ref.id, channel.ref.name, channel.avatar ?? channel.ref.avatar));
+        found.add(
+            ChannelRef(channel.ref.id, channel.ref.name, channel.avatar ?? channel.ref.avatar));
       }
     }
     return found;
@@ -137,8 +145,29 @@ class YoutubeAccountFeed {
     return back < 0 ? null : (back / 24).round();
   }
 
-  static const _weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  static const _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  static const _weekdays = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday'
+  ];
+  static const _months = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec'
+  ];
 
   /// A website `/browse` answer read by the core, on another isolate: a
   /// page runs to a megabyte.

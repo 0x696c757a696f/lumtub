@@ -23,7 +23,8 @@ class JapaneseDictionary {
 
   /// Reads the pack's UTF-8 text: each line found by its kanji and kana
   /// forms, the first two fields.
-  static JapaneseDictionary fromBytes(Uint8List bytes) => JapaneseDictionary._(PackedLines.build(bytes, (start, end, key) {
+  static JapaneseDictionary fromBytes(Uint8List bytes) =>
+      JapaneseDictionary._(PackedLines.build(bytes, (start, end, key) {
         var first = start;
         while (first < end && bytes[first] != 0x09) {
           first++;
@@ -52,7 +53,8 @@ class JapaneseDictionary {
     final found = [for (final i in _lines.linesOf(word)) JapaneseEntry.parse(_lines.line(i))];
     // Entries where [word] is the main way of writing come first, then
     // common ones; otherwise JMdict's order.
-    int rank(JapaneseEntry e) => ((e.kanji.isEmpty ? e.kana.first : e.kanji.first) == word ? 0 : 2) + (e.common ? 0 : 1);
+    int rank(JapaneseEntry e) =>
+        ((e.kanji.isEmpty ? e.kana.first : e.kanji.first) == word ? 0 : 2) + (e.common ? 0 : 1);
     // Written in kana only, a word may be any of several kanji words read
     // alike (いっぱい: 一杯, 一敗); the one with more senses is the one
     // people mean far more often.
@@ -107,14 +109,18 @@ class JapaneseDictionary {
       var n = _longestAt(chars, i, end);
       // A particle followed by a word reads better than a rare word that
       // swallows it: は + まだ, not はま + だ.
-      if (n > 1 && _particles.contains(chars[i]) && !chars.sublist(i, i + n).any((c) => _isKanji(c.runes.first))) {
-        final next = _longestAt(chars, i + 1, i + 1 + _longest < chars.length ? i + 1 + _longest : chars.length);
+      if (n > 1 &&
+          _particles.contains(chars[i]) &&
+          !chars.sublist(i, i + n).any((c) => _isKanji(c.runes.first))) {
+        final next = _longestAt(
+            chars, i + 1, i + 1 + _longest < chars.length ? i + 1 + _longest : chars.length);
         if (1 + next > n) n = 1;
       }
       if (n > 0) {
         final surface = chars.sublist(i, i + n).join();
         final (match, entries) = lookUpInflected(surface).first;
-        found = WordToken(surface, _readingOf(surface, match, entries.first), isWord: true, lookup: surface, language: 'ja');
+        found = WordToken(surface, _readingOf(surface, match, entries.first),
+            isWord: true, lookup: surface, language: 'ja');
         i += n;
       }
       if (found == null) {
@@ -140,9 +146,34 @@ class JapaneseDictionary {
 
   /// How the most common single kanji are read on their own.
   static const _usualReadings = {
-    '人': 'ひと', '彼': 'かれ', '日': 'ひ', '何': 'なに', '方': 'ほう', '私': 'わたし', '上': 'うえ', '下': 'した', '中': 'なか', '間': 'あいだ',
-    '後': 'あと', '前': 'まえ', '時': 'とき', '所': 'ところ', '事': 'こと', '物': 'もの', '今': 'いま', '目': 'め', '手': 'て',
-    '気': 'き', '心': 'こころ', '家': 'いえ', '国': 'くに', '本': 'ほん', '先': 'さき', '外': 'そと', '他': 'ほか', '金': 'かね',
+    '人': 'ひと',
+    '彼': 'かれ',
+    '日': 'ひ',
+    '何': 'なに',
+    '方': 'ほう',
+    '私': 'わたし',
+    '上': 'うえ',
+    '下': 'した',
+    '中': 'なか',
+    '間': 'あいだ',
+    '後': 'あと',
+    '前': 'まえ',
+    '時': 'とき',
+    '所': 'ところ',
+    '事': 'こと',
+    '物': 'もの',
+    '今': 'いま',
+    '目': 'め',
+    '手': 'て',
+    '気': 'き',
+    '心': 'こころ',
+    '家': 'いえ',
+    '国': 'くに',
+    '本': 'ほん',
+    '先': 'さき',
+    '外': 'そと',
+    '他': 'ほか',
+    '金': 'かね',
   };
 
   /// The kana for [surface], when it has kanji: the entry's reading with
@@ -153,9 +184,16 @@ class JapaneseDictionary {
     final base = match.base;
     var reading = entry.readingFor(base);
     // 来る is read き, こ or く by what follows it.
-    if (reading != null && base.endsWith('来る') && reading.endsWith('くる') && surface.length > base.length - 2 + 1) {
+    if (reading != null &&
+        base.endsWith('来る') &&
+        reading.endsWith('くる') &&
+        surface.length > base.length - 2 + 1) {
       final next = surface[base.length - 1];
-      final vowel = 'たてまな'.contains(next) && next != 'な' ? 'き' : 'なよいられさ'.contains(next) ? 'こ' : 'く';
+      final vowel = 'たてまな'.contains(next) && next != 'な'
+          ? 'き'
+          : 'なよいられさ'.contains(next)
+              ? 'こ'
+              : 'く';
       return '${reading.substring(0, reading.length - 2)}$vowel${surface.substring(base.length - 1)}';
     }
     if (reading == null) return null;
@@ -178,7 +216,11 @@ class JapaneseDictionary {
     return (r >= 0x3040 && r <= 0x30ff) || _isKanji(r) || r == 0x30fc || r == 0x3005;
   }
 
-  static bool _isKanji(int r) => (r >= 0x4e00 && r <= 0x9fff) || (r >= 0x3400 && r <= 0x4dbf) || (r >= 0x20000 && r <= 0x2ffff) || r == 0x3005;
+  static bool _isKanji(int r) =>
+      (r >= 0x4e00 && r <= 0x9fff) ||
+      (r >= 0x3400 && r <= 0x4dbf) ||
+      (r >= 0x20000 && r <= 0x2ffff) ||
+      r == 0x3005;
 
   /// Whether [text] reads as Japanese: it has kana.
   static bool looksJapanese(String text) {
@@ -196,7 +238,10 @@ class JapaneseDictionary {
     for (var k = 0; k < out.length && out.length < 64; k++) {
       final current = out[k];
       for (final rule in _rules) {
-        if (!current.base.endsWith(rule.from) || current.base.length <= rule.from.length && rule.to.isEmpty) continue;
+        if (!current.base.endsWith(rule.from) ||
+            current.base.length <= rule.from.length && rule.to.isEmpty) {
+          continue;
+        }
         if (rule.inType != null && current.type != null && current.type != rule.inType) continue;
         if (rule.inType != null && current.type == null && k != 0) continue;
         final base = current.base.substring(0, current.base.length - rule.from.length) + rule.to;
@@ -223,7 +268,13 @@ class JapaneseMatch {
 }
 
 class JapaneseEntry {
-  const JapaneseEntry({required this.kanji, required this.kana, required this.pos, required this.senses, required this.common, this.chinese = const []});
+  const JapaneseEntry(
+      {required this.kanji,
+      required this.kana,
+      required this.pos,
+      required this.senses,
+      required this.common,
+      this.chinese = const []});
 
   final List<String> kanji;
   final List<String> kana;
@@ -238,7 +289,8 @@ class JapaneseEntry {
   String get headword => kanji.isEmpty ? kana.first : kanji.first;
 
   /// The kana reading for [written], one of this entry's forms.
-  String? readingFor(String written) => kana.contains(written) ? written : (kana.isEmpty ? null : kana.first);
+  String? readingFor(String written) =>
+      kana.contains(written) ? written : (kana.isEmpty ? null : kana.first);
 
   /// Whether this word inflects as [type] says.
   bool takes(String type) => switch (type) {
@@ -280,14 +332,32 @@ class _Rule {
 
 List<_Rule> _makeRules() {
   final rules = <_Rule>[];
-  void add(String from, String to, String? inType, String outType, String name) => rules.add(_Rule(from, to, inType, outType, name));
+  void add(String from, String to, String? inType, String outType, String name) =>
+      rules.add(_Rule(from, to, inType, outType, name));
 
   // Ichidan verbs: 食べ + ending.
   const v1 = {
-    'た': 'past', 'て': 'te', 'ない': 'negative', 'ます': 'polite', 'ません': 'polite negative', 'ました': 'polite past',
-    'ませんでした': 'polite past negative', 'ましょう': 'polite volitional', 'よう': 'volitional', 'れば': 'conditional',
-    'たら': 'conditional', 'られる': 'passive', 'させる': 'causative', 'たい': 'want', 'ろ': 'imperative', 'ず': 'negative',
-    'ながら': 'while', 'なさい': 'imperative', 'たり': 'tari', 'ちゃう': 'chau', 'れる': 'potential',
+    'た': 'past',
+    'て': 'te',
+    'ない': 'negative',
+    'ます': 'polite',
+    'ません': 'polite negative',
+    'ました': 'polite past',
+    'ませんでした': 'polite past negative',
+    'ましょう': 'polite volitional',
+    'よう': 'volitional',
+    'れば': 'conditional',
+    'たら': 'conditional',
+    'られる': 'passive',
+    'させる': 'causative',
+    'たい': 'want',
+    'ろ': 'imperative',
+    'ず': 'negative',
+    'ながら': 'while',
+    'なさい': 'imperative',
+    'たり': 'tari',
+    'ちゃう': 'chau',
+    'れる': 'potential',
   };
   for (final MapEntry(key: from, value: name) in v1.entries) {
     add(from, 'る', null, 'v1', name);
@@ -308,14 +378,27 @@ List<_Rule> _makeRules() {
     final [a, i, e, o, ta, te] = rows;
     add(ta, u, null, 'v5', 'past');
     add(te, u, null, 'v5', 'te');
-    add('${ta.substring(0, ta.length - 1)}${ta.endsWith('だ') ? 'だら' : 'たら'}', u, null, 'v5', 'conditional');
-    add('${ta.substring(0, ta.length - 1)}${ta.endsWith('だ') ? 'だり' : 'たり'}', u, null, 'v5', 'tari');
-    for (final (end, name) in [('ない', 'negative'), ('ず', 'negative'), ('れる', 'passive'), ('せる', 'causative')]) {
+    add('${ta.substring(0, ta.length - 1)}${ta.endsWith('だ') ? 'だら' : 'たら'}', u, null, 'v5',
+        'conditional');
+    add('${ta.substring(0, ta.length - 1)}${ta.endsWith('だ') ? 'だり' : 'たり'}', u, null, 'v5',
+        'tari');
+    for (final (end, name) in [
+      ('ない', 'negative'),
+      ('ず', 'negative'),
+      ('れる', 'passive'),
+      ('せる', 'causative')
+    ]) {
       add('$a$end', u, null, 'v5', name);
     }
     for (final (end, name) in [
-      ('ます', 'polite'), ('ません', 'polite negative'), ('ました', 'polite past'), ('ませんでした', 'polite past negative'),
-      ('ましょう', 'polite volitional'), ('たい', 'want'), ('ながら', 'while'), ('なさい', 'imperative'),
+      ('ます', 'polite'),
+      ('ません', 'polite negative'),
+      ('ました', 'polite past'),
+      ('ませんでした', 'polite past negative'),
+      ('ましょう', 'polite volitional'),
+      ('たい', 'want'),
+      ('ながら', 'while'),
+      ('なさい', 'imperative'),
     ]) {
       add('$i$end', u, null, 'v5', name);
     }
@@ -329,18 +412,43 @@ List<_Rule> _makeRules() {
   add('って', 'く', null, 'v5', 'te');
   // i-adjectives.
   for (final (from, name) in [
-    ('かった', 'past'), ('くない', 'negative'), ('くなかった', 'past negative'), ('くて', 'te'), ('く', 'adverb'),
-    ('ければ', 'conditional'), ('さ', 'noun'), ('そう', 'seems'), ('かったら', 'conditional'), ('すぎる', 'too'),
+    ('かった', 'past'),
+    ('くない', 'negative'),
+    ('くなかった', 'past negative'),
+    ('くて', 'te'),
+    ('く', 'adverb'),
+    ('ければ', 'conditional'),
+    ('さ', 'noun'),
+    ('そう', 'seems'),
+    ('かったら', 'conditional'),
+    ('すぎる', 'too'),
   ]) {
     add(from, 'い', null, 'adj-i', name);
   }
   // ない, たい and the like inflect as adjectives: 食べなかった → 食べない.
-  for (final (from, name) in [('かった', 'past'), ('くて', 'te'), ('ければ', 'conditional'), ('く', 'adverb')]) {
+  for (final (from, name) in [
+    ('かった', 'past'),
+    ('くて', 'te'),
+    ('ければ', 'conditional'),
+    ('く', 'adverb')
+  ]) {
     add('な$from', 'ない', null, 'adj-i', name);
     add('た$from', 'たい', null, 'adj-i', name);
   }
   // Helpers after the te form: 食べている → 食べて.
-  for (final (from, name) in [('いる', 'progressive'), ('る', 'progressive'), ('いた', 'progressive'), ('た', 'progressive'), ('います', 'progressive'), ('しまう', 'completed'), ('しまった', 'completed'), ('ください', 'request'), ('おく', 'in advance'), ('ある', 'resultative'), ('みる', 'try')]) {
+  for (final (from, name) in [
+    ('いる', 'progressive'),
+    ('る', 'progressive'),
+    ('いた', 'progressive'),
+    ('た', 'progressive'),
+    ('います', 'progressive'),
+    ('しまう', 'completed'),
+    ('しまった', 'completed'),
+    ('ください', 'request'),
+    ('おく', 'in advance'),
+    ('ある', 'resultative'),
+    ('みる', 'try')
+  ]) {
     add('て$from', 'て', null, 'te', name);
     add('で$from', 'で', null, 'te', name);
   }
@@ -354,18 +462,47 @@ List<_Rule> _makeRules() {
   add('させる', 'る', 'v1', 'v1', 'causative');
   // する and 来る.
   for (final (from, name) in [
-    ('した', 'past'), ('して', 'te'), ('しない', 'negative'), ('します', 'polite'), ('しました', 'polite past'), ('しません', 'polite negative'),
-    ('しよう', 'volitional'), ('すれば', 'conditional'), ('される', 'passive'), ('させる', 'causative'), ('しろ', 'imperative'),
-    ('したい', 'want'), ('しなかった', 'past negative'), ('しましょう', 'polite volitional'), ('したら', 'conditional'), ('できる', 'potential'),
+    ('した', 'past'),
+    ('して', 'te'),
+    ('しない', 'negative'),
+    ('します', 'polite'),
+    ('しました', 'polite past'),
+    ('しません', 'polite negative'),
+    ('しよう', 'volitional'),
+    ('すれば', 'conditional'),
+    ('される', 'passive'),
+    ('させる', 'causative'),
+    ('しろ', 'imperative'),
+    ('したい', 'want'),
+    ('しなかった', 'past negative'),
+    ('しましょう', 'polite volitional'),
+    ('したら', 'conditional'),
+    ('できる', 'potential'),
   ]) {
     add(from, 'する', null, 'vs-i', name);
   }
   add('する', '', 'vs-i', 'vs', 'suru');
   add('する', '', null, 'vs', 'suru');
-  for (final (from, name) in [('きた', 'past'), ('きて', 'te'), ('こない', 'negative'), ('きます', 'polite'), ('きました', 'polite past'), ('こよう', 'volitional'), ('くれば', 'conditional'), ('こい', 'imperative'), ('られる', 'potential')]) {
+  for (final (from, name) in [
+    ('きた', 'past'),
+    ('きて', 'te'),
+    ('こない', 'negative'),
+    ('きます', 'polite'),
+    ('きました', 'polite past'),
+    ('こよう', 'volitional'),
+    ('くれば', 'conditional'),
+    ('こい', 'imperative'),
+    ('られる', 'potential')
+  ]) {
     add(from, 'くる', null, 'vk', name);
   }
-  for (final (from, name) in [('た', 'past'), ('て', 'te'), ('ない', 'negative'), ('ます', 'polite'), ('ました', 'polite past')]) {
+  for (final (from, name) in [
+    ('た', 'past'),
+    ('て', 'te'),
+    ('ない', 'negative'),
+    ('ます', 'polite'),
+    ('ました', 'polite past')
+  ]) {
     add('来$from', '来る', null, 'vk', name);
   }
   return rules;

@@ -26,7 +26,9 @@ Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final controller = AppController()..ready = true;
-  await tester.pumpWidget(MaterialApp(home: Scaffold(body: ListenableBuilder(
+  await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+          body: ListenableBuilder(
     listenable: controller,
     builder: (context, _) => ExplorePage(controller: controller),
   ))));
@@ -40,9 +42,17 @@ Future<void> _tapChip(WidgetTester tester, String label) async {
   await tester.pump();
   await tester.pump();
   final chip = find.text(label).last;
-  final row = find.ancestor(of: chip, matching: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right)).first;
+  final row = find
+      .ancestor(
+          of: chip,
+          matching: find
+              .byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right))
+      .first;
   // That line only: the page stays where it is.
-  await tester.state<ScrollableState>(row).position.ensureVisible(tester.renderObject(chip), alignment: 0.5);
+  await tester
+      .state<ScrollableState>(row)
+      .position
+      .ensureVisible(tester.renderObject(chip), alignment: 0.5);
   await tester.pump();
   await tester.tap(find.text(label).last);
 }
@@ -76,17 +86,22 @@ void main() {
     expect(exploreParams(ExploreMode.latest), 'CAISAhAB');
     // Long: views, all time unless a period is picked, videos, over 20 minutes.
     expect(exploreParams(ExploreMode.long), 'CAMSBBABGAI%253D');
-    expect(exploreParams(ExploreMode.long, period: SearchUploadDate.year), 'CAMSBggFEAEYAg%253D%253D');
+    expect(
+        exploreParams(ExploreMode.long, period: SearchUploadDate.year), 'CAMSBggFEAEYAg%253D%253D');
     // 新人新作: this week, videos only.
-    expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')), [0x12, 4, 0x08, 3, 0x10, 1]);
+    expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')),
+        [0x12, 4, 0x08, 3, 0x10, 1]);
     // 全部 mixes the video zones; region and language pick where from.
-    expect(popularTopics.take(2).map((t) => (t.label, t.mix)), [('All', true), ('Education', false)]);
-    expect(liveTopics.map((t) => t.label).take(3), ['All', 'Gaming live streams', 'Chat & interaction']);
+    expect(
+        popularTopics.take(2).map((t) => (t.label, t.mix)), [('All', true), ('Education', false)]);
+    expect(liveTopics.map((t) => t.label).take(3),
+        ['All', 'Gaming live streams', 'Chat & interaction']);
     expect(liveTopics.last.label, '24/7 live');
     expect(legacyTopicKeys['Radio for sleep'], '24/7 live');
     final hdr = base64.decode(searchParams(quality: SearchQuality.hdr)!.replaceAll('%253D', '='));
     expect(hdr, [0x12, 3, 0xC8, 0x01, 1]);
-    final uhd = base64.decode(exploreParams(ExploreMode.liveViewers, quality: SearchQuality.uhd).replaceAll('%253D', '='));
+    final uhd = base64.decode(exploreParams(ExploreMode.liveViewers, quality: SearchQuality.uhd)
+        .replaceAll('%253D', '='));
     expect(uhd, [0x08, 3, 0x12, 4, 0x40, 1, 0x70, 1]);
   });
 
@@ -108,31 +123,78 @@ void main() {
           continue;
         }
         // A zone of groups, as 24/7 live: each group holds the range.
-        final groups = topic.subs.every((s) => s.subs.isNotEmpty) ? topic.subs.map((s) => s.subs) : [topic.subs];
+        final groups = topic.subs.every((s) => s.subs.isNotEmpty)
+            ? topic.subs.map((s) => s.subs)
+            : [topic.subs];
         for (final subs in groups) {
           expect(subs.length, inInclusiveRange(min, max), reason: '${section.name} ${topic.label}');
         }
-        expect(topic.subs.map((s) => s.label).toSet(), hasLength(topic.subs.length), reason: '${topic.label} labels');
-        expect(topic.subs.map((s) => s.query).toSet(), hasLength(topic.subs.length), reason: '${topic.label} queries');
+        expect(topic.subs.map((s) => s.label).toSet(), hasLength(topic.subs.length),
+            reason: '${topic.label} labels');
+        expect(topic.subs.map((s) => s.query).toSet(), hasLength(topic.subs.length),
+            reason: '${topic.label} queries');
       }
     }
     // No two sub-categories of one half search for the same words.
     for (final section in [ExploreSection.popular, ExploreSection.live]) {
-      final queries = [for (final t in exploreTopicsOf(section)) for (final s in t.subs) s.query];
+      final queries = [
+        for (final t in exploreTopicsOf(section))
+          for (final s in t.subs) s.query
+      ];
       expect(queries.toSet(), hasLength(queries.length), reason: section.name);
     }
   });
 
   test('宗教与信仰 has four tabs of zones, with Christianity split twice', () {
-    expect(ExploreSection.faithTabs.map((s) => s.label), ['Traditions', 'Study', 'Culture & art', 'Faith live']);
+    expect(ExploreSection.faithTabs.map((s) => s.label),
+        ['Traditions', 'Study', 'Culture & art', 'Faith live']);
     final christian = faithTraditionTopics.first;
     expect(christian.label, 'Christianity');
-    expect(christian.subs.map((s) => s.label), ['Catholic', 'Eastern Orthodox', 'Protestant', 'Oriental Orthodox', 'Other Christian']);
+    expect(christian.subs.map((s) => s.label),
+        ['Catholic', 'Eastern Orthodox', 'Protestant', 'Oriental Orthodox', 'Other Christian']);
     final catholic = christian.subs.first;
-    expect(catholic.subs.map((s) => s.label), containsAll(["The Pope's words", 'Vatican news', 'Mass', 'Sacraments', 'Lives of the saints', 'Religious life', 'Church music']));
-    expect(christian.subs[2].subs.map((s) => s.label), containsAll(['Lutheran', 'Reformed', 'Anglican', 'Methodist', 'Baptist', 'Pentecostal', 'Evangelical']));
-    expect(faithTraditionTopics.map((t) => t.label), containsAll(['Islam', 'Buddhism', 'Taoism & Chinese religion', 'Hinduism', 'Judaism', 'Other religions']));
-    expect(faithStudyTopics.map((t) => t.label), containsAll(['Religious history', 'Philosophy of religion', 'Comparative religion', 'Religion and society', 'Atheism and critique', 'Dialogue']));
+    expect(
+        catholic.subs.map((s) => s.label),
+        containsAll([
+          "The Pope's words",
+          'Vatican news',
+          'Mass',
+          'Sacraments',
+          'Lives of the saints',
+          'Religious life',
+          'Church music'
+        ]));
+    expect(
+        christian.subs[2].subs.map((s) => s.label),
+        containsAll([
+          'Lutheran',
+          'Reformed',
+          'Anglican',
+          'Methodist',
+          'Baptist',
+          'Pentecostal',
+          'Evangelical'
+        ]));
+    expect(
+        faithTraditionTopics.map((t) => t.label),
+        containsAll([
+          'Islam',
+          'Buddhism',
+          'Taoism & Chinese religion',
+          'Hinduism',
+          'Judaism',
+          'Other religions'
+        ]));
+    expect(
+        faithStudyTopics.map((t) => t.label),
+        containsAll([
+          'Religious history',
+          'Philosophy of religion',
+          'Comparative religion',
+          'Religion and society',
+          'Atheism and critique',
+          'Dialogue'
+        ]));
     expect(faithLiveTopics, hasLength(10));
     for (final section in ExploreSection.values) {
       final topics = exploreTopicsOf(section);
@@ -145,10 +207,16 @@ void main() {
       }
     }
     // Among the video zones, 宗教信仰 opens the tabs.
-    expect(popularTopics.singleWhere((t) => t.label == 'Religion & faith').opens, ExploreSection.faith);
+    expect(popularTopics.singleWhere((t) => t.label == 'Religion & faith').opens,
+        ExploreSection.faith);
     expect(ExploreMode.of(ExploreSection.faith).first, ExploreMode.curated);
     expect(ExploreMode.of(ExploreSection.popular), isNot(contains(ExploreMode.curated)));
-    expect(ExploreMode.of(ExploreSection.faithLive), [ExploreMode.liveViewers, ExploreMode.liveLatest, ExploreMode.liveUpcoming, ExploreMode.liveReplay]);
+    expect(ExploreMode.of(ExploreSection.faithLive), [
+      ExploreMode.liveViewers,
+      ExploreMode.liveLatest,
+      ExploreMode.liveUpcoming,
+      ExploreMode.liveReplay
+    ]);
     // Upcoming and past streams come from the newest videos.
     expect(exploreParams(ExploreMode.liveUpcoming), 'CAISAhAB');
     expect(exploreParams(ExploreMode.curated), 'EgIQAQ%253D%253D');
@@ -156,13 +224,21 @@ void main() {
 
   test('学术 has a tab per faculty and one for live, each zone named in Chinese', () async {
     await loadTranslations();
-    expect(popularTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.humanities);
+    expect(
+        popularTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.humanities);
     expect(liveTopics.singleWhere((t) => t.label == 'Academia').opens, ExploreSection.academicLive);
-    expect(ExploreSection.academicTabs, everyElement(predicate<ExploreSection>((s) => s.isAcademic && s.tabs!.every((t) => t.isAcademic && t.isLive == s.isLive))));
-    expect(ExploreSection.faithTabs, everyElement(predicate<ExploreSection>((s) => s.tabs!.every((t) => t.isFaith && t.isLive == s.isLive))));
+    expect(
+        ExploreSection.academicTabs,
+        everyElement(predicate<ExploreSection>(
+            (s) => s.isAcademic && s.tabs!.every((t) => t.isAcademic && t.isLive == s.isLive))));
+    expect(
+        ExploreSection.faithTabs,
+        everyElement(predicate<ExploreSection>(
+            (s) => s.tabs!.every((t) => t.isFaith && t.isLive == s.isLive))));
     expect(ExploreSection.humanities.tabs, contains(ExploreSection.frontier));
     expect(ExploreSection.academicTabs.where((s) => s.isLive), [ExploreSection.academicLive]);
-    expect(humanitiesTopics.map((t) => t.label), containsAll(['Philosophy', 'Theology', 'History']));
+    expect(
+        humanitiesTopics.map((t) => t.label), containsAll(['Philosophy', 'Theology', 'History']));
     expect(socialScienceTopics.first.label, 'Psychology');
     expect(ExploreMode.defaultOf(ExploreSection.humanities), ExploreMode.curated);
     expect(ExploreMode.defaultOf(ExploreSection.academicLive), ExploreMode.liveViewers);
@@ -194,14 +270,25 @@ void main() {
     expect(looksLikeBait('天主教的七件圣事'), isFalse);
     expect(looksLikeBait('EWTN Daily Mass'), isFalse);
     final keep = faithFilter();
-    VideoItem video(int i, String channel) => VideoItem(id: 'v$i'.padRight(11, '0'), title: 'Mass $i', channel: channel, url: '');
-    final kept = [for (var i = 0; i < 6; i++) video(i, i < 5 ? 'a' : 'b')].where(keep).map((v) => v.channel).toList();
+    VideoItem video(int i, String channel) =>
+        VideoItem(id: 'v$i'.padRight(11, '0'), title: 'Mass $i', channel: channel, url: '');
+    final kept = [for (var i = 0; i < 6; i++) video(i, i < 5 ? 'a' : 'b')]
+        .where(keep)
+        .map((v) => v.channel)
+        .toList();
     expect(kept, ['a', 'a', 'a', 'b']);
   });
 
-  test('blocked groups show in a search only for the exact channel name, and the setting turns it off', () {
-    VideoItem video(String id, String title, String channel) => VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, url: '');
-    final items = [video('a', 'News', 'NTD Television'), video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'), video('c', 'Mass', 'EWTN')];
+  test(
+      'blocked groups show in a search only for the exact channel name, and the setting turns it off',
+      () {
+    VideoItem video(String id, String title, String channel) =>
+        VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, url: '');
+    final items = [
+      video('a', 'News', 'NTD Television'),
+      video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'),
+      video('c', 'Mass', 'EWTN')
+    ];
     final controller = AppController();
     controller.preferences = controller.preferences.copyWith(blockGroups: true);
     String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
@@ -233,8 +320,14 @@ void main() {
     expect(isStateMediaChannel('NHK WORLD-JAPAN'), isFalse);
     expect(isStateMediaChannel('Rick Talks CGTN'), isFalse);
     expect(isStateMediaChannel('VOA News', {'us-government-international-broadcasting'}), isFalse);
-    VideoItem video(String id, String channel) => VideoItem(id: id.padRight(11, '0'), title: 'News', channel: channel, url: '');
-    final items = [video('a', 'CGTN'), video('b', 'BBC News'), video('c', 'VOA Chinese'), video('d', 'Some Vlog')];
+    VideoItem video(String id, String channel) =>
+        VideoItem(id: id.padRight(11, '0'), title: 'News', channel: channel, url: '');
+    final items = [
+      video('a', 'CGTN'),
+      video('b', 'BBC News'),
+      video('c', 'VOA Chinese'),
+      video('d', 'Some Vlog')
+    ];
     final controller = AppController();
     String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
     expect(ids(controller.visible(items)), 'abcd');
@@ -243,19 +336,22 @@ void main() {
     expect(ids(controller.visible(items)), 'bcd');
     controller.debugQuery = 'CGTN';
     expect(ids(controller.visible(items, search: true)), 'abcd');
-    controller.preferences = controller.preferences.copyWith(enabledGroups: ['us-government-international-broadcasting']);
+    controller.preferences = controller.preferences
+        .copyWith(enabledGroups: ['us-government-international-broadcasting']);
     expect(ids(controller.visible(items)), 'bd');
     // One entry can be unticked on its own.
     final cgtn = stateMedia.expand((g) => g.entries).firstWhere((e) => e.label == 'CGTN');
     controller.preferences = controller.preferences.copyWith(allowedEntries: [cgtn.key]);
     expect(ids(controller.visible(items)), 'abd');
-    final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
+    final restored =
+        AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
     expect(restored.blockStateMedia, isTrue);
     expect(restored.enabledGroups, ['us-government-international-broadcasting']);
     expect(restored.allowedEntries, [cgtn.key]);
   });
 
-  test('Falun Gong channels are blocked by name, @handle and id; unproven ones too unless unticked', () {
+  test('Falun Gong channels are blocked by name, @handle and id; unproven ones too unless unticked',
+      () {
     final prefs = const AppPreferences(blockGroups: true);
     expect(prefs.blocksChannel('文昭談古論今 -Wen Zhao Official'), isTrue);
     expect(prefs.blocksChannel('江峰时刻'), isTrue);
@@ -263,20 +359,35 @@ void main() {
     expect(prefs.blocksChannel('', id: 'UCAk-SBMZp79a4k2CAqqoDLQ'), isTrue);
     expect(prefs.blocksChannel('China Uncensored'), isTrue);
     // A title naming a host is not enough; only his channel is.
-    expect(prefs.blocksGroup(VideoItem(id: 'x'.padRight(11, '0'), title: '采访文昭谈古论今', channel: 'BBC News 中文', url: '')), isFalse);
+    expect(
+        prefs.blocksGroup(VideoItem(
+            id: 'x'.padRight(11, '0'), title: '采访文昭谈古论今', channel: 'BBC News 中文', url: '')),
+        isFalse);
     expect(prefs.blocksChannel('西岸觀察'), isTrue);
-    expect(prefs.copyWith(allowedGroups: ['falun-gong-linked-unproven']).blocksChannel('西岸观察'), isFalse);
-    final wenzhao = blockedGroups.firstWhere((g) => g.name == 'falun-gong-linked-hosts-and-shows').entries.firstWhere((e) => e.label == '文昭谈古论今');
+    expect(prefs.copyWith(allowedGroups: ['falun-gong-linked-unproven']).blocksChannel('西岸观察'),
+        isFalse);
+    final wenzhao = blockedGroups
+        .firstWhere((g) => g.name == 'falun-gong-linked-hosts-and-shows')
+        .entries
+        .firstWhere((e) => e.label == '文昭谈古论今');
     expect(wenzhao.forms, contains('文昭談古論今'));
     expect(prefs.copyWith(allowedEntries: [wenzhao.key]).blocksChannel('文昭談古論今'), isFalse);
-    expect(prefs.copyWith(allowedGroups: ['falun-gong-linked-hosts-and-shows']).blocksChannel('江峰时刻'), isFalse);
+    expect(
+        prefs.copyWith(allowedGroups: ['falun-gong-linked-hosts-and-shows']).blocksChannel('江峰时刻'),
+        isFalse);
     expect(prefs.blocksChannel('BBC News 中文'), isFalse);
   });
 
-  test('channels not to recommend stay in searches; typed channels are blocked by id or exact name', () async {
+  test('channels not to recommend stay in searches; typed channels are blocked by id or exact name',
+      () async {
     const ewtn = ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'EWTN');
-    VideoItem video(String id, String channel, [String? channelId]) => VideoItem(id: id.padRight(11, '0'), title: 'Mass', channel: channel, channelId: channelId, url: '');
-    final items = [video('a', 'EWTN', ewtn.id), video('b', 'Other', 'UCbbbbbbbbbbbbbbbbbbbbbb'), video('c', 'Some Channel')];
+    VideoItem video(String id, String channel, [String? channelId]) => VideoItem(
+        id: id.padRight(11, '0'), title: 'Mass', channel: channel, channelId: channelId, url: '');
+    final items = [
+      video('a', 'EWTN', ewtn.id),
+      video('b', 'Other', 'UCbbbbbbbbbbbbbbbbbbbbbb'),
+      video('c', 'Some Channel')
+    ];
     final controller = AppController();
     String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
     controller.setRecommendChannel(ewtn, false);
@@ -286,7 +397,8 @@ void main() {
     controller.setRecommendChannel(ewtn, true);
     expect(controller.preferences.unrecommendedChannels, isEmpty);
 
-    expect(controller.blockChannelTyped('https://www.youtube.com/channel/UCbbbbbbbbbbbbbbbbbbbbbb'), 'UCbbbbbbbbbbbbbbbbbbbbbb');
+    expect(controller.blockChannelTyped('https://www.youtube.com/channel/UCbbbbbbbbbbbbbbbbbbbbbb'),
+        'UCbbbbbbbbbbbbbbbbbbbbbb');
     expect(controller.blockChannelTyped('  some channel '), 'some channel');
     expect(ids(controller.visible(items, search: true)), 'a');
     controller.unblockChannelName('some channel');
@@ -308,7 +420,8 @@ void main() {
   });
 
   test('block lists hide the blocked channel only, never other channels\' videos naming it', () {
-    VideoItem video(String title, [String channel = 'Some channel']) => VideoItem(id: 'x'.padRight(11, '0'), title: title, channel: channel, url: '');
+    VideoItem video(String title, [String channel = 'Some channel']) =>
+        VideoItem(id: 'x'.padRight(11, '0'), title: title, channel: channel, url: '');
     const prefs = AppPreferences(blockGroups: true);
     // The blocked channel's own videos go; third-party reports stay.
     expect(prefs.blocksGroup(video('今日时事', '江峰时刻')), isTrue);
@@ -324,27 +437,52 @@ void main() {
     expect(namesBlockedGroup(video('Sermon', 'Shincheonji')), isTrue);
     expect(namesBlockedGroup(video('Sermon', 'The Epoch Times')), isTrue);
     expect(namesBlockedGroup(video('Sermon', "KAILASA's SPH Nithyananda")), isTrue);
-    expect(namesBlockedGroup(video('Sermon', 'Unrelated channel').withChannel(const ChannelRef('UCewpZIBPFGB8S53fZn-W4mg', 'Unrelated channel'))), isTrue);
+    expect(
+        namesBlockedGroup(video('Sermon', 'Unrelated channel')
+            .withChannel(const ChannelRef('UCewpZIBPFGB8S53fZn-W4mg', 'Unrelated channel'))),
+        isTrue);
     expect(namesBlockedGroup(video('KAILASA documentary', 'DW Documentary')), isFalse);
     expect(namesBlockedGroup(video('Almighty God, we pray', 'EWTN')), isFalse);
     expect(namesBlockedGroup(video('Sermon', 'Twin Flames Universe')), isTrue);
-    expect(namesBlockedGroup(video('Sermon', 'Unrelated channel').withChannel(const ChannelRef('UC8AqZc9Ij7GGptu3U5Mcj7A', 'Unrelated channel'))), isTrue);
-    expect(prefs.copyWith(allowedGroups: ['additional-spiritual-and-religious-channels']).blocksChannel('Twin Flames Universe'), isFalse);
-    expect(namesBlockedGroup(video('Twin Flames Universe investigation', 'DW Documentary')), isFalse);
+    expect(
+        namesBlockedGroup(video('Sermon', 'Unrelated channel')
+            .withChannel(const ChannelRef('UC8AqZc9Ij7GGptu3U5Mcj7A', 'Unrelated channel'))),
+        isTrue);
+    expect(
+        prefs.copyWith(allowedGroups: [
+          'additional-spiritual-and-religious-channels'
+        ]).blocksChannel('Twin Flames Universe'),
+        isFalse);
+    expect(
+        namesBlockedGroup(video('Twin Flames Universe investigation', 'DW Documentary')), isFalse);
     expect(namesBlockedGroup(video('天主教的七件圣事', '梵蒂冈新闻')), isFalse);
   });
 
   test('arranges zones in the saved order and leaves hidden ones out', () {
-    final topics = [ExploreTopic('A', AppIcons.textAa, 'a'), ExploreTopic('B', AppIcons.textAa, 'b'), ExploreTopic('C', AppIcons.textAa, 'c'), ExploreTopic('D', AppIcons.textAa, 'd')];
+    final topics = [
+      ExploreTopic('A', AppIcons.textAa, 'a'),
+      ExploreTopic('B', AppIcons.textAa, 'b'),
+      ExploreTopic('C', AppIcons.textAa, 'c'),
+      ExploreTopic('D', AppIcons.textAa, 'd')
+    ];
     expect(arrangeTopics(topics, ['C', 'A'], {'B'}).map((t) => t.label), ['C', 'A', 'D']);
     expect(arrangeTopics(topics, const [], {'A', 'B', 'C', 'D'}).map((t) => t.label), ['A']);
   });
 
-  test('custom zones, order and hidden zones round-trip through the preferences, Chinese zone keys saved before too', () {
+  test(
+      'custom zones, order and hidden zones round-trip through the preferences, Chinese zone keys saved before too',
+      () {
     const prefs = AppPreferences(
-      exploreCustomTopics: [CustomTopic('额我略圣歌', 'Gregorian chant', ExploreSection.popular), CustomTopic('朝拜圣体', 'Eucharistic adoration live', ExploreSection.live)],
-      exploreOrder: {'popular': ['宗教信仰', 'custom:额我略圣歌']},
-      exploreHidden: {'popular': ['游戏']},
+      exploreCustomTopics: [
+        CustomTopic('额我略圣歌', 'Gregorian chant', ExploreSection.popular),
+        CustomTopic('朝拜圣体', 'Eucharistic adoration live', ExploreSection.live)
+      ],
+      exploreOrder: {
+        'popular': ['宗教信仰', 'custom:额我略圣歌']
+      },
+      exploreHidden: {
+        'popular': ['游戏']
+      },
     );
     final back = AppPreferences.fromJson(jsonDecode(jsonEncode(prefs.toJson())));
     expect(back.exploreCustomTopics.map((t) => (t.label, t.query, t.section)), [
@@ -353,23 +491,39 @@ void main() {
     ]);
     // Zones saved by their Chinese names before the interface was in English
     // come back under their keys now; custom zones keep the name typed.
-    expect(back.exploreOrder, {'popular': ['Religion & faith', 'custom:额我略圣歌']});
-    expect(back.exploreHidden, {'popular': ['Gaming']});
-    expect(arrangeTopics(popularTopics, back.exploreOrder['popular']!, back.exploreHidden['popular']!.toSet()).first.label, 'Religion & faith');
+    expect(back.exploreOrder, {
+      'popular': ['Religion & faith', 'custom:额我略圣歌']
+    });
+    expect(back.exploreHidden, {
+      'popular': ['Gaming']
+    });
+    expect(
+        arrangeTopics(popularTopics, back.exploreOrder['popular']!,
+                back.exploreHidden['popular']!.toSet())
+            .first
+            .label,
+        'Religion & faith');
     final live = exploreTopicsOf(ExploreSection.live, back.exploreCustomTopics);
     expect(live.last.label, '朝拜圣体');
     expect(live.last.custom, isTrue);
   });
 
   test('为你推荐 ranks videos like the history above others', () {
-    VideoItem video(String id, String title, String channel, {int? views}) =>
-        VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, channelId: 'UC$channel'.padRight(24, '0'), url: '', viewCount: views);
+    VideoItem video(String id, String title, String channel, {int? views}) => VideoItem(
+        id: id.padRight(11, '0'),
+        title: title,
+        channel: channel,
+        channelId: 'UC$channel'.padRight(24, '0'),
+        url: '',
+        viewCount: views);
     final taste = TasteProfile.from(history: [
       for (var i = 0; i < 5; i++) video('h$i', 'Catholic Mass Gregorian chant $i', 'chant'),
       video('x', 'Cooking pasta', 'food'),
     ]);
-    final liked = AppController.exploreScore(taste, video('a', 'Gregorian chant for prayer', 'chant'));
-    final other = AppController.exploreScore(taste, video('b', 'Football highlights', 'sport', views: 10000000));
+    final liked =
+        AppController.exploreScore(taste, video('a', 'Gregorian chant for prayer', 'chant'));
+    final other = AppController.exploreScore(
+        taste, video('b', 'Football highlights', 'sport', views: 10000000));
     expect(liked, greaterThan(other));
   });
 
@@ -382,7 +536,8 @@ void main() {
     await tester.pump();
     expect(find.text('Education · most watched Any time'), findsOneWidget);
     expect(find.text('Shuffle'), findsNothing);
-    expect(controller.exploreBroaderQueries, isEmpty, reason: 'the zone is searched in its own words');
+    expect(controller.exploreBroaderQueries, isEmpty,
+        reason: 'the zone is searched in its own words');
     controller.preferences = controller.preferences.copyWith(exploreLanguage: ExploreLanguage.it);
     // Put into Italian, the zone's words may find none: its sub-categories' follow.
     expect(controller.exploreBroaderQueries, containsAllInOrder(['科普', '历史 纪录片']));
@@ -447,7 +602,10 @@ void main() {
     await tester.pump();
     expect(controller.exploreQuery, 'Holy Mass 天主教 弥撒');
     expect(controller.exploreTraditionNow, FaithTradition.catholic);
-    expect(find.text('Christianity · Catholic · Mass · Relevant full-length videos, less clickbait, up to 3 per channel'), findsOneWidget);
+    expect(
+        find.text(
+            'Christianity · Catholic · Mass · Relevant full-length videos, less clickbait, up to 3 per channel'),
+        findsOneWidget);
 
     await tester.tap(find.text('Type'));
     await tester.pump(const Duration(milliseconds: 300));

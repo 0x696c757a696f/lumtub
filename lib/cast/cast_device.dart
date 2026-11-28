@@ -2,7 +2,15 @@ import 'cast_subtitles.dart';
 
 /// What a TV or speaker is asked to play.
 class CastMedia {
-  const CastMedia({required this.url, required this.title, this.mime = 'video/mp4', this.start = Duration.zero, this.offset = Duration.zero, this.duration, this.restart, this.subtitles});
+  const CastMedia(
+      {required this.url,
+      required this.title,
+      this.mime = 'video/mp4',
+      this.start = Duration.zero,
+      this.offset = Duration.zero,
+      this.duration,
+      this.restart,
+      this.subtitles});
   final String url;
   final String title;
   final String mime;
@@ -27,7 +35,8 @@ enum CastState { loading, playing, paused, stopped }
 
 /// What a device reports about the playback it was given.
 class CastStatus {
-  const CastStatus({required this.state, this.position = Duration.zero, this.duration = Duration.zero});
+  const CastStatus(
+      {required this.state, this.position = Duration.zero, this.duration = Duration.zero});
   final CastState state;
   final Duration position;
   final Duration duration;

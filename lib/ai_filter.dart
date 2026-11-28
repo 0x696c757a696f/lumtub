@@ -46,10 +46,13 @@ class AiFilter extends ChangeNotifier {
   /// Where each AI channel list comes from, by the name it is kept under.
   static const lists = {
     'killslop': 'https://api.killslop.app/api/v1/export/youtube-channels.json',
-    'aislist': 'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_blocklist_ids.txt',
-    'aislist-warn': 'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_warnlist_ids.txt',
+    'aislist':
+        'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_blocklist_ids.txt',
+    'aislist-warn':
+        'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_warnlist_ids.txt',
   };
-  static const _fields = 'contents.twoColumnWatchNextResults.results.results.contents.videoPrimaryInfoRenderer.badges';
+  static const _fields =
+      'contents.twoColumnWatchNextResults.results.results.contents.videoPrimaryInfoRenderer.badges';
   static const parallel = 4;
   static const _kept = 20000;
 
@@ -77,7 +80,9 @@ class AiFilter extends ChangeNotifier {
     if (mode == AiFilterMode.off) return false;
     if (_labels?[item.id] ?? false) return true;
     final channel = item.channelId;
-    return mode == AiFilterMode.labeledAndList && channel != null && (_channels.contains(channel) || _channels.contains(item.channel.toLowerCase()));
+    return mode == AiFilterMode.labeledAndList &&
+        channel != null &&
+        (_channels.contains(channel) || _channels.contains(item.channel.toLowerCase()));
   }
 
   /// Sets [next] and loads what it needs.
@@ -149,7 +154,8 @@ class AiFilter extends ChangeNotifier {
 
   /// A masked answer is read here, a whole one in the background: see
   /// VideoLanguages.
-  static Future<bool?> _read(List<int> bytes) async => bytes.length < 32 << 10 ? _label(bytes) : Isolate.run(() => _label(bytes));
+  static Future<bool?> _read(List<int> bytes) async =>
+      bytes.length < 32 << 10 ? _label(bytes) : Isolate.run(() => _label(bytes));
 
   static bool? _label(List<int> bytes) {
     final core = NativeCore.instance!;
@@ -169,7 +175,8 @@ class AiFilter extends ChangeNotifier {
         DateTime? fetched;
         try {
           if (labelsPath != null && File(labelsPath).existsSync()) {
-            labels = (jsonDecode(File(labelsPath).readAsStringSync()) as Map<String, dynamic>).map((k, v) => MapEntry(k, v == true));
+            labels = (jsonDecode(File(labelsPath).readAsStringSync()) as Map<String, dynamic>)
+                .map((k, v) => MapEntry(k, v == true));
           }
         } catch (e) {
           logDebug(() => 'No cached AI labels were read: $e');
@@ -179,8 +186,13 @@ class AiFilter extends ChangeNotifier {
             final file = File(channelsPath);
             final kept = jsonDecode(file.readAsStringSync());
             listed = kept is Map
-                ? {for (final e in kept.entries) e.key.toString(): [for (final c in e.value as List) c.toString()]}
-                : {'killslop': [for (final c in kept as List) c.toString()]};
+                ? {
+                    for (final e in kept.entries)
+                      e.key.toString(): [for (final c in e.value as List) c.toString()]
+                  }
+                : {
+                    'killslop': [for (final c in kept as List) c.toString()]
+                  };
             fetched = kept is Map ? file.lastModifiedSync() : null;
           }
         } catch (e) {
@@ -209,17 +221,24 @@ class AiFilter extends ChangeNotifier {
   Future<void> refreshList({bool force = false}) async {
     if (mode != AiFilterMode.labeledAndList || !available) return;
     final fetched = _listFetched;
-    if (!force && fetched != null && DateTime.now().difference(fetched) < const Duration(days: 1)) return;
+    if (!force && fetched != null && DateTime.now().difference(fetched) < const Duration(days: 1)) {
+      return;
+    }
     final listed = Map<String, List<String>>.of(_listed);
     var changed = false;
     for (final MapEntry(key: name, value: url) in lists.entries) {
       if (_disposed) return;
       try {
-        final (status, body) = await getBounded(_client, Uri.parse(url), limit: 64 << 20).timeout(const Duration(seconds: 30));
+        final (status, body) = await getBounded(_client, Uri.parse(url), limit: 64 << 20)
+            .timeout(const Duration(seconds: 30));
         if (status != 200) throw StateError('HTTP $status');
         final channels = await Isolate.run(() {
           final core = NativeCore.instance!;
-          return [for (final c in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List) c.toString()];
+          return [
+            for (final c
+                in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List)
+              c.toString()
+          ];
         });
         if (channels.isEmpty) throw StateError('the list is empty');
         listed[name] = channels;

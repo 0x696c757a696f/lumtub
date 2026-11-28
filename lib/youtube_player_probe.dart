@@ -22,7 +22,8 @@ class YoutubePlayerProbe {
 
   // As the Rust core's TV sign-in sends them.
   static const _tvVersion = '7.20260901.15.00';
-  static const _tvUserAgent = 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)';
+  static const _tvUserAgent =
+      'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)';
 
   /// Who asks, as YouTube's own page told a visitor: its visitor data and
   /// cookies. Signed-out requests without them are the first YouTube asks
@@ -34,8 +35,10 @@ class YoutubePlayerProbe {
   static const _visitorRetry = Duration(minutes: 5);
   // The page writes it as a JSON string, which may escape characters. It
   // ran to 548 characters on 2026-11-16.
-  static final _visitorData = RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,4000})"');
-  static final _visitorCookie = RegExp(r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
+  static final _visitorData =
+      RegExp(r'"(?:VISITOR_DATA|visitorData)"\s*:\s*"((?:[^"\\]|\\.){10,4000})"');
+  static final _visitorCookie = RegExp(
+      r'(VISITOR_INFO1_LIVE|VISITOR_PRIVACY_METADATA|YSC|__Secure-ROLLOUT_TOKEN)=([^;,\s]+)');
 
   @visibleForTesting
   static void forgetVisitor() {
@@ -48,7 +51,8 @@ class YoutubePlayerProbe {
   /// not opened lately. Without one, YouTube answers `/player` for most
   /// videos with "Sign in to confirm you're not a bot". False when no
   /// visitor is known.
-  static Future<bool> addVisitor(http.Client client, Map<String, String> headers, Map<String, Object?> body) async {
+  static Future<bool> addVisitor(
+      http.Client client, Map<String, String> headers, Map<String, Object?> body) async {
     final visitor = await _visitorNow(client);
     if (visitor == null) return false;
     headers['X-Goog-Visitor-Id'] = visitor.data;
@@ -90,8 +94,11 @@ class YoutubePlayerProbe {
       return http.Response('', 429, reasonPhrase: 'Resting');
     }
     try {
-      final response = await _post(client, headers, body, endpoint: endpoint, mask: mask, timeout: timeout, playing: playing);
-      if (!playing && endpoint == 'player' && response.statusCode == 200) _backgroundAnswered(response);
+      final response = await _post(client, headers, body,
+          endpoint: endpoint, mask: mask, timeout: timeout, playing: playing);
+      if (!playing && endpoint == 'player' && response.statusCode == 200) {
+        _backgroundAnswered(response);
+      }
       return response;
     } finally {
       if (playing) {
@@ -104,8 +111,10 @@ class YoutubePlayerProbe {
   /// Videos being started, and when the last start was answered.
   static int _playing = 0;
   static DateTime _playedAt = DateTime(0);
+
   /// When the next lookup for a list may go.
   static DateTime _nextLookup = DateTime(0);
+
   /// Lookups for lists in a row YouTube took for a bot's, and until when
   /// none is asked after too many.
   static int _refusedInRow = 0;
@@ -118,6 +127,7 @@ class YoutubePlayerProbe {
   /// Whether a phone's app is hidden: lookups for lists wait meanwhile.
   static bool appHidden = false;
   static const afterPlayback = Duration(seconds: 3);
+
   /// After [refusalsBeforeRest] refusals in a row, lookups for lists rest
   /// for [rest]: asking on only keeps YouTube refusing, playback too.
   static const refusalsBeforeRest = 5;
@@ -137,7 +147,8 @@ class YoutubePlayerProbe {
       }
       final free = _playedAt.add(afterPlayback);
       if (_playing > 0 || now.isBefore(free)) {
-        await Future<void>.delayed(_playing > 0 ? const Duration(milliseconds: 200) : free.difference(now));
+        await Future<void>.delayed(
+            _playing > 0 ? const Duration(milliseconds: 200) : free.difference(now));
         continue;
       }
       if (now.isBefore(_nextLookup)) {
@@ -161,7 +172,8 @@ class YoutubePlayerProbe {
     if (++_refusedInRow < refusalsBeforeRest) return;
     _refusedInRow = 0;
     _restUntil = DateTime.now().add(rest);
-    logWarn('YouTube took $refusalsBeforeRest lookups in a row for a bot\'s; lookups for lists rest ${rest.inMinutes} minutes so playback is not refused too');
+    logWarn(
+        'YouTube took $refusalsBeforeRest lookups in a row for a bot\'s; lookups for lists rest ${rest.inMinutes} minutes so playback is not refused too');
   }
 
   static bool _botCheck(http.Response response) {
@@ -281,10 +293,17 @@ class YoutubePlayerProbe {
         return null;
       }
       final cookies = {
-        for (final m in _visitorCookie.allMatches(response.headers['set-cookie'] ?? '')) m.group(1)!: m.group(2)!,
+        for (final m in _visitorCookie.allMatches(response.headers['set-cookie'] ?? ''))
+          m.group(1)!: m.group(2)!,
       };
       logDebug(() => 'YouTube visitor from the page, with cookies ${cookies.keys.join(', ')}');
-      return (data: data, cookies: [YoutubeWeb.consentCookie, for (final MapEntry(:key, :value) in cookies.entries) '$key=$value'].join('; '));
+      return (
+        data: data,
+        cookies: [
+          YoutubeWeb.consentCookie,
+          for (final MapEntry(:key, :value) in cookies.entries) '$key=$value'
+        ].join('; ')
+      );
     } catch (e) {
       logWarn('Could not open the YouTube page for visitor data: $e');
       return null;
@@ -292,7 +311,8 @@ class YoutubePlayerProbe {
   }
 
   /// Whether [fields] are still asked for as a mask.
-  bool masks(String fields, {String endpoint = 'player'}) => !_refused.contains(endpoint) && !_refused.contains('$endpoint $fields');
+  bool masks(String fields, {String endpoint = 'player'}) =>
+      !_refused.contains(endpoint) && !_refused.contains('$endpoint $fields');
 
   /// The answer's bytes, cut down to [fields] (an `X-Goog-FieldMask`)
   /// where YouTube allows it. With [expect], a masked answer that lacks
@@ -304,7 +324,9 @@ class YoutubePlayerProbe {
   ///
   /// [hl] is the language the answer's texts are asked in: a title the
   /// uploader translated comes back in it.
-  Future<List<int>> fetch(String id, String? fields, {String endpoint = 'player', String? expect, bool tv = false, String hl = 'en'}) => fetchAs(
+  Future<List<int>> fetch(String id, String? fields,
+          {String endpoint = 'player', String? expect, bool tv = false, String hl = 'en'}) =>
+      fetchAs(
         tv ? PlayerClient.tv : PlayerClient.web,
         id,
         fields,
@@ -315,18 +337,25 @@ class YoutubePlayerProbe {
 
   /// [fetch] as [client] asks. [PlayerClient.quick] needs the Rust core:
   /// without it the TV app asks.
-  Future<List<int>> fetchAs(PlayerClient client, String id, String? fields, {String endpoint = 'player', String? expect, String hl = 'en'}) async {
+  Future<List<int>> fetchAs(PlayerClient client, String id, String? fields,
+      {String endpoint = 'player', String? expect, String hl = 'en'}) async {
     final (headers, body) = _request(client, id, hl);
     // Only the few fields read, instead of a few hundred kilobytes.
-    final response = await post(_client, headers, body, endpoint: endpoint, mask: fields != null && masks(fields, endpoint: endpoint) ? fields : null);
+    final response = await post(_client, headers, body,
+        endpoint: endpoint,
+        mask: fields != null && masks(fields, endpoint: endpoint) ? fields : null);
     final masked = response.request?.headers.containsKey('X-Goog-FieldMask') ?? false;
     if (response.statusCode == 400 && masked) {
       _refused.add(endpoint);
       logWarn('YouTube refused the field mask for /$endpoint; asking for whole answers');
       return fetchAs(client, id, fields, endpoint: endpoint, hl: hl);
     }
-    if (response.statusCode != 200) throw StateError('$endpoint answered HTTP ${response.statusCode}');
-    if (masked && expect != null && !utf8.decode(response.bodyBytes, allowMalformed: true).contains('"$expect"')) {
+    if (response.statusCode != 200) {
+      throw StateError('$endpoint answered HTTP ${response.statusCode}');
+    }
+    if (masked &&
+        expect != null &&
+        !utf8.decode(response.bodyBytes, allowMalformed: true).contains('"$expect"')) {
       final whole = await fetchAs(client, id, null, endpoint: endpoint, hl: hl);
       if (utf8.decode(whole, allowMalformed: true).contains('"$expect"')) {
         _refused.add('$endpoint $fields');
@@ -337,7 +366,8 @@ class YoutubePlayerProbe {
     return response.bodyBytes;
   }
 
-  static (Map<String, String>, Map<String, Object?>) _request(PlayerClient client, String id, String hl) {
+  static (Map<String, String>, Map<String, Object?>) _request(
+      PlayerClient client, String id, String hl) {
     if (client == PlayerClient.quick) {
       // As a quick start asks (see quick.rs), with the texts in [hl].
       if (NativeCore.instance?.quickRequest(id) case final json?) {
@@ -346,7 +376,15 @@ class YoutubePlayerProbe {
         ((body['context']! as Map)['client'] as Map)['hl'] = hl;
         // The consent cookie too: from Europe, a request without one may
         // be sent to the consent page instead of answered.
-        return ({'Content-Type': 'application/json', 'Accept-Language': hl, 'Cookie': YoutubeWeb.consentCookie, ...(parts['headers'] as Map).cast<String, String>()}, body);
+        return (
+          {
+            'Content-Type': 'application/json',
+            'Accept-Language': hl,
+            'Cookie': YoutubeWeb.consentCookie,
+            ...(parts['headers'] as Map).cast<String, String>()
+          },
+          body
+        );
       }
       client = PlayerClient.tv;
     }
@@ -354,13 +392,30 @@ class YoutubePlayerProbe {
     return (
       {
         ...YoutubeWeb.apiHeaders(acceptLanguage: hl),
-        if (tv) ...{'User-Agent': _tvUserAgent, 'X-YouTube-Client-Name': '7', 'X-YouTube-Client-Version': _tvVersion},
+        if (tv) ...{
+          'User-Agent': _tvUserAgent,
+          'X-YouTube-Client-Name': '7',
+          'X-YouTube-Client-Version': _tvVersion
+        },
       },
       {
         'context': {
           'client': tv
-              ? {'clientName': 'TVHTML5', 'clientVersion': _tvVersion, 'userAgent': _tvUserAgent, 'hl': hl, 'timeZone': 'UTC', 'utcOffsetMinutes': 0}
-              : {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': hl, 'timeZone': 'UTC', 'utcOffsetMinutes': 0},
+              ? {
+                  'clientName': 'TVHTML5',
+                  'clientVersion': _tvVersion,
+                  'userAgent': _tvUserAgent,
+                  'hl': hl,
+                  'timeZone': 'UTC',
+                  'utcOffsetMinutes': 0
+                }
+              : {
+                  'clientName': 'WEB',
+                  'clientVersion': YoutubeWeb.clientVersion,
+                  'hl': hl,
+                  'timeZone': 'UTC',
+                  'utcOffsetMinutes': 0
+                },
         },
         'videoId': id,
       },

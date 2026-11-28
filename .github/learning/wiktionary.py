@@ -17,6 +17,7 @@ OUT_DIR/LANG-wiktionary.tsv, one word a line:
 between tabs, meanings one a line with a literal \\n between them, parts
 of speech and base words between |. Both Wiktionaries are CC BY-SA 4.0.
 """
+
 import gzip
 import json
 import re
@@ -26,6 +27,7 @@ from collections import defaultdict
 
 try:
     import opencc
+
     simplified = opencc.OpenCC('t2s').convert
 except ImportError:
     print('opencc is missing: Chinese stays as written', flush=True)
@@ -34,11 +36,33 @@ except ImportError:
 MAX_SENSES = 8
 MIN_WORDS = int(__import__("os").environ.get("MIN_WORDS", "20000"))
 WORD = re.compile(r"^[^\W\d_](?:[\w'’\-]*[^\W\d_])?$")
-SKIP_FORM_TAGS = {'table-tags', 'inflection-template', 'class', 'romanization', 'canonical', 'error-unrecognized-form'}
+SKIP_FORM_TAGS = {
+    'table-tags',
+    'inflection-template',
+    'class',
+    'romanization',
+    'canonical',
+    'error-unrecognized-form',
+}
 POS = {
-    'noun': 'n.', 'verb': 'v.', 'adj': 'adj.', 'adv': 'adv.', 'pron': 'pron.', 'prep': 'prep.', 'conj': 'conj.',
-    'intj': 'int.', 'num': 'num.', 'det': 'det.', 'article': 'art.', 'particle': 'part.', 'name': 'name',
-    'phrase': 'phr.', 'suffix': 'suf.', 'prefix': 'pref.', 'postp': 'postp.', 'contraction': 'contr.',
+    'noun': 'n.',
+    'verb': 'v.',
+    'adj': 'adj.',
+    'adv': 'adv.',
+    'pron': 'pron.',
+    'prep': 'prep.',
+    'conj': 'conj.',
+    'intj': 'int.',
+    'num': 'num.',
+    'det': 'det.',
+    'article': 'art.',
+    'particle': 'part.',
+    'name': 'name',
+    'phrase': 'phr.',
+    'suffix': 'suf.',
+    'prefix': 'pref.',
+    'postp': 'postp.',
+    'contraction': 'contr.',
 }
 
 
@@ -47,17 +71,35 @@ def clean(text):
 
 
 def opener(path):
-    return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
+    return (
+        gzip.open(path, 'rt', encoding='utf-8')
+        if path.endswith('.gz')
+        else open(path, encoding='utf-8')
+    )
 
 
 # Where a Spanish or Portuguese sense is said, from its tags: English for
 # the English meanings, Chinese for the Chinese ones when every sense of
 # the word is from there (ônibus, Brazil; autocarro, Portugal).
 REGIONS = {
-    'Brazil': '巴西', 'Portugal': '葡萄牙', 'Spain': '西班牙', 'Latin-America': '拉美', 'Mexico': '墨西哥',
-    'Argentina': '阿根廷', 'Rioplatense': '拉普拉塔', 'Uruguay': '乌拉圭', 'Chile': '智利', 'Colombia': '哥伦比亚',
-    'Peru': '秘鲁', 'Venezuela': '委内瑞拉', 'Cuba': '古巴', 'Caribbean': '加勒比', 'Central-America': '中美洲',
-    'Andes': '安第斯', 'Angola': '安哥拉', 'Mozambique': '莫桑比克',
+    'Brazil': '巴西',
+    'Portugal': '葡萄牙',
+    'Spain': '西班牙',
+    'Latin-America': '拉美',
+    'Mexico': '墨西哥',
+    'Argentina': '阿根廷',
+    'Rioplatense': '拉普拉塔',
+    'Uruguay': '乌拉圭',
+    'Chile': '智利',
+    'Colombia': '哥伦比亚',
+    'Peru': '秘鲁',
+    'Venezuela': '委内瑞拉',
+    'Cuba': '古巴',
+    'Caribbean': '加勒比',
+    'Central-America': '中美洲',
+    'Andes': '安第斯',
+    'Angola': '安哥拉',
+    'Mozambique': '莫桑比克',
 }
 REGIONAL = {'es', 'pt'}
 
@@ -92,7 +134,7 @@ def main():
 
     # Chinese meanings, from the Chinese Wiktionary.
     chinese = {code: defaultdict(list) for code in languages}
-    wanted = re.compile(r'"lang_code":\s*"(?:%s)"' % '|'.join(map(re.escape, languages)))
+    wanted = re.compile(r'"lang_code":\s*"(?:{})"'.format('|'.join(map(re.escape, languages))))
     with opener(zh_path) as f:
         for line in f:
             if not wanted.search(line):
@@ -121,11 +163,17 @@ def main():
             continue
         added = 0
         with sqlite3.connect(path) as db:
-            for word, translations, score in db.execute('select written_rep, trans_list, max_score from simple_translation'):
-                word = clean(word or '')
+            for written, translations, score in db.execute(
+                'select written_rep, trans_list, max_score from simple_translation'
+            ):
+                word = clean(written or '')
                 if not word or chinese[code].get(word) or not translations or float(score or 0) < 1:
                     continue
-                meaning = '；'.join(dict.fromkeys(simplified(clean(t)) for t in str(translations).split('|') if clean(t)))
+                meaning = '；'.join(
+                    dict.fromkeys(
+                        simplified(clean(t)) for t in str(translations).split('|') if clean(t)
+                    )
+                )
                 if meaning:
                     chinese[code][word] = [meaning]
                     added += 1
@@ -136,8 +184,10 @@ def main():
     for code, path in languages.items():
         words = {}
 
-        def word_of(text):
-            return words.setdefault(text, {'reading': '', 'ipa': '', 'pos': [], 'en': [], 'lemmas': [], 'regions': []})
+        def word_of(text, words=words):
+            return words.setdefault(
+                text, {'reading': '', 'ipa': '', 'pos': [], 'en': [], 'lemmas': [], 'regions': []}
+            )
 
         with opener(path) as f:
             for line in f:
@@ -153,7 +203,11 @@ def main():
                     record['pos'].append(pos)
                 for form in entry.get('forms', []):
                     tags = set(form.get('tags', []))
-                    if not record['reading'] and tags & {'romanization', 'canonical'} and form.get('form') != text:
+                    if (
+                        not record['reading']
+                        and tags & {'romanization', 'canonical'}
+                        and form.get('form') != text
+                    ):
                         record['reading'] = clean(form.get('form', ''))
                 if not record['ipa']:
                     for sound in entry.get('sounds', []):
@@ -198,10 +252,20 @@ def main():
                     zh = [f'〔{where}〕{line}' for line in zh]
                 if not (zh or record['en'] or record['lemmas']):
                     continue
-                out.write('\t'.join([
-                    text, record['reading'], record['ipa'], '|'.join(record['pos']),
-                    '\\n'.join(zh), '\\n'.join(record['en']), '|'.join(record['lemmas'][:6]),
-                ]) + '\n')
+                out.write(
+                    '\t'.join(
+                        [
+                            text,
+                            record['reading'],
+                            record['ipa'],
+                            '|'.join(record['pos']),
+                            '\\n'.join(zh),
+                            '\\n'.join(record['en']),
+                            '|'.join(record['lemmas'][:6]),
+                        ]
+                    )
+                    + '\n'
+                )
                 kept += 1
         with_zh = sum(1 for t in words if chinese[code].get(t))
         print(f'{code}: {kept} words, {with_zh} with Chinese meanings', flush=True)

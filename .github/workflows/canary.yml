@@ -54,7 +54,9 @@ jobs:
           echo "yt-dlp $("$tools/yt-dlp" --version), $("$tools/deno" --version | head -n1)"
 
       - name: Play
-        run: python3 .github/scripts/canary.py native/lumtub_core/target/release/lumtub-canary "$RUNNER_TEMP/tools" $VIDEOS
+        run: |
+          read -ra videos <<< "$VIDEOS"
+          python3 .github/scripts/canary.py native/lumtub_core/target/release/lumtub-canary "$RUNNER_TEMP/tools" "${videos[@]}"
 
   yt-dlp-notes:
     runs-on: ubuntu-24.04

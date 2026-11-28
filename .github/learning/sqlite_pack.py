@@ -17,6 +17,7 @@ Tables:
 A Wiktionary line that only says which words it is a form of becomes
 form rows to those words, not an entry of its own.
 """
+
 import sqlite3
 import sys
 
@@ -39,8 +40,11 @@ def main():
         CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
         CREATE TABLE entry(id INTEGER PRIMARY KEY, line TEXT NOT NULL);
         CREATE TABLE term(key TEXT NOT NULL, entry INTEGER NOT NULL, form INTEGER NOT NULL, PRIMARY KEY(key, entry)) WITHOUT ROWID;
-    ''')
-    db.executemany('INSERT INTO meta VALUES (?, ?)', [('format', kind), ('language', language), ('version', FORMAT_VERSION)])
+    ''')  # noqa: E501, the SQL stays on one line as written.
+    db.executemany(
+        'INSERT INTO meta VALUES (?, ?)',
+        [('format', kind), ('language', language), ('version', FORMAT_VERSION)],
+    )
     terms = {}
 
     def term(key, entry, form):
@@ -54,15 +58,15 @@ def main():
     entries = 0
     pending = []
     with open(source, encoding='utf-8') as f:
-        for line in f:
-            line = line.rstrip('\n')
+        for raw in f:
+            line = raw.rstrip('\n')
             parts = line.split('\t')
             word = parts[0]
             if not word:
                 continue
             if kind == 'wiktionary':
                 meanings = len(parts) > 5 and (parts[4] or parts[5])
-                lemmas = [l for l in (parts[6] if len(parts) > 6 else '').split('|') if l]
+                lemmas = [x for x in (parts[6] if len(parts) > 6 else '').split('|') if x]
                 if not meanings:
                     pending.extend((word, lemma) for lemma in lemmas)
                     continue
@@ -79,10 +83,17 @@ def main():
             if kind == 'wiktionary':
                 pending.extend((word, lemma) for lemma in lemmas)
     for form, lemma in pending:
-        entry = ids.get(lemma) or ids.get(lemma.lower()) or ids.get(fold(lemma)) or ids.get(fold(lemma.lower()))
+        entry = (
+            ids.get(lemma)
+            or ids.get(lemma.lower())
+            or ids.get(fold(lemma))
+            or ids.get(fold(lemma.lower()))
+        )
         if entry and form != lemma:
             term(form, entry, 1)
-    db.executemany('INSERT INTO term VALUES (?, ?, ?)', ((k, e, f) for (k, e), f in sorted(terms.items())))
+    db.executemany(
+        'INSERT INTO term VALUES (?, ?, ?)', ((k, e, f) for (k, e), f in sorted(terms.items()))
+    )
     db.commit()
     # Shipped read-only: a plain journal, statistics for the planner, no
     # free pages.

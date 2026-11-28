@@ -21,6 +21,7 @@ _STARTUP = dict(SETTINGS)
 if SETTINGS.get("LUMTUB_EXECUTABLE"):
     sys.executable = SETTINGS["LUMTUB_EXECUTABLE"]
 
+import contextlib  # noqa: E402
 import ctypes  # noqa: E402
 import io  # noqa: E402
 import json  # noqa: E402
@@ -215,7 +216,7 @@ def _version_of(app):
 
 
 def _main(run, app, argv, environment=None):
-    global _loaded, SETTINGS
+    global _loaded, SETTINGS  # noqa: PLW0603, both are module state shared across runs.
     _local.run = run
     # The settings in force for this run: the app's, then the run's own.
     # A new dict replaces the old in one step, so a reader on another
@@ -256,10 +257,8 @@ def _main(run, app, argv, environment=None):
         traceback.print_exception(error)
         code = 1
     finally:
-        try:
+        with contextlib.suppress(Exception):
             sys.stdout.flush()
-        except Exception:
-            pass
         run.finish(code)
         _local.run = None
 
@@ -270,7 +269,12 @@ def start(port, request):
     run = _Run(port)
     with _lock:
         _runs[port] = run
-    thread = threading.Thread(target=_main, args=(run, request["app"], request["argv"], request.get("environment")), name=f"yt-dlp {port}", daemon=True)
+    thread = threading.Thread(
+        target=_main,
+        args=(run, request["app"], request["argv"], request.get("environment")),
+        name=f"yt-dlp {port}",
+        daemon=True,
+    )
     run.thread = thread
     thread.start()
 
@@ -284,12 +288,14 @@ def kill(port):
         return
     thread = run.thread
     if thread is not None and thread.ident is not None:
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_ulong(thread.ident), ctypes.py_object(KeyboardInterrupt))
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            ctypes.c_ulong(thread.ident), ctypes.py_object(KeyboardInterrupt)
+        )
     run.finish(-9)
 
 
-sys.stdout = _Text(_STDOUT, sys.__stdout__ or open(os.devnull, "w"))
-sys.stderr = _Text(_STDERR, sys.__stderr__ or open(os.devnull, "w"))
+sys.stdout = _Text(_STDOUT, sys.__stdout__ or open(os.devnull, "w"))  # noqa: SIM115, the stream stays open for the process lifetime.
+sys.stderr = _Text(_STDERR, sys.__stderr__ or open(os.devnull, "w"))  # noqa: SIM115, the stream stays open for the process lifetime.
 sys.stdin = io.TextIOWrapper(io.BufferedReader(_Nothing()))
 sys.argv = ["yt-dlp"]
 _inherit()

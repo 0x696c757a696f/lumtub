@@ -32,22 +32,55 @@ URL = 'github.com/0x696c757a696f/lumtub'
 STORY = {
     'en': {
         'voice': 'af_heart',
-        'brand': (['Lumtub.', 'YouTube for your computer, phone and TV.'], 'YouTube for computer, phone and TV'),
-        'subtitles': ('Two subtitles at once, in any two languages.', 'Bilingual subtitles', ['Any two languages', 'Translated as it plays']),
-        'danmaku': ('Live chat flies across the picture, as danmaku.', 'Danmaku', ['Live chat', 'Chat replay']),
-        'home': ('Recommendations are worked out on your own device, and every card says why.',
-                 'A feed that explains itself', ['Worked out on your device', 'Every card says why']),
-        'skins': ('Twenty-three skins, from Y2K gloss to one-bit pixels, or make your own.', 'Skins', ['23 built in', 'Make your own']),
-        'palettes': ('Ten palettes, and seventy-two languages.', 'Make it yours', ['10 palettes', '72 languages']),
+        'brand': (
+            ['Lumtub.', 'YouTube for your computer, phone and TV.'],
+            'YouTube for computer, phone and TV',
+        ),
+        'subtitles': (
+            'Two subtitles at once, in any two languages.',
+            'Bilingual subtitles',
+            ['Any two languages', 'Translated as it plays'],
+        ),
+        'danmaku': (
+            'Live chat flies across the picture, as danmaku.',
+            'Danmaku',
+            ['Live chat', 'Chat replay'],
+        ),
+        'home': (
+            'Recommendations are worked out on your own device, and every card says why.',
+            'A feed that explains itself',
+            ['Worked out on your device', 'Every card says why'],
+        ),
+        'skins': (
+            'Twenty-three skins, from Y2K gloss to one-bit pixels, or make your own.',
+            'Skins',
+            ['23 built in', 'Make your own'],
+        ),
+        'palettes': (
+            'Ten palettes, and seventy-two languages.',
+            'Make it yours',
+            ['10 palettes', '72 languages'],
+        ),
         'outro': (['Free. Open source. No ads.'], 'Free · Open source · No ads', 'Download free'),
     },
     'zh': {
         'voice': 'zf_xiaoxiao',
-        'brand': (['Lumtub，', '电脑、手机、电视上的 YouTube。'], '为电脑、手机和电视打造的 YouTube 客户端'),
+        'brand': (
+            ['Lumtub，', '电脑、手机、电视上的 YouTube。'],
+            '为电脑、手机和电视打造的 YouTube 客户端',
+        ),
         'subtitles': ('双语字幕，两种语言一起显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
         'danmaku': ('直播聊天，变成弹幕飞过画面。', '弹幕', ['直播聊天', '聊天回放']),
-        'home': ('推荐在本机计算，每条都写明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),
-        'skins': ('二十三套皮肤，从千禧光泽到黑白点阵，也能自己做。', '皮肤', ['内置 23 套', '可以自己做']),
+        'home': (
+            '推荐在本机计算，每条都写明原因。',
+            '会解释自己的推荐',
+            ['只在本机计算', '每张卡片说明原因'],
+        ),
+        'skins': (
+            '二十三套皮肤，从千禧光泽到黑白点阵，也能自己做。',
+            '皮肤',
+            ['内置 23 套', '可以自己做'],
+        ),
         'palettes': ('十套配色，七十二种语言。', '换成你喜欢的样子', ['10 套配色', '72 种语言']),
         'outro': (['免费、开源、没有广告。'], '免费 · 开源 · 无广告', '免费下载'),
     },
@@ -56,7 +89,13 @@ STORY = {
 # What each scene shows: a picture the showcase took (named for the
 # interface language, else the English one), or a stretch of the recorded
 # tour at a playback speed.
-SCREENS = [('subtitles', 'watch-subtitles'), ('danmaku', 'danmaku'), ('home', 'home-reasons'), ('skins', 'skin-aero'), ('palettes', 2.5)]
+SCREENS = [
+    ('subtitles', 'watch-subtitles'),
+    ('danmaku', 'danmaku'),
+    ('home', 'home-reasons'),
+    ('skins', 'skin-aero'),
+    ('palettes', 2.5),
+]
 
 # Pictures taken on a real computer, which win over the showcase's: CI
 # runners are refused YouTube's subtitles and live chat.
@@ -79,7 +118,12 @@ def font_file(pattern):
     override = os.environ.get('PROMO_FONT')
     if override:
         return override, 0
-    out = subprocess.run(['fc-match', '-f', '%{file}\n%{index}', pattern], capture_output=True, text=True).stdout.split('\n')
+    out = subprocess.run(
+        ['fc-match', '-f', '%{file}\n%{index}', pattern],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.split('\n')
     return out[0], int(out[1] or 0)
 
 
@@ -112,7 +156,9 @@ def text_image(text, size, color=(255, 255, 255)):
 def rounded(size, radius, color):
     s = 3
     img = Image.new('RGBA', (size[0] * s, size[1] * s), (0, 0, 0, 0))
-    ImageDraw.Draw(img).rounded_rectangle((0, 0, size[0] * s - 1, size[1] * s - 1), radius * s, fill=color)
+    ImageDraw.Draw(img).rounded_rectangle(
+        (0, 0, size[0] * s - 1, size[1] * s - 1), radius * s, fill=color
+    )
     return img.resize(size, Image.LANCZOS)
 
 
@@ -120,10 +166,12 @@ def logo(size):
     s = 4
     img = Image.new('RGBA', (size * s, size * s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, size * s - 1, size * s - 1), int(size * s * 0.24), fill=RED + (255,))
+    d.rounded_rectangle((0, 0, size * s - 1, size * s - 1), int(size * s * 0.24), fill=(*RED, 255))
     c = size * s / 2
     r = size * s * 0.22
-    d.polygon([(c - r * 0.75, c - r), (c - r * 0.75, c + r), (c + r * 1.05, c)], fill=(255, 255, 255, 255))
+    d.polygon(
+        [(c - r * 0.75, c - r), (c - r * 0.75, c + r), (c + r * 1.05, c)], fill=(255, 255, 255, 255)
+    )
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -131,7 +179,9 @@ def place(canvas, img, x, y, alpha=1.0, scale=1.0, center=False):
     if alpha <= 0.01 or scale <= 0.01:
         return
     if scale != 1.0:
-        img = img.resize((max(1, int(img.width * scale)), max(1, int(img.height * scale))), Image.BICUBIC)
+        img = img.resize(
+            (max(1, int(img.width * scale)), max(1, int(img.height * scale))), Image.BICUBIC
+        )
     if alpha < 1.0:
         img = img.copy()
         img.putalpha(img.getchannel('A').point(lambda a: int(a * alpha)))
@@ -144,9 +194,9 @@ class Backdrop:
     """Near-black with two slow coloured glows."""
 
     def __init__(self):
-        self.base = Image.new('RGBA', (W, H), INK + (255,))
+        self.base = Image.new('RGBA', (W, H), (*INK, 255))
         glow = Image.new('RGBA', (900, 900), (0, 0, 0, 0))
-        ImageDraw.Draw(glow).ellipse((150, 150, 750, 750), fill=RED + (70,))
+        ImageDraw.Draw(glow).ellipse((150, 150, 750, 750), fill=(*RED, 70))
         self.red = glow.filter(ImageFilter.GaussianBlur(150))
         glow = Image.new('RGBA', (900, 900), (0, 0, 0, 0))
         ImageDraw.Draw(glow).ellipse((150, 150, 750, 750), fill=(90, 70, 220, 60))
@@ -154,8 +204,13 @@ class Backdrop:
 
     def at(self, t):
         img = self.base.copy()
-        img.alpha_composite(self.red, (int(-250 + 160 * math.sin(t * 0.35)), int(-300 + 120 * math.cos(t * 0.27))))
-        img.alpha_composite(self.blue, (int(W - 650 + 140 * math.cos(t * 0.31)), int(H - 600 + 110 * math.sin(t * 0.23))))
+        img.alpha_composite(
+            self.red, (int(-250 + 160 * math.sin(t * 0.35)), int(-300 + 120 * math.cos(t * 0.27)))
+        )
+        img.alpha_composite(
+            self.blue,
+            (int(W - 650 + 140 * math.cos(t * 0.31)), int(H - 600 + 110 * math.sin(t * 0.23))),
+        )
         return img
 
 
@@ -164,9 +219,27 @@ class Clip:
 
     def __init__(self, path, start, end, speed, size):
         self.size, self.speed, self.length = size, speed, end - start
-        self.proc = subprocess.Popen(['ffmpeg', '-v', 'error', '-ss', f'{start:.3f}', '-t', f'{end - start:.3f}', '-i', path,
-                                      '-vf', f'scale={size[0]}:{size[1]}:flags=bicubic,fps={FPS}', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
-                                     stdout=subprocess.PIPE)
+        self.proc = subprocess.Popen(
+            [
+                'ffmpeg',
+                '-v',
+                'error',
+                '-ss',
+                f'{start:.3f}',
+                '-t',
+                f'{end - start:.3f}',
+                '-i',
+                path,
+                '-vf',
+                f'scale={size[0]}:{size[1]}:flags=bicubic,fps={FPS}',
+                '-f',
+                'rawvideo',
+                '-pix_fmt',
+                'rgb24',
+                '-',
+            ],
+            stdout=subprocess.PIPE,
+        )
         self.index, self.frame = -1, Image.new('RGB', size, INK)
 
     def at(self, t):
@@ -193,12 +266,14 @@ class Segment:
 class Voice:
     def __init__(self, model, voices):
         from kokoro_onnx import Kokoro
+
         self.kokoro = Kokoro(model, voices)
         self.zh = None
 
     def phonemes_zh(self, text):
         if self.zh is None:
             from misaki import zh
+
             self.zh = zh.ZHG2P()
         # Latin words such as YouTube are read in English, the rest in
         # Chinese; split before converting, as the Chinese phonemes are
@@ -214,12 +289,14 @@ class Voice:
 
     def say(self, lang, voice, text):
         if lang == 'zh':
-            audio, rate = self.kokoro.create(self.phonemes_zh(text), voice=voice, speed=1.0, is_phonemes=True)
+            audio, rate = self.kokoro.create(
+                self.phonemes_zh(text), voice=voice, speed=1.0, is_phonemes=True
+            )
         else:
             audio, rate = self.kokoro.create(text, voice=voice, speed=1.0, lang='en-us')
         audio = signal.resample_poly(np.asarray(audio, dtype=np.float64), RATE // 100, rate // 100)
         trimmed = np.nonzero(np.abs(audio) > 0.01)[0]
-        return audio[max(0, trimmed[0] - 400):trimmed[-1] + 2000] if len(trimmed) else audio
+        return audio[max(0, trimmed[0] - 400) : trimmed[-1] + 2000] if len(trimmed) else audio
 
     def lines(self, lang, voice, lines, gap=0.28):
         parts, cues, at = [], [], 0.0
@@ -254,7 +331,9 @@ def build(story, voice, scenes, lang, folder):
         segments.append(Segment('screen', max(len(audio) / RATE + 0.6, 3.0), audio, [0.0], data))
     lines, title, button = story['outro']
     audio, cues = voice.lines(lang, v, lines, gap=0.3)
-    segments.append(Segment('outro', len(audio) / RATE + 2.4, audio, cues, {'title': title, 'button': button}))
+    segments.append(
+        Segment('outro', len(audio) / RATE + 2.4, audio, cues, {'title': title, 'button': button})
+    )
     at = 0.0
     for s in segments:
         s.start = at
@@ -268,7 +347,9 @@ def picture(folder, name, lang):
     files.append(os.path.join(folder, f'{name}.png'))
     if name in TAKEN_NAMES:
         taken = TAKEN_NAMES[name]
-        files[:0] = ([os.path.join(TAKEN, 'zh', f'{taken}.jpg')] if lang == 'zh' else []) + [os.path.join(TAKEN, f'{taken}.jpg')]
+        files[:0] = ([os.path.join(TAKEN, 'zh', f'{taken}.jpg')] if lang == 'zh' else []) + [
+            os.path.join(TAKEN, f'{taken}.jpg')
+        ]
     for path in files:
         if os.path.exists(path):
             img = Image.open(path).convert('RGB')
@@ -293,7 +374,9 @@ class Painter:
         self.window = (1440, 810)
         self.mask = rounded(self.window, 22, (255, 255, 255, 255)).getchannel('A')
         shadow = Image.new('RGBA', (self.window[0] + 160, self.window[1] + 160), (0, 0, 0, 0))
-        ImageDraw.Draw(shadow).rounded_rectangle((80, 100, self.window[0] + 80, self.window[1] + 100), 24, fill=(0, 0, 0, 170))
+        ImageDraw.Draw(shadow).rounded_rectangle(
+            (80, 100, self.window[0] + 80, self.window[1] + 100), 24, fill=(0, 0, 0, 170)
+        )
         self.shadow = shadow.filter(ImageFilter.GaussianBlur(36))
 
     def text(self, text, size, color=(255, 255, 255)):
@@ -314,7 +397,7 @@ class Painter:
 
     def headline(self, img, title, t, y=64):
         p = ease_out((t - 0.15) / 0.5)
-        bar = self.image(('bar',), lambda: rounded((10, 64), 5, RED + (255,)))
+        bar = self.image(('bar',), lambda: rounded((10, 64), 5, (*RED, 255)))
         place(img, bar, 240, y + 12, alpha=p)
         place(img, self.text(title, 60), 268, y + (1 - p) * 30, alpha=p)
 
@@ -326,14 +409,22 @@ class Painter:
         img = rounded((txt.width + 64, 66), 33, (255, 255, 255, 236))
         dark = text_image(label, 34, INK)
         img.alpha_composite(dark, (32, (66 - dark.height) // 2 + 1))
-        dot = rounded((14, 14), 7, RED + (255,))
+        dot = rounded((14, 14), 7, (*RED, 255))
         img.alpha_composite(dot, (12, 26))
         return img
 
     def brand(self, img, seg, t):
         p = ease_back((t - 0.15) / 0.55)
         size = 240
-        place(img, self.image(('logo', size), lambda: logo(size)), W / 2, 400, alpha=min(1, max(0, (t - 0.15) / 0.2)), scale=max(0.01, p), center=True)
+        place(
+            img,
+            self.image(('logo', size), lambda: logo(size)),
+            W / 2,
+            400,
+            alpha=min(1, max(0, (t - 0.15) / 0.2)),
+            scale=max(0.01, p),
+            center=True,
+        )
         name = self.text('Lumtub', 150)
         reveal = ease_out((t - 0.45) / 0.6)
         if reveal > 0:
@@ -341,7 +432,14 @@ class Painter:
             place(img, crop, W / 2 - name.width / 2, 560)
         cue = seg.cues[-1] if seg.cues else 1.2
         q = ease_out((t - cue) / 0.6)
-        place(img, self.text(seg.data['tagline'], 52, (220, 220, 228)), W / 2, 820 + (1 - q) * 30, alpha=q, center=True)
+        place(
+            img,
+            self.text(seg.data['tagline'], 52, (220, 220, 228)),
+            W / 2,
+            820 + (1 - q) * 30,
+            alpha=q,
+            center=True,
+        )
 
     def screen(self, img, seg, t):
         d = seg.data
@@ -356,7 +454,11 @@ class Painter:
         cw, ch = 1600 / zoom, 900 / zoom
         fx, fy = {'subtitles': (0.5, 0.85), 'danmaku': (0.5, 0.15)}.get(name, (0.5, 0.35))
         x0, y0 = (1600 - cw) * fx, (900 - ch) * fy
-        shot = frame.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize(self.window, Image.BILINEAR).convert('RGBA')
+        shot = (
+            frame.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch)))
+            .resize(self.window, Image.BILINEAR)
+            .convert('RGBA')
+        )
         shot.putalpha(self.mask)
         rise = ease_out(t / 0.6)
         x, y = (W - self.window[0]) // 2, 200 + int((1 - rise) * 60)
@@ -368,40 +470,116 @@ class Painter:
             if p <= 0:
                 continue
             chip = self.chip(label)
-            place(img, chip, W - 250 - chip.width, 860 - (len(d['chips']) - 1 - i) * 84, alpha=min(1, p * 2), scale=0.7 + 0.3 * ease_back(p))
+            place(
+                img,
+                chip,
+                W - 250 - chip.width,
+                860 - (len(d['chips']) - 1 - i) * 84,
+                alpha=min(1, p * 2),
+                scale=0.7 + 0.3 * ease_back(p),
+            )
 
     def outro(self, img, seg, t):
         p = ease_back((t - 0.1) / 0.5)
-        place(img, self.image(('logo', 150), lambda: logo(150)), W / 2 - 250, 300, scale=max(0.01, p), alpha=min(1, t / 0.2), center=True)
+        place(
+            img,
+            self.image(('logo', 150), lambda: logo(150)),
+            W / 2 - 250,
+            300,
+            scale=max(0.01, p),
+            alpha=min(1, t / 0.2),
+            center=True,
+        )
         q = ease_out((t - 0.3) / 0.5)
         place(img, self.text('Lumtub', 130), W / 2 + 90, 300 + (1 - q) * 20, alpha=q, center=True)
         r = ease_out((t - 0.7) / 0.5)
-        place(img, self.text(seg.data['title'], 72), W / 2, 520 + (1 - r) * 30, alpha=r, center=True)
-        place(img, self.text('Windows · Linux · macOS', 40, (190, 190, 200)), W / 2, 620, alpha=ease_out((t - 1.0) / 0.5), center=True)
+        place(
+            img, self.text(seg.data['title'], 72), W / 2, 520 + (1 - r) * 30, alpha=r, center=True
+        )
+        place(
+            img,
+            self.text('Windows · Linux · macOS', 40, (190, 190, 200)),
+            W / 2,
+            620,
+            alpha=ease_out((t - 1.0) / 0.5),
+            center=True,
+        )
         cue = seg.cues[-1] if len(seg.cues) > 1 else 1.4
         b = (t - cue) / 0.4
         if b > 0:
-            button = self.image(('button', seg.data['button']), lambda: self._button(seg.data['button']))
+            button = self.image(
+                ('button', seg.data['button']), lambda: self._button(seg.data['button'])
+            )
             pulse = 1 + 0.03 * math.sin(max(0, t - cue - 0.4) * 6)
-            place(img, button, W / 2, 770, alpha=min(1, b * 2), scale=(0.7 + 0.3 * ease_back(b)) * pulse, center=True)
-            place(img, self.text(URL, 36, (200, 200, 210)), W / 2, 880, alpha=ease_out(b - 0.5), center=True)
+            place(
+                img,
+                button,
+                W / 2,
+                770,
+                alpha=min(1, b * 2),
+                scale=(0.7 + 0.3 * ease_back(b)) * pulse,
+                center=True,
+            )
+            place(
+                img,
+                self.text(URL, 36, (200, 200, 210)),
+                W / 2,
+                880,
+                alpha=ease_out(b - 0.5),
+                center=True,
+            )
         fade = (t - (seg.duration - 0.7)) / 0.7
         if fade > 0:
             img.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, int(255 * min(1, fade)))))
 
     def _button(self, label):
         txt = text_image(label, 50)
-        img = rounded((txt.width + 120, 104), 52, RED + (255,))
+        img = rounded((txt.width + 120, 104), 52, (*RED, 255))
         img.alpha_composite(txt, (60, (104 - txt.height) // 2 + 2))
         return img
 
 
 def render(segments, total, tour, out_video, audio_file):
     painter = Painter(tour)
-    enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
-                            '-i', audio_file, '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
-                            '-c:a', 'aac', '-b:a', '160k', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-shortest', '-movflags', '+faststart', out_video],
-                           stdin=subprocess.PIPE)
+    enc = subprocess.Popen(
+        [
+            'ffmpeg',
+            '-v',
+            'error',
+            '-y',
+            '-f',
+            'rawvideo',
+            '-pix_fmt',
+            'rgb24',
+            '-s',
+            f'{W}x{H}',
+            '-r',
+            str(FPS),
+            '-i',
+            '-',
+            '-i',
+            audio_file,
+            '-c:v',
+            'libx264',
+            '-preset',
+            'medium',
+            '-crf',
+            '20',
+            '-pix_fmt',
+            'yuv420p',
+            '-c:a',
+            'aac',
+            '-b:a',
+            '160k',
+            '-af',
+            'loudnorm=I=-14:TP=-1.5:LRA=11',
+            '-shortest',
+            '-movflags',
+            '+faststart',
+            out_video,
+        ],
+        stdin=subprocess.PIPE,
+    )
     for n in range(int(total * FPS)):
         now = n / FPS
         live = [s for s in segments if s.start <= now < s.start + s.duration]
@@ -420,6 +598,7 @@ def render(segments, total, tour, out_video, audio_file):
 
 
 # Sound.
+
 
 def note(semitones_from_a4):
     return 440.0 * 2 ** (semitones_from_a4 / 12)
@@ -463,7 +642,7 @@ def add(track, at, sound, gain=1.0):
     if i >= track.shape[-1]:
         return
     j = min(track.shape[-1], i + sound.shape[-1])
-    track[..., i:j] += gain * sound[..., :j - i]
+    track[..., i:j] += gain * sound[..., : j - i]
 
 
 def music(total, drop, rng):
@@ -477,15 +656,20 @@ def music(total, drop, rng):
     for b in range(bars):
         at = b * bar
         root = chords[b % 4]
-        for k, semi in enumerate(root):
-            for side, track, det in ((0, left, -0.003), (1, right, 0.003)):
-                pad = tone(note(semi - 12), bar + 0.4, harmonics=5, detune=det) * env(int((bar + 0.4) * RATE), 0.5, 0.6)
+        for semi in root:
+            for _side, track, det in ((0, left, -0.003), (1, right, 0.003)):
+                pad = tone(note(semi - 12), bar + 0.4, harmonics=5, detune=det) * env(
+                    int((bar + 0.4) * RATE), 0.5, 0.6
+                )
                 add(track, at, lowpass(pad, 1800 if at >= drop else 700) * 0.05)
         for step in range(8):
             t0 = at + step * beat / 2
             semi = root[[0, 1, 2, 1, 0, 2, 1, 2][step]] + (12 if step % 4 == 2 else 0)
             n = int(0.35 * RATE)
-            pl = (np.sin(2 * np.pi * note(semi) * np.arange(n) / RATE) + 0.3 * np.sin(4 * np.pi * note(semi) * np.arange(n) / RATE)) * np.exp(-np.arange(n) / RATE * 9)
+            pl = (
+                np.sin(2 * np.pi * note(semi) * np.arange(n) / RATE)
+                + 0.3 * np.sin(4 * np.pi * note(semi) * np.arange(n) / RATE)
+            ) * np.exp(-np.arange(n) / RATE * 9)
             pl = lowpass(pl, 4000 if t0 >= drop else 1200)
             add(left, t0, pl, 0.07 if step % 2 == 0 else 0.05)
             add(right, t0, pl, 0.05 if step % 2 == 0 else 0.07)
@@ -497,17 +681,23 @@ def music(total, drop, rng):
                 continue
             n = int(0.45 * RATE)
             tt = np.arange(n) / RATE
-            kick = np.sin(2 * np.pi * (45 * tt + 70 / 18 * (1 - np.exp(-18 * tt)))) * np.exp(-tt * 7)
+            kick = np.sin(2 * np.pi * (45 * tt + 70 / 18 * (1 - np.exp(-18 * tt)))) * np.exp(
+                -tt * 7
+            )
             add(left, t0, kick, 0.5)
             add(right, t0, kick, 0.5)
             bass_f = note(root[0] - 36 + (12 if root[0] < -2 else 0))
             nb = int(beat * 0.9 * RATE)
-            bass = np.tanh(2 * np.sin(2 * np.pi * bass_f * np.arange(nb) / RATE)) * env(nb, 0.01, 0.15)
+            bass = np.tanh(2 * np.sin(2 * np.pi * bass_f * np.arange(nb) / RATE)) * env(
+                nb, 0.01, 0.15
+            )
             add(left, t0, lowpass(bass, 500) * 0.16)
             add(right, t0, lowpass(bass, 500) * 0.16)
             if k in (1, 3):
                 nc = int(0.2 * RATE)
-                clap = bandpass(rng.standard_normal(nc), 900, 3500) * np.exp(-np.arange(nc) / RATE * 22)
+                clap = bandpass(rng.standard_normal(nc), 900, 3500) * np.exp(
+                    -np.arange(nc) / RATE * 22
+                )
                 add(left, t0, clap, 0.12)
                 add(right, t0, clap, 0.14)
             nh = int(0.06 * RATE)
@@ -517,12 +707,14 @@ def music(total, drop, rng):
     # The end: one chord that rings out.
     end = total - 1.6
     for semi in (0, 3, 7, 12):
-        ring = tone(note(semi - 12), 3.0, harmonics=4) * np.exp(-np.arange(int(3.0 * RATE)) / RATE * 1.4)
+        ring = tone(note(semi - 12), 3.0, harmonics=4) * np.exp(
+            -np.arange(int(3.0 * RATE)) / RATE * 1.4
+        )
         add(left, end, lowpass(ring, 2500), 0.08)
         add(right, end, lowpass(ring, 2500), 0.08)
     fade = np.ones(left.shape[0])
     stop = int(total * RATE)
-    fade[stop - int(0.6 * RATE):stop] = np.linspace(1, 0, int(0.6 * RATE))
+    fade[stop - int(0.6 * RATE) : stop] = np.linspace(1, 0, int(0.6 * RATE))
     fade[stop:] = 0
     return np.stack([left, right]) * fade
 
@@ -542,7 +734,9 @@ def whoosh(rng, dur=0.6):
 def pop(freq=520):
     n = int(0.12 * RATE)
     tt = np.arange(n) / RATE
-    return np.sin(2 * np.pi * (freq * tt + freq * 1.4 * tt * tt / 0.12 / 2)) * np.exp(-tt * 35) * 0.5
+    return (
+        np.sin(2 * np.pi * (freq * tt + freq * 1.4 * tt * tt / 0.12 / 2)) * np.exp(-tt * 35) * 0.5
+    )
 
 
 def impact(rng):
@@ -570,10 +764,12 @@ def mix(segments, total):
     bed = music(total, drop, rng)
     # Duck the music under the narration.
     level = lowpass(np.abs(voice), 6)
-    duck = 1 - 0.55 * np.clip(level / (np.percentile(level[level > 1e-4], 60) if np.any(level > 1e-4) else 1), 0, 1)
+    duck = 1 - 0.55 * np.clip(
+        level / (np.percentile(level[level > 1e-4], 60) if np.any(level > 1e-4) else 1), 0, 1
+    )
     duck = lowpass(duck, 3)
     fx = np.zeros_like(bed)
-    for i, s in enumerate(segments[1:], 1):
+    for s in segments[1:]:
         if s.kind != 'brand':
             add(fx, s.start - 0.1, np.stack([whoosh(rng)] * 2), 0.35)
     add(fx, drop - 1.4, np.stack([riser(rng, 1.4)] * 2), 0.8)
@@ -587,7 +783,7 @@ def mix(segments, total):
             cue = s.cues[-1] if len(s.cues) > 1 else 1.4
             add(fx, s.start + cue, np.stack([pop(880)] * 2), 0.45)
     out = bed * duck + fx + np.stack([voice, voice]) * 0.9
-    out = out[:, :int(total * RATE)]
+    out = out[:, : int(total * RATE)]
     out = np.tanh(out / max(1e-6, np.max(np.abs(out))) * 1.2) * 0.9
     return out
 
@@ -615,14 +811,32 @@ def read_scenes(path):
         for line in f:
             name, ms = line.split()
             marks.append((name, int(ms) / 1000))
-    return {name: (start, marks[i + 1][1] if i + 1 < len(marks) else start + 8) for i, (name, start) in enumerate(marks)}
+    return {
+        name: (start, marks[i + 1][1] if i + 1 < len(marks) else start + 8)
+        for i, (name, start) in enumerate(marks)
+    }
 
 
 def gif(folder, scenes):
     start, end = scenes.get('palettes', (0, 12))
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', f'{start + 0.5:.2f}', '-t', f'{min(12, end - start - 0.5):.2f}', '-i', os.path.join(folder, 'tour.mp4'),
-                    '-vf', 'fps=10,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=bayer:bayer_scale=4',
-                    os.path.join(folder, 'tour.gif')], check=True)
+    subprocess.run(
+        [
+            'ffmpeg',
+            '-v',
+            'error',
+            '-y',
+            '-ss',
+            f'{start + 0.5:.2f}',
+            '-t',
+            f'{min(12, end - start - 0.5):.2f}',
+            '-i',
+            os.path.join(folder, 'tour.mp4'),
+            '-vf',
+            'fps=10,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=bayer:bayer_scale=4',
+            os.path.join(folder, 'tour.gif'),
+        ],
+        check=True,
+    )
 
 
 def main():

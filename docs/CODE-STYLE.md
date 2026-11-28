@@ -13,12 +13,19 @@ its own page, [RUST-STYLE.md](RUST-STYLE.md). The rules in
 | C++ (Windows and Linux runners) | [Google C++ Style Guide][cpp] | clang-format with `.clang-format` |
 | Kotlin (`android/`) | [Android Kotlin style guide][kotlin] | review; `.editorconfig` for editors and ktlint |
 | Swift (`ios/`, `macos/`) | [Google Swift Style Guide][swift] | review |
+| Python (yt-dlp runner, CI and packaging scripts) | [Google Python Style Guide][python] | Ruff with `ruff.toml` |
+| Shell (`*.sh`, workflow steps) | [Google Shell Style Guide][shell] | ShellCheck, actionlint |
+| JavaScript (`license-server/`, `docs/cards/`) | [Google JavaScript Style Guide][js] | ESLint with `.github/lint/eslint.config.mjs` |
+| GitHub Actions workflows | the rules below, [SECURE-CODING.md](SECURE-CODING.md) | actionlint, zizmor |
 
 [dart]: https://dart.dev/effective-dart
 [rust]: https://google.github.io/styleguide/rustguide.html
 [cpp]: https://google.github.io/styleguide/cppguide.html
 [kotlin]: https://developer.android.com/kotlin/style-guide
 [swift]: https://google.github.io/swift/
+[python]: https://google.github.io/styleguide/pyguide.html
+[shell]: https://google.github.io/styleguide/shellguide.html
+[js]: https://google.github.io/styleguide/jsguide.html
 
 ## Every language
 
@@ -102,3 +109,72 @@ The Google Swift Style Guide: 100 columns, two-space indent,
   use `guard let`.
 - `///` doc comments on types and on the methods Dart calls.
 - `[weak self]` in closures kept by the system.
+
+## Python
+
+Google's Python style, checked by Ruff (`ruff.toml`) in Checks › Scripts:
+pycodestyle, pyflakes, bugbear, import order, naming, newer syntax and
+Ruff's own rules. Files are formatted with `ruff format`, 100 columns.
+
+- Scripts that read outside data (`.github/scripts`, the yt-dlp runner)
+  check its type before use, like the Dart code.
+- `subprocess.run` says `check=True` or `check=False`; a command is a list,
+  never a shell string.
+- Python that ships in the app (`native/lumtub_core/src/python_runner.py`,
+  `python/`) reads its settings from the runner, not from `os.environ`,
+  which other threads may be changing.
+- Scripts run with `python3 -I` in CI, so nothing in the working directory
+  is imported by accident.
+- `# noqa: CODE` only with a reason after it.
+
+## Shell
+
+Google's Shell style, checked by ShellCheck for `*.sh` files and by
+actionlint (which runs ShellCheck) for every workflow step.
+
+- Bash, starting with `set -euo pipefail`. The smoke, showcase and glass
+  checks are the exception: they keep going to collect every log.
+- Quote every expansion. Where words are split on purpose, split them
+  into an array with `read -ra` first; a `# shellcheck disable=` line
+  says why.
+- `rm -rf` on a variable path uses `"${dir:?}/…"`, so an empty variable
+  can never remove `/`.
+- Anything longer than a page, or with real logic, is Python instead.
+
+## JavaScript
+
+Google's JavaScript style, checked by ESLint (`@eslint/js` recommended
+rules plus Google's: `const` by default, `let` when reassigned, never
+`var`; `===`; no thrown literals). ESLint's versions are locked in
+`.github/lint/package-lock.json`.
+
+- Two-space indent, single quotes, semicolons, as the files already are.
+- The license server checks every field of a request before use and
+  never trusts a webhook without its signature.
+
+## Workflows
+
+- Every action is pinned by commit hash with its version in a comment;
+  every download is pinned by checksum (`.github/pins.env` or the step).
+- `persist-credentials: false` on checkout, the smallest `permissions`,
+  and no `${{ }}` of outside data inside `run:` (zizmor checks these).
+- Tools installed with pip use `--require-hashes --only-binary=:all:`;
+  npm uses `npm ci --ignore-scripts` from a lockfile.
+
+## Other files
+
+Checked by review only:
+
+- **PowerShell** (`build_windows.ps1`, `windows/packaging`):
+  `$ErrorActionPreference = 'Stop'` except in the checks that collect
+  logs, full cmdlet names rather than aliases.
+- **CMake** (Windows and Linux): the Flutter-generated files are left as
+  they are; our own lines follow the surrounding file.
+- **Gradle Kotlin scripts** (`android/*.gradle.kts`): the Kotlin rules
+  above.
+- **Inno Setup** (`windows/installer/lumtub.iss`) and **CSS**
+  (`website/style.css`): the style of the file.
+- **GLSL shaders** (`assets/shaders`) come from their authors unchanged,
+  with their licence headers.
+- **Data** (JSON, JSONC, TSV, XML, plist): valid for its format, read by
+  code that checks it (rule 13).

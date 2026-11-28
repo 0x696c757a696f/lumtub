@@ -32,7 +32,7 @@ chmod +x "$out/run.sh"
 xvfb-run -a -s "-screen 0 1600x1000x24" "$out/run.sh" "$out" "$appimage"
 code=$?
 cp -r "$out/home/.local/share/lumtub/logs" "$out/logs" 2> /dev/null || true
-rm -rf "$out/home"
+rm -rf "${out:?}/home"
 cat "$out/result.json" 2> /dev/null || echo "No result written."
 if [[ $code -ne 0 ]]; then
   echo "--- end of the app's output"
@@ -52,7 +52,7 @@ if [[ $code -ne 0 ]] && command -v gdb > /dev/null; then
       timeout 300 xvfb-run -a -s "-screen 0 1600x1000x24" gdb -q -batch -ex 'handle SIGPIPE nostop noprint' -ex run -ex bt -ex 'thread apply all bt 25' \
       --args "$out/squashfs-root/usr/bin/lumtub" > "$out/gdb.txt" 2>&1
     grep -v '^\[New Thread\|^\[Thread .* exited\|^\[Detaching' "$out/gdb.txt" | grep -B5 -A60 -m1 'received signal\|exited with code' || tail -n 80 "$out/gdb.txt"
-    rm -rf "$out/squashfs-root" "$out/home"
+    rm -rf "${out:?}/squashfs-root" "${out:?}/home"
   )
 fi
 echo "Exit code $code"

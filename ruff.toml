@@ -1,0 +1,25 @@
+# Python follows Google's Python style guide, checked by Ruff
+# (docs/CODE-STYLE.md). 100 columns, like the Rust and Kotlin code.
+line-length = 100
+target-version = "py312"
+extend-exclude = ["vendor"]
+
+[lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "B",        # bugbear
+  "I",        # import order
+  "N",        # naming
+  "UP",       # newer syntax where the target allows it
+  "SIM",      # simpler forms
+  "PLE", "PLW",
+  "RUF",
+]
+ignore = [
+  # Text in other languages is data (parsers, titles, translations).
+  "RUF001", "RUF002", "RUF003",
+]
+
+[format]
+quote-style = "preserve"

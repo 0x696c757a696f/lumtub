@@ -20,12 +20,42 @@ PACKAGES = (".exe", ".zip", ".AppImage", ".dmg", ".apk", ".ipa", ".tipa")
 
 # Verdana 11 px advance widths, as shields.io measures text.
 WIDTHS = {
-    " ": 3.87, "-": 4.58, ".": 3.5, "0": 7.0, "1": 7.0, "2": 7.0, "3": 7.0,
-    "4": 7.0, "5": 7.0, "6": 7.0, "7": 7.0, "8": 7.0, "9": 7.0, "a": 6.66,
-    "b": 6.83, "c": 5.73, "d": 6.83, "e": 6.56, "f": 3.87, "g": 6.83,
-    "h": 6.98, "i": 3.0, "k": 6.5, "l": 3.0, "m": 10.7, "n": 6.98,
-    "o": 6.67, "p": 6.83, "r": 4.69, "s": 5.73, "t": 4.33, "u": 6.98,
-    "v": 6.5, "w": 9.0, "M": 9.88, "B": 7.55,
+    " ": 3.87,
+    "-": 4.58,
+    ".": 3.5,
+    "0": 7.0,
+    "1": 7.0,
+    "2": 7.0,
+    "3": 7.0,
+    "4": 7.0,
+    "5": 7.0,
+    "6": 7.0,
+    "7": 7.0,
+    "8": 7.0,
+    "9": 7.0,
+    "a": 6.66,
+    "b": 6.83,
+    "c": 5.73,
+    "d": 6.83,
+    "e": 6.56,
+    "f": 3.87,
+    "g": 6.83,
+    "h": 6.98,
+    "i": 3.0,
+    "k": 6.5,
+    "l": 3.0,
+    "m": 10.7,
+    "n": 6.98,
+    "o": 6.67,
+    "p": 6.83,
+    "r": 4.69,
+    "s": 5.73,
+    "t": 4.33,
+    "u": 6.98,
+    "v": 6.5,
+    "w": 9.0,
+    "M": 9.88,
+    "B": 7.55,
 }
 
 
@@ -34,7 +64,7 @@ def text_width(text):
 
 
 def dark_text(color):
-    r, g, b = (int(color[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    r, g, b = (int(color[i : i + 2], 16) / 255 for i in (0, 2, 4))
     return 0.299 * r + 0.587 * g + 0.114 * b > 0.69
 
 
@@ -43,6 +73,7 @@ def badge(label, value, color):
     vw = round(text_width(value)) + 10
     w = lw + vw
     fill, shadow = ("#333", "#ccc") if dark_text(color) else ("#fff", "#010101")
+
     def text(x, s, f, sh):
         return (
             f'<text x="{x * 10}" y="150" fill="{sh}" fill-opacity=".3" '
@@ -50,6 +81,7 @@ def badge(label, value, color):
             f'<text x="{x * 10}" y="140" fill="{f}" transform="scale(.1)" '
             f'textLength="{round(text_width(s)) * 10}">{s}</text>'
         )
+
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="20" '
         f'role="img" aria-label="{label}: {value}"><title>{label}: {value}</title>'
@@ -75,8 +107,10 @@ def releases():
     while True:
         req = urllib.request.Request(
             f"https://api.github.com/repos/{REPO}/releases?per_page=100&page={page}",
-            headers={"Accept": "application/vnd.github+json",
-                     **({"Authorization": f"Bearer {token}"} if token else {})},
+            headers={
+                "Accept": "application/vnd.github+json",
+                **({"Authorization": f"Bearer {token}"} if token else {}),
+            },
         )
         with urllib.request.urlopen(req, timeout=60) as reply:
             batch = json.load(reply)
@@ -101,10 +135,7 @@ def main():
     newest = max(published, key=lambda r: r["published_at"] or "")
     version = newest["tag_name"].split("-")[0]
     total = sum(
-        a["download_count"]
-        for r in published
-        for a in r["assets"]
-        if a["name"].endswith(PACKAGES)
+        a["download_count"] for r in published for a in r["assets"] if a["name"].endswith(PACKAGES)
     )
     downloads = metric(total)
     for name, label, value, color in (

@@ -35,15 +35,53 @@ CHANNEL = 'Channel / 频道'
 SOURCE = 'Source / 来源'
 
 FORMS = {
-    BUG: {'first': WHAT_HAPPENED, 'required': [WHAT_HAPPENED, STEPS, DIAGNOSTICS], 'single': [WHAT_HAPPENED]},
+    BUG: {
+        'first': WHAT_HAPPENED,
+        'required': [WHAT_HAPPENED, STEPS, DIAGNOSTICS],
+        'single': [WHAT_HAPPENED],
+    },
     FEATURE: {'first': PROBLEM, 'required': [PROBLEM, IDEA], 'single': [PROBLEM]},
-    BLOCK_LIST: {'first': 'Add or remove / 添加还是移除', 'required': [CHANNEL, SOURCE], 'single': []},
+    BLOCK_LIST: {
+        'first': 'Add or remove / 添加还是移除',
+        'required': [CHANNEL, SOURCE],
+        'single': [],
+    },
 }
 
 FILLER = {
-    '', '无', '没', '没有', '暂无', '略', '空', '如上', '同上', '见上', '见上文', '见上面', '上面', '如题', '同标题',
-    '见标题', '不知道', '不清楚', '测试', 'none', 'no', 'na', 'nil', 'null', 'nothing', 'same', 'above',
-    'asabove', 'seeabove', 'seetitle', 'idk', 'test', 'tbd',
+    '',
+    '无',
+    '没',
+    '没有',
+    '暂无',
+    '略',
+    '空',
+    '如上',
+    '同上',
+    '见上',
+    '见上文',
+    '见上面',
+    '上面',
+    '如题',
+    '同标题',
+    '见标题',
+    '不知道',
+    '不清楚',
+    '测试',
+    'none',
+    'no',
+    'na',
+    'nil',
+    'null',
+    'nothing',
+    'same',
+    'above',
+    'asabove',
+    'seeabove',
+    'seetitle',
+    'idk',
+    'test',
+    'tbd',
 }
 
 TOO_MANY = re.compile(
@@ -88,7 +126,9 @@ def plain(text):
     """The answer without fences, "_No response_", spaces and punctuation."""
     text = '\n'.join(line for line in text.split('\n') if not line.strip().startswith('```'))
     text = text.replace('_No response_', '')
-    return ''.join(c for c in text.lower() if not c.isspace() and unicodedata.category(c)[0] not in 'PSZ')
+    return ''.join(
+        c for c in text.lower() if not c.isspace() and unicodedata.category(c)[0] not in 'PSZ'
+    )
 
 
 def numbered_points(text):
@@ -109,34 +149,49 @@ def problems(issue):
     found = sections(issue.get('body'))
     form = form_of(found)
     if form is None:
-        return [(
-            'It was not opened from one of the issue forms. Please open it again with '
-            '"Bug report" or "Feature request" and fill in every field.',
-            '没有用 issue 表单提交。请用「问题反馈」或「功能建议」重新提交，并填好每一项。',
-        )]
+        return [
+            (
+                'It was not opened from one of the issue forms. Please open it again with '
+                '"Bug report" or "Feature request" and fill in every field.',
+                '没有用 issue 表单提交。请用「问题反馈」或「功能建议」重新提交，并填好每一项。',
+            )
+        ]
     wrong = []
     empty = [name for name in FORMS[form]['required'] if plain(found.get(name, '')) in FILLER]
     if empty:
         names = ', '.join(f'"{name}"' for name in empty)
-        wrong.append((
-            f'These fields are empty or only say something like "none" or "see above": {names}.',
-            f'这些项是空的，或者只写了“无”“如上”之类：{names}。',
-        ))
+        wrong.append(
+            (
+                f'These fields are empty or only say something like "none" or "see above": '
+                f'{names}.',
+                f'这些项是空的，或者只写了“无”“如上”之类：{names}。',
+            )
+        )
     if form == BUG and DIAGNOSTICS not in empty and not VERSION.search(found.get(DIAGNOSTICS, '')):
-        wrong.append((
-            'The version is missing. Paste the diagnostics (Settings › About › Copy diagnostics); '
-            'if Lumtub does not start, write the version you downloaded, such as 0.2.56.',
-            '缺少版本号。请粘贴诊断信息（设置 › 关于 › 复制诊断信息）；如果 Lumtub 打不开，请写下载的版本号，比如 0.2.56。',
-        ))
+        wrong.append(
+            (
+                'The version is missing. Paste the diagnostics (Settings › About › Copy '
+                'diagnostics); '
+                'if Lumtub does not start, write the version you downloaded, such as 0.2.56.',
+                '缺少版本号。请粘贴诊断信息（设置 › 关于 › 复制诊断信息）；如果 Lumtub '
+                '打不开，请写下载的版本号，比如 0.2.56。',
+            )
+        )
     title = issue.get('title') or ''
-    several = TOO_MANY.search(title) or any(numbered_points(found.get(name, '')) for name in FORMS[form]['single'])
+    several = TOO_MANY.search(title) or any(
+        numbered_points(found.get(name, '')) for name in FORMS[form]['single']
+    )
     unticked = form != BLOCK_LIST and '- [x]' not in found.get(ONE, '').lower()
     if several or unticked:
-        wrong.append((
-            'Each issue should be about one problem or one idea, so each can be followed and closed on its own. '
-            'Please open a separate issue for each.',
-            '一个 issue 只写一个问题或一个建议，这样每个都能单独跟进和关闭。请把它们分别开成单独的 issue。',
-        ))
+        wrong.append(
+            (
+                'Each issue should be about one problem or one idea, so each can be followed and '
+                'closed on its own. '
+                'Please open a separate issue for each.',
+                '一个 issue 只写一个问题或一个建议，这样每个都能单独跟进和关闭。请把它们分别开成单'
+                '独的 issue。',
+            )
+        )
     return wrong
 
 
@@ -147,7 +202,8 @@ def reply(wrong):
         'Thanks for taking the time to write this. It was closed automatically because it does not '
         'follow the issue rules yet:\n\n'
         f'{english}\n\n'
-        'Edit the issue to fix this and it reopens by itself. Questions and loose ideas are welcome in '
+        'Edit the issue to fix this and it reopens by itself. Questions and loose ideas are '
+        'welcome in '
         '[Discussions](https://github.com/0x696c757a696f/lumtub/discussions).\n\n'
         '感谢花时间反馈。这个 issue 还不符合提交规范，所以被自动关闭了：\n\n'
         f'{chinese}\n\n'

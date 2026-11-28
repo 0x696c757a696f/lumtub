@@ -7,6 +7,7 @@
 # not place over the letter. Without the marks the letter is missing as a
 # whole and is drawn in the next font that has it.
 import sys
+
 from fontTools.ttLib import TTFont
 
 path = sys.argv[1]

@@ -61,7 +61,7 @@ build_abi() { # abi triple clang-triple pin ("built" = made by python-arm32.sh)
     fetch "$url" "$tarball" "$pin"
   fi
   local src="$work/$abi/src" stage="$work/$abi/stage"
-  rm -rf "$work/$abi"
+  rm -rf "${work:?}/$abi"
   mkdir -p "$src" "$stage/usr/lib" "$stage/usr/etc/tls" "$jni/$abi"
   tar -xzf "$tarball" -C "$src"
   local prefix="$src/prefix"

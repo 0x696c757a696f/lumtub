@@ -138,7 +138,7 @@ async function signedByPolar(request, body, secret) {
   const keys = [new TextEncoder().encode(secret)];
   try {
     keys.push(Uint8Array.from(atob(secret.replace(/^whsec_/, '')), (c) => c.charCodeAt(0)));
-  } catch (_) {
+  } catch {
     // Not base64: the bytes as they are only.
   }
   const message = new TextEncoder().encode(`${id}.${timestamp}.${body}`);
@@ -592,6 +592,7 @@ const SPEAK_MAX_CHARS = 40;
 async function speak(request, env) {
   const ask = await request.json().catch(() => ({}));
   const language = clean(ask.language);
+  // eslint-disable-next-line no-control-regex -- control characters are what it removes.
   const text = String(ask.text || '').replace(/[\u0000-\u001f]/g, '').trim();
   const device = clean(ask.device);
   const voice = AZURE_VOICES[language];

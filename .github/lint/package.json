@@ -1,0 +1,9 @@
+{
+  "name": "lumtub-lint",
+  "private": true,
+  "description": "ESLint for the repository's JavaScript (docs/CODE-STYLE.md); Checks runs npm ci here.",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.1.0"
+  }
+}

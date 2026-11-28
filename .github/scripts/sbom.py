@@ -39,40 +39,48 @@ def pub(path):
 
     def flush():
         if name and source == "hosted" and version:
-            component = {"type": "library", "name": name, "version": version, "purl": f"pkg:pub/{name}@{version}"}
+            component = {
+                "type": "library",
+                "name": name,
+                "version": version,
+                "purl": f"pkg:pub/{name}@{version}",
+            }
             if digest:
                 component["hashes"] = [{"alg": "SHA-256", "content": digest}]
             entries.append(component)
 
-    for line in open(path, encoding="utf-8"):
-        line = line.rstrip("\n")
-        if m := re.match(r"^  ([A-Za-z0-9_]+):$", line):
-            flush()
-            name, source, version, digest = m.group(1), None, None, None
-        elif m := re.match(r"^    source: (\w+)$", line):
-            source = m.group(1)
-        elif m := re.match(r'^    version: "([^"]+)"$', line):
-            version = m.group(1)
-        elif m := re.match(r"^      sha256: ([0-9a-f]{64})$", line):
-            digest = m.group(1)
-        elif line and not line.startswith(" "):
-            flush()
-            name = None
+    with open(path, encoding="utf-8") as f:
+        for raw in f:
+            line = raw.rstrip("\n")
+            if m := re.match(r"^  ([A-Za-z0-9_]+):$", line):
+                flush()
+                name, source, version, digest = m.group(1), None, None, None
+            elif m := re.match(r"^    source: (\w+)$", line):
+                source = m.group(1)
+            elif m := re.match(r'^    version: "([^"]+)"$', line):
+                version = m.group(1)
+            elif m := re.match(r"^      sha256: ([0-9a-f]{64})$", line):
+                digest = m.group(1)
+            elif line and not line.startswith(" "):
+                flush()
+                name = None
     flush()
     return entries
 
 
 def pins(path):
     values = {}
-    for line in open(path, encoding="utf-8"):
-        if "=" in line and not line.startswith("#"):
-            key, value = line.strip().split("=", 1)
-            values[key] = value
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if "=" in line and not line.startswith("#"):
+                key, value = line.strip().split("=", 1)
+                values[key] = value
     return values
 
 
 def main(version, output):
-    flutter = open(".flutter-version", encoding="utf-8").read().strip()
+    with open(".flutter-version", encoding="utf-8") as f:
+        flutter = f.read().strip()
     pinned = pins(".github/pins.env")
     components = [
         {
@@ -105,7 +113,7 @@ def main(version, output):
         "serialNumber": f"urn:uuid:{uuid.uuid4()}",
         "version": 1,
         "metadata": {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "component": {
                 "type": "application",
                 "name": "Lumtub",

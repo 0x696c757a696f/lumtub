@@ -16,7 +16,9 @@ CLIENT = {'clientName': 'WEB', 'clientVersion': '2.20251105.01.00', 'hl': 'en', 
 
 def channel(channel_id):
     body = json.dumps({'context': {'client': CLIENT}, 'browseId': channel_id}).encode()
-    request = urllib.request.Request(BROWSE, data=body, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+    request = urllib.request.Request(
+        BROWSE, data=body, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
+    )
     for attempt in range(3):
         try:
             with urllib.request.urlopen(request, timeout=30) as reply:
@@ -33,7 +35,7 @@ def channel(channel_id):
                 return None, None, f'not found (HTTP {error.code})'
             if attempt == 2:
                 return None, None, f'failed: {error}'
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             if attempt == 2:
                 return None, None, f'failed: {error}'
         time.sleep(5 * (attempt + 1))

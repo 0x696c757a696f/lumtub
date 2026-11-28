@@ -1016,7 +1016,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           apt-install xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
-          linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
+          linux/packaging/smoke.sh Lumtub_*_linux-"$PACKAGE_ARCH".AppImage "$RUNNER_TEMP/smoke"
 
       - name: Linux - window glass check
         if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
@@ -1266,6 +1266,8 @@ jobs:
           security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           rm "$RUNNER_TEMP/cert.p12"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          # One argument per keychain already listed, split on purpose.
+          # shellcheck disable=SC2046
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
           identity=$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)
           [ -n "$identity" ] || { echo "The certificate is not a Developer ID Application one."; exit 1; }
@@ -1399,7 +1401,8 @@ jobs:
       - name: iOS - build the Rust core
         run: |
           # bindgen (QuickJS's bindings) needs the iPhone SDK's headers.
-          export BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)"
+          sdk=$(xcrun --sdk iphoneos --show-sdk-path)
+          export BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $sdk"
           IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build --manifest-path native/lumtub_core/Cargo.toml --release --lib --target aarch64-apple-ios
           core=native/lumtub_core/target/aarch64-apple-ios/release/liblumtub_core.dylib
           lipo -info "$core"
@@ -1839,9 +1842,11 @@ jobs:
           # managers that already list Lumtub.
           managers=()
           if gh api repos/microsoft/winget-pkgs/contents/manifests/l/Lumtub/Lumtub --silent 2>/dev/null; then
+            # shellcheck disable=SC2016 # the backticks are Markdown.
             managers+=('- Windows: `winget install Lumtub.Lumtub`')
           fi
           if gh api repos/ScoopInstaller/Extras/contents/bucket/lumtub.json --silent 2>/dev/null; then
+            # shellcheck disable=SC2016 # the backticks are Markdown.
             managers+=('- Windows: `scoop bucket add extras` then `scoop install lumtub`')
           fi
           footer="$RUNNER_TEMP/which-file.md"

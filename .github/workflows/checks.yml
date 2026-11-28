@@ -51,6 +51,45 @@ jobs:
       - name: Sources (security lint)
         run: python3 -I .github/scripts/security_lint.py
 
+  scripts:
+    name: Scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # The rules these check are in docs/CODE-STYLE.md.
+      - name: Install the linters
+        run: |
+          python3 -m venv "$RUNNER_TEMP/lint"
+          cat > "$RUNNER_TEMP/lint.txt" <<'PINS'
+          ruff==0.16.9 --hash=sha256:a21713e629d3e5bdb2f5c2def1cc7f04f47fa8e1a7eb0571b4a28e1da64bc728
+          shellcheck-py==0.11.0.1 --hash=sha256:1b274df81de5b000ff78db433e7328b87e52e3c38481c60f8e488c3095beef05
+          PINS
+          "$RUNNER_TEMP/lint/bin/pip" install -q --require-hashes --only-binary=:all: -r "$RUNNER_TEMP/lint.txt"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP/lint/bin" actionlint
+          echo "$RUNNER_TEMP/lint/bin" >> "$GITHUB_PATH"
+          npm ci --prefix .github/lint --ignore-scripts --no-audit --no-fund
+
+      - name: Python (Ruff)
+        run: |
+          ruff check --output-format=github .
+          ruff format --check .
+
+      - name: Shell (ShellCheck)
+        run: git ls-files -z '*.sh' ':!vendor' | xargs -0 shellcheck
+
+      # Also runs ShellCheck over each step's script.
+      - name: Workflows (actionlint)
+        run: actionlint
+
+      - name: JavaScript (ESLint)
+        run: .github/lint/node_modules/.bin/eslint -c .github/lint/eslint.config.mjs license-server docs/cards
+
   analyze:
     name: Analyze
     runs-on: ubuntu-24.04
@@ -89,7 +128,7 @@ jobs:
           clang-format==18.1.3 --hash=sha256:059f2c2e7166f97cf06f78d9bd31d83a9c0416527845cb397296daa43bd2c6e2
           PINS
           "$RUNNER_TEMP/clang-format/bin/pip" install -q --require-hashes --only-binary=:all: -r "$RUNNER_TEMP/clang-format.txt"
-          find windows/runner linux/runner -name '*.cpp' -o -name '*.cc' -o -name '*.h' | xargs "$RUNNER_TEMP/clang-format/bin/clang-format" --dry-run --Werror
+          find windows/runner linux/runner \( -name '*.cpp' -o -name '*.cc' -o -name '*.h' \) -exec "$RUNNER_TEMP/clang-format/bin/clang-format" --dry-run --Werror {} +
 
       - name: Get packages
         run: flutter pub get

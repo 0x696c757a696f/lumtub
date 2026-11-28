@@ -43,3 +43,15 @@ updates:
       android:
         patterns: ['*']
     open-pull-requests-limit: 5
+
+  # ESLint for the repository's JavaScript (Checks › Analyze).
+  - package-ecosystem: npm
+    directory: /.github/lint
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      lint:
+        patterns: ['*']
+    open-pull-requests-limit: 5

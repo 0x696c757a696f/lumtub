@@ -17,6 +17,7 @@ app's one Python, the runner imports it once (LUMTUB_JSC).
 
 from __future__ import annotations
 
+import contextlib
 import ctypes
 import json
 import os
@@ -48,7 +49,7 @@ def _setting(name, default=None):
 
 
 def _library():
-    global _core
+    global _core  # noqa: PLW0603, the loaded core library is cached as module state.
     with _core_lock:
         if _core is None:
             path = _setting('LUMTUB_CORE')
@@ -84,19 +85,27 @@ class LumtubJCP(EJSBaseJCP):
             self.logger.warning(f'Lumtub core library could not be loaded: {e}')
             return False
 
-    def _construct_stdin(self, player: str, preprocessed: bool, requests: list[JsChallengeRequest], /) -> str:
+    def _construct_stdin(
+        self, player: str, preprocessed: bool, requests: list[JsChallengeRequest], /
+    ) -> str:
         script = super()._construct_stdin(player, preprocessed, requests)
         if preprocessed:
             # Kept for _run_js_runtime: the core answers these against the
             # player's compiled bytecode, without the solver's scripts.
-            self._solve = (script, {
-                'player': player,
-                'requests': [{
-                    'type': request.type.value,
-                    'challenges': request.input.challenges,
-                } for request in requests],
-                'cache': self._players_folder(),
-            })
+            self._solve = (
+                script,
+                {
+                    'player': player,
+                    'requests': [
+                        {
+                            'type': request.type.value,
+                            'challenges': request.input.challenges,
+                        }
+                        for request in requests
+                    ],
+                    'cache': self._players_folder(),
+                },
+            )
         else:
             self._solve = None
         return script
@@ -132,7 +141,9 @@ class LumtubJCP(EJSBaseJCP):
 
     def _players_folder(self):
         try:
-            return os.path.dirname(self.ie.cache._get_cache_fn(self._CACHE_SECTION, 'player', 'json'))
+            return os.path.dirname(
+                self.ie.cache._get_cache_fn(self._CACHE_SECTION, 'player', 'json')
+            )
         except AttributeError:
             return None
 
@@ -143,7 +154,11 @@ class LumtubJCP(EJSBaseJCP):
         except OSError:
             return
         players = [os.path.join(folder, n) for n in names if n.startswith('player')]
-        compiled = [os.path.join(folder, n) for n in names if n.startswith('lumtub-player-') and n.endswith('.qbc')]
+        compiled = [
+            os.path.join(folder, n)
+            for n in names
+            if n.startswith('lumtub-player-') and n.endswith('.qbc')
+        ]
         self._remove_oldest(players)
         self._remove_oldest(compiled)
 
@@ -154,10 +169,8 @@ class LumtubJCP(EJSBaseJCP):
         except OSError:
             return
         for old in files[_KEEP_PLAYERS:]:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(old)
-            except OSError:
-                pass
 
 
 @register_preference(LumtubJCP)

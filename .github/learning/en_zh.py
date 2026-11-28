@@ -23,9 +23,10 @@ is rewritten in place:
 - Collins stars (column 6) are dropped: they are Collins' own data.
 - The rank (column 7) is the word's place in wordfreq's English list
   (code MIT, data CC BY-SA 4.0) when the wordfreq package is there.
-- A tenth column (after English meanings and the CEFR level) says where the Chinese came from: `w` Wiktionary,
-  `d` WikDict (shown as a reference translation), empty none.
+- A tenth column (after English meanings and the CEFR level) says where the Chinese came
+  from: `w` Wiktionary, `d` WikDict (shown as a reference translation), empty none.
 """
+
 import gzip
 import json
 import re
@@ -38,9 +39,22 @@ import opencc
 simplified = opencc.OpenCC('t2s').convert
 
 POS = {
-    'noun': 'n.', 'verb': 'v.', 'adj': 'adj.', 'adv': 'adv.', 'pron': 'pron.', 'prep': 'prep.', 'conj': 'conj.',
-    'intj': 'int.', 'num': 'num.', 'det': 'det.', 'article': 'art.', 'particle': 'part.', 'phrase': 'phr.',
-    'contraction': 'contr.', 'prep_phrase': 'phr.', 'abbrev': 'abbr.',
+    'noun': 'n.',
+    'verb': 'v.',
+    'adj': 'adj.',
+    'adv': 'adv.',
+    'pron': 'pron.',
+    'prep': 'prep.',
+    'conj': 'conj.',
+    'intj': 'int.',
+    'num': 'num.',
+    'det': 'det.',
+    'article': 'art.',
+    'particle': 'part.',
+    'phrase': 'phr.',
+    'contraction': 'contr.',
+    'prep_phrase': 'phr.',
+    'abbrev': 'abbr.',
 }
 MAX_LINES = 5
 MAX_PER_LINE = 8
@@ -55,12 +69,19 @@ def clean(text):
 
 
 def opener(path):
-    return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')
+    return (
+        gzip.open(path, 'rt', encoding='utf-8')
+        if path.endswith('.gz')
+        else open(path, encoding='utf-8')
+    )
 
 
 # Chinese varieties other than Mandarin, whose words a Mandarin reader
 # would not use.
-OTHER_CHINESE = re.compile(r'Cantonese|Hokkien|Min|Wu|Hakka|Teochew|Gan|Xiang|Jin|Dungan|Classical|Literary|Taishanese|Shanghainese', re.I)
+OTHER_CHINESE = re.compile(
+    r'Cantonese|Hokkien|Min|Wu|Hakka|Teochew|Gan|Xiang|Jin|Dungan|Classical|Literary|Taishanese|Shanghainese',
+    re.I,
+)
 
 
 def mandarin(item):
@@ -87,14 +108,11 @@ def translations_of(entry):
         if not CJK.search(word):
             continue
         tags = set(item.get('tags') or [])
-        if 'Traditional-Chinese' in tags and 'Simplified-Chinese' not in tags:
-            # Kept only if no simplified spelling follows; converted.
-            rank = 1
-        else:
-            rank = 0
+        # Kept only if no simplified spelling follows; converted.
+        rank = 1 if 'Traditional-Chinese' in tags and 'Simplified-Chinese' not in tags else 0
         words = by_sense.setdefault(clean(item.get('sense')), [])
-        for part in re.split(r'[/／,，、]', word):
-            part = simplified(NOTE.sub('', part)).strip()
+        for piece in re.split(r'[/／,，、]', word):
+            part = simplified(NOTE.sub('', piece)).strip()
             if part and CJK.search(part) and len(part) <= 12:
                 words.append((rank, part))
     found = []
@@ -117,7 +135,13 @@ def ipa_of(entry):
         if not ipa:
             continue
         tags = set(sound.get('tags') or [])
-        score = 0 if tags & {'UK', 'Received-Pronunciation', 'RP', 'British'} else 1 if tags & {'US', 'General-American'} else 2
+        score = (
+            0
+            if tags & {'UK', 'Received-Pronunciation', 'RP', 'British'}
+            else 1
+            if tags & {'US', 'General-American'}
+            else 2
+        )
         if best is None or score < best[0]:
             best = (score, ipa)
     return best[1] if best else ''
@@ -131,7 +155,7 @@ def line_of(pos, groups):
         words = [w for w in group if w not in seen]
         if not words:
             continue
-        words = words[:MAX_PER_LINE - len(seen)]
+        words = words[: MAX_PER_LINE - len(seen)]
         seen.update(words)
         senses.append('，'.join(words))
         if len(seen) >= MAX_PER_LINE:
@@ -141,13 +165,39 @@ def line_of(pos, groups):
 
 # Contractions, which dictionaries leave out; written for this pack.
 CONTRACTIONS = {
-    "can't": 'v. 不能，不会', "cannot": 'v. 不能，不会', "couldn't": 'v. 不能，不会（过去）', "won't": 'v. 不会，将不', "wouldn't": 'v. 不会，不愿',
-    "don't": 'v. 不（do not）', "doesn't": 'v. 不（does not）', "didn't": 'v. 没有（did not）', "isn't": 'v. 不是（is not）', "aren't": 'v. 不是（are not）',
-    "wasn't": 'v. 不是（was not）', "weren't": 'v. 不是（were not）', "haven't": 'v. 没有（have not）', "hasn't": 'v. 没有（has not）', "hadn't": 'v. 没有（had not）',
-    "shouldn't": 'v. 不应该', "mustn't": 'v. 不得，禁止', "needn't": 'v. 不必', "mightn't": 'v. 可能不', "shan't": 'v. 将不',
-    "i'm": '我是（I am）', "you're": '你是（you are）', "we're": '我们是（we are）', "they're": '他们是（they are）', "it's": '它是（it is / it has）',
-    "that's": '那是（that is）', "there's": '有（there is）', "let's": '让我们（let us）', "i've": '我已经（I have）', "i'll": '我将（I will）', "i'd": '我会；我曾（I would / I had）',
-    "anymore": 'adv. 不再，再也（不）', "alright": 'adj. 好的，没问题；adv. 还好',
+    "can't": 'v. 不能，不会',
+    "cannot": 'v. 不能，不会',
+    "couldn't": 'v. 不能，不会（过去）',
+    "won't": 'v. 不会，将不',
+    "wouldn't": 'v. 不会，不愿',
+    "don't": 'v. 不（do not）',
+    "doesn't": 'v. 不（does not）',
+    "didn't": 'v. 没有（did not）',
+    "isn't": 'v. 不是（is not）',
+    "aren't": 'v. 不是（are not）',
+    "wasn't": 'v. 不是（was not）',
+    "weren't": 'v. 不是（were not）',
+    "haven't": 'v. 没有（have not）',
+    "hasn't": 'v. 没有（has not）',
+    "hadn't": 'v. 没有（had not）',
+    "shouldn't": 'v. 不应该',
+    "mustn't": 'v. 不得，禁止',
+    "needn't": 'v. 不必',
+    "mightn't": 'v. 可能不',
+    "shan't": 'v. 将不',
+    "i'm": '我是（I am）',
+    "you're": '你是（you are）',
+    "we're": '我们是（we are）',
+    "they're": '他们是（they are）',
+    "it's": '它是（it is / it has）',
+    "that's": '那是（that is）',
+    "there's": '有（there is）',
+    "let's": '让我们（let us）',
+    "i've": '我已经（I have）',
+    "i'll": '我将（I will）',
+    "i'd": '我会；我曾（I would / I had）',
+    "anymore": 'adv. 不再，再也（不）',
+    "alright": 'adj. 好的，没问题；adv. 还好',
 }
 
 
@@ -157,6 +207,7 @@ def wordnet_meanings(cow_path, wordnet_path):
     if not cow_path or not wordnet_path:
         return lambda word: []
     import zipfile
+
     lemmas = defaultdict(list)
     current = None
     with open(cow_path, encoding='utf-8') as f:
@@ -179,18 +230,25 @@ def wordnet_meanings(cow_path, wordnet_path):
                 parts = line.split()
                 pointers, synsets = int(parts[3]), int(parts[2])
                 # Senses in order of how often they were met.
-                index[parts[0].replace('_', ' ')][pos] = parts[6 + pointers:6 + pointers + synsets]
+                index[parts[0].replace('_', ' ')][pos] = parts[
+                    6 + pointers : 6 + pointers + synsets
+                ]
     print(f'Chinese Open Wordnet: {len(lemmas)} synsets; WordNet: {len(index)} words', flush=True)
     names = {'n': 'n.', 'v': 'v.', 'a': 'adj.', 'r': 'adv.'}
 
     def meanings(word):
         lines = []
         for pos in 'nvar':
-            groups = [lemmas[(o, pos)][:3] for o in index.get(word.lower(), {}).get(pos, [])[:4] if lemmas.get((o, pos))]
+            groups = [
+                lemmas[(o, pos)][:3]
+                for o in index.get(word.lower(), {}).get(pos, [])[:4]
+                if lemmas.get((o, pos))
+            ]
             line = line_of(names[pos], groups[:3])
             if line:
                 lines.append(line)
         return lines
+
     return meanings
 
 
@@ -242,24 +300,31 @@ def main():
                 gloss = simplified(NOTE.sub('', clean(gloss))).strip(' 。；;，,')
                 # A Chinese meaning, not an English explanation.
                 if gloss and CJK.search(gloss) and len(gloss) <= 40:
-                    glosses[word][pos].append([part.strip() for part in re.split(r'[；;]', gloss) if part.strip()])
+                    glosses[word][pos].append(
+                        [part.strip() for part in re.split(r'[；;]', gloss) if part.strip()]
+                    )
 
     wordnet = wordnet_meanings(options.get('cow', ''), options.get('wordnet', ''))
 
     reference = {}
     if wikdict:
         with sqlite3.connect(wikdict) as db:
-            for word, translations, score in db.execute('select written_rep, trans_list, max_score from simple_translation'):
-                word = clean(word)
+            for written, translations, score in db.execute(
+                'select written_rep, trans_list, max_score from simple_translation'
+            ):
+                word = clean(written)
                 if word not in wanted or not translations or float(score or 0) < 1:
                     continue
-                parts = [simplified(NOTE.sub('', clean(t))).strip() for t in str(translations).split('|')]
+                parts = [
+                    simplified(NOTE.sub('', clean(t))).strip() for t in str(translations).split('|')
+                ]
                 parts = [p for p in dict.fromkeys(parts) if p and CJK.search(p)]
                 if parts:
                     reference[word] = '，'.join(parts[:MAX_PER_LINE])
 
     try:
         import wordfreq
+
         ranks = {w: i + 1 for i, w in enumerate(wordfreq.top_n_list('en', 200000))}
     except ImportError:
         ranks = None
@@ -287,7 +352,9 @@ def main():
             merged = {pos: list(groups) for pos, groups in tables.get(word, {}).items()}
             for pos, groups in glosses.get(word, {}).items():
                 merged.setdefault(pos, []).extend(groups)
-            lines = [line for line in (line_of(pos, groups) for pos, groups in merged.items()) if line]
+            lines = [
+                line for line in (line_of(pos, groups) for pos, groups in merged.items()) if line
+            ]
             if lines:
                 row[2], row[9] = '\\n'.join(lines[:MAX_LINES]), 'w'
                 counts['wiktionary'] += 1
@@ -314,10 +381,28 @@ def main():
             if ranks is not None:
                 row[6] = str(ranks.get(word.lower(), 0))
             out.write('\t'.join(row) + '\n')
-    print(f"Chinese meanings: {counts['wiktionary']} from Wiktionary, {counts['Chinese Open Wordnet']} from the Chinese Open Wordnet, "
-          f"{counts['contractions']} contractions, {counts['base word']} from base words, {counts['wikdict']} from WikDict, "
-          f"{counts['none']} without, of {len(rows)}; IPA for {len(ipa)}", flush=True)
-    for word in ('bank', 'run', 'get', 'set', 'however', 'beautiful', 'available', 'assess', 'totally', 'socks', 'psychological', "can't"):
+    print(
+        f"Chinese meanings: {counts['wiktionary']} from Wiktionary, "
+        f"{counts['Chinese Open Wordnet']} from the Chinese Open Wordnet, "
+        f"{counts['contractions']} contractions, {counts['base word']} from base words, "
+        f"{counts['wikdict']} from WikDict, "
+        f"{counts['none']} without, of {len(rows)}; IPA for {len(ipa)}",
+        flush=True,
+    )
+    for word in (
+        'bank',
+        'run',
+        'get',
+        'set',
+        'however',
+        'beautiful',
+        'available',
+        'assess',
+        'totally',
+        'socks',
+        'psychological',
+        "can't",
+    ):
         row = next((r for r in rows if r[0] == word), None)
         if row:
             print(f'  {word} /{row[1]}/ [{row[9]}] {row[2][:200]}', flush=True)

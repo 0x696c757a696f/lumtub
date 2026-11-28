@@ -181,7 +181,7 @@ const _reasonHeight = 20.0;
 }
 
 /// The line a channel has to itself on a narrow card.
-const _channelLineHeight = 18.0;
+const _channelLineHeight = 20.0;
 
 /// How far in from a card's sides its text starts and ends, both together.
 double _infoInset(bool compact) => compact ? 16 : 4;
@@ -988,21 +988,18 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
                 SizedBox(height: _reasonHeight * cardTextScale(context), child: Align(alignment: AlignmentDirectional.centerStart, child: ReasonTag(reason, wide: true))),
               // Whose it is, and its menu. On a card too narrow for both,
               // the channel has a line of its own above the date, so its
-              // name reads whole.
-              if (ownLine)
-                SizedBox(
-                  height: _channelLineHeight * cardTextScale(context),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle),
-                  ),
-                ),
+              // name reads whole; the two lines sit together, the menu
+              // beside them, and the date's line stays when a live has
+              // none, so the channels of a row line up.
               SizedBox(
-                height: 24,
+                height: 24 + (ownLine ? _channelLineHeight * cardTextScale(context) : 0),
                 child: Row(children: [
                   Expanded(child: ownLine
-                      ? Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle)
-                      : MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle)),
+                      ? Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle.copyWith(color: colors.onSurfaceVariant, height: 1.3)),
+                          Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: metaStyle.copyWith(height: 1.3)),
+                        ])
+                      : MetaLine(lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead, tail: MetaLine.ageOf(item) ?? '', style: metaStyle, leadColor: colors.onSurfaceVariant)),
                   Builder(builder: (context) => touchFirst || Device.tv
                       ? IconButton(
                           tooltip: tr('More (Menu key)'),
@@ -1588,7 +1585,7 @@ Offset _centreOf(BuildContext context) {
 /// A video's channel, then its views and upload date, on one line: a long
 /// channel name is shortened first, so the views and date stay in sight.
 class MetaLine extends StatelessWidget {
-  const MetaLine({super.key, required this.lead, required this.tail, required this.style});
+  const MetaLine({super.key, required this.lead, required this.tail, required this.style, this.leadColor});
 
   factory MetaLine.of(VideoItem item, {required TextStyle style, String? extra}) {
     final upcomingStart = startOf(item);
@@ -1618,6 +1615,10 @@ class MetaLine extends StatelessWidget {
   final String lead;
   final String tail;
   final TextStyle style;
+
+  /// The channel's colour, a step stronger than the date's so the name
+  /// reads first; [style]'s when null.
+  final Color? leadColor;
 
   /// How wide each piece of the line is drawn, by text and look: the same
   /// few channels fill a feed, and measuring a name again for every card
@@ -1677,7 +1678,8 @@ class MetaLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
-    if (lead.isEmpty || tail.isEmpty) return Text(lead.isEmpty ? tail : lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    if (tail.isEmpty) return Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style.copyWith(color: leadColor));
+    if (lead.isEmpty) return Text(tail, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
     final full = DefaultTextStyle.of(context).style.merge(style);
     final direction = Directionality.of(context);
     final scaler = MediaQuery.textScalerOf(context);
@@ -1688,7 +1690,13 @@ class MetaLine extends StatelessWidget {
       final after = ' · $tail';
       final tailWidth = min(_width(after, full, scaler, direction), box.maxWidth * 2 / 3);
       final name = fit(lead, max(0, box.maxWidth - tailWidth - 0.5), full, scaler, direction);
-      return Text('$name$after', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+      return Text.rich(
+        TextSpan(children: [TextSpan(text: name, style: TextStyle(color: leadColor)), TextSpan(text: after)]),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        softWrap: false,
+        style: style,
+      );
     });
   }
 }

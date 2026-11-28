@@ -189,13 +189,29 @@ const _reasonHeight = 20.0;
           : base * _compactWidth;
   final columns = max(1, ((width + gridGap) / (narrowest + gridGap)).floor());
   final itemWidth = (width - gridGap * (columns - 1)) / columns;
+  final isCompact = compact ?? compactCards;
+  final ownLine = channelOwnLine(itemWidth - 2 * padding - _infoInset(isCompact))
+      ? _channelLineHeight * textScale
+      : 0.0;
   return (
     columns: columns,
     itemHeight: (itemWidth - 2 * padding) * 9 / 16 +
-        _cardInfoHeight(textScale, compact ?? compactCards) +
+        _cardInfoHeight(textScale, isCompact) +
+        ownLine +
         2 * padding
   );
 }
+
+/// The line a channel has to itself on a narrow card.
+const _channelLineHeight = 20.0;
+
+/// How far in from a card's sides its text starts and ends, both together.
+double _infoInset(bool compact) => compact ? 16 : 4;
+
+/// Whether a card's text [width] wide puts the channel on a line of its
+/// own: two cards a row on a phone leave too little room for a channel's
+/// name and the date together.
+bool channelOwnLine(double width) => width < 220;
 
 /// The space the current skin leaves round each video card.
 double skinCardPadding(BuildContext context) =>
@@ -1200,58 +1216,83 @@ class _VideoCardState extends State<VideoCard> with SpokenTitle {
                     : const EdgeInsets.fromLTRB(2, 10, 2, 4),
                 // The channel line keeps to the card's foot, however long the
                 // title, so a row of cards lines up.
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(
-                      child: Align(
-                          alignment: AlignmentDirectional.topStart,
-                          child: TitleText(titleFor(item),
-                              about: aboutOf(item),
-                              video: item,
-                              maxLines: 2,
-                              style: TextStyle(
-                                  fontSize: compact ? 13 : 14,
-                                  height: compact ? 1.32 : 1.38,
-                                  fontWeight: FontWeight.w500,
-                                  color: colors.onSurface)))),
-                  // Why it is here, on a line of its own so it reads whole.
-                  if (widget.reason case final reason? when reason.isNotEmpty)
-                    SizedBox(
-                        height: _reasonHeight * cardTextScale(context),
+                child: LayoutBuilder(builder: (context, box) {
+                  final ownLine = channelOwnLine(box.maxWidth);
+                  return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
                         child: Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: ReasonTag(reason, wide: true))),
-                  // Whose it is, and its menu.
-                  SizedBox(
-                    height: 24,
-                    child: Row(children: [
-                      Expanded(
-                          child: MetaLine(
-                              lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead,
-                              tail: MetaLine.ageOf(item) ?? '',
-                              style: metaStyle)),
-                      Builder(
-                          builder: (context) => touchFirst || Device.tv
-                              ? IconButton(
-                                  tooltip: tr('More (Menu key)'),
-                                  onPressed: () => _menu(_centreOf(context)),
-                                  icon: Icon(AppIcons.dotsThreeVertical,
-                                      size: touchFirst ? 18 : 16, color: colors.outline),
-                                  padding: EdgeInsets.zero,
-                                  // Wider for a finger; the row's height stays.
-                                  constraints: BoxConstraints.tightFor(
-                                      width: touchFirst ? 40 : 24, height: 24),
-                                  visualDensity: VisualDensity.compact,
-                                )
-                              : CardMenuDots(
-                                  onPressed: () => _menu(_centreOf(context)),
-                                  color: colors.outline)),
-                    ]),
-                  ),
-                  if (widget.watched case final watched?)
+                            alignment: AlignmentDirectional.topStart,
+                            child: TitleText(titleFor(item),
+                                about: aboutOf(item),
+                                video: item,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: compact ? 13 : 14,
+                                    height: compact ? 1.32 : 1.38,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.onSurface)))),
+                    // Why it is here, on a line of its own so it reads whole.
+                    if (widget.reason case final reason? when reason.isNotEmpty)
+                      SizedBox(
+                          height: _reasonHeight * cardTextScale(context),
+                          child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: ReasonTag(reason, wide: true))),
+                    // Whose it is, and its menu. On a card too narrow for both,
+                    // the channel has a line of its own above the date, so its
+                    // name reads whole; the two lines sit together, the menu
+                    // beside them, and the date's line stays when a live has
+                    // none, so the channels of a row line up.
                     SizedBox(
-                        height: _reasonHeight * cardTextScale(context),
-                        child: WatchedLine(watched)),
-                ]),
+                      height: 24 + (ownLine ? _channelLineHeight * cardTextScale(context) : 0),
+                      child: Row(children: [
+                        Expanded(
+                            child: ownLine
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                        Text(item.channel.isEmpty ? tr('YouTube') : item.channel,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            style: metaStyle.copyWith(
+                                                color: colors.onSurfaceVariant, height: 1.3)),
+                                        Text(MetaLine.startOf(item) ?? MetaLine.ageOf(item) ?? '',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            style: metaStyle.copyWith(height: 1.3)),
+                                      ])
+                                : MetaLine(
+                                    lead: meta.lead.isEmpty ? tr('YouTube') : meta.lead,
+                                    tail: MetaLine.ageOf(item) ?? '',
+                                    style: metaStyle,
+                                    leadColor: colors.onSurfaceVariant)),
+                        Builder(
+                            builder: (context) => touchFirst || Device.tv
+                                ? IconButton(
+                                    tooltip: tr('More (Menu key)'),
+                                    onPressed: () => _menu(_centreOf(context)),
+                                    icon: Icon(AppIcons.dotsThreeVertical,
+                                        size: touchFirst ? 18 : 16, color: colors.outline),
+                                    padding: EdgeInsets.zero,
+                                    // Wider for a finger; the row's height stays.
+                                    constraints: BoxConstraints.tightFor(
+                                        width: touchFirst ? 40 : 24, height: 24),
+                                    visualDensity: VisualDensity.compact,
+                                  )
+                                : CardMenuDots(
+                                    onPressed: () => _menu(_centreOf(context)),
+                                    color: colors.outline)),
+                      ]),
+                    ),
+                    if (widget.watched case final watched?)
+                      SizedBox(
+                          height: _reasonHeight * cardTextScale(context),
+                          child: WatchedLine(watched)),
+                  ]);
+                }),
               )),
             ])),
       ),
@@ -1930,12 +1971,11 @@ Offset _centreOf(BuildContext context) {
 /// A video's channel, then its views and upload date, on one line: a long
 /// channel name is shortened first, so the views and date stay in sight.
 class MetaLine extends StatelessWidget {
-  const MetaLine({super.key, required this.lead, required this.tail, required this.style});
+  const MetaLine(
+      {super.key, required this.lead, required this.tail, required this.style, this.leadColor});
 
   factory MetaLine.of(VideoItem item, {required TextStyle style, String? extra}) {
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null
-        ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)])
-        : null;
+    final upcomingStart = startOf(item);
     return MetaLine(
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel]
           .join(' · '),
@@ -1943,6 +1983,11 @@ class MetaLine extends StatelessWidget {
       style: style,
     );
   }
+
+  /// When an upcoming live starts.
+  static String? startOf(VideoItem item) => item.isUpcoming && item.scheduledStart != null
+      ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)])
+      : null;
 
   /// "1.2K views", or watching for a live.
   static String? viewsOf(VideoItem item) => switch (item.audience) {
@@ -1961,52 +2006,106 @@ class MetaLine extends StatelessWidget {
   final String tail;
   final TextStyle style;
 
-  /// How wide each channel name is drawn, by name and look: the same few
-  /// channels fill a feed, and measuring a name again for every card that
-  /// scrolls in doubled the cost of the line.
+  /// The channel's colour, a step stronger than the date's so the name
+  /// reads first; [style]'s when null.
+  final Color? leadColor;
+
+  /// How wide each piece of the line is drawn, by text and look: the same
+  /// few channels fill a feed, and measuring a name again for every card
+  /// that scrolls in doubled the cost of the line.
   static final _widths = <(String, TextStyle, TextScaler, TextDirection), double>{};
 
-  /// What the channel keeps of a line [width] wide: all it needs, up to a
-  /// third, however long the rest.
-  double _leadRoom(BuildContext context, double width) {
-    if (lead.isEmpty) return 0;
-    final full = DefaultTextStyle.of(context).style.merge(style);
-    final direction = Directionality.of(context);
-    final scaler = MediaQuery.textScalerOf(context);
-    final key = (lead, full, scaler, direction);
-    var needed = _widths.remove(key);
-    if (needed == null) {
+  /// The channel as it fits [room], by width and look.
+  static final _fitted = <(String, int, TextStyle, TextScaler, TextDirection), String>{};
+
+  static const _ellipsis = '\u2026';
+
+  /// What a shortened name may not end on: a space, a dot or bar between
+  /// names, or a bracket opened for words cut away.
+  static final _loose = RegExp(r'[\s\u00B7\u2022\u30FB|｜/\\,，、:：;；\-–—_(（\[【《〈「『<]+$');
+
+  static double _width(String text, TextStyle style, TextScaler scaler, TextDirection direction) {
+    final key = (text, style, scaler, direction);
+    var width = _widths.remove(key);
+    if (width == null) {
       final painter = TextPainter(
-          text: TextSpan(text: lead, style: full),
+          text: TextSpan(text: text, style: style),
           maxLines: 1,
           textDirection: direction,
           textScaler: scaler)
         ..layout();
-      needed = painter.width.ceilToDouble();
+      width = painter.width;
       painter.dispose();
-      if (_widths.length >= 512) _widths.remove(_widths.keys.first);
+      if (_widths.length >= 1024) _widths.remove(_widths.keys.first);
     }
-    _widths[key] = needed;
-    return needed < width / 3 ? needed : width / 3;
+    return _widths[key] = width;
+  }
+
+  /// [lead] whole when it fits [room], else cut letter by letter, not at
+  /// a word, with the ellipsis right after the last letter kept: cut at a
+  /// word, a name like "Yinuo Li 李一諾" lost its last word and left a gap
+  /// as wide as it before the date.
+  static String fit(
+      String lead, double room, TextStyle style, TextScaler scaler, TextDirection direction) {
+    if (_width(lead, style, scaler, direction) <= room) return lead;
+    final key = (lead, room.floor(), style, scaler, direction);
+    if (_fitted[key] case final known?) return known;
+    final letters = lead.characters.toList();
+    String cut(int n) {
+      final kept = letters.take(n).join().replaceFirst(_loose, '');
+      return kept.isEmpty ? '' : '$kept$_ellipsis';
+    }
+
+    var low = 0;
+    var high = letters.length - 1;
+    while (low < high) {
+      final mid = (low + high + 1) ~/ 2;
+      if (_width(cut(mid), style, scaler, direction) <= room) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    final fitted = low == 0 ? _ellipsis : cut(low);
+    if (_fitted.length >= 512) _fitted.remove(_fitted.keys.first);
+    return _fitted[key] = fitted;
   }
 
   @override
   Widget build(BuildContext context) {
     if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
-    return LayoutBuilder(
-      builder: (context, box) => Row(children: [
-        if (lead.isNotEmpty)
-          Flexible(
-              child: Text(lead,
-                  maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),
-        if (tail.isNotEmpty)
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: box.maxWidth - _leadRoom(context, box.maxWidth)),
-            child: Text(lead.isEmpty ? tail : ' · $tail',
-                maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style),
-          ),
-      ]),
-    );
+    if (tail.isEmpty) {
+      return Text(lead,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          style: style.copyWith(color: leadColor));
+    }
+    if (lead.isEmpty) {
+      return Text(tail,
+          maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style);
+    }
+    final full = DefaultTextStyle.of(context).style.merge(style);
+    final direction = Directionality.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(builder: (context, box) {
+      // The views and date keep their whole width, unless that leaves the
+      // channel less than a third of the line; the channel has the rest,
+      // shortened right up to the dot before the date.
+      final after = ' · $tail';
+      final tailWidth = min(_width(after, full, scaler, direction), box.maxWidth * 2 / 3);
+      final name = fit(lead, max(0, box.maxWidth - tailWidth - 0.5), full, scaler, direction);
+      return Text.rich(
+        TextSpan(children: [
+          TextSpan(text: name, style: TextStyle(color: leadColor)),
+          TextSpan(text: after)
+        ]),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        softWrap: false,
+        style: style,
+      );
+    });
   }
 }
 

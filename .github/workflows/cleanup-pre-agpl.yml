@@ -1,0 +1,50 @@
+name: Remove pre-AGPL releases
+
+# One-off: deletes the releases, tags and branches listed in
+# .github/cleanup/, all from before the switch to AGPL-3.0-or-later (#158).
+# A tag is deleted only when its LICENSE is not the AGPL, a branch only when
+# it still points at the listed commit.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type delete to remove them for good'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  remove:
+    name: Remove
+    runs-on: ubuntu-24.04
+    if: inputs.confirm == 'delete'
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Releases and tags
+        run: |
+          grep -v '^#' .github/cleanup/pre-agpl-tags.txt | while read -r tag commit; do
+            if [ "$(git rev-list -n1 "refs/tags/$tag" 2>/dev/null)" != "$commit" ]; then
+              echo "skip $tag: missing or moved"; continue
+            fi
+            if git show "$tag:LICENSE" | head -1 | grep -q 'AFFERO'; then
+              echo "skip $tag: AGPL"; continue
+            fi
+            gh release delete "$tag" -R "$REPO" --yes 2>/dev/null && echo "release $tag deleted" || echo "no release for $tag"
+            gh api -X DELETE "repos/$REPO/git/refs/tags/$tag" && echo "tag $tag deleted"
+          done
+      - name: Branches
+        run: |
+          grep -v '^#' .github/cleanup/pre-agpl-branches.txt | while read -r branch commit; do
+            now=$(gh api "repos/$REPO/git/ref/heads/$branch" -q .object.sha 2>/dev/null || true)
+            if [ "$now" != "$commit" ]; then
+              echo "skip $branch: missing or moved"; continue
+            fi
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$branch" && echo "branch $branch deleted"
+          done

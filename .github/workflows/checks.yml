@@ -51,6 +51,24 @@ jobs:
       - name: Sources (security lint)
         run: python3 -I .github/scripts/security_lint.py
 
+  translations:
+    name: Translations
+    # Compares the translation files a pull request changes with its base
+    # (.github/scripts/l10n_review.py); Weblate's are merged on this.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Review the changed translations
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: python3 -I .github/scripts/l10n_review.py "$BASE"
+
   scripts:
     name: Scripts
     runs-on: ubuntu-24.04

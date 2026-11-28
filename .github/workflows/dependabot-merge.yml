@@ -6,7 +6,9 @@ name: Merge dependency updates
 # lockfiles.yml) and newer pinned tools (see upstream.yml) go into main the
 # same way, when main has not moved since. Weblate's translation pull
 # requests are merged too when they touch nothing but assets/l10n; the
-# tests check every translation keeps its placeholders.
+# tests check every translation keeps its placeholders, and Checks'
+# Translations job (.github/scripts/l10n_review.py) stops rewritten files,
+# stray backslashes and translations moved to other keys.
 on:
   workflow_run:
     # Dependabot's pull requests always get the full Build; Weblate's get

@@ -1917,9 +1917,9 @@ dependencies = [
 
 [[package]]
 name = "oo7"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9484776a7b58eadca65c2e247499d2fd926a914f65633d68c5d17c157db8479"
+checksum = "820361404414a1a61f8a58c4a52d55e755720f572aea7d7a799187848fecd12c"
 dependencies = [
  "aes",
  "ashpd",

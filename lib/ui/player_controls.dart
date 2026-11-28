@@ -346,6 +346,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final state = _player.state;
     final ratio = shaped ? 0.0 : videoAspectFor(fit.aspectRatio, state.width, state.height);
     widget.state?.update(fit: fit.fit, aspectRatio: ratio);
+    // Picture in picture shapes its window itself.
+    final width = state.width ?? 0, height = state.height ?? 0;
+    if (!_c.pip && width > 0 && height > 0) {
+      VideoShapedWindow.aspect = fit.aspectRatio ?? width / height;
+    }
   }
 
   void _showFeedback(IconData icon, String text) {

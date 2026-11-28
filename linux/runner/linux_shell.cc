@@ -89,6 +89,13 @@ struct Shell {
   bool has_last = false;
   int last_x = 0, last_y = 0;
 
+  // Filling the window (铺满窗口, WindowFrame.keepVideoShape in
+  // lib/window_frame.dart): the video's width over height while the window
+  // keeps its shape, else 0, and the window's size before.
+  double video_aspect = 0;
+  bool has_shape_before = false;
+  int shape_before_width = 0, shape_before_height = 0;
+
   // The screen saver held off while a video plays.
   guint inhibit = 0;
 
@@ -791,6 +798,63 @@ void SetPipAspect(double aspect) {
                     static_cast<int>(width / aspect + 0.5));
 }
 
+// Sets the window's height from its width and the video's shape, both
+// smaller when it would not fit on the screen. Wayland compositors place
+// windows themselves, so there only the size changes.
+void FitToVideo() {
+  GtkWindow* window = shell.window;
+  if (window == nullptr || shell.pip || gtk_window_is_maximized(window) ||
+      !(shell.video_aspect > 0))
+    return;
+  int width = 0, height = 0, x = 0, y = 0;
+  gtk_window_get_size(window, &width, &height);
+  gtk_window_get_position(window, &x, &y);
+  height = static_cast<int>(width / shell.video_aspect + 0.5);
+  GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(window));
+  GdkMonitor* monitor = surface != nullptr
+                            ? gdk_display_get_monitor_at_window(
+                                  gdk_window_get_display(surface), surface)
+                            : nullptr;
+  GdkRectangle area = {x, y, width, height};
+  if (monitor != nullptr) gdk_monitor_get_workarea(monitor, &area);
+  if (height > area.height && area.height > 0) {
+    height = area.height;
+    width = static_cast<int>(height * shell.video_aspect + 0.5);
+  }
+  if (width <= 0 || height <= 0) return;
+  KeepAspect(shell.video_aspect);
+  gtk_window_resize(window, width, height);
+  if (monitor != nullptr && y + height > area.y + area.height)
+    gtk_window_move(window, x, std::max(area.y, area.y + area.height - height));
+}
+
+// Gives the window the video's shape, |aspect| > 0, and keeps it while it is
+// resized; 0 lets the shape go and puts back the size it had. A maximized
+// window keeps its size; picture in picture keeps its own shape.
+void KeepVideoShape(double aspect) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr) return;
+  if (!(aspect > 0) || !std::isfinite(aspect)) {
+    shell.video_aspect = 0;
+    if (!shell.has_shape_before) return;
+    shell.has_shape_before = false;
+    if (shell.pip) return;
+    KeepAspect(0);
+    if (!gtk_window_is_maximized(window))
+      gtk_window_resize(window, shell.shape_before_width,
+                        shell.shape_before_height);
+    return;
+  }
+  if (shell.pip || gtk_window_is_maximized(window)) return;
+  shell.video_aspect = std::clamp(aspect, 0.25, 4.0);
+  if (!shell.has_shape_before) {
+    gtk_window_get_size(window, &shell.shape_before_width,
+                        &shell.shape_before_height);
+    shell.has_shape_before = true;
+  }
+  FitToVideo();
+}
+
 // Moves or resizes the window with the pointer, from a press on the picture.
 void BeginDrag(bool resize) {
   GtkWindow* window = shell.window;
@@ -836,6 +900,8 @@ void SetCustomFrame(bool on) {
   GtkWidget* bar = gtk_window_get_titlebar(shell.window);
   if (bar != nullptr) gtk_widget_set_visible(bar, !on);
   gtk_window_set_decorated(shell.window, !on);
+  // The title bar just went or came back, so the window changed shape.
+  if (shell.video_aspect > 0) FitToVideo();
 }
 
 GdkWindowEdge EdgeOf(const std::string& name) {
@@ -1273,6 +1339,8 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
   } else if (method == "hidePointer") {
     HidePointer(args);
+  } else if (method == "keepVideoShape") {
+    KeepVideoShape(DoubleArg(args, nullptr));
   } else if (method == "setCaption") {
     // Hit-testing is Windows' own.
   } else {

@@ -8,6 +8,7 @@
 #include <flutter/method_channel.h>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 // The app's own title bar (lib/window_frame.dart, channel
@@ -23,6 +24,11 @@ class WindowFrame {
   // true, with the result in |result|, when it did.
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam,
                      LRESULT* result);
+
+  // The video's width over height while filling the window (铺满窗口) keeps the
+  // window in its shape (WindowFrame.keepVideoShape in lib/window_frame.dart),
+  // else 0.
+  double VideoAspect() const { return video_aspect_; }
 
   // Flutter's view is a child window covering the whole client area, so
   // the hit tests for the bar reach it, not the frame. Hooked here, it
@@ -52,6 +58,14 @@ class WindowFrame {
   // Writes a click the caption took to the app's log, for the first few.
   void TraceCaptionClick(LPARAM lparam);
   void ApplyMargins();
+  // Gives the window the video's shape, |aspect| > 0, and keeps it while
+  // it is resized; 0 lets the shape go and puts back the size it had.
+  void KeepVideoShape(double aspect);
+  // Sets the client area's height from its width and the video's shape,
+  // both smaller when it would not fit on the screen.
+  void FitToVideo();
+  // Moves and sizes the window, kept inside its monitor's work area.
+  void PlaceInWorkArea(LONG left, LONG top, LONG width, LONG height);
   bool Active() const;
   LRESULT HitTest(LPARAM lparam);
   static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam,
@@ -83,6 +97,9 @@ class WindowFrame {
   bool maximized_ = false;
   bool active_ = true;
   int traces_ = 0;
+  double video_aspect_ = 0;
+  // The window's size before it took the video's shape.
+  std::optional<SIZE> size_before_;
   bool pointer_hidden_ = false;
   POINT hidden_at_ = {};
 };

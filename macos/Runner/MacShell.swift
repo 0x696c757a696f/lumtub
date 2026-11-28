@@ -19,6 +19,11 @@ final class MacShell: NSObject, NSWindowDelegate {
   private var playing = false
   private var pipBefore: (frame: NSRect, style: NSWindow.StyleMask, minSize: NSSize)?
   private var lastPipOrigin: NSPoint?
+  /// Filling the window (铺满窗口, WindowFrame.keepVideoShape in
+  /// lib/window_frame.dart): the video's width over height while the window
+  /// keeps its shape, else 0, and the window's size before.
+  private var videoAspect = 0.0
+  private var shapeBefore: NSSize?
   private var dragMonitor: Any?
   private var awake: IOPMAssertionID = 0
 
@@ -64,6 +69,10 @@ final class MacShell: NSObject, NSWindowDelegate {
     case "setCustom":
       customFrame = call.arguments as? Bool ?? false
       if pipBefore == nil { applyFrame(to: window) }
+      // The title bar just went or came back, so the content changed shape.
+      if videoAspect > 0 { fitToVideo(window) }
+    case "keepVideoShape":
+      keepVideoShape(window, aspect: call.arguments as? Double ?? 0)
     case "minimize":
       window.miniaturize(nil)
     case "toggleMaximize":
@@ -305,6 +314,59 @@ final class MacShell: NSObject, NSWindowDelegate {
     let height = frame.width / aspect
     window.contentAspectRatio = NSSize(width: aspect, height: 1)
     window.setFrame(NSRect(x: frame.minX, y: frame.maxY - height, width: frame.width, height: height), display: true)
+  }
+
+  // MARK: The video's shape
+
+  /// Gives the window the video's shape, [aspect] > 0, and keeps it while it
+  /// is resized; 0 lets the shape go and puts back the size it had. A zoomed
+  /// or fullscreen window keeps its size; picture in picture its own shape.
+  private func keepVideoShape(_ window: NSWindow, aspect: Double) {
+    guard aspect > 0, aspect.isFinite else {
+      videoAspect = 0
+      guard let before = shapeBefore else { return }
+      shapeBefore = nil
+      guard pipBefore == nil, !window.styleMask.contains(.fullScreen) else { return }
+      // Setting the increments clears the kept ratio.
+      window.contentResizeIncrements = NSSize(width: 1, height: 1)
+      guard !window.isZoomed else { return }
+      let frame = window.frame
+      place(window, NSRect(x: frame.minX, y: frame.maxY - before.height, width: before.width, height: before.height))
+      return
+    }
+    guard pipBefore == nil, !window.styleMask.contains(.fullScreen), !window.isZoomed else { return }
+    videoAspect = min(max(aspect, 0.25), 4)
+    if shapeBefore == nil { shapeBefore = window.frame.size }
+    fitToVideo(window)
+  }
+
+  /// Sets the content's height from its width and the video's shape, both
+  /// smaller when it would not fit on the screen; the top edge stays.
+  private func fitToVideo(_ window: NSWindow) {
+    guard videoAspect > 0, pipBefore == nil, !window.styleMask.contains(.fullScreen), !window.isZoomed else { return }
+    let frame = window.frame
+    let content = window.contentRect(forFrameRect: frame)
+    let area = (window.screen ?? NSScreen.main)?.visibleFrame ?? frame
+    let titleBar = frame.height - content.height
+    var size = NSSize(width: content.width, height: (content.width / videoAspect).rounded())
+    if size.height + titleBar > area.height, area.height > titleBar {
+      size.height = area.height - titleBar
+      size.width = (size.height * videoAspect).rounded()
+    }
+    guard size.width > 0, size.height > 0 else { return }
+    window.contentAspectRatio = NSSize(width: videoAspect, height: 1)
+    let next = window.frameRect(forContentRect: NSRect(origin: .zero, size: size))
+    place(window, NSRect(x: frame.minX, y: frame.maxY - next.height, width: next.width, height: next.height))
+  }
+
+  /// Sets the window's frame, kept on its screen.
+  private func place(_ window: NSWindow, _ frame: NSRect) {
+    var frame = frame
+    if let area = (window.screen ?? NSScreen.main)?.visibleFrame {
+      frame.origin.x = min(max(frame.minX, area.minX), max(area.minX, area.maxX - frame.width))
+      frame.origin.y = min(max(frame.minY, area.minY), max(area.minY, area.maxY - frame.height))
+    }
+    window.setFrame(frame, display: true)
   }
 
   /// Moves the window with the pointer, or resizes it from the bottom-right

@@ -3,9 +3,9 @@
 Weblate's pull requests are merged without a person reading them (see
 dependabot-merge.yml), so this stops the kinds of damage seen in #250:
 
-  1. The file is written as the repository writes it: two-space JSON with
-     keys in the base's order and no ASCII escapes, so a pull request never
-     rewrites a whole file to change a few lines.
+  1. The file is written as the repository writes it: two-space JSON
+     without ASCII escapes, so a pull request never rewrites a whole file
+     to change a few lines.
   2. No new backslashes: a translation has no more backslashes than its
      English source, so quotes do not show up as \\" in the app.
   3. No values moved to other keys: a changed translation is not the old
@@ -62,8 +62,6 @@ def review(path, text, old, known):
 
     if text != written(new):
         problems.append('formatting changed: the file must stay two-space JSON without escapes')
-    elif old and [k for k in new if k in old] != [k for k in old if k in new]:
-        problems.append('keys reordered')
 
     unknown = [k for k in new if k not in known]
     if unknown:

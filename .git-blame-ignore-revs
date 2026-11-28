@@ -1,0 +1,6 @@
+# Commits that only reformatted code. Use with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view reads this file by itself.
+
+# dart format of lib and test at 100 columns (#270).
+f9bd93dec2077442d1387aad5e70d4adc211e00b

@@ -57,7 +57,7 @@ class _FillIconState extends State<FillIcon> with TickerProviderStateMixin {
         builder: (context, _) {
           final f = Curves.easeInOutCubic.transform(_fill.value);
           final scale = 1 + sin(pi * _pop.value) * FillIcon.pop;
-          final Widget icon = f == 0
+          final icon = f == 0
               ? Icon(widget.outline)
               : f == 1
                   ? Icon(widget.fill)

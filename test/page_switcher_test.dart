@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/page_switcher.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   // The page area: 400 wide, its left edge at 200 in an 800 wide test view.

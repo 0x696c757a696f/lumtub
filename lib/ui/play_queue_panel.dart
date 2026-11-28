@@ -2,9 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
 import 'theme.dart';
 import 'video_card.dart';
-import 'app_icons.dart';
 
 /// The hand-made play queue (see [AppController.playQueue]): reorder by
 /// dragging, remove one, clear. Shown at the top of the watch page's
@@ -40,7 +40,7 @@ class PlayQueuePanel extends StatelessWidget {
           return Row(key: ValueKey(item.id), children: [
             Expanded(child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.playQueued(item))),
             IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: Icon(AppIcons.x, size: 18)),
-            ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsetsDirectional.only(end: 4), child: Icon(AppIcons.equals, size: 20))),
+            ReorderableDragStartListener(index: i, child: Padding(padding: const EdgeInsetsDirectional.only(end: 4), child: Icon(AppIcons.equals, size: 20))),
           ]);
         },
         ),

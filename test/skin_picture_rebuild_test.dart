@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_paint.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('a skin picture stays up while the window rebuilds', (tester) async {

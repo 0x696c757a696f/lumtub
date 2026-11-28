@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
@@ -37,7 +39,7 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
     final colors = Theme.of(context).colorScheme;
     void save(DanmakuSettings next) {
       setState(() => _moving = null);
-      _controller.setDanmaku(next);
+      unawaited(_controller.setDanmaku(next));
     }
 
     Widget label(String text, String value) => Padding(

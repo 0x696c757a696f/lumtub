@@ -92,8 +92,7 @@ void main() {
     expect(releaseTagOfRedirect('0x696c757a696f/lumtub', 'https://github.com/0x696c757a696f/lumtub/releases'), isNull);
     expect(releaseTagOfRedirect('0x696c757a696f/lumtub', 'https://example.com/0x696c757a696f/lumtub/releases/tag/v1'), isNull);
     expect(releaseTagOfRedirect('0x696c757a696f/lumtub', null), isNull);
-    const feed = '<feed><entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-aaaaaaa"/><updated>2026-11-18T01:00:00Z</updated></entry>'
-        '<entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-588804e"/><updated>2026-11-19T09:00:00Z</updated></entry></feed>';
+    const feed = '<feed><entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-aaaaaaa"/><updated>2026-11-18T01:00:00Z</updated></entry><entry><link rel="alternate" type="text/html" href="https://github.com/0x696c757a696f/lumtub/releases/tag/v0.2.53-588804e"/><updated>2026-11-19T09:00:00Z</updated></entry></feed>';
     expect(publishedInFeed(feed, 'v0.2.53-588804e'), '2026-11-19T09:00:00Z');
     expect(publishedInFeed(feed, 'v0.2.52-1111111'), isNull);
     String name(String package, {bool portable = false}) => ((releaseOfTag('v0.2.53-588804e', package: package, portable: portable)['assets'] as List).first as Map)['name'] as String;

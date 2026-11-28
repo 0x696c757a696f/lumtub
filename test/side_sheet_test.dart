@@ -1,8 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/side_sheet.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 /// Opens a [PanelDialog] with [show] from a button in a window [size]
@@ -66,7 +67,7 @@ void main() {
 
   testWidgets('the back button closes the side sheet', (tester) async {
     await _open(tester, const Size(1200, 800), showPanel);
-    final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+    final widgetsAppState = tester.state(find.byType(WidgetsApp)) as WidgetsBindingObserver;
     expect(await widgetsAppState.didPopRoute(), isTrue);
     await tester.pumpAndSettle();
     expect(find.text('Body'), findsNothing);

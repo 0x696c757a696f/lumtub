@@ -17,7 +17,7 @@ Future<void> captureScreenshot(BuildContext context, AppController controller, {
   if (player == null || controller.playing == null) return;
   final messenger = ScaffoldMessenger.maybeOf(context);
   try {
-    final title = controller.details?.title.isNotEmpty == true ? controller.details!.title : controller.playing!.title;
+    final title = controller.details?.title.isNotEmpty ?? false ? controller.details!.title : controller.playing!.title;
     final file = await takeScreenshot(player, title: title);
     if (file == null) throw StateError('no file written');
     unawaited(copyImageToClipboard(file));

@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+
 import 'app_directories.dart';
-import 'bounded_get.dart';
-import 'native_core.dart';
-import 'l10n/l10n.dart';
 import 'app_log.dart';
+import 'bounded_get.dart';
+import 'l10n/l10n.dart';
+import 'native_core.dart';
 
 /// Searches typed before, kept on this computer only, newest first.
 class SearchHistory {

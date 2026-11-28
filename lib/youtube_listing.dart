@@ -68,7 +68,7 @@ class YoutubeListing {
     followed ??= {};
     followed.add('${first['browseId']} ${first['params']}');
     final shelves = <Map<String, Object>>[];
-    Map<String, Object> body = first;
+    var body = first;
     final tokens = <String>{};
     // A page can hold only videos already listed, or parts the core does
     // not read: the next may still have videos. A few such pages in a row

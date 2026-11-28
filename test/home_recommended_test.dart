@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/home_feed.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/ui/pages/video_pages.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('home shows 为你推荐 with 换一批', (tester) async {

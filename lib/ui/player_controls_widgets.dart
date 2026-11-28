@@ -168,7 +168,7 @@ class _Buffering extends StatelessWidget {
                 SizedBox(width: 36, height: 36, child: Semantics(liveRegion: true, label: waiting ? null : tr('Loading…'), child: const CircularProgressIndicator(strokeWidth: 3, color: Colors.white))),
                 if (waiting) ...[
                   const SizedBox(height: 12),
-                  Text(tr('Translating subtitles…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4, color: Colors.black)])),
+                  Text(tr('Translating subtitles…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
                 ],
               ]),
             );

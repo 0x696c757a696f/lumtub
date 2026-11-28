@@ -36,65 +36,65 @@ const TRUSTED_CLIENT_TOKEN: &str = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 // FIPS 180-4 SHA-256 constants:
 // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 const SHA256_INITIAL: [u32; 8] = [
-    0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A, 0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19,
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
 
 const SHA256_STATE: [u32; 8] = [
-    0xFD9FBEA2, 0x91243CE7, 0xBE499094, 0xCD2E1E0A, 0x6C006F49, 0x04BD35AB, 0xFEB0A7E4, 0x03EFFBD2,
+    0xfd9fbea2, 0x91243ce7, 0xbe499094, 0xcd2e1e0a, 0x6c006f49, 0x04bd35ab, 0xfeb0a7e4, 0x03effbd2,
 ];
 
 const SHA256_SCHEDULE: [u32; 14] = [
-    0xEB24BF9E, 0x1558691F, 0xA0C09EE2, 0x0CFA32BA, 0xA622EE8C, 0xD1DD9491, 0xC0DD25A0, 0xF9E70AB6,
-    0xF0C31573, 0x7058CE4E, 0x7188E606, 0x00E5AB33, 0xD258B060, 0x72766564,
+    0xeb24bf9e, 0x1558691f, 0xa0c09ee2, 0x0cfa32ba, 0xa622ee8c, 0xd1dd9491, 0xc0dd25a0, 0xf9e70ab6,
+    0xf0c31573, 0x7058ce4e, 0x7188e606, 0x00e5ab33, 0xd258b060, 0x72766564,
 ];
 
 const SHA256_ROUND_CONSTANTS: [u32; 64] = [
-    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
-    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC, 0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7, 0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13, 0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3, 0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, 0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-const SHA256_ADJUSTMENT: u32 = 0xC9DC06A7;
-const SHA256_SIGMA0_ADJUSTMENT: u32 = 0x059C0B80;
-const SHA256_SIGMA1_ADJUSTMENT: u32 = 0x000B92C0;
+const SHA256_ADJUSTMENT: u32 = 0xc9dc06a7;
+const SHA256_SIGMA0_ADJUSTMENT: u32 = 0x059c0b80;
+const SHA256_SIGMA1_ADJUSTMENT: u32 = 0x000b92c0;
 
 /// `_SHA256_ROUND_CONSTANTS[..14] + (SHA256_ADJUSTMENT,) + [15..]`.
 const SHA256_BLOCK_CONSTANTS: [u32; 64] = [
-    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0xC9DC06A7, 0xC19BF174,
-    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC, 0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7, 0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13, 0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3, 0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, 0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0xc9dc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
 const CS64_COEFFICIENTS: [(u32, u32); 14] = [
-    (0xE82E91B1, 0xB32700D0),
-    (0x44DE24C6, 0x88DFF51D),
-    (0x3BEB65BC, 0x29514038),
-    (0xC89C5933, 0xB328CBDF),
-    (0x8D1EC211, 0xD405B4D5),
-    (0x314EF5D5, 0x26E55F3C),
-    (0xE92491B1, 0x607801C6),
-    (0xF0A5B9D5, 0x82B2C1FB),
-    (0x06064CF3, 0xFA51A3DA),
-    (0xDA79FA60, 0x207CC464),
-    (0xBED20560, 0x3C3C74F3),
-    (0x89F9C9F8, 0xD2D14B61),
-    (0x35FA38C6, 0xBB04A2C1),
-    (0xCB49E3C6, 0xC5626167),
+    (0xe82e91b1, 0xb32700d0),
+    (0x44de24c6, 0x88dff51d),
+    (0x3beb65bc, 0x29514038),
+    (0xc89c5933, 0xb328cbdf),
+    (0x8d1ec211, 0xd405b4d5),
+    (0x314ef5d5, 0x26e55f3c),
+    (0xe92491b1, 0x607801c6),
+    (0xf0a5b9d5, 0x82b2c1fb),
+    (0x06064cf3, 0xfa51a3da),
+    (0xda79fa60, 0x207cc464),
+    (0xbed20560, 0x3c3c74f3),
+    (0x89f9c9f8, 0xd2d14b61),
+    (0x35fa38c6, 0xbb04a2c1),
+    (0xcb49e3c6, 0xc5626167),
 ];
 
 const CS64_FACTOR: u32 = 0x82893933;
-const CS64_ADJUSTMENT0: u32 = 0xF2F90B1A;
-const CS64_ADJUSTMENT1: u32 = 0x0B1A0000;
+const CS64_ADJUSTMENT0: u32 = 0xf2f90b1a;
+const CS64_ADJUSTMENT1: u32 = 0x0b1a0000;
 
 /// Rotate a 32-bit value left by 16 bits.
 #[inline]
@@ -369,9 +369,9 @@ fn cs64_digest(data: &[u8], digest: &[u8; 32]) -> [u32; 2] {
     for (index, word) in words_le4_even(&input).into_iter().enumerate() {
         let mut term = word.wrapping_mul(if index % 2 == 0 { key_a } else { key_b });
         let mut offset = rol16(word).wrapping_mul(if index % 2 == 0 {
-            0xEF0569FB
+            0xef0569fb
         } else {
-            0xC31713DB
+            0xc31713db
         });
         if index == 0 {
             term = term.wrapping_add(CS64_ADJUSTMENT0.wrapping_mul(factors[0]));
@@ -391,24 +391,24 @@ fn cs64_digest(data: &[u8], digest: &[u8; 32]) -> [u32; 2] {
         let y = terms[index + 1];
 
         let mut t = rol16(offsets[index].wrapping_add(x));
-        let mut q = t.wrapping_mul(0x76F50F34);
-        swap_acc = swap_acc.wrapping_add(rol16(q).wrapping_mul(0xC3EFEA97).wrapping_add(q));
+        let mut q = t.wrapping_mul(0x76f50f34);
+        swap_acc = swap_acc.wrapping_add(rol16(q).wrapping_mul(0xc3efea97).wrapping_add(q));
         t = rol16(offsets[index + 1].wrapping_add(y));
-        q = t.wrapping_mul(0x1881CE3C);
-        swap_last = rol16(q).wrapping_mul(0x35BD1EC9).wrapping_add(q);
+        q = t.wrapping_mul(0x1881ce3c);
+        swap_last = rol16(q).wrapping_mul(0x35bd1ec9).wrapping_add(q);
         swap_acc = swap_acc.wrapping_add(swap_last);
 
         state = state.wrapping_mul(key_a).wrapping_add(x);
-        state = rol16(state).wrapping_mul(0xCF98B111);
-        state = rol16(state).wrapping_mul(0x87085B9F);
-        state = rol16(state).wrapping_mul(0x12CEB96D);
-        state = rol16(state).wrapping_mul(0x257E1D83);
+        state = rol16(state).wrapping_mul(0xcf98b111);
+        state = rol16(state).wrapping_mul(0x87085b9f);
+        state = rol16(state).wrapping_mul(0x12ceb96d);
+        state = rol16(state).wrapping_mul(0x257e1d83);
         acc = acc.wrapping_add(state);
 
         t = state.wrapping_mul(key_b).wrapping_add(y);
-        t = rol16(t).wrapping_mul(0xA27416F5);
-        t = rol16(t).wrapping_mul(0xD38396FF);
-        state = rol16(rol16(t).wrapping_mul(0x7C932B89)).wrapping_mul(0xBFA49F69);
+        t = rol16(t).wrapping_mul(0xa27416f5);
+        t = rol16(t).wrapping_mul(0xd38396ff);
+        state = rol16(rol16(t).wrapping_mul(0x7c932b89)).wrapping_mul(0xbfa49f69);
         acc = acc.wrapping_add(state);
 
         index += 2;

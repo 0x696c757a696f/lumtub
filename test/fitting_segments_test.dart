@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/chip_strip.dart';
 import 'package:lumtub/ui/fitting_segments.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _tabs = ['Humanities', 'Social sciences', 'Natural sciences', 'Engineering & technology', 'Medicine', 'Frontier research'];
 

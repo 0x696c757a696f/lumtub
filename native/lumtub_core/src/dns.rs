@@ -1,4 +1,4 @@
-//! 加密 DNS: host names looked up over DNS-over-HTTPS (RFC 8484) instead of
+//! Encrypted DNS: host names looked up over DNS-over-HTTPS (RFC 8484) instead of
 //! the system resolver, for the app's requests and the stream relay. The
 //! query goes through the same pooled client and system TLS as everything
 //! else; hickory-proto only builds and reads the DNS messages. Answers are
@@ -117,7 +117,7 @@ impl Doh {
         if let Some((ips, until)) = self
             .cache
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .expect("lock poisoned by a panic")
             .get(&key)
             && *until > Instant::now()
         {
@@ -145,7 +145,7 @@ impl Doh {
         if ips.is_empty() {
             return Err(failure.unwrap_or(Failure::NoSuchName));
         }
-        let mut cache = self.cache.lock().unwrap_or_else(|e| e.into_inner());
+        let mut cache = self.cache.lock().expect("lock poisoned by a panic");
         if cache.len() >= KEEP {
             let now = Instant::now();
             cache.retain(|_, (_, until)| *until > now);
@@ -189,17 +189,17 @@ static CURRENT: RwLock<Option<Arc<Doh>>> = RwLock::new(None);
 static SETTINGS: LazyLock<Mutex<Settings>> = LazyLock::new(|| Mutex::new(Settings::default()));
 
 pub fn current() -> Option<Arc<Doh>> {
-    CURRENT.read().unwrap_or_else(|e| e.into_inner()).clone()
+    CURRENT.read().expect("lock poisoned by a panic").clone()
 }
 
 /// Switches to [settings], or to the certificate authorities now chosen;
 /// returns whether anything changed.
 pub fn set(settings: Settings) -> bool {
-    let mut old = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
+    let mut old = SETTINGS.lock().expect("lock poisoned by a panic");
     if *old == settings && current().is_none_or(|doh| doh.tls == crate::tls::current()) {
         return false;
     }
-    *CURRENT.write().unwrap_or_else(|e| e.into_inner()) = Doh::new(&settings).map(Arc::new);
+    *CURRENT.write().expect("lock poisoned by a panic") = Doh::new(&settings).map(Arc::new);
     *old = settings;
     true
 }
@@ -242,7 +242,7 @@ impl reqwest::dns::Resolve for Resolver {
     }
 }
 
-/// Whichever 加密 DNS is on at each lookup, else the system's, for the
+/// Whichever encrypted DNS is on at each lookup, else the system's, for the
 /// relay's clients, which outlive a change of the setting.
 #[derive(Debug, Default)]
 pub struct LiveResolver;
@@ -276,8 +276,12 @@ pub unsafe extern "C" fn lumtub_dns_test(
     host: *const u8,
     host_length: usize,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let settings: Settings =
         serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    // SAFETY: The caller passes `host` pointing at `host_length` readable bytes, per this
+    // function's `# Safety`.
     let host = unsafe { text(host, host_length) }.to_string();
     let answer = match Doh::new(&settings) {
         None => serde_json::json!({"ok": false, "error": "not an https:// address"}),
@@ -327,7 +331,7 @@ mod tests {
                 ),
                 Record::from_rdata(name.clone(), 120, RData::A(A::new(142, 250, 1, 1))),
                 Record::from_rdata(
-                    name.clone(),
+                    name,
                     5,
                     RData::AAAA(AAAA::new(0x2404, 0x6800, 0, 0, 0, 0, 0, 1)),
                 ),

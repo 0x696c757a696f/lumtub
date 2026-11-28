@@ -107,7 +107,7 @@ void main() {
     test('the app runs the core on an isolate of its own', () async {
       final tab = _Tab([...lengths]);
       final lengthsOf = ChannelLengths(newest: () => Listing(tab.open), channel: _channel, tab: ChannelTab.live, sort: ChannelSort.longest, folder: dir.path);
-      final loader = VideoListLoader(lengthsOf.listing, pageSize: 20);
+      final loader = VideoListLoader(lengthsOf.listing);
       addTearDown(loader.dispose);
       loader.loadMore();
       for (var i = 0; i < 100 && loader.loading; i++) {

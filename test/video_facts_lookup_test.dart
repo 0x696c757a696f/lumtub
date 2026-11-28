@@ -11,7 +11,7 @@ void main() {
   final lookup = VideoFactsLookup.instance;
   tearDown(lookup.reset);
 
-  VideoItem feedItem(String id) => VideoItem(id: id, title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=$id', published: DateTime.utc(2026, 11, 1));
+  VideoItem feedItem(String id) => VideoItem(id: id, title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=$id', published: DateTime.utc(2026, 11));
 
   test('reads length, views and day from a /player answer', () {
     final facts = VideoFacts.ofPlayer('{"videoDetails":{"videoId":"x","lengthSeconds":"754","viewCount":"12345"},"microformat":{"playerMicroformatRenderer":{"publishDate":"2026-10-30T05:00:00-07:00"}}}', DateTime.utc(2026, 11, 11))!;
@@ -73,10 +73,10 @@ void main() {
     final filled = lookup.of(item);
     expect(filled.durationLabel, '2:05');
     expect(filled.viewCount, 99);
-    expect(filled.published, DateTime.utc(2026, 11, 1));
+    expect(filled.published, DateTime.utc(2026, 11));
     expect(asked, ['aaaaaaaaaaa']);
 
-    final live = VideoItem(id: 'bbbbbbbbbbb', title: 'T', channel: 'C', url: '', liveStatus: 'is_live');
+    final live = const VideoItem(id: 'bbbbbbbbbbb', title: 'T', channel: 'C', url: '', liveStatus: 'is_live');
     expect(lookup.needs(live), isFalse);
     expect(identical(lookup.of(live), live), isTrue);
 

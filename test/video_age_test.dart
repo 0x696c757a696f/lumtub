@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/youtube_related.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   test('a related video keeps the age YouTube wrote and shows it after its views', () {

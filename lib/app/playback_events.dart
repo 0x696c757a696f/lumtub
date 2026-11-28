@@ -481,7 +481,7 @@ extension PlaybackEvents on AppController {
       // iOS opens picture in picture on going home (when chosen), a moment
       // after the app is hidden: the picture stays on for its window.
       if (Platform.isIOS && !IosVideoLayer.active.value && _iosAutoPip) {
-        await Future.delayed(const Duration(milliseconds: 1200));
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
         if (!_windowHidden) return;
       }
       final wanted = preferences.audioOnlyInBackground || ((Platform.isAndroid || Platform.isIOS) && !Device.tv && !pip && !IosVideoLayer.active.value);

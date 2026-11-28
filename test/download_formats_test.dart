@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/downloads/download_formats.dart';
 import 'package:lumtub/downloads/download_manager.dart';
@@ -14,6 +13,7 @@ import 'package:lumtub/native_core.dart';
 import 'package:lumtub/translation.dart';
 import 'package:lumtub/ui/download_dialog.dart';
 import 'package:lumtub/video_codec.dart';
+import 'package:material_ui/material_ui.dart';
 
 Map<String, dynamic> v(String id, String vcodec, int height, String ext, {double fps = 30, double tbr = 1000, int? size, String? range}) => {
       'format_id': id, 'vcodec': vcodec, 'acodec': 'none', 'height': height, 'fps': fps, 'ext': ext, 'tbr': tbr, 'url': 'http://x/$id', 'protocol': 'https',
@@ -221,7 +221,7 @@ void main() {
       }
     });
 
-    final item = VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
+    final item = const VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
     Future<Joined> joiner(JoinRequest request) async => (path: null, error: null, cut: const <(Duration, Duration)>[]);
     DownloadManager manager({bool join = false}) => DownloadManager(
         file: File('${dir.path}/downloads.json'),

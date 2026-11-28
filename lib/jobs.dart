@@ -40,7 +40,7 @@ enum JobPriority {
 /// What a running job is told and can tell.
 class JobContext {
   JobContext._(this._job);
-  final _Job _job;
+  final _Job<Object?> _job;
 
   /// Whether the job was cancelled; long work checks it between steps.
   bool get cancelled => _job.cancelled;
@@ -132,7 +132,7 @@ class JobQueue extends ChangeNotifier {
     if (_byKey[key] case final same? when !same.cancelled) {
       return same.completer.future.then((value) => value as T);
     }
-    final job = _Job<Object?>(this, JobInfo(key: key, lane: lane, priority: priority, running: false), (context) async => await work(context), _order++);
+    final job = _Job<Object?>(this, JobInfo(key: key, lane: lane, priority: priority, running: false), (context) async => work(context), _order++);
     _byKey[key] = job;
     _waiting.add(job);
     _pump();

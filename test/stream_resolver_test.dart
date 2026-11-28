@@ -34,7 +34,7 @@ void main() {
 
   test('builds the EDL address mpv\'s ytdl_hook would', () {
     final video = ResolvedVideo(_info(), file, 'f');
-    final tracks = (video.info['requested_formats'] as List).map((t) => t['url'] as String).toList();
+    final tracks = (video.info['requested_formats'] as List).map((t) => (t as Map)['url'] as String).toList();
     expect(
       video.directUrl,
       'edl://!new_stream;!no_clip;!no_chapters;%${tracks[0].length}%${tracks[0]};'
@@ -74,10 +74,10 @@ void main() {
   test('leaves live and fragmented streams to ytdl_hook', () {
     expect(ResolvedVideo({..._info(), 'is_live': true}, file, 'f').directUrl, isNull);
     final fragmented = _info();
-    (fragmented['requested_formats'] as List)[0]['fragments'] = [{'url': 'x'}];
+    ((fragmented['requested_formats'] as List)[0] as Map)['fragments'] = [{'url': 'x'}];
     expect(ResolvedVideo(fragmented, file, 'f').directUrl, isNull);
     final hls = _info();
-    (hls['requested_formats'] as List)[0]['protocol'] = 'm3u8_native';
+    ((hls['requested_formats'] as List)[0] as Map)['protocol'] = 'm3u8_native';
     expect(ResolvedVideo(hls, file, 'f').directUrl, isNull);
   });
 
@@ -101,7 +101,7 @@ void main() {
     final videos = await Future.wait([resolver.resolve('dQw4w9WgXcQ', 'ytdl'), resolver.resolve('dQw4w9WgXcQ', 'ytdl')]);
     expect(identical(videos[0], videos[1]), isTrue);
     expect(count.readAsLinesSync(), hasLength(1));
-    expect(jsonDecode(videos[0].file.readAsStringSync())['title'], 'Never Gonna Give You Up');
+    expect((jsonDecode(videos[0].file.readAsStringSync()) as Map)['title'], 'Never Gonna Give You Up');
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--format', 'bestvideo+bestaudio/best', '--', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']));
     expect(resolver.arguments('dQw4w9WgXcQ', 'bestvideo+bestaudio', formatSort: 'res,fps,vcodec:vp9'), containsAllInOrder(['--format', 'bestvideo+bestaudio', '--format-sort', 'res,fps,vcodec:vp9']));
     resolver.forget('dQw4w9WgXcQ');

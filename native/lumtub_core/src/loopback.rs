@@ -74,7 +74,7 @@ impl Loopback {
         self.stopped.store(true, Ordering::SeqCst);
         // Wakes the accepting thread, which then sees [stopped].
         let _ = TcpStream::connect_timeout(&address(self.port()), PROBE);
-        let thread = self.thread.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let thread = self.thread.lock().expect("lock poisoned by a panic").take();
         if let Some(thread) = thread
             && thread.thread().id() != std::thread::current().id()
         {
@@ -87,7 +87,7 @@ impl Loopback {
         let thread = std::thread::Builder::new()
             .name(self.name.into())
             .spawn(move || me.accept(listener, generation))?;
-        *self.thread.lock().unwrap_or_else(|e| e.into_inner()) = Some(thread);
+        *self.thread.lock().expect("lock poisoned by a panic") = Some(thread);
         Ok(())
     }
 
@@ -134,7 +134,7 @@ impl Loopback {
     /// Listens again, unless another listener already replaced the one of
     /// [seen].
     fn rebind(self: &Arc<Self>, seen: u64, why: &str) {
-        let _one = self.rebinding.lock().unwrap_or_else(|e| e.into_inner());
+        let _one = self.rebinding.lock().expect("lock poisoned by a panic");
         if !self.current(seen) || self.stopped.load(Ordering::SeqCst) {
             return;
         }

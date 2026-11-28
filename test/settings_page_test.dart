@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/models.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/settings_sections.dart';
 import 'package:lumtub/ui/pages/settings_subpages.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   late AppController controller;

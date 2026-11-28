@@ -1,22 +1,23 @@
 import 'dart:async';
-import 'package:material_ui/material_ui.dart';
+
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart' show NativePlayer;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
-import '../right_click.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
+import '../right_click.dart';
 import '../shortcut_bindings.dart';
-import 'lights_off.dart';
-import 'theater_mode.dart';
+import '../subtitle_cues.dart' show cueIndexAt;
 import 'app_icons.dart';
 import 'common.dart';
 import 'fill_window.dart';
+import 'lights_off.dart';
+import 'theater_mode.dart';
 import 'video_notes.dart' show showNoteEditor;
-import '../subtitle_cues.dart' show cueIndexAt;
 
 /// What [action] does, as the settings and the help name it.
 String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch (action) {
@@ -152,7 +153,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
   void jumpTo(bool end) {
-    if (end && controller.playing?.isLive == true) {
+    if (end && (controller.playing?.isLive ?? false)) {
       unawaited(controller.goLive());
       onFeedback?.call(AppIcons.caretLineRight, tr('Live'));
       return;

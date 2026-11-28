@@ -4,11 +4,11 @@ import 'dart:math' as math;
 
 import 'package:media_kit/media_kit.dart';
 
+import 'app_log.dart';
 import 'device.dart';
 import 'libass_layout.dart';
 import 'player_settings.dart';
 import 'upscale_shaders.dart';
-import 'app_log.dart';
 
 class PlayerOptionApplicator {
   /// Whether a PipeWire server is running for this user. mpv 0.41's

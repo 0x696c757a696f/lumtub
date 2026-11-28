@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_chrome.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('a menu bar that replaces another keeps its menus clickable in the title bar', (tester) async {

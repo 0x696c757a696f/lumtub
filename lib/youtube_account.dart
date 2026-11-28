@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'models.dart';
 import 'l10n/l10n.dart';
+import 'models.dart';
 
 /// A playlist of the signed-in account.
 class RemotePlaylist {
@@ -48,7 +48,7 @@ class YouTubeAccountApi implements AccountApi {
     final items = data['items'];
     if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube account'), avatar: null, likes: null);
     final channel = items.first as Map;
-    final likes = (channel['contentDetails'] as Map?)?['relatedPlaylists']?['likes'];
+    final likes = ((channel['contentDetails'] as Map?)?['relatedPlaylists'] as Map?)?['likes'];
     final snippet = channel['snippet'] as Map?;
     final pictures = snippet?['thumbnails'] as Map?;
     final picture = (pictures?['medium'] ?? pictures?['default']) as Map?;
@@ -168,7 +168,7 @@ class YouTubeAccountApi implements AccountApi {
     if (id != null) await _send('DELETE', 'subscriptions', {'id': id});
   }
 
-  static ChannelRef? parseSubscription(Map item) {
+  static ChannelRef? parseSubscription(Map<Object?, Object?> item) {
     final snippet = item['snippet'];
     if (snippet is! Map) return null;
     final id = (snippet['resourceId'] as Map?)?['channelId']?.toString() ?? '';
@@ -178,7 +178,7 @@ class YouTubeAccountApi implements AccountApi {
     return ChannelRef.isValidId(id) ? ChannelRef(id, snippet['title']?.toString() ?? '', avatar) : null;
   }
 
-  static RemotePlaylist? parsePlaylist(Map item) {
+  static RemotePlaylist? parsePlaylist(Map<Object?, Object?> item) {
     final id = item['id'];
     if (id is! String || id.isEmpty) return null;
     final count = (item['contentDetails'] as Map?)?['itemCount'];
@@ -187,7 +187,7 @@ class YouTubeAccountApi implements AccountApi {
 
   /// Deleted and private videos stay in playlists without an owner; they
   /// cannot be played, so they are left out.
-  static VideoItem? parsePlaylistItem(Map item) {
+  static VideoItem? parsePlaylistItem(Map<Object?, Object?> item) {
     final snippet = item['snippet'];
     if (snippet is! Map) return null;
     final resource = snippet['resourceId'];
@@ -204,7 +204,7 @@ class YouTubeAccountApi implements AccountApi {
     );
   }
 
-  Future<void> _pages(String resource, Map<String, String> query, void Function(Map item) onItem, {int? limit}) async {
+  Future<void> _pages(String resource, Map<String, String> query, void Function(Map<Object?, Object?> item) onItem, {int? limit}) async {
     String? pageToken;
     var seen = 0;
     do {
@@ -245,7 +245,7 @@ class YouTubeAccountApi implements AccountApi {
 
   static String? errorReason(String body) {
     try {
-      final errors = (jsonDecode(body) as Map)['error']['errors'] as List;
+      final errors = ((jsonDecode(body) as Map)['error'] as Map)['errors'] as List;
       return (errors.first as Map)['reason']?.toString();
     } catch (_) {
       return null;

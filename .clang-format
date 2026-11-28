@@ -1,0 +1,4 @@
+# Google's C++ style (docs/CODE-STYLE.md). Includes keep their order:
+# Windows headers such as dbghelp.h need windows.h before them.
+BasedOnStyle: Google
+SortIncludes: Never

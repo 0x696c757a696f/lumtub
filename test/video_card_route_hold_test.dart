@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _item = VideoItem(id: 'dQw4w9WgXcQ', title: 'Video', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', duration: 212);
 

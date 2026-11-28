@@ -4,7 +4,7 @@
 //! computer as long as either half holds; servers that do not know it pick
 //! X25519 or an elliptic curve instead. TLS 1.2 has no such exchange.
 //!
-//! The setting (抗量子加密) chooses: prefer the hybrid (the default), never
+//! The post-quantum encryption setting chooses: prefer the hybrid (the default), never
 //! offer it, or require it, which leaves out TLS 1.2 and classic groups so
 //! a server without it cannot be reached. The group each host agreed on is
 //! kept and shown in the settings (lumtub_tls_seen).
@@ -52,11 +52,11 @@ static CURRENT: RwLock<Tls> = RwLock::new(Tls {
 });
 
 pub fn current() -> Tls {
-    *CURRENT.read().unwrap_or_else(|e| e.into_inner())
+    *CURRENT.read().expect("lock poisoned by a panic")
 }
 
 pub fn set(tls: Tls) {
-    *CURRENT.write().unwrap_or_else(|e| e.into_inner()) = tls;
+    *CURRENT.write().expect("lock poisoned by a panic") = tls;
 }
 
 /// Whether [group] is a hybrid with ML-KEM.
@@ -144,7 +144,7 @@ fn note(server: &ServerName<'_>, group: String, quantum: bool) {
     let at = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
-    let mut seen = SEEN.lock().unwrap_or_else(|e| e.into_inner());
+    let mut seen = SEEN.lock().expect("lock poisoned by a panic");
     if seen.len() >= SEEN_LIMIT
         && !seen.contains_key(&host)
         && let Some(oldest) = seen.values().min_by_key(|s| s.at).map(|s| s.host.clone())
@@ -166,7 +166,7 @@ fn note(server: &ServerName<'_>, group: String, quantum: bool) {
 pub fn seen() -> Vec<Seen> {
     let mut list: Vec<Seen> = SEEN
         .lock()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .values()
         .cloned()
         .collect();

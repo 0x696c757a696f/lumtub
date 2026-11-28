@@ -11,13 +11,13 @@ import 'system_env.dart';
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are Lumtub's own, the rest a wider palette.
 final accentChoices = <(String, Color)>[
-  (tr('YouTube red'), Color(0xFFE53935)),
-  (tr('Cyan green'), Color(0xFF26A69A)),
-  (tr('Sky blue'), Color(0xFF1E88E5)),
-  (tr('Violet'), Color(0xFF7E57C2)),
-  (tr('Amber'), Color(0xFFFFB300)),
-  (tr('Pink'), Color(0xFFEC407A)),
-  (tr('Default green'), Color(0xFF5CB67B)),
+  (tr('YouTube red'), const Color(0xFFE53935)),
+  (tr('Cyan green'), const Color(0xFF26A69A)),
+  (tr('Sky blue'), const Color(0xFF1E88E5)),
+  (tr('Violet'), const Color(0xFF7E57C2)),
+  (tr('Amber'), const Color(0xFFFFB300)),
+  (tr('Pink'), const Color(0xFFEC407A)),
+  (tr('Default green'), const Color(0xFF5CB67B)),
   (tr('Orange'), Colors.orange),
   (tr('Yellow'), Colors.yellow),
   (tr('Lime'), Colors.lime),
@@ -281,6 +281,106 @@ int _hour(Object? raw, int fallback) => raw is int && raw >= 0 && raw < 24 ? raw
 T _byName<T extends Enum>(List<T> values, Object? name, T fallback) => values.where((v) => v.name == name).firstOrNull ?? fallback;
 
 class AppearanceSettings {
+  const AppearanceSettings({
+    this.themeMode = ThemeMode.system,
+    this.accentIndex = 0,
+    this.customAccent = 0xFFE53935,
+    this.systemAccent = false,
+    this.schemeVariant = DynamicSchemeVariant.tonalSpot,
+    this.pureBlack = false,
+    this.compact = false,
+    this.watchHidesRail = false,
+    this.fontFamily = autoFont,
+    this.textScale = 1.0,
+    this.transition = PageTransition.fade,
+    this.motion = MotionPreference.system,
+    this.navigation = NavigationStyle.auto,
+    this.cardWidth = 250,
+    this.thumbnailQuality = ThumbnailQuality.high,
+    this.darkWatchPage = false,
+    this.showStatusBar = true,
+    this.language = AppLanguage.system,
+    this.palette = '',
+    this.skin = '',
+    this.systemTitleBar = false,
+    this.hideTitleBar = false,
+    this.glassOpacity = 1,
+    this.skinBackground = true,
+    this.windowGlass = false,
+    this.windowGlassClarity = 0.7,
+    this.windowGlassWhole = false,
+    this.windowGlassBlur = true,
+    this.eyeCare = EyeCare.off,
+    this.warmth = 0.4,
+    this.eyeCareStart = 20,
+    this.eyeCareEnd = 7,
+    this.darkSchedule = DarkSchedule.off,
+    this.darkStart = 19,
+    this.darkEnd = 7,
+    this.lowResource = false,
+    this.layout = VideoLayout.grid,
+    this.appIcon = AppIcon.classic,
+  });
+
+  factory AppearanceSettings.fromJson(Object? raw) {
+    if (raw is! Map) return const AppearanceSettings();
+    final mode = ThemeMode.values.where((m) => m.name == raw['themeMode']).firstOrNull ?? ThemeMode.system;
+    final index = raw['accentIndex'];
+    final custom = raw['customAccent'];
+    final font = raw['fontFamily']?.toString();
+    final scale = raw['textScale'];
+    final width = raw['cardWidth'];
+    return AppearanceSettings(
+      themeMode: mode,
+      accentIndex: index is int && index >= -1 && index < accentChoices.length ? index : 0,
+      customAccent: custom is int ? custom | 0xFF000000 : 0xFFE53935,
+      systemAccent: raw['systemAccent'] == true,
+      schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
+      pureBlack: raw['pureBlack'] == true,
+      compact: raw['compact'] == true,
+      watchHidesRail: raw['watchHidesRail'] == true,
+      // Earlier builds wrote nothing for the system font, and wrote the
+      // bundled one as their default; both now mean automatic.
+      fontFamily: font == 'system'
+          ? null
+          : font == null || font.trim().isEmpty || (font == bundledFont && raw['fontVersion'] != 2)
+              ? autoFont
+              : font,
+      textScale: scale is num ? scale.toDouble().clamp(0.8, 2.0) : 1.0,
+      transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
+      motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
+      navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),
+      cardWidth: width is num ? width.toDouble().clamp(180, 420) : 250,
+      thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),
+      darkWatchPage: raw['darkWatchPage'] == true,
+      showStatusBar: raw['showStatusBar'] != false,
+      language: AppLanguage.parse(raw['language']),
+      skin: switch ((raw['skin'], raw['palette'])) {
+        (final String skin, _) when skin.isNotEmpty => skin,
+        (_, final String palette) when palette.isNotEmpty => paletteSkinId(palette),
+        _ => '',
+      },
+      systemTitleBar: raw['systemTitleBar'] == true,
+      hideTitleBar: raw['hideTitleBar'] == true,
+      glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
+      skinBackground: raw['skinBackground'] != false,
+      windowGlass: raw['windowGlass'] == true,
+      windowGlassClarity: raw['windowGlassClarity'] is num ? (raw['windowGlassClarity'] as num).toDouble().clamp(0.0, 1.0) : 0.7,
+      windowGlassWhole: raw['windowGlassWhole'] == true,
+      windowGlassBlur: raw['windowGlassBlur'] != false,
+      eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
+      warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
+      eyeCareStart: _hour(raw['eyeCareStart'], 20),
+      eyeCareEnd: _hour(raw['eyeCareEnd'], 7),
+      darkSchedule: _byName(DarkSchedule.values, raw['darkSchedule'], DarkSchedule.off),
+      darkStart: _hour(raw['darkStart'], 19),
+      darkEnd: _hour(raw['darkEnd'], 7),
+      lowResource: raw['lowResource'] == true,
+      layout: _byName(VideoLayout.values, raw['layout'], VideoLayout.grid),
+      appIcon: _byName(AppIcon.values, raw['appIcon'], AppIcon.classic),
+    );
+  }
+
   final ThemeMode themeMode;
   /// An index into [accentChoices], or -1 for [customAccent].
   final int accentIndex;
@@ -355,47 +455,6 @@ class AppearanceSettings {
   final bool lowResource;
   final VideoLayout layout;
   final AppIcon appIcon;
-
-  const AppearanceSettings({
-    this.themeMode = ThemeMode.system,
-    this.accentIndex = 0,
-    this.customAccent = 0xFFE53935,
-    this.systemAccent = false,
-    this.schemeVariant = DynamicSchemeVariant.tonalSpot,
-    this.pureBlack = false,
-    this.compact = false,
-    this.watchHidesRail = false,
-    this.fontFamily = autoFont,
-    this.textScale = 1.0,
-    this.transition = PageTransition.fade,
-    this.motion = MotionPreference.system,
-    this.navigation = NavigationStyle.auto,
-    this.cardWidth = 250,
-    this.thumbnailQuality = ThumbnailQuality.high,
-    this.darkWatchPage = false,
-    this.showStatusBar = true,
-    this.language = AppLanguage.system,
-    this.palette = '',
-    this.skin = '',
-    this.systemTitleBar = false,
-    this.hideTitleBar = false,
-    this.glassOpacity = 1,
-    this.skinBackground = true,
-    this.windowGlass = false,
-    this.windowGlassClarity = 0.7,
-    this.windowGlassWhole = false,
-    this.windowGlassBlur = true,
-    this.eyeCare = EyeCare.off,
-    this.warmth = 0.4,
-    this.eyeCareStart = 20,
-    this.eyeCareEnd = 7,
-    this.darkSchedule = DarkSchedule.off,
-    this.darkStart = 19,
-    this.darkEnd = 7,
-    this.lowResource = false,
-    this.layout = VideoLayout.grid,
-    this.appIcon = AppIcon.classic,
-  });
 
   /// Whether 护眼暖色 is on at [now].
   /// How warm the window is at [now]: [warmth] while the warm light is
@@ -571,67 +630,6 @@ class AppearanceSettings {
         'layout': layout.name,
         'appIcon': appIcon.name,
       };
-
-  factory AppearanceSettings.fromJson(Object? raw) {
-    if (raw is! Map) return const AppearanceSettings();
-    final mode = ThemeMode.values.where((m) => m.name == raw['themeMode']).firstOrNull ?? ThemeMode.system;
-    final index = raw['accentIndex'];
-    final custom = raw['customAccent'];
-    final font = raw['fontFamily']?.toString();
-    final scale = raw['textScale'];
-    final width = raw['cardWidth'];
-    return AppearanceSettings(
-      themeMode: mode,
-      accentIndex: index is int && index >= -1 && index < accentChoices.length ? index : 0,
-      customAccent: custom is int ? custom | 0xFF000000 : 0xFFE53935,
-      systemAccent: raw['systemAccent'] == true,
-      schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
-      pureBlack: raw['pureBlack'] == true,
-      compact: raw['compact'] == true,
-      watchHidesRail: raw['watchHidesRail'] == true,
-      // Earlier builds wrote nothing for the system font, and wrote the
-      // bundled one as their default; both now mean automatic.
-      fontFamily: font == 'system'
-          ? null
-          : font == null || font.trim().isEmpty || (font == bundledFont && raw['fontVersion'] != 2)
-              ? autoFont
-              : font,
-      textScale: scale is num ? scale.toDouble().clamp(0.8, 2.0) : 1.0,
-      transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
-      motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
-      navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),
-      cardWidth: width is num ? width.toDouble().clamp(180, 420) : 250,
-      thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),
-      darkWatchPage: raw['darkWatchPage'] == true,
-      showStatusBar: raw['showStatusBar'] != false,
-      language: AppLanguage.parse(raw['language']),
-      // The colour schemes are skins now: a saved one becomes its skin.
-      palette: '',
-      skin: switch ((raw['skin'], raw['palette'])) {
-        (final String skin, _) when skin.isNotEmpty => skin,
-        (_, final String palette) when palette.isNotEmpty => paletteSkinId(palette),
-        _ => '',
-      },
-      systemTitleBar: raw['systemTitleBar'] == true,
-      hideTitleBar: raw['hideTitleBar'] == true,
-      glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
-      skinBackground: raw['skinBackground'] != false,
-      windowGlass: raw['windowGlass'] == true,
-      windowGlassClarity: raw['windowGlassClarity'] is num ? (raw['windowGlassClarity'] as num).toDouble().clamp(0.0, 1.0) : 0.7,
-      windowGlassWhole: raw['windowGlassWhole'] == true,
-      windowGlassBlur: raw['windowGlassBlur'] != false,
-      eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
-      warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
-      eyeCareStart: _hour(raw['eyeCareStart'], 20),
-      eyeCareEnd: _hour(raw['eyeCareEnd'], 7),
-      darkSchedule: _byName(DarkSchedule.values, raw['darkSchedule'], DarkSchedule.off),
-      darkStart: _hour(raw['darkStart'], 19),
-      darkEnd: _hour(raw['darkEnd'], 7),
-      lowResource: raw['lowResource'] == true,
-      layout: _byName(VideoLayout.values, raw['layout'], VideoLayout.grid),
-      appIcon: _byName(AppIcon.values, raw['appIcon'], AppIcon.classic),
-    );
-  }
 }
 
 /// Reads the Windows accent colour (Settings › Personalisation › Colours).
@@ -651,8 +649,8 @@ Future<Color?> readWindowsAccent() async {
 }
 
 class AppearanceSettingsStore {
-  final File file;
   AppearanceSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}appearance.json');
+  final File file;
 
   Future<AppearanceSettings> load() async {
     if (!await file.exists()) return const AppearanceSettings();

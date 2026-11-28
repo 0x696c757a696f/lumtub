@@ -197,7 +197,11 @@ fn post(post: &Value) -> Option<Post> {
 pub fn page(data: &Value) -> Page {
     fn walk(node: &Value, page: &mut Page) {
         match node {
-            Value::Array(list) => list.iter().for_each(|child| walk(child, page)),
+            Value::Array(list) => {
+                for child in list {
+                    walk(child, page);
+                }
+            }
             Value::Object(map) => {
                 if let Some(renderer) = map
                     .get("backstagePostRenderer")
@@ -223,9 +227,11 @@ pub fn page(data: &Value) -> Page {
                 ) {
                     page.continuation = Some(token.clone());
                 }
-                map.values()
-                    .filter(|v| v.is_object() || v.is_array())
-                    .for_each(|v| walk(v, page));
+                for value in map.values() {
+                    if value.is_object() || value.is_array() {
+                        walk(value, page);
+                    }
+                }
             }
             _ => {}
         }
@@ -261,6 +267,7 @@ pub fn section_token(data: &Value) -> Option<String> {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_posts(body: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `body` points to `length` readable bytes, per this function's `# Safety`.
     let body = unsafe { outside(body, length) };
     let data = if body.trim_start().starts_with('{') {
         serde_json::from_str(body).ok()
@@ -280,6 +287,7 @@ pub unsafe extern "C" fn lumtub_youtube_post_comments(
     html: *const u8,
     length: usize,
 ) -> *mut c_char {
+    // SAFETY: `html` points to `length` readable bytes, per this function's `# Safety`.
     give_json(&initial_data(unsafe { outside(html, length) }).and_then(|data| section_token(&data)))
 }
 

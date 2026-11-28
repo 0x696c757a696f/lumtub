@@ -71,6 +71,26 @@ jobs:
       - name: Rust formatting
         run: cargo fmt --manifest-path native/lumtub_core/Cargo.toml --check
 
+      # rustfmt.toml's import, hex and macro options exist only in nightly
+      # rustfmt; stable ignores them. Nightly is used for this check only.
+      - name: Rust formatting (Google's rustfmt options)
+        env:
+          # Pinned so formatting only changes when this date does.
+          RUSTFMT_NIGHTLY: nightly-2026-11-26
+        run: |
+          rustup toolchain install "$RUSTFMT_NIGHTLY" --profile minimal --component rustfmt --no-self-update
+          cargo "+$RUSTFMT_NIGHTLY" fmt --manifest-path native/lumtub_core/Cargo.toml --check
+          cargo "+$RUSTFMT_NIGHTLY" fmt --manifest-path native/lumtub_core/fuzz/Cargo.toml --check
+
+      - name: C++ formatting (Google's style, .clang-format)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/clang-format"
+          cat > "$RUNNER_TEMP/clang-format.txt" <<'PINS'
+          clang-format==18.1.3 --hash=sha256:059f2c2e7166f97cf06f78d9bd31d83a9c0416527845cb397296daa43bd2c6e2
+          PINS
+          "$RUNNER_TEMP/clang-format/bin/pip" install -q --require-hashes --only-binary=:all: -r "$RUNNER_TEMP/clang-format.txt"
+          find windows/runner linux/runner -name '*.cpp' -o -name '*.cc' -o -name '*.h' | xargs "$RUNNER_TEMP/clang-format/bin/clang-format" --dry-run --Werror
+
       - name: Get packages
         run: flutter pub get
 

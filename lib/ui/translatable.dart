@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
 import '../church_wording.dart';
@@ -10,8 +10,8 @@ import '../l10n/l10n.dart';
 import '../language_guess.dart';
 import '../translation.dart';
 import '../translation_services.dart';
-import 'theme.dart';
 import 'app_icons.dart';
+import 'theme.dart';
 
 /// [builder]'s content for [text], with a 翻译 button under it. Tapping it
 /// translates [text] into the language chosen in the settings and shows the

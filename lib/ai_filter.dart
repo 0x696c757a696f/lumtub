@@ -75,7 +75,7 @@ class AiFilter extends ChangeNotifier {
   /// Whether [item] is hidden: labeled as AI, or by a listed channel.
   bool hides(VideoItem item) {
     if (mode == AiFilterMode.off) return false;
-    if (_labels?[item.id] == true) return true;
+    if (_labels?[item.id] ?? false) return true;
     final channel = item.channelId;
     return mode == AiFilterMode.labeledAndList && channel != null && (_channels.contains(channel) || _channels.contains(item.channel.toLowerCase()));
   }

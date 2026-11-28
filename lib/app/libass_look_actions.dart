@@ -263,7 +263,7 @@ extension LibassLookActions on AppController {
       var source = copy?.source ?? shown;
       if (moved != null && source == moved.old) source = moved.now;
       final wanted = libassDraws ? await _copyFor(platform, source, second: second, current: current) : source;
-      if (second && _subtitleCopies[wanted]?.key.endsWith(_quickMark) == true) quick = true;
+      if (second && (_subtitleCopies[wanted]?.key.endsWith(_quickMark) ?? false)) quick = true;
       if (!current()) return;
       if (wanted != shown) {
         await platform.setProperty(second ? 'secondary-sid' : 'sid', wanted);
@@ -374,7 +374,7 @@ extension LibassLookActions on AppController {
       }
       // Nothing runs past the edges and no line mixes scripts: the track
       // shows as it is.
-      if (Iterable.generate(cues.length).every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {
+      if (Iterable<int>.generate(cues.length).every((i) => wrapped[i] == cues[i].text && mixed[i] == null)) {
         _plainFits.add('$source|$key');
         return source;
       }
@@ -398,7 +398,7 @@ extension LibassLookActions on AppController {
     }
     await platform.command(['sub-add', file.path, 'auto', track.title ?? '', track.language ?? '']);
     final list = jsonDecode(await platform.getProperty('track-list'));
-    final added = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && t['external-filename'] == file.path).lastOrNull : null;
+    final added = list is List ? list.whereType<Map<Object?, Object?>>().where((t) => t['type'] == 'sub' && t['external-filename'] == file.path).lastOrNull : null;
     if (added == null) return source;
     final id = '${added['id']}';
     _subtitleCopies[id] = (source: source, key: key, second: second, file: file.path);

@@ -1,5 +1,5 @@
-//! Subtitle lines for 字幕列表 and the script-based language guess that lets
-//! 翻译 skip text already in the target language.
+//! Subtitle lines for the subtitle list and the script-based language guess that lets
+//! translation skip text already in the target language.
 
 use std::collections::HashSet;
 use std::ffi::c_char;
@@ -146,18 +146,18 @@ const ENGLISH: &[&str] = &[
 fn is_letter(c: char) -> bool {
     let c = c as u32;
     if c < 0x80 {
-        return (0x41..=0x5A).contains(&c) || (0x61..=0x7A).contains(&c);
+        return (0x41..=0x5a).contains(&c) || (0x61..=0x7a).contains(&c);
     }
-    !((0x2000..=0x2BFF).contains(&c)
-        || (0x3000..=0x303F).contains(&c)
-        || (0xFF00..=0xFF20).contains(&c)
-        || c >= 0x1F000)
+    !((0x2000..=0x2bff).contains(&c)
+        || (0x3000..=0x303f).contains(&c)
+        || (0xff00..=0xff20).contains(&c)
+        || c >= 0x1f000)
 }
 
 fn han(c: u32) -> bool {
-    (0x4E00..=0x9FFF).contains(&c)
-        || (0x3400..=0x4DBF).contains(&c)
-        || (0xF900..=0xFAFF).contains(&c)
+    (0x4e00..=0x9fff).contains(&c)
+        || (0x3400..=0x4dbf).contains(&c)
+        || (0xf900..=0xfaff).contains(&c)
 }
 
 /// A guess from the script alone at whether [source] is in [target] (a
@@ -175,7 +175,7 @@ pub fn looks_like(source: &str, target: &str) -> bool {
     let count = |test: &dyn Fn(u32) -> bool| letters.iter().filter(|&&c| test(c)).count() as f64;
     let share = letters.len() as f64 * 0.6;
     let hans = count(&han);
-    let kana = count(&|c| (0x3040..=0x30FF).contains(&c) || (0x31F0..=0x31FF).contains(&c));
+    let kana = count(&|c| (0x3040..=0x30ff).contains(&c) || (0x31f0..=0x31ff).contains(&c));
     let range = |from: u32, to: u32| count(&|c| (from..=to).contains(&c));
     match target {
         "zh-CN" | "zh-TW" => {
@@ -193,17 +193,17 @@ pub fn looks_like(source: &str, target: &str) -> bool {
         "ja" => kana > 0.0 && hans + kana >= share,
         "ko" => {
             count(&|c| {
-                (0xAC00..=0xD7AF).contains(&c)
-                    || (0x1100..=0x11FF).contains(&c)
-                    || (0x3130..=0x318F).contains(&c)
+                (0xac00..=0xd7af).contains(&c)
+                    || (0x1100..=0x11ff).contains(&c)
+                    || (0x3130..=0x318f).contains(&c)
             }) >= share
         }
-        "ru" => range(0x0400, 0x04FF) >= share,
-        "ar" => range(0x0600, 0x06FF) >= share,
-        "th" => range(0x0E00, 0x0E7F) >= share,
-        "hi" => range(0x0900, 0x097F) >= share,
+        "ru" => range(0x0400, 0x04ff) >= share,
+        "ar" => range(0x0600, 0x06ff) >= share,
+        "th" => range(0x0e00, 0x0e7f) >= share,
+        "hi" => range(0x0900, 0x097f) >= share,
         "en" => {
-            if count(&|c| (0x41..=0x5A).contains(&c) || (0x61..=0x7A).contains(&c)) < share {
+            if count(&|c| (0x41..=0x5a).contains(&c) || (0x61..=0x7a).contains(&c)) < share {
                 return false;
             }
             let lower = source.to_lowercase();
@@ -307,6 +307,8 @@ fn translation_code(lang: whatlang::Lang) -> Option<&'static str> {
 /// [source] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_subtitle_cues(source: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `source` pointing at `length` readable bytes, as this function
+    // requires.
     let list: Vec<serde_json::Value> = cues(unsafe { text(source, length) })
         .into_iter()
         .map(|c| serde_json::json!([c.start, c.end, c.text]))
@@ -325,6 +327,8 @@ pub unsafe extern "C" fn lumtub_looks_like(
     target: *const u8,
     target_length: usize,
 ) -> bool {
+    // SAFETY: The caller passes `source` and `target` pointing at `length` and `target_length`
+    // readable bytes, as this function requires.
     looks_like(unsafe { text(source, length) }, unsafe {
         text(target, target_length)
     })

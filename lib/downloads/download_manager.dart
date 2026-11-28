@@ -9,19 +9,19 @@ import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
 import '../blocked_sign_in.dart';
+import '../cast/cast_subtitles.dart' show toVtt;
 import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
+import '../native_core.dart';
 import '../process_priority.dart';
 import '../sponsor_block.dart';
+import '../subtitle_cues.dart';
+import '../user_folders.dart';
 import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
 import 'download_subtitles.dart';
-import '../subtitle_cues.dart';
-import '../cast/cast_subtitles.dart' show toVtt;
-import '../native_core.dart';
-import '../user_folders.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
@@ -139,7 +139,7 @@ class LocalVideo {
     final raw = ((info['lumtub'] ?? info['ytplus']) as Map?)?['sponsorblock'];
     final segments = <SkipSegment>[
       if (raw is List)
-        for (final s in raw.whereType<Map>())
+        for (final s in raw.whereType<Map<dynamic, dynamic>>())
           if (s['start'] is int && s['end'] is int) SkipSegment(Duration(milliseconds: s['start'] as int), Duration(milliseconds: s['end'] as int), '${s['category']}'),
     ];
     return LocalVideo(media, info, subtitles, segments);
@@ -148,7 +148,7 @@ class LocalVideo {
 
 /// The download queue: runs up to [maxConcurrent] yt-dlp processes, keeps the
 /// list in [file] and finds the downloaded files for playback.
-class _NoList {
+class _NoList implements Exception {
   const _NoList();
 }
 
@@ -504,7 +504,7 @@ class DownloadManager extends ChangeNotifier {
       if (live) {
         final id = task.id;
         _recordTasks[id] = _record(task).whenComplete(() {
-          _recordTasks.remove(id);
+          unawaited(_recordTasks.remove(id));
           _pump();
         });
       } else {
@@ -693,7 +693,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final _botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+  static final _botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Prefix of the line a signed-in download prints its info on.
   static const _infoPrefix = 'lumtub-info|';
@@ -1023,7 +1023,7 @@ class DownloadManager extends ChangeNotifier {
   static Object? shiftChapters(Object? chapters, List<(Duration, Duration)> cut) {
     if (chapters is! List) return chapters;
     return [
-      for (final c in chapters.whereType<Map>())
+      for (final c in chapters.whereType<Map<dynamic, dynamic>>())
         if (c['start_time'] is num && c['end_time'] is num)
           if ((_shiftSeconds(c['start_time'] as num, cut), _shiftSeconds(c['end_time'] as num, cut)) case (final start, final end) when end > start) {...c, 'start_time': start, 'end_time': end},
     ];

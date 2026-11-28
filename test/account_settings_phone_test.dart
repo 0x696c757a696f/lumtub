@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,6 +10,7 @@ import 'package:lumtub/library_store.dart';
 import 'package:lumtub/secure_store.dart';
 import 'package:lumtub/ui/pages/account_settings.dart';
 import 'package:lumtub/youtube_web_sign_in.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _Plain implements SecretProtector {
   @override

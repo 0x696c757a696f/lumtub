@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 
+import 'l10n/l10n.dart';
 import 'models.dart';
 import 'native_core.dart';
-import 'l10n/l10n.dart';
 import 'youtube_web.dart';
 
 /// Reads a channel's public Atom feed, which lists its latest 15 uploads with
@@ -35,7 +36,7 @@ class ChannelFeed {
   Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) {
     if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return Future.value(items);
     return _inFlight[channel.id] ??= _fetch(channel).whenComplete(() {
-      _inFlight.remove(channel.id);
+      unawaited(_inFlight.remove(channel.id));
     });
   }
 

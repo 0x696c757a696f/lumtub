@@ -1,4 +1,3 @@
-import 'flat_press.dart';
 import 'dart:ui' show lerpDouble;
 
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageTransitionsBuilder;
@@ -6,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../appearance_settings.dart';
 import '../skins/skin.dart';
+import 'flat_press.dart';
 import 'palettes.dart';
 import 'skin_paint.dart';
 import 'warm_layer.dart';

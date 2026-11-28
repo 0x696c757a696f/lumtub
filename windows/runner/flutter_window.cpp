@@ -12,7 +12,9 @@ namespace {
 // (lib/app_window.dart) is shown, otherwise 0. The window property holds the
 // ratio times 1000.
 double PictureInPictureAspect(HWND window) {
-  return reinterpret_cast<uintptr_t>(::GetProp(window, L"LumtubPictureInPicture")) / 1000.0;
+  return reinterpret_cast<uintptr_t>(
+             ::GetProp(window, L"LumtubPictureInPicture")) /
+         1000.0;
 }
 
 }  // namespace
@@ -38,14 +40,14 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
-  shell_ = std::make_unique<WindowsShell>(GetHandle(), flutter_controller_->engine()->messenger());
-  frame_ = std::make_unique<WindowFrame>(GetHandle(), flutter_controller_->engine()->messenger());
+  shell_ = std::make_unique<WindowsShell>(
+      GetHandle(), flutter_controller_->engine()->messenger());
+  frame_ = std::make_unique<WindowFrame>(
+      GetHandle(), flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
   frame_->AttachView(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
+  flutter_controller_->engine()->SetNextFrameCallback([&]() { this->Show(); });
 
   // Flutter can complete the first frame before the "show window" callback is
   // registered. The following call ensures a frame is pending to ensure the

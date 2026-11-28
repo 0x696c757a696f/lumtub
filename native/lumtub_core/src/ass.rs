@@ -63,9 +63,9 @@ fn color(text: &str) -> Option<u32> {
     let abgr = u32::from_str_radix(hex, 16).ok()?;
     let (a, b, g, r) = (
         abgr >> 24,
-        (abgr >> 16) & 0xFF,
-        (abgr >> 8) & 0xFF,
-        abgr & 0xFF,
+        (abgr >> 16) & 0xff,
+        (abgr >> 8) & 0xff,
+        abgr & 0xff,
     );
     Some(r << 24 | g << 16 | b << 8 | (255 - a))
 }
@@ -105,7 +105,7 @@ pub fn parse(source: &str) -> Option<Styled> {
                     .unwrap_or(18.0),
                 color: field("primarycolour")
                     .and_then(color)
-                    .unwrap_or(0xFFFF_FFFF),
+                    .unwrap_or(0xffff_ffff),
                 bold: field("bold").is_some_and(|b| b != "0"),
                 background: (field("borderstyle") == Some("3"))
                     .then(|| field("backcolour").and_then(color))
@@ -235,10 +235,10 @@ mod tests {
         let main = styled.main.unwrap();
         assert_eq!(
             (main.font.as_str(), main.size, main.color, main.bold),
-            ("Microsoft YaHei", 40.0, 0xFFFF_FFFF, true)
+            ("Microsoft YaHei", 40.0, 0xffff_ffff, true)
         );
         let second = styled.second.unwrap();
-        assert_eq!((second.color, second.bold), (0xFFE7_00E5, false));
+        assert_eq!((second.color, second.bold), (0xffe7_00e5, false));
         assert_eq!(tx3g_size(&second, styled.play_res_y), 12);
         assert_eq!((main.background, main.margin), (None, 30.0));
     }
@@ -250,7 +250,7 @@ mod tests {
             "&H54000000,&H54000000,-1,0,0,0,100,100,0,0,3,",
         );
         let main = parse(&file).unwrap().main.unwrap();
-        assert_eq!(main.background, Some(0x0000_00AB));
+        assert_eq!(main.background, Some(0x0000_00ab));
     }
 
     #[test]

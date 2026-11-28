@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   tearDown(() => lightsOff.value = false);

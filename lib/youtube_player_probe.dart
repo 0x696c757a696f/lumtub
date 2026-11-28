@@ -53,7 +53,7 @@ class YoutubePlayerProbe {
     if (visitor == null) return false;
     headers['X-Goog-Visitor-Id'] = visitor.data;
     headers['Cookie'] = visitor.cookies;
-    ((body['context'] as Map)['client'] as Map)['visitorData'] = visitor.data;
+    ((body['context']! as Map)['client'] as Map)['visitorData'] = visitor.data;
     return true;
   }
 
@@ -232,10 +232,10 @@ class YoutubePlayerProbe {
     headers['X-Goog-Visitor-Id'] = data;
     // The page's cookies name the other visitor.
     headers['Cookie'] = YoutubeWeb.consentCookie;
-    ((body['context'] as Map)['client'] as Map)['visitorData'] = data;
+    ((body['context']! as Map)['client'] as Map)['visitorData'] = data;
   }
 
-  static Future<bool> _isKnown() async => await (_visitor ?? Future.value()) != null;
+  static Future<bool> _isKnown() async => await (_visitor ?? Future<_Visitor?>.value()) != null;
 
   static String? _visitorIn(String text) {
     final raw = _visitorData.firstMatch(text)?.group(1);
@@ -343,7 +343,7 @@ class YoutubePlayerProbe {
       if (NativeCore.instance?.quickRequest(id) case final json?) {
         final parts = jsonDecode(json) as Map<String, dynamic>;
         final body = (parts['body'] as Map).cast<String, Object?>();
-        ((body['context'] as Map)['client'] as Map)['hl'] = hl;
+        ((body['context']! as Map)['client'] as Map)['hl'] = hl;
         // The consent cookie too: from Europe, a request without one may
         // be sent to the consent page instead of answered.
         return ({'Content-Type': 'application/json', 'Accept-Language': hl, 'Cookie': YoutubeWeb.consentCookie, ...(parts['headers'] as Map).cast<String, String>()}, body);

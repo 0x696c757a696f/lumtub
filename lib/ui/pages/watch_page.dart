@@ -1,69 +1,68 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, SystemUiMode;
-import 'package:media_kit_video/media_kit_video.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart' show Player;
+import 'package:media_kit_video/media_kit_video.dart';
 
-import '../../device.dart';
-import '../../libass_layout.dart' show LibassLook;
-import '../../live_chat.dart' show LiveChatMessage;
-import '../window_chrome.dart';
 import '../../app/app_controller.dart';
-import '../../learning/word_token.dart';
+import '../../appearance_settings.dart' show blankFont, bundledFont, cjkFormOf, downloadedScriptFamilies, languageStyle;
+import '../../dearrow.dart';
+import '../../device.dart';
+import '../../l10n/l10n.dart';
 import '../../learning/known_words.dart';
 import '../../learning/learning.dart';
-import '../learning/ruby_line.dart';
-import '../learning/word_card.dart';
-import '../../appearance_settings.dart' show blankFont, bundledFont, cjkFormOf, downloadedScriptFamilies, languageStyle;
+import '../../learning/word_token.dart';
+import '../../libass_layout.dart' show LibassLook;
+import '../../live_chat.dart' show LiveChatMessage;
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../../timestamp_link.dart';
 import '../../youtube_account.dart' show VideoRating;
-import '../comments_view.dart';
+import '../animated_visibility.dart';
+import '../app_icons.dart';
 import '../cast_ui.dart';
+import '../comments_view.dart';
 import '../common.dart';
 import '../fill_icon.dart';
 import '../fitting_tab_bar.dart';
 import '../haptics.dart';
-import '../reveal.dart';
 import '../key_scroll.dart';
+import '../learning/ruby_line.dart';
+import '../learning/word_card.dart';
 import '../lights_off.dart';
-import '../live_chat_rows.dart';
 import '../linked_text.dart';
+import '../live_chat_input.dart';
+import '../live_chat_list.dart';
+import '../live_chat_rows.dart';
+import '../motion.dart';
+import '../palettes.dart';
+import '../play_queue_panel.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
+import '../playing_list_panel.dart';
+import '../reveal.dart';
 import '../screenshot_action.dart';
-import '../summary_dialog.dart';
-import '../subtitle_list_panel.dart';
-import '../study_bar.dart';
-import '../animated_visibility.dart';
-import '../theater_mode.dart';
 import '../skeleton.dart';
-import '../theme.dart';
 import '../skin_deck.dart';
 import '../skin_lcd.dart';
 import '../skin_paint.dart';
-import '../warm_layer.dart';
+import '../study_bar.dart';
+import '../subtitle_list_panel.dart';
+import '../summary_dialog.dart';
+import '../theater_mode.dart';
+import '../theme.dart';
 import '../translatable.dart';
-import '../play_queue_panel.dart';
-import '../playing_list_panel.dart';
-import '../video_card.dart';
 import '../upcoming_card.dart';
+import '../video_box.dart';
+import '../video_card.dart';
+import '../warm_layer.dart';
+import '../window_chrome.dart';
 import 'channel_page.dart';
 import 'downloads_page.dart';
-import '../../dearrow.dart';
-import '../video_box.dart';
-import '../../l10n/l10n.dart';
-import '../motion.dart';
-import '../app_icons.dart';
-import '../palettes.dart';
-import '../live_chat_input.dart';
-import '../live_chat_list.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel as
@@ -156,7 +155,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
       final state = _video.currentState;
       if (mounted && state != null && !state.isFullscreen()) {
         fillingWindow.value = false;
-        state.enterFullscreen();
+        unawaited(state.enterFullscreen());
       }
     });
   }
@@ -196,7 +195,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
           // it, as phone video apps do.
           final phone = watchesLikePhone(context);
           final item = controller.playing;
-          final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
+          final hasChat = (item?.isLive ?? false) || item?.liveStatus == 'was_live';
           // 剧场模式 in a wide window keeps comments, up next and the chat
           // in a column beside the video, which can be folded away.
           final sidePanel = theater && outer.maxWidth >= 900;
@@ -235,7 +234,7 @@ class _WatchPageState extends State<WatchPage> with WidgetsBindingObserver {
                   controller: controller,
                   comments: comments,
                   replayChat: replayChat,
-                  chatFirst: item?.isLive == true,
+                  chatFirst: item?.isLive ?? false,
                   // As phone video apps lay it out: the channel, the
                   // title with its description folded under it, a row of
                   // the main actions, then what plays next.
@@ -485,7 +484,7 @@ class _Toolbar extends StatelessWidget {
                       icon: Icon(AppIcons.timer),
                       onPressed: () {
                         final link = timestampLink(item.id, controller.player?.state.position ?? Duration.zero);
-                        if (link != null) copyText(context, link, tr('Link copied'));
+                        if (link != null) unawaited(copyText(context, link, tr('Link copied')));
                       },
                     ),
             ),
@@ -532,7 +531,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
       else if (views != null) tr('{0} views', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');
-    final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
+    final channel = details?.channel.isNotEmpty ?? false ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;
     final description = details?.description ?? '';
     final name = channel.isEmpty ? tr('YouTube') : channel;
@@ -567,7 +566,7 @@ class _PhoneDetailsState extends State<_PhoneDetails> {
             Translatable(
               controller: controller,
               rite: controller.playingRite,
-              text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
+              text: deArrow.titleOf(item.id, details?.title.isNotEmpty ?? false ? details!.title : item.title),
               builder: (context, title) => Text(title, maxLines: _open ? null : 2, overflow: _open ? null : TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
             ),
             if (meta.isNotEmpty) ...[
@@ -645,7 +644,7 @@ class _PhoneActions extends StatelessWidget {
     if (picked == null || !context.mounted) return;
     if (picked.startsWith('order:')) {
       final order = PlayOrder.values.byName(picked.substring(6));
-      controller.setPlayOrder(order);
+      unawaited(controller.setPlayOrder(order));
       return;
     }
     switch (picked) {
@@ -656,10 +655,10 @@ class _PhoneActions extends StatelessWidget {
       case 'summary':
         await showVideoSummary(context, controller);
       case 'link':
-        copyText(context, item.url, tr('Link copied'));
+        unawaited(copyText(context, item.url, tr('Link copied')));
       case 'time':
         final link = timestampLink(item.id, position);
-        if (link != null) copyText(context, link, tr('Link copied'));
+        if (link != null) unawaited(copyText(context, link, tr('Link copied')));
       case 'browser':
         await openExternal(item.url);
     }
@@ -669,7 +668,7 @@ class _PhoneActions extends StatelessWidget {
 /// An icon over a short label, as a phone's row of actions has them. With
 /// [fill], the icon fills in while [selected].
 class _StackedAction extends StatelessWidget {
-  const _StackedAction({required this.icon, this.fill, required this.label, required this.onPressed, this.selected = false});
+  const _StackedAction({required this.icon, required this.label, required this.onPressed, this.fill, this.selected = false});
   final IconData icon;
   final IconData? fill;
   final String label;
@@ -889,13 +888,13 @@ class _Details extends StatelessWidget {
       else if (views != null) tr('{0} views', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');
-    final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
+    final channel = details?.channel.isNotEmpty ?? false ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Translatable(
         controller: controller,
         rite: controller.playingRite,
-        text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
+        text: deArrow.titleOf(item.id, details?.title.isNotEmpty ?? false ? details!.title : item.title),
         builder: (context, title) => SelectableText(title, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
       ),
       const SizedBox(height: 12),
@@ -940,7 +939,7 @@ class _Details extends StatelessWidget {
 
 /// Collapsible description card, three lines until expanded.
 class _Description extends StatefulWidget {
-  const _Description({required this.meta, required this.description, this.expanded = false, required this.controller});
+  const _Description({required this.meta, required this.description, required this.controller, this.expanded = false});
   final AppController controller;
   final String meta;
   final String description;
@@ -1075,7 +1074,7 @@ class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
     final controller = widget.controller;
     final player = controller.player;
     final chat = widget.replayChat == null ? null : ('chat', tr('Chat'), _KeepAlive(child: widget.replayChat!));
-    final subtitles = player != null && (controller.details?.subtitles.isNotEmpty == true || controller.secondarySubtitle != null);
+    final subtitles = player != null && ((controller.details?.subtitles.isNotEmpty ?? false) || controller.secondarySubtitle != null);
     final tabs = [
       if (widget.intro case final intro?) ('intro', tr('Overview'), _KeepAlive(child: intro)),
       if (widget.chatFirst && chat != null) chat,

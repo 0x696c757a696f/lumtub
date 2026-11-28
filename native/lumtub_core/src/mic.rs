@@ -1,4 +1,4 @@
-//! 跟读录音: records the microphone while the person repeats a subtitle
+//! Shadowing: records the microphone while the person repeats a subtitle
 //! line, as 16-bit mono, and writes the take as a WAV file.
 //!
 //! Windows, macOS and iOS record through cpal. Linux and Android load
@@ -124,14 +124,22 @@ pub fn read_wav(bytes: &[u8]) -> Result<(Vec<i16>, u32), String> {
     let mut format: Option<(u16, u32)> = None;
     while at + 8 <= bytes.len() {
         let id = &bytes[at..at + 4];
-        let size = u32::from_le_bytes(bytes[at + 4..at + 8].try_into().unwrap()) as usize;
+        let size = u32::from_le_bytes(
+            bytes[at + 4..at + 8]
+                .try_into()
+                .expect("the slice is 4 bytes"),
+        ) as usize;
         let body = at + 8;
         if id == b"fmt " && body + 16 <= bytes.len() {
             let tag = u16::from_le_bytes([bytes[body], bytes[body + 1]]);
             let channels = u16::from_le_bytes([bytes[body + 2], bytes[body + 3]]);
-            let rate = u32::from_le_bytes(bytes[body + 4..body + 8].try_into().unwrap());
+            let rate = u32::from_le_bytes(
+                bytes[body + 4..body + 8]
+                    .try_into()
+                    .expect("the slice is 4 bytes"),
+            );
             let bits = u16::from_le_bytes([bytes[body + 14], bytes[body + 15]]);
-            if !(tag == 1 || tag == 0xFFFE) || bits != 16 || channels == 0 || rate == 0 {
+            if !(tag == 1 || tag == 0xfffe) || bits != 16 || channels == 0 || rate == 0 {
                 return Err(format!(
                     "the WAV file is not 16-bit PCM (format {tag}, {bits} bits)"
                 ));
@@ -230,6 +238,8 @@ pub fn join(parts: &[Part], gap: f64) -> Result<Vec<u8>, String> {
 /// [json] must point at [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_mic_join(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let ask: serde_json::Value =
         serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let done = (|| -> Result<f64, String> {
@@ -286,6 +296,8 @@ pub extern "C" fn lumtub_mic_start() -> *mut c_char {
 /// [path] must point at [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_mic_stop(path: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `path` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let path = unsafe { text(path, length) };
     let Some((samples, rate)) = stop() else {
         return give_json(&serde_json::json!({ "error": "not recording" }));
@@ -397,11 +409,16 @@ mod platform {
     const RATE: u32 = 44100;
 
     unsafe fn symbol<T>(library: *mut c_void, name: &[u8]) -> Option<T> {
+        // SAFETY: `name` is a NUL-terminated byte string and `library` is the handle `dlopen`
+        // returned and never closes, per this function's contract.
         let found = unsafe { libc::dlsym(library, name.as_ptr() as *const c_char) };
+        // SAFETY: `found` is a non-null symbol that the caller's `# Safety` says has the C
+        // signature `T` describes; `T` is a pointer-sized function type.
         (!found.is_null()).then(|| unsafe { std::mem::transmute_copy::<*mut c_void, T>(&found) })
     }
 
     pub(super) fn capture(stop: Arc<AtomicBool>, heard: Arc<Mutex<Heard>>, ready: Ready) {
+        // SAFETY: `dlopen` gets a NUL-terminated library name literal.
         let library = unsafe {
             libc::dlopen(
                 c"libasound.so.2".as_ptr(),
@@ -412,6 +429,8 @@ mod platform {
             let _ = ready.send(Err("libasound.so.2 is not installed".into()));
             return;
         }
+        // SAFETY: Each name is a NUL-terminated literal, and each `T` is the C signature of that
+        // ALSA function.
         let functions = unsafe {
             (
                 symbol::<Open>(library, b"snd_pcm_open\0"),
@@ -427,14 +446,20 @@ mod platform {
             return;
         };
         let mut pcm: *mut c_void = std::ptr::null_mut();
+        // SAFETY: `open` is `snd_pcm_open`; `pcm` is a valid out-pointer and the device name is a
+        // NUL-terminated literal.
         let opened = unsafe { open(&mut pcm, c"default".as_ptr(), CAPTURE, 0) };
         if opened < 0 || pcm.is_null() {
             let _ = ready.send(Err(format!("no microphone (ALSA error {opened})")));
             return;
         }
         // Half a second of buffer; ALSA resamples to this rate if need be.
+        // SAFETY: `set_params` is `snd_pcm_set_params` and `pcm` is the handle `open` just filled
+        // in and checked non-null.
         let set = unsafe { set_params(pcm, S16_LE, RW_INTERLEAVED, 1, RATE, 1, 500_000) };
         if set < 0 {
+            // SAFETY: `pcm` is the handle `open` filled in; it is closed here once and not used
+            // again.
             unsafe { close(pcm) };
             let _ = ready.send(Err(format!(
                 "the microphone refused 16-bit mono (ALSA error {set})"
@@ -447,6 +472,8 @@ mod platform {
         let _ = ready.send(Ok(()));
         let mut buffer = vec![0i16; 2048];
         while !stop.load(Ordering::SeqCst) {
+            // SAFETY: `read` is `snd_pcm_readi`; `pcm` is open and `buffer` has room for the
+            // `buffer.len()` mono 16-bit frames asked for.
             let got = unsafe {
                 read(
                     pcm,
@@ -455,6 +482,7 @@ mod platform {
                 )
             };
             if got < 0 {
+                // SAFETY: `recover` is `snd_pcm_recover` and `pcm` is still open.
                 if unsafe { recover(pcm, got as c_int, 1) } < 0 {
                     break;
                 }
@@ -464,6 +492,7 @@ mod platform {
                 heard.add(&buffer[..got as usize], 1, |s| s);
             }
         }
+        // SAFETY: `pcm` is open and is closed here once, after the last use.
         unsafe { close(pcm) };
     }
 }
@@ -487,16 +516,23 @@ mod platform {
     const RATE: i32 = 44100;
 
     unsafe fn symbol<T>(library: *mut c_void, name: &[u8]) -> Option<T> {
+        // SAFETY: `name` is a NUL-terminated byte string and `library` is the handle `dlopen`
+        // returned and never closes, per this function's contract.
         let found = unsafe { libc::dlsym(library, name.as_ptr() as *const c_char) };
+        // SAFETY: `found` is a non-null symbol that the caller's `# Safety` says has the C
+        // signature `T` describes; `T` is a pointer-sized function type.
         (!found.is_null()).then(|| unsafe { std::mem::transmute_copy::<*mut c_void, T>(&found) })
     }
 
     pub(super) fn capture(stop: Arc<AtomicBool>, heard: Arc<Mutex<Heard>>, ready: Ready) {
+        // SAFETY: `dlopen` gets a NUL-terminated library name literal.
         let library = unsafe { libc::dlopen(c"libaaudio.so".as_ptr(), libc::RTLD_NOW) };
         if library.is_null() {
             let _ = ready.send(Err("recording needs Android 8 or later".into()));
             return;
         }
+        // SAFETY: Each name is a NUL-terminated literal, and each `T` is the C signature of that
+        // AAudio function.
         let f = unsafe {
             (
                 symbol::<CreateBuilder>(library, b"AAudio_createStreamBuilder\0"),
@@ -532,11 +568,14 @@ mod platform {
             return;
         };
         let mut builder: *mut c_void = std::ptr::null_mut();
+        // SAFETY: `create` is `AAudio_createStreamBuilder` and `builder` is a valid out-pointer.
         if unsafe { create(&mut builder) } < 0 || builder.is_null() {
             let _ = ready.send(Err("AAudio could not start".into()));
             return;
         }
         let mut stream: *mut c_void = std::ptr::null_mut();
+        // SAFETY: `builder` was just created and checked non-null; it is deleted here once, after
+        // `open` filled in `stream`, and not used again.
         let opened = unsafe {
             direction(builder, DIRECTION_INPUT);
             format(builder, FORMAT_PCM_I16);
@@ -550,8 +589,10 @@ mod platform {
             let _ = ready.send(Err(format!("no microphone (AAudio error {opened})")));
             return;
         }
+        // SAFETY: `start` is `AAudioStream_requestStart` and `stream` was checked non-null.
         let started = unsafe { start(stream) };
         if started < 0 {
+            // SAFETY: `stream` is open and is closed here once; it is not used again.
             unsafe { close(stream) };
             let _ = ready.send(Err(format!(
                 "the microphone did not start (AAudio error {started})"
@@ -559,12 +600,15 @@ mod platform {
             return;
         }
         if let Ok(mut heard) = heard.lock() {
+            // SAFETY: `sample_rate` is `AAudioStream_getSampleRate` and `stream` is open.
             heard.rate = unsafe { sample_rate(stream) }.max(8000) as u32;
         }
         let _ = ready.send(Ok(()));
         let mut buffer = vec![0i16; 2048];
         while !stop.load(Ordering::SeqCst) {
             // A tenth of a second at most, so stopping is quick.
+            // SAFETY: `read` is `AAudioStream_read`; `stream` is open and `buffer` has room for the
+            // `buffer.len()` mono 16-bit frames asked for.
             let got = unsafe {
                 read(
                     stream,
@@ -580,6 +624,7 @@ mod platform {
                 heard.add(&buffer[..got as usize], 1, |s| s);
             }
         }
+        // SAFETY: `stream` is open; it is stopped and closed here once, after the last use.
         unsafe {
             stop_stream(stream);
             close(stream);
@@ -618,7 +663,7 @@ mod tests {
         assert_eq!(u32::from_le_bytes(file[28..32].try_into().unwrap()), 96000);
         assert_eq!(&file[36..40], b"data");
         assert_eq!(u32::from_le_bytes(file[40..44].try_into().unwrap()), 6);
-        assert_eq!(&file[44..], &[1, 0, 0xFE, 0xFF, 0x2C, 0x01]);
+        assert_eq!(&file[44..], &[1, 0, 0xfe, 0xff, 0x2c, 0x01]);
     }
 
     #[test]

@@ -11,7 +11,8 @@ namespace {
 ///
 /// Redefined in case the developer's machine has a Windows SDK older than
 /// version 10.0.22000.0.
-/// See: https://docs.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute
+/// See:
+/// https://docs.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
@@ -116,17 +117,14 @@ void WindowClassRegistrar::UnregisterWindowClass() {
   class_registered_ = false;
 }
 
-Win32Window::Win32Window() {
-  ++g_active_window_count;
-}
+Win32Window::Win32Window() { ++g_active_window_count; }
 
 Win32Window::~Win32Window() {
   --g_active_window_count;
   Destroy();
 }
 
-bool Win32Window::Create(const std::wstring& title,
-                         const Point& origin,
+bool Win32Window::Create(const std::wstring& title, const Point& origin,
                          const Size& size) {
   Destroy();
 
@@ -155,12 +153,12 @@ bool Win32Window::Create(const std::wstring& title,
 }
 
 bool Win32Window::Show() {
-  return ShowWindow(window_handle_, start_maximized_ ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL);
+  return ShowWindow(window_handle_,
+                    start_maximized_ ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL);
 }
 
 // static
-LRESULT CALLBACK Win32Window::WndProc(HWND const window,
-                                      UINT const message,
+LRESULT CALLBACK Win32Window::WndProc(HWND const window, UINT const message,
                                       WPARAM const wparam,
                                       LPARAM const lparam) noexcept {
   if (message == WM_NCCREATE) {
@@ -179,9 +177,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND const window,
 }
 
 LRESULT
-Win32Window::MessageHandler(HWND hwnd,
-                            UINT const message,
-                            WPARAM const wparam,
+Win32Window::MessageHandler(HWND hwnd, UINT const message, WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
     case WM_DESTROY:
@@ -196,7 +192,8 @@ Win32Window::MessageHandler(HWND hwnd,
       auto info = reinterpret_cast<MINMAXINFO*>(lparam);
       const double scale_factor =
           FlutterDesktopGetDpiForMonitor(
-              MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)) / 96.0;
+              MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)) /
+          96.0;
       info->ptMinTrackSize.x = Scale(kMinimumWidth, scale_factor);
       info->ptMinTrackSize.y = Scale(kMinimumHeight, scale_factor);
       return 0;
@@ -278,9 +275,7 @@ RECT Win32Window::GetClientArea() {
   return frame;
 }
 
-HWND Win32Window::GetHandle() {
-  return window_handle_;
-}
+HWND Win32Window::GetHandle() { return window_handle_; }
 
 void Win32Window::SetQuitOnClose(bool quit_on_close) {
   quit_on_close_ = quit_on_close;

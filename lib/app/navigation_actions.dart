@@ -268,7 +268,7 @@ extension NavigationActions on AppController {
   /// are read.
   VideoListLoader _channelLoader(VideoRepository repository, ChannelRef ref, ChannelTab tab, ChannelSort sort) {
     channelLengths = null;
-    Listing Function() open = () => repository.channelTab(ref, tab, sort: sort);
+    var open = () => repository.channelTab(ref, tab, sort: sort);
     if (sort.rank != null && sort.fits(tab)) {
       final root = cacheRoot;
       final lengths = channelLengths = ChannelLengths(
@@ -528,7 +528,7 @@ extension NavigationActions on AppController {
     return following;
   }
 
-  /// 换一批.
+  /// Shuffles the home feed (换一批).
   void shuffleHomeFeed() {
     homeFeed?.mix = preferences.feedMix;
     homeFeed?.shuffle(filter: visible);

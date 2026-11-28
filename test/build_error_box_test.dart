@@ -15,8 +15,8 @@ void main() {
     final empty = List<VocabularyWord>.unmodifiable(const []);
     expect(newestFirstWords(empty), isEmpty);
     final words = List<VocabularyWord>.unmodifiable([
-      VocabularyWord(word: 'a', language: 'it', added: DateTime(2026, 1, 1)),
-      VocabularyWord(word: 'b', language: 'it', added: DateTime(2026, 2, 1)),
+      VocabularyWord(word: 'a', language: 'it', added: DateTime(2026)),
+      VocabularyWord(word: 'b', language: 'it', added: DateTime(2026, 2)),
     ]);
     expect(newestFirstWords(words).map((w) => w.word), ['b', 'a']);
     expect(identical(newestFirstWords(words), newestFirstWords(words)), isTrue);

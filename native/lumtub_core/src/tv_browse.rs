@@ -327,7 +327,11 @@ fn tiles<'a>(
                 tiles(value, shorts, shelf, out);
             }
         }
-        Value::Array(list) => list.iter().for_each(|v| tiles(v, shorts, shelf, out)),
+        Value::Array(list) => {
+            for value in list {
+                tiles(value, shorts, shelf, out);
+            }
+        }
         _ => {}
     }
 }
@@ -440,6 +444,8 @@ pub unsafe extern "C" fn lumtub_tv_browse(
     length: usize,
     shorts: bool,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `body` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };

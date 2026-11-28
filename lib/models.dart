@@ -3,6 +3,71 @@ import 'dart:convert';
 import 'l10n/l10n.dart';
 
 class VideoItem {
+  const VideoItem({
+    required this.id,
+    required this.title,
+    required this.channel,
+    required this.url, this.duration,
+    this.viewCount,
+    this.watching,
+    this.channelId,
+    this.published,
+    this.liveStatus,
+    this.scheduledStart,
+    this.width,
+    this.height,
+    this.description,
+    this.isShortListing = false,
+    this.membersOnly = false,
+    this.age,
+  });
+
+  factory VideoItem.fromJson(Map<String, dynamic> map) {
+    final raw = map['id']?.toString() ?? '';
+    // yt-dlp flat playlist results normally expose an 11-character YouTube ID.
+    final id = _videoId.hasMatch(raw)
+        ? raw
+        : (_watchUrlId.firstMatch(map['url']?.toString() ?? '')?.group(1) ?? '');
+    if (id.isEmpty) throw const FormatException('Missing YouTube video ID');
+    final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
+    final value = map['duration'];
+    // Streams list the people watching now instead.
+    final views = map['view_count'];
+    final watching = map['concurrent_view_count'];
+    final channelId = map['channel_id']?.toString();
+    final width = map['width'];
+    final height = map['height'];
+    final description = map['description'];
+    final listed = '${map['original_url'] ?? ''} ${map['webpage_url'] ?? ''}';
+    final liveStatus = const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null;
+    DateTime? unixTime(Object? value) {
+      final seconds = value is num ? value.toInt() : int.tryParse('${value ?? ''}');
+      return seconds == null || seconds <= 0 ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true).toLocal();
+    }
+    final savedScheduledStart = DateTime.tryParse(map['scheduled_start']?.toString() ?? '')?.toLocal();
+    return VideoItem(
+      id: id,
+      title: map['title']?.toString() ?? 'Untitled video',
+      channel: name.toString(),
+      duration: value is num ? value.toInt() : null,
+      url: 'https://www.youtube.com/watch?v=$id',
+      viewCount: views is num ? views.toInt() : null,
+      watching: watching is num ? watching.toInt() : null,
+      channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
+      // Lists give only about when ("3 days ago"); the core and yt-dlp's
+      // approximate_date turn that into a timestamp.
+      published: DateTime.tryParse(map['published']?.toString() ?? '') ?? (liveStatus == null || liveStatus == 'was_live' ? unixTime(map['timestamp']) : null),
+      liveStatus: liveStatus,
+      scheduledStart: savedScheduledStart ?? (liveStatus == 'is_upcoming' ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp']) : null),
+      width: width is num ? width.toInt() : null,
+      height: height is num ? height.toInt() : null,
+      description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
+      isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
+      membersOnly: map['availability'] == 'subscriber_only',
+      age: map['age'] is String ? map['age'] as String : null,
+    );
+  }
+
   final String id;
   final String title;
   final String channel;
@@ -39,26 +104,6 @@ class VideoItem {
   /// What a card shows: people watching for a live stream, else views.
   int? get audience => isLive ? watching ?? viewCount : viewCount;
   bool get isUpcoming => liveStatus == 'is_upcoming';
-
-  const VideoItem({
-    required this.id,
-    required this.title,
-    required this.channel,
-    this.duration,
-    required this.url,
-    this.viewCount,
-    this.watching,
-    this.channelId,
-    this.published,
-    this.liveStatus,
-    this.scheduledStart,
-    this.width,
-    this.height,
-    this.description,
-    this.isShortListing = false,
-    this.membersOnly = false,
-    this.age,
-  });
 
   /// This video credited to [ref], keeping the known name when [ref] has none.
   VideoItem withChannel(ChannelRef ref) => VideoItem(
@@ -186,52 +231,6 @@ class VideoItem {
   static final _videoId = RegExp(r'^[\w-]{11}$');
   static final _watchUrlId = RegExp(r'[?&]v=([\w-]{11})');
 
-  factory VideoItem.fromJson(Map<String, dynamic> map) {
-    final raw = map['id']?.toString() ?? '';
-    // yt-dlp flat playlist results normally expose an 11-character YouTube ID.
-    final id = _videoId.hasMatch(raw)
-        ? raw
-        : (_watchUrlId.firstMatch(map['url']?.toString() ?? '')?.group(1) ?? '');
-    if (id.isEmpty) throw const FormatException('Missing YouTube video ID');
-    final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
-    final value = map['duration'];
-    // Streams list the people watching now instead.
-    final views = map['view_count'];
-    final watching = map['concurrent_view_count'];
-    final channelId = map['channel_id']?.toString();
-    final width = map['width'];
-    final height = map['height'];
-    final description = map['description'];
-    final listed = '${map['original_url'] ?? ''} ${map['webpage_url'] ?? ''}';
-    final liveStatus = const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null;
-    DateTime? unixTime(Object? value) {
-      final seconds = value is num ? value.toInt() : int.tryParse('${value ?? ''}');
-      return seconds == null || seconds <= 0 ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true).toLocal();
-    }
-    final savedScheduledStart = DateTime.tryParse(map['scheduled_start']?.toString() ?? '')?.toLocal();
-    return VideoItem(
-      id: id,
-      title: map['title']?.toString() ?? 'Untitled video',
-      channel: name.toString(),
-      duration: value is num ? value.toInt() : null,
-      url: 'https://www.youtube.com/watch?v=$id',
-      viewCount: views is num ? views.toInt() : null,
-      watching: watching is num ? watching.toInt() : null,
-      channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
-      // Lists give only about when ("3 days ago"); the core and yt-dlp's
-      // approximate_date turn that into a timestamp.
-      published: DateTime.tryParse(map['published']?.toString() ?? '') ?? (liveStatus == null || liveStatus == 'was_live' ? unixTime(map['timestamp']) : null),
-      liveStatus: liveStatus,
-      scheduledStart: savedScheduledStart ?? (liveStatus == 'is_upcoming' ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp']) : null),
-      width: width is num ? width.toInt() : null,
-      height: height is num ? height.toInt() : null,
-      description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
-      isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
-      membersOnly: map['availability'] == 'subscriber_only',
-      age: map['age'] is String ? map['age'] as String : null,
-    );
-  }
-
   static List<VideoItem> fromJsonLines(String stdout) {
     final results = <VideoItem>[];
     final seen = <String>{};
@@ -310,7 +309,7 @@ class ChannelResult {
     final thumbnails = map['thumbnails'];
     String? avatar;
     if (thumbnails is List) {
-      for (final t in thumbnails.whereType<Map>()) {
+      for (final t in thumbnails.whereType<Map<String, Object?>>()) {
         final url = t['url']?.toString() ?? '';
         if (url.isNotEmpty) avatar = url;
       }
@@ -349,7 +348,7 @@ class PlaylistResult {
     String? thumbnail;
     final thumbnails = map['thumbnails'];
     if (thumbnails is List) {
-      for (final t in thumbnails.whereType<Map>()) {
+      for (final t in thumbnails.whereType<Map<String, Object?>>()) {
         final u = t['url']?.toString() ?? '';
         if (u.isNotEmpty) thumbnail = u.startsWith('//') ? 'https:$u' : u;
       }
@@ -426,7 +425,7 @@ class Chapter {
     if (raw is! List) return const [];
     Duration? seconds(Object? value) => value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
     final chapters = [
-      for (final entry in raw.whereType<Map>())
+      for (final entry in raw.whereType<Map<String, Object?>>())
         if (seconds(entry['start_time']) case final start?)
           Chapter(start, seconds(entry['end_time']) ?? Duration.zero, entry['title']?.toString().trim() ?? ''),
     ]..sort((a, b) => a.start.compareTo(b.start));
@@ -456,25 +455,6 @@ class Chapter {
 }
 
 class VideoDetails {
-  final String title;
-  final String channel;
-  final String? channelUrl;
-  final String? channelId;
-  final DateTime? uploadDate;
-  final int? viewCount;
-  final int? likeCount;
-  final String description;
-  final List<Chapter> chapters;
-  /// Every subtitle YouTube offers: uploaded ones, then automatic captions
-  /// and their machine translations.
-  final List<SubtitleOption> subtitles;
-  /// When a live stream or premiere that has not started is scheduled to.
-  final DateTime? scheduledStart;
-  /// The language the video is in, as yt-dlp tags it, when known.
-  final String? language;
-  /// What yt-dlp knows of it as music: its category and song tags.
-  final MusicTags music;
-
   const VideoDetails({
     required this.title,
     required this.channel,
@@ -513,6 +493,25 @@ class VideoDetails {
       music: MusicTags.fromJson(map),
     );
   }
+
+  final String title;
+  final String channel;
+  final String? channelUrl;
+  final String? channelId;
+  final DateTime? uploadDate;
+  final int? viewCount;
+  final int? likeCount;
+  final String description;
+  final List<Chapter> chapters;
+  /// Every subtitle YouTube offers: uploaded ones, then automatic captions
+  /// and their machine translations.
+  final List<SubtitleOption> subtitles;
+  /// When a live stream or premiere that has not started is scheduled to.
+  final DateTime? scheduledStart;
+  /// The language the video is in, as yt-dlp tags it, when known.
+  final String? language;
+  /// What yt-dlp knows of it as music: its category and song tags.
+  final MusicTags music;
 
   /// These details with YouTube's [title] and [description] in the
   /// interface language. Chapters come from the description's timestamps,
@@ -610,12 +609,6 @@ class VideoDetails {
 /// tags YouTube Music gives its tracks.
 class MusicTags {
   const MusicTags({this.categories = const [], this.track, this.artists = const [], this.album});
-  final List<String> categories;
-  final String? track;
-  final List<String> artists;
-  final String? album;
-
-  bool get inMusicCategory => categories.contains('Music');
 
   factory MusicTags.fromJson(Map<String, dynamic> map) {
     String? text(Object? value) => value is String && value.trim().isNotEmpty ? value.trim() : null;
@@ -634,6 +627,13 @@ class MusicTags {
       album: text(map['album']),
     );
   }
+
+  final List<String> categories;
+  final String? track;
+  final List<String> artists;
+  final String? album;
+
+  bool get inMusicCategory => categories.contains('Music');
 }
 
 /// A subtitle track of a video that can be added to the player by URL.
@@ -694,8 +694,8 @@ class SubtitleOption {
     ];
   }
 
-  static (String, String)? _vtt(List formats) {
-    final maps = formats.whereType<Map>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
+  static (String, String)? _vtt(List<Object?> formats) {
+    final maps = formats.whereType<Map<String, Object?>>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
     final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ?? maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
     return pick == null ? null : ('${pick['url']}', '${pick['name'] ?? ''}');
   }

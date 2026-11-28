@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/live_chat.dart';
 import 'package:lumtub/ui/live_chat_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   List<LiveChatMessage> messages(int count) => [

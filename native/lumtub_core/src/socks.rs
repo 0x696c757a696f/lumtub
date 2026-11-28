@@ -113,7 +113,10 @@ impl Bridge {
                 }
                 let id = ids.fetch_add(1, Ordering::Relaxed);
                 if let Ok(copy) = client.try_clone() {
-                    tracked.lock().unwrap().insert(id, copy);
+                    tracked
+                        .lock()
+                        .expect("lock poisoned by a panic")
+                        .insert(id, copy);
                 }
                 serving.fetch_add(1, Ordering::SeqCst);
                 let (proxy, login, mine, count) = (
@@ -127,13 +130,17 @@ impl Bridge {
                     .stack_size(STACK)
                     .spawn(move || {
                         handle(client, &proxy, &login, &mine, id);
-                        mine.lock().unwrap().remove(&id);
+                        mine.lock().expect("lock poisoned by a panic").remove(&id);
                         count.fetch_sub(1, Ordering::SeqCst);
                     });
                 if spawned.is_err() {
                     // The client was moved into the closure that never
                     // ran; its tracked copy closes the socket.
-                    if let Some(socket) = tracked.lock().unwrap().remove(&id) {
+                    if let Some(socket) = tracked
+                        .lock()
+                        .expect("lock poisoned by a panic")
+                        .remove(&id)
+                    {
                         let _ = socket.shutdown(Shutdown::Both);
                     }
                     serving.fetch_sub(1, Ordering::SeqCst);
@@ -163,7 +170,7 @@ impl Bridge {
     pub fn close(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
         self.listener.stop();
-        for (_, socket) in self.open.lock().unwrap().drain() {
+        for (_, socket) in self.open.lock().expect("lock poisoned by a panic").drain() {
             let _ = socket.shutdown(Shutdown::Both);
         }
     }
@@ -226,7 +233,9 @@ fn handle(
     };
     let (mut upstream, forward) = upstream;
     if let Ok(copy) = upstream.try_clone() {
-        open.lock().unwrap().insert(id | 1 << 63, copy);
+        open.lock()
+            .expect("lock poisoned by a panic")
+            .insert(id | 1 << 63, copy);
     }
     let _ = reader.get_ref().set_read_timeout(None);
     let sent = match &forward {
@@ -238,12 +247,16 @@ fn handle(
     reader.consume(early.len());
     if sent.is_err() || upstream.write_all(&early).is_err() {
         let _ = upstream.shutdown(Shutdown::Both);
-        open.lock().unwrap().remove(&(id | 1 << 63));
+        open.lock()
+            .expect("lock poisoned by a panic")
+            .remove(&(id | 1 << 63));
         return;
     }
     let (Ok(mut up_read), Ok(mut up_write)) = (upstream.try_clone(), upstream.try_clone()) else {
         let _ = upstream.shutdown(Shutdown::Both);
-        open.lock().unwrap().remove(&(id | 1 << 63));
+        open.lock()
+            .expect("lock poisoned by a panic")
+            .remove(&(id | 1 << 63));
         return;
     };
     let mut client_read = reader.into_inner();
@@ -257,14 +270,18 @@ fn handle(
     let Ok(to_upstream) = to_upstream else {
         let _ = writer.shutdown(Shutdown::Both);
         let _ = upstream.shutdown(Shutdown::Both);
-        open.lock().unwrap().remove(&(id | 1 << 63));
+        open.lock()
+            .expect("lock poisoned by a panic")
+            .remove(&(id | 1 << 63));
         return;
     };
     pipe(&mut up_read, &mut writer);
     let _ = writer.shutdown(Shutdown::Write);
     let _ = to_upstream.join();
     let _ = upstream.shutdown(Shutdown::Both);
-    open.lock().unwrap().remove(&(id | 1 << 63));
+    open.lock()
+        .expect("lock poisoned by a panic")
+        .remove(&(id | 1 << 63));
 }
 
 /// Copies [from] to [to] until either side ends.
@@ -521,6 +538,8 @@ fn socks4(socket: &mut TcpStream, proxy: &Proxy, host: &str, port: u16) -> std::
 /// [url] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_socks_start(url: *const u8, len: usize) -> *mut Bridge {
+    // SAFETY: The caller passes `url` pointing at `len` readable bytes, per this function's `#
+    // Safety`.
     let Some(proxy) = Proxy::parse(unsafe { crate::taste::text(url, len) }) else {
         return std::ptr::null_mut();
     };
@@ -533,6 +552,8 @@ pub unsafe extern "C" fn lumtub_socks_start(url: *const u8, len: usize) -> *mut 
 /// [bridge] came from [lumtub_socks_start] and is not closed.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_socks_port(bridge: *const Bridge) -> u16 {
+    // SAFETY: `bridge` is null or came from `lumtub_socks_start` and is not closed, per this
+    // function's `# Safety`.
     unsafe { bridge.as_ref() }.map_or(0, Bridge::port)
 }
 
@@ -543,6 +564,8 @@ pub unsafe extern "C" fn lumtub_socks_port(bridge: *const Bridge) -> u16 {
 /// [bridge] came from [lumtub_socks_start] and is not closed.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_socks_token(bridge: *const Bridge) -> *mut std::os::raw::c_char {
+    // SAFETY: `bridge` is null or came from `lumtub_socks_start` and is not closed, per this
+    // function's `# Safety`.
     crate::taste::give(unsafe { bridge.as_ref() }.map_or(String::new(), |b| b.token().to_owned()))
 }
 
@@ -553,6 +576,8 @@ pub unsafe extern "C" fn lumtub_socks_token(bridge: *const Bridge) -> *mut std::
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_socks_close(bridge: *mut Bridge) {
     if !bridge.is_null() {
+        // SAFETY: `bridge` is non-null and came from `Box::into_raw` in `lumtub_socks_start`; the
+        // caller closes it once, per this function's `# Safety`.
         drop(unsafe { Box::from_raw(bridge) });
     }
 }

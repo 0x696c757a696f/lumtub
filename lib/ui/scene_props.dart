@@ -290,7 +290,7 @@ void sprout(Canvas canvas, Offset foot, double size, {bool night = false}) {
       ..quadraticBezierTo(base.dx + side * size * 0.42, base.dy + size * 0.06, base.dx, base.dy)
       ..close();
     final b = leaf.getBounds();
-    canvas.drawPath(leaf, _linear(b, night ? const [Color(0xFF6FD08A), Color(0xFF1E6A3A)] : const [Color(0xFFD6FF8A), Color(0xFF6CD13A), Color(0xFF2E9A1E)], begin: Alignment.topCenter, end: Alignment.bottomCenter));
+    canvas.drawPath(leaf, _linear(b, night ? const [Color(0xFF6FD08A), Color(0xFF1E6A3A)] : const [Color(0xFFD6FF8A), Color(0xFF6CD13A), Color(0xFF2E9A1E)]));
     // The vein and the shine.
     canvas.drawLine(base, Offset.lerp(base, tip, 0.85)!, Paint()
       ..strokeWidth = size * 0.02

@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
 import '../ui/app_icons.dart';
@@ -38,7 +38,7 @@ class NormalItem extends StatelessWidget {
 }
 
 class SwitchItem extends StatelessWidget {
-  const SwitchItem({super.key, required this.title, this.subtitle, this.leading, required this.value, required this.onChanged, this.onTap, this.enabled = true});
+  const SwitchItem({super.key, required this.title, required this.value, required this.onChanged, this.subtitle, this.leading, this.onTap, this.enabled = true});
   final String title;
   final String? subtitle;
   final Widget? leading;
@@ -79,7 +79,7 @@ class SwitchItem extends StatelessWidget {
 }
 
 class PopupItem<T> extends StatelessWidget {
-  const PopupItem({super.key, required this.title, this.leading, required this.value, required this.values, required this.onSelected, this.enabled = true});
+  const PopupItem({super.key, required this.title, required this.value, required this.values, required this.onSelected, this.leading, this.enabled = true});
   final String title;
   final Widget? leading;
   final T value;
@@ -95,7 +95,7 @@ class PopupItem<T> extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final box = context.findRenderObject() as RenderBox;
+    final box = context.findRenderObject()! as RenderBox;
     final origin = box.localToGlobal(Offset.zero);
     final left = origin.dx + (leading == null ? 16 : 72);
     final picked = await showMenu<T>(
@@ -127,7 +127,7 @@ class PopupItem<T> extends StatelessWidget {
 }
 
 class SelectDialog<T> extends StatelessWidget {
-  const SelectDialog({super.key, this.value, required this.values, required this.title, this.subtitleBuilder});
+  const SelectDialog({required this.values, required this.title, super.key, this.value, this.subtitleBuilder});
   final T? value;
   final List<(T, String)> values;
   final String title;
@@ -218,10 +218,9 @@ Future<void> pickWithSlider(
   required double value,
   required double min,
   required double max,
-  int? divisions,
+  required ValueChanged<double> onSelected, int? divisions,
   String suffix = '',
   int precise = 0,
-  required ValueChanged<double> onSelected,
 }) async {
   final result = await showDialog<double>(
     context: context,

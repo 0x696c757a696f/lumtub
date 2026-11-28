@@ -22,7 +22,7 @@ void main() {
   test('French elision looks up the word after the apostrophe', () {
     final fr = WiktionaryDictionary.parse('homme\t\tɔm\tn.\tn. 人\tn. man\t\n', 'fr');
     expect(fr.lookup("l'homme").single.word, 'homme');
-    final tokens = fr.segment("C’est l’homme.");
+    final tokens = fr.segment('C’est l’homme.');
     expect(tokens.where((t) => t.isWord).map((t) => t.key), ["C'est", "l'homme"]);
     expect(tokens.map((t) => t.text).join(), 'C’est l’homme.');
   });

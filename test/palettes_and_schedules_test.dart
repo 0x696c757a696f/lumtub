@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/sun_times.dart';
@@ -8,6 +7,7 @@ import 'package:lumtub/sun_zones.dart';
 import 'package:lumtub/ui/palettes.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/warm_layer.dart';
+import 'package:material_ui/material_ui.dart';
 
 double _contrast(Color a, Color b) {
   final la = a.computeLuminance(), lb = b.computeLuminance();
@@ -90,7 +90,7 @@ void main() {
     // A candle takes all the blue out of white; 6000 K hardly any.
     expect(WarmLayer.tint(AppearanceSettings.warmthOf(1900)).b, lessThan(0.05));
     expect(WarmLayer.tint(AppearanceSettings.warmthOf(6000)).b, greaterThan(0.9));
-    const hours = AppearanceSettings(eyeCare: EyeCare.hours, eyeCareStart: 20, eyeCareEnd: 7, warmth: 0.6);
+    const hours = AppearanceSettings(eyeCare: EyeCare.hours, warmth: 0.6);
     double at(int hour, int minute) => hours.warmthAt(DateTime(2026, 11, 7, hour, minute));
     expect(at(12, 0), 0);
     expect(at(19, 25), 0);

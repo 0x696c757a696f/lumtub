@@ -6,15 +6,15 @@ import 'package:media_kit/media_kit.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
-import '../subtitle_translation.dart';
 import '../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
+import '../subtitle_translation.dart';
 import '../translation.dart' show TranslationException;
+import 'app_icons.dart';
+import 'common.dart' show ErrorBanner;
+import 'learning/learning_page.dart';
 import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
-import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
-import 'app_icons.dart';
-import 'learning/learning_page.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right. A choice applies at once and the panel stays open; a track
@@ -86,7 +86,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
   @override
   void dispose() {
     for (final s in _subscriptions) {
-      s.cancel();
+      unawaited(s.cancel());
     }
     widget.controller.removeListener(_changed);
     super.dispose();

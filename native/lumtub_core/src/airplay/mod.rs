@@ -91,7 +91,7 @@ fn address(text: &str) -> Result<SocketAddr, String> {
 fn player(id: u64) -> Result<Arc<Player>, String> {
     state()
         .lock()
-        .unwrap()
+        .expect("lock poisoned by a panic")
         .players
         .get(&id)
         .cloned()
@@ -110,7 +110,7 @@ pub fn handle(ask: &str) -> Json {
                 // A new pairing replaces the earlier ones, which the TV has
                 // abandoned; they are closed outside the lock.
                 let old: Vec<Pairing> = {
-                    let mut s = state().lock().unwrap();
+                    let mut s = state().lock().expect("lock poisoned by a panic");
                     let old = s.pairings.drain().map(|(_, p)| p).collect();
                     s.pairings.insert(
                         id,
@@ -131,7 +131,7 @@ pub fn handle(ask: &str) -> Json {
             Ask::PairFinish { pairing: id, pin } => {
                 let mut p = state()
                     .lock()
-                    .unwrap()
+                    .expect("lock poisoned by a panic")
                     .pairings
                     .remove(&id)
                     .ok_or("pairing ended; start again")?;
@@ -159,7 +159,7 @@ pub fn handle(ask: &str) -> Json {
                 let played = Player::play(address(&a)?, auth, v2, &url, position)?;
                 let id = next();
                 let old: Vec<Arc<Player>> = {
-                    let mut s = state().lock().unwrap();
+                    let mut s = state().lock().expect("lock poisoned by a panic");
                     let old = s.players.drain().map(|(_, p)| p).collect();
                     s.players.insert(id, Arc::new(played));
                     old
@@ -178,7 +178,11 @@ pub fn handle(ask: &str) -> Json {
             Ask::Rate { session, value } => player(session)?.rate(value).map(|_| json!({})),
             Ask::Seek { session, seconds } => player(session)?.seek(seconds).map(|_| json!({})),
             Ask::Stop { session } => {
-                let removed = state().lock().unwrap().players.remove(&session);
+                let removed = state()
+                    .lock()
+                    .expect("lock poisoned by a panic")
+                    .players
+                    .remove(&session);
                 if let Some(p) = removed {
                     p.stop();
                 }
@@ -196,6 +200,7 @@ pub fn handle(ask: &str) -> Json {
 /// [json] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_airplay(json: *const u8, len: usize) -> *mut std::os::raw::c_char {
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, as this function requires.
     crate::taste::give_json(&handle(unsafe { crate::taste::text(json, len) }))
 }
 

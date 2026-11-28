@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'theme.dart';
 import '../device.dart';
 import '../l10n/l10n.dart';
 import '../system_env.dart';
@@ -15,6 +14,7 @@ import 'app_icons.dart';
 import 'motion.dart';
 import 'reveal.dart';
 import 'side_sheet.dart';
+import 'theme.dart';
 
 export '../models.dart' show formatBytes;
 
@@ -44,7 +44,7 @@ bool nearListEnd(ScrollMetrics metrics) => metrics.extentAfter < (metrics.viewpo
 /// while scrolling and also when its content changes size, so a first page
 /// too short to scroll on a tall window still brings the next one.
 class NearEndListener extends StatelessWidget {
-  const NearEndListener({super.key, required this.onNearEnd, this.enabled = true, required this.child});
+  const NearEndListener({super.key, required this.onNearEnd, required this.child, this.enabled = true});
   final VoidCallback onNearEnd;
   final bool enabled;
   final Widget child;

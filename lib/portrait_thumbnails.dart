@@ -157,12 +157,12 @@ abstract final class PortraitThumbnails {
           final item = parseListingEntry(line);
           if (item is VideoItem) {
             videos++;
-            portrait(item.id).then((v) => v, onError: (_) => false).then((v) {
+            unawaited(portrait(item.id).then((v) => v, onError: (_) => false).then((v) {
               held
                 ..portrait = v
                 ..done = true;
               flush();
-            });
+            }));
           } else {
             held.done = true;
           }

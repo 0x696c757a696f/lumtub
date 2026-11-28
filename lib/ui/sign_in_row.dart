@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 /// A sign-in's state with its buttons under the text, not beside it, so a
 /// phone's width or large text never squeezes them out.
 class SignInRow extends StatelessWidget {
-  const SignInRow({super.key, this.leading, required this.title, this.subtitle, this.actions = const []});
+  const SignInRow({required this.title, super.key, this.leading, this.subtitle, this.actions = const []});
   final Widget? leading;
   final Widget title;
   final Widget? subtitle;

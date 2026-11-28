@@ -1,6 +1,6 @@
 mod icons;
-mod motion;
 mod jsonc;
+mod motion;
 mod release;
 mod skins;
 mod text;
@@ -52,7 +52,11 @@ fn initial_lang() -> Lang {
         .and_then(|p| p.get("lang"));
     let saved = storage().and_then(|s| s.get_item("lang").ok().flatten());
     let browser = window.and_then(|w| w.navigator().language());
-    [from_query, saved, browser].into_iter().flatten().find_map(|c| Lang::from_code(&c)).unwrap_or(Lang::En)
+    [from_query, saved, browser]
+        .into_iter()
+        .flatten()
+        .find_map(|c| Lang::from_code(&c))
+        .unwrap_or(Lang::En)
 }
 
 fn main() {
@@ -103,7 +107,10 @@ fn App() -> impl IntoView {
     let lang = RwSignal::new(initial_lang());
     let menu = RwSignal::new(false);
     let active = RwSignal::new(String::new());
-    let ctx = Ctx { release: RwSignal::new(None), os: Os::detect() };
+    let ctx = Ctx {
+        release: RwSignal::new(None),
+        os: Os::detect(),
+    };
     let skin = SkinState::new();
 
     spawn_local(async move {
@@ -125,13 +132,18 @@ fn App() -> impl IntoView {
 
     Effect::new(move |_| {
         let open = menu.get();
-        if let Some(body) = web_sys::window().and_then(|w| w.document()).and_then(|d| d.body()) {
+        if let Some(body) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.body())
+        {
             let _ = body.class_list().toggle_with_force("menu-open", open);
         }
     });
 
     let pick_lang = move |ev: leptos::ev::Event| {
-        let Some(next) = Lang::from_code(&event_target_value(&ev)) else { return };
+        let Some(next) = Lang::from_code(&event_target_value(&ev)) else {
+            return;
+        };
         if let Some(s) = storage() {
             let _ = s.set_item("lang", next.code());
         }
@@ -142,7 +154,10 @@ fn App() -> impl IntoView {
             let loc = w.location();
             let hash = loc.hash().unwrap_or_default();
             let path = loc.pathname().unwrap_or_default();
-            if loc.replace(&format!("{path}?lang={}{hash}", next.code())).is_ok() {
+            if loc
+                .replace(&format!("{path}?lang={}{hash}", next.code()))
+                .is_ok()
+            {
                 return;
             }
         }
@@ -243,7 +258,8 @@ fn App() -> impl IntoView {
 }
 
 fn primary_button(t: &'static Text, ctx: Ctx, large: bool) -> impl IntoView {
-    let (label, href): (&'static str, Box<dyn Fn() -> String + Send + Sync>) = match ctx.os.index() {
+    let (label, href): (&'static str, Box<dyn Fn() -> String + Send + Sync>) = match ctx.os.index()
+    {
         Some(i) => {
             let suffix = ctx.os.suffix();
             (t.download_for[i], Box::new(ctx.link(suffix)))
@@ -337,13 +353,31 @@ fn Highlights(t: &'static Text, lang: Lang, skin: SkinState) -> impl IntoView {
     }
 }
 
-const LEARN_SHOTS_EN: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-fr", "4-study", "5-vocab", "6-review"];
-const LEARN_SHOTS_ZH: [&str; 6] = ["1-lookup-ja", "2-kana", "3-lookup-en", "4-video-words", "5-study", "7-review"];
+const LEARN_SHOTS_EN: [&str; 6] = [
+    "1-lookup-ja",
+    "2-kana",
+    "3-lookup-fr",
+    "4-study",
+    "5-vocab",
+    "6-review",
+];
+const LEARN_SHOTS_ZH: [&str; 6] = [
+    "1-lookup-ja",
+    "2-kana",
+    "3-lookup-en",
+    "4-video-words",
+    "5-study",
+    "7-review",
+];
 
 #[component]
 fn Learning(t: &'static Text, lang: Lang) -> impl IntoView {
     let l = &t.learn;
-    let (dir, names): (&str, &[&str]) = if lang == Lang::Zh { ("zh", &LEARN_SHOTS_ZH) } else { ("en", &LEARN_SHOTS_EN) };
+    let (dir, names): (&str, &[&str]) = if lang == Lang::Zh {
+        ("zh", &LEARN_SHOTS_ZH)
+    } else {
+        ("en", &LEARN_SHOTS_EN)
+    };
     let guide = match lang {
         Lang::En => "/learn/",
         Lang::Zh => "/learn/zh/",
@@ -469,7 +503,10 @@ fn Download(t: &'static Text, ctx: Ctx) -> impl IntoView {
         if let Some(w) = web_sys::window() {
             let _ = w.navigator().clipboard().write_text(ALTSTORE_SOURCE);
             copied.set(true);
-            set_timeout(move || copied.set(false), std::time::Duration::from_millis(1600));
+            set_timeout(
+                move || copied.set(false),
+                std::time::Duration::from_millis(1600),
+            );
         }
     };
     view! {
@@ -593,7 +630,13 @@ const GITHUB_MARK: &str = "M17.625 1.499c-2.32 0-4.354 1.203-5.625 3.03-1.271-1.
 const KOFI_MARK: &str = "M11.351 2.715c-2.7 0-4.986.025-6.83.26C2.078 3.285 0 5.154 0 8.61c0 3.506.182 6.13 1.585 8.493 1.584 2.701 4.233 4.182 7.662 4.182h.83c4.209 0 6.494-2.234 7.637-4a9.5 9.5 0 0 0 1.091-2.338C21.792 14.688 24 12.22 24 9.208v-.415c0-3.247-2.13-5.507-5.792-5.87-1.558-.156-2.65-.208-6.857-.208m0 1.947c4.208 0 5.09.052 6.571.182 2.624.311 4.13 1.584 4.13 4v.39c0 2.156-1.792 3.844-3.87 3.844h-.935l-.156.649c-.208 1.013-.597 1.818-1.039 2.546-.909 1.428-2.545 3.064-5.922 3.064h-.805c-2.571 0-4.831-.883-6.078-3.195-1.09-2-1.298-4.155-1.298-7.506 0-2.181.857-3.402 3.012-3.714 1.533-.233 3.559-.26 6.39-.26m6.547 2.287c-.416 0-.65.234-.65.546v2.935c0 .311.234.545.65.545 1.324 0 2.051-.754 2.051-2s-.727-2.026-2.052-2.026m-10.39.182c-1.818 0-3.013 1.48-3.013 3.142 0 1.533.858 2.857 1.949 3.897.727.701 1.87 1.429 2.649 1.896a1.47 1.47 0 0 0 1.507 0c.78-.467 1.922-1.195 2.623-1.896 1.117-1.039 1.974-2.364 1.974-3.897 0-1.662-1.247-3.142-3.039-3.142-1.065 0-1.792.545-2.338 1.298-.493-.753-1.246-1.298-2.312-1.298";
 const AFDIAN_MARK: &str = "M9 14.234a.567.567 0 1 0 0 1.134.567.567 0 0 0 0-1.134m5.351 1.705a.567.567 0 1 0 0 1.135.567.567 0 0 0 0-1.135M24 12.25c0 6.627-5.373 12-12 12s-12-5.373-12-12 5.373-12 12-12 12 5.373 12 12m-5.68-.708c.236-.46.367-.996.367-1.565 0-1.789-1.29-3.239-2.88-3.239-.893 0-1.692.457-2.22 1.175l-.008-.01-.017.025-.006.007-2.373 3.293c-1.53-1.135-3.592-1.598-5.693-1.104-1.95.459-3.519 1.682-4.383 3.247a.57.57 0 0 0 .249.79l.008.003a.58.58 0 0 0 .769-.245c.71-1.282 2.004-2.284 3.613-2.663 1.808-.426 3.578.006 4.837.99.032.03.069.056.11.075a.56.56 0 0 0 .72-.155l.003-.003 2.734-3.796c.312-.425.775-.705 1.288-.705.903 0 1.635.877 1.635 1.958 0 .493-.153.943-.403 1.287a.5.5 0 0 0 .087.672l.016.012a.5.5 0 0 0 .67-.081 3 3 0 0 0 .19-.25 3.4 3.4 0 0 1 .617 1.48c.226 1.648-.958 3.215-2.665 3.63l-.04.01c-.043.012-.088.02-.132.026l-1.168.198a.577.577 0 0 0-.465.656.58.58 0 0 0 .67.454l1.164-.198c.06-.008.12-.02.18-.034l.09-.02c2.293-.556 3.851-2.656 3.552-4.837a4.6 4.6 0 0 0-1.003-2.307z";
 
-fn give(class: &'static str, href: &'static str, mark: &'static str, name: &'static str, note: &'static str) -> impl IntoView {
+fn give(
+    class: &'static str,
+    href: &'static str,
+    mark: &'static str,
+    name: &'static str,
+    note: &'static str,
+) -> impl IntoView {
     view! {
         <a class=format!("give {class}") href=href>
             <svg class="give-mark" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true">
@@ -617,7 +660,11 @@ fn Support(t: &'static Text, lang: Lang) -> impl IntoView {
         Lang::En => view! { {sponsor}{kofi}{afdian} }.into_any(),
         _ => view! { {kofi}{sponsor}{afdian} }.into_any(),
     };
-    let goals = t.goals.iter().map(|g| view! { <li>{*g}</li> }).collect_view();
+    let goals = t
+        .goals
+        .iter()
+        .map(|g| view! { <li>{*g}</li> })
+        .collect_view();
     view! {
         <section id="support" class="section alt">
             <div class="wrap reveal">

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui show Codec, Image, ImmutableBuffer, Picture, PictureRecorder, TargetImageSize, TargetImageSizeCallback;
@@ -8,10 +9,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../appearance_settings.dart';
 import '../skins/skin.dart';
-import 'skin_scenes.dart';
-import 'glass_look.dart';
-import 'theme.dart';
 import 'frame_pressure.dart';
+import 'glass_look.dart';
+import 'skin_scenes.dart';
+import 'theme.dart';
 
 /// Paints one [SkinPaint] layer (not pictures, which [SkinLayers] shows as
 /// widgets) into [rect].
@@ -247,6 +248,14 @@ abstract final class SkinGlass {
 }
 
 class SurfaceDecoration extends Decoration {
+  /// [surface] in [context]'s 护眼暖色.
+  /// Seeing the desktop, the bars round the pages are drawn at the
+  /// glass's alpha ([GlassLook]) instead of a glass skin's own clarity.
+  factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) {
+    final glass = surface.frame ? context.glass : null;
+    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1), plain: lowResourceMode || FramePressure.on);
+  }
+
   const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1, this.plain = false});
   final SkinSurface surface;
   final double radius;
@@ -257,14 +266,6 @@ class SurfaceDecoration extends Decoration {
   /// 低占用模式, or frames running late ([FramePressure]): the fill's
   /// patterns and grain are left out, its colours kept.
   final bool plain;
-
-  /// [surface] in [context]'s 护眼暖色.
-  /// Seeing the desktop, the bars round the pages are drawn at the
-  /// glass's alpha ([GlassLook]) instead of a glass skin's own clarity.
-  factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) {
-    final glass = surface.frame ? context.glass : null;
-    return SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: glass?.alpha ?? (surface.glass ? SkinGlass.opacity : 1), plain: lowResourceMode || FramePressure.on);
-  }
 
   double get _radius => surface.radius ?? radius;
 
@@ -481,7 +482,7 @@ class BoxDecodedImage extends ImageProvider<BoxDecodedKey> {
     final inner = image.obtainKey(configuration);
     if (inner is SynchronousFuture<Object>) {
       Object? found;
-      inner.then((key) => found = key);
+      unawaited(inner.then((key) => found = key));
       return SynchronousFuture(keyOf(found!));
     }
     return inner.then(keyOf);
@@ -598,7 +599,7 @@ class _Nothing extends CustomPainter {
 
 /// A box drawn as [surface] (or nothing when null) round [child].
 class SkinBox extends StatelessWidget {
-  const SkinBox({super.key, required this.surface, this.radius = 0, this.padding, required this.child});
+  const SkinBox({super.key, required this.surface, required this.child, this.radius = 0, this.padding});
   final SkinSurface? surface;
   final double radius;
   final EdgeInsetsGeometry? padding;

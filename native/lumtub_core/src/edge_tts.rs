@@ -448,6 +448,8 @@ pub unsafe extern "C" fn lumtub_speak_online(json: *const u8, length: usize) -> 
         voice: String,
         out: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| Failure::Other(e.to_string()))
         .and_then(|ask| {

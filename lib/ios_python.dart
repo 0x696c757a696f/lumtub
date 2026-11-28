@@ -118,7 +118,7 @@ class IosPythonProcess implements Process {
 
   /// Not a system process: a number of its own, which no process has.
   @override
-  final int pid = -(_next++);
+  final int pid = -_next++;
 
   void _receive(Object? message) {
     if (message is! List || message.length < 2) return;

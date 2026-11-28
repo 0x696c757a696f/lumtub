@@ -15,7 +15,7 @@ pub mod tag {
     pub const ENCRYPTED_DATA: u8 = 0x05;
     pub const SEQ_NO: u8 = 0x06;
     pub const ERROR: u8 = 0x07;
-    pub const SIGNATURE: u8 = 0x0A;
+    pub const SIGNATURE: u8 = 0x0a;
     pub const FLAGS: u8 = 0x13;
 }
 

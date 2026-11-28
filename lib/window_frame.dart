@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -110,11 +111,11 @@ abstract final class WindowFrame {
     if (last != null && last.height == next.height && listEquals(last.maximize, next.maximize) && _sameRects(last.interactive, next.interactive)) return;
     _lastCaption = next;
     _listen();
-    _tryInvoke('setCaption', {'height': next.height, 'maximize': next.maximize, 'interactive': next.interactive}).then((taken) {
+    unawaited(_tryInvoke('setCaption', {'height': next.height, 'maximize': next.maximize, 'interactive': next.interactive}).then((taken) {
       // Not taken: the next report goes out again instead of being
       // skipped as already sent.
       if (!taken && identical(_lastCaption, next)) _lastCaption = null;
-    });
+    }));
   }
 
   /// A rect as the runner reads it: left, top, right, bottom.
@@ -168,7 +169,7 @@ abstract final class WindowFrame {
           logInfo('Title bar click taken as the caption: ${call.arguments}, last report $_lastCaption');
       }
     });
-    _refresh();
+    unawaited(_refresh());
   }
 
   static Future<void> _refresh() async {

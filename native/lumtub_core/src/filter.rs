@@ -271,9 +271,9 @@ fn kana_say_japanese(title: &str) -> bool {
     let mut han = false;
     for c in title.chars() {
         match c as u32 {
-            0x3041..=0x309F if c != 'の' => hiragana += 1,
-            0x30A1..=0x30FA => katakana += 1,
-            0x4E00..=0x9FFF | 0x3400..=0x4DBF => han = true,
+            0x3041..=0x309f if c != 'の' => hiragana += 1,
+            0x30a1..=0x30fa => katakana += 1,
+            0x4e00..=0x9fff | 0x3400..=0x4dbf => han = true,
             _ => {}
         }
     }
@@ -523,9 +523,84 @@ pub fn same_script(language: Language) -> Vec<Language> {
         .map_or_else(|| vec![language], |group| group.to_vec())
 }
 
+/// Every language, in the order of its number ([Language::Any] is 0).
+const LANGUAGES: [Language; 71] = [
+    Language::Any,
+    Language::Zh,
+    Language::Ja,
+    Language::Ko,
+    Language::En,
+    Language::Es,
+    Language::Fr,
+    Language::De,
+    Language::Pt,
+    Language::Ru,
+    Language::Ar,
+    Language::Hi,
+    Language::Th,
+    Language::Vi,
+    Language::It,
+    Language::Nl,
+    Language::Tr,
+    Language::Id,
+    Language::Ms,
+    Language::Tl,
+    Language::Pl,
+    Language::Uk,
+    Language::Cs,
+    Language::Ro,
+    Language::Hu,
+    Language::El,
+    Language::Sv,
+    Language::No,
+    Language::Da,
+    Language::Fi,
+    Language::He,
+    Language::Fa,
+    Language::Ur,
+    Language::Bn,
+    Language::Ta,
+    Language::Te,
+    Language::Af,
+    Language::Am,
+    Language::Az,
+    Language::Be,
+    Language::Bg,
+    Language::Eo,
+    Language::Et,
+    Language::Eu,
+    Language::Gl,
+    Language::Gu,
+    Language::Hy,
+    Language::Is,
+    Language::Jv,
+    Language::Ka,
+    Language::Km,
+    Language::Kn,
+    Language::La,
+    Language::Lo,
+    Language::Lt,
+    Language::Lv,
+    Language::Mk,
+    Language::Ml,
+    Language::Mn,
+    Language::Mr,
+    Language::My,
+    Language::Ne,
+    Language::Pa,
+    Language::Si,
+    Language::Sk,
+    Language::Sq,
+    Language::Su,
+    Language::Sw,
+    Language::Ti,
+    Language::Tk,
+    Language::Uz,
+];
+
 /// The language at explore's index [index].
 pub fn language_at(index: u32) -> Option<Language> {
-    (index <= Language::Uz as u32).then(|| unsafe { std::mem::transmute::<u32, Language>(index) })
+    LANGUAGES.get(usize::try_from(index).ok()?).copied()
 }
 
 /// Whether [language] is written in Latin letters.
@@ -624,54 +699,54 @@ fn read(title: &str) -> Language {
     if kana_say_japanese(title) {
         return Language::Ja;
     }
-    if any_in(title, &[(0xAC00, 0xD7AF), (0x1100, 0x11FF)]) {
+    if any_in(title, &[(0xac00, 0xd7af), (0x1100, 0x11ff)]) {
         return Language::Ko;
     }
-    if any_in(title, &[(0x4E00, 0x9FFF), (0x3400, 0x4DBF)]) {
+    if any_in(title, &[(0x4e00, 0x9fff), (0x3400, 0x4dbf)]) {
         return Language::Zh;
     }
-    if any_in(title, &[(0x0E00, 0x0E7F)]) {
+    if any_in(title, &[(0x0e00, 0x0e7f)]) {
         return Language::Th;
     }
     // Scripts of one language each among explore's.
     for (ranges, language) in [
-        (&[(0x0A80u32, 0x0AFFu32)][..], Language::Gu),
-        (&[(0x0A00, 0x0A7F)], Language::Pa),
-        (&[(0x0C80, 0x0CFF)], Language::Kn),
-        (&[(0x0D00, 0x0D7F)], Language::Ml),
-        (&[(0x0D80, 0x0DFF)], Language::Si),
-        (&[(0x0E80, 0x0EFF)], Language::Lo),
-        (&[(0x1000, 0x109F)], Language::My),
-        (&[(0x10A0, 0x10FF), (0x1C90, 0x1CBF)], Language::Ka),
-        (&[(0x0530, 0x058F)], Language::Hy),
-        (&[(0x1780, 0x17FF)], Language::Km),
+        (&[(0x0a80u32, 0x0affu32)][..], Language::Gu),
+        (&[(0x0a00, 0x0a7f)], Language::Pa),
+        (&[(0x0c80, 0x0cff)], Language::Kn),
+        (&[(0x0d00, 0x0d7f)], Language::Ml),
+        (&[(0x0d80, 0x0dff)], Language::Si),
+        (&[(0x0e80, 0x0eff)], Language::Lo),
+        (&[(0x1000, 0x109f)], Language::My),
+        (&[(0x10a0, 0x10ff), (0x1c90, 0x1cbf)], Language::Ka),
+        (&[(0x0530, 0x058f)], Language::Hy),
+        (&[(0x1780, 0x17ff)], Language::Km),
         // Ge'ez: Amharic, the more common of the two that write it.
-        (&[(0x1200, 0x137F)], Language::Am),
+        (&[(0x1200, 0x137f)], Language::Am),
     ] {
         if any_in(title, ranges) {
             return language;
         }
     }
-    if any_in(title, &[(0x0900, 0x097F)]) {
+    if any_in(title, &[(0x0900, 0x097f)]) {
         // Devanagari: Hindi unless the words are Marathi's or Nepali's.
         return devanagari(title).unwrap_or(Language::Hi);
     }
-    if any_in(title, &[(0x0980, 0x09FF)]) {
+    if any_in(title, &[(0x0980, 0x09ff)]) {
         return Language::Bn;
     }
-    if any_in(title, &[(0x0B80, 0x0BFF)]) {
+    if any_in(title, &[(0x0b80, 0x0bff)]) {
         return Language::Ta;
     }
-    if any_in(title, &[(0x0C00, 0x0C7F)]) {
+    if any_in(title, &[(0x0c00, 0x0c7f)]) {
         return Language::Te;
     }
-    if any_in(title, &[(0x0590, 0x05FF)]) {
+    if any_in(title, &[(0x0590, 0x05ff)]) {
         return Language::He;
     }
-    if any_in(title, &[(0x0370, 0x03FF)]) {
+    if any_in(title, &[(0x0370, 0x03ff)]) {
         return Language::El;
     }
-    if any_in(title, &[(0x0600, 0x06FF)]) {
+    if any_in(title, &[(0x0600, 0x06ff)]) {
         // Letters Arabic itself does not use.
         if title.contains(['ٹ', 'ڈ', 'ڑ', 'ں', 'ے']) {
             return Language::Ur;
@@ -686,7 +761,7 @@ fn read(title: &str) -> Language {
         }
         return Language::Ar;
     }
-    if any_in(title, &[(0x0400, 0x04FF)]) {
+    if any_in(title, &[(0x0400, 0x04ff)]) {
         let lower = title.to_lowercase();
         if lower.contains(['ї', 'є', 'ґ']) {
             return Language::Uk;
@@ -1017,7 +1092,7 @@ pub fn name_starts_with(name: &str, word: &str) -> bool {
     let Some(next) = rest.chars().next() else {
         return true;
     };
-    word.chars().last().is_some_and(|c| c as u32 > 0x2E7F) || !next.is_alphanumeric()
+    word.chars().last().is_some_and(|c| c as u32 > 0x2e7f) || !next.is_alphanumeric()
 }
 
 /// The language of the UTF-8 title, as its place in [Language].
@@ -1026,6 +1101,8 @@ pub fn name_starts_with(name: &str, word: &str) -> bool {
 /// `title` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_title_language(title: *const u8, length: usize) -> u32 {
+    // SAFETY: The caller passes `title` pointing at `length` readable bytes, as this function
+    // requires.
     title_language(unsafe { text(title, length) }) as u32
 }
 
@@ -1035,6 +1112,8 @@ pub unsafe extern "C" fn lumtub_title_language(title: *const u8, length: usize) 
 /// `title` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_looks_like_bait(title: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `title` pointing at `length` readable bytes, as this function
+    // requires.
     looks_like_bait(unsafe { text(title, length) })
 }
 
@@ -1044,6 +1123,8 @@ pub unsafe extern "C" fn lumtub_looks_like_bait(title: *const u8, length: usize)
 /// `json` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_is_short(json: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     serde_json::from_str::<ShortInfo>(unsafe { text(json, length) })
         .is_ok_and(|info| is_short(&info))
 }
@@ -1055,6 +1136,8 @@ pub unsafe extern "C" fn lumtub_is_short(json: *const u8, length: usize) -> bool
 /// `json` points at `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_blocks_new(json: *const u8, length: usize) -> *mut Blocks {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     match serde_json::from_str::<Blocks>(unsafe { text(json, length) }) {
         Ok(blocks) if !blocks.is_empty() => Box::into_raw(Box::new(blocks)),
         _ => std::ptr::null_mut(),
@@ -1072,9 +1155,13 @@ pub unsafe extern "C" fn lumtub_blocks_match(
     json: *const u8,
     length: usize,
 ) -> bool {
+    // SAFETY: `blocks` is null (`as_ref` gives None) or a live pointer from `lumtub_blocks_new`
+    // that Dart has not freed.
     let Some(blocks) = (unsafe { blocks.as_ref() }) else {
         return false;
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     serde_json::from_str::<Channel>(unsafe { text(json, length) })
         .is_ok_and(|channel| blocks.matches(&channel))
 }
@@ -1086,12 +1173,23 @@ pub unsafe extern "C" fn lumtub_blocks_match(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_blocks_free(blocks: *mut Blocks) {
     if !blocks.is_null() {
+        // SAFETY: `blocks` is non-null here and, per this function's `# Safety`, came from
+        // `lumtub_blocks_new` and is freed once.
         drop(unsafe { Box::from_raw(blocks) });
     }
 }
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn languages_are_listed_in_the_order_of_their_numbers() {
+        for (index, language) in super::LANGUAGES.iter().enumerate() {
+            assert_eq!(*language as usize, index, "{language:?} is out of place");
+        }
+        assert_eq!(super::language_at(super::LANGUAGES.len() as u32), None);
+    }
+
     #[test]
     fn no_small_word_marks_two_languages() {
         // The first seven lists (das, que, como, ...) shared a few words
@@ -1111,7 +1209,8 @@ mod tests {
 
     #[test]
     fn reads_the_smaller_latin_languages_by_their_words() {
-        use super::{Language::*, reading};
+        use super::Language::*;
+        use super::reading;
         for (title, language) in [
             ("Balita ngayong umaga: ang mga pangunahing ulat", Tl),
             ("Gaur egungo albisteak eta euskara", Eu),

@@ -2,9 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
 import '../live_chat_composer.dart';
+import '../thumbnail_cache.dart';
 import 'app_icons.dart';
 import 'theme.dart';
-import '../thumbnail_cache.dart';
 
 /// The emoji offered, by group: the ones people use most in comments and
 /// chats, drawn by the system's emoji font.
@@ -68,7 +68,7 @@ class EmojiButton extends StatelessWidget {
 }
 
 class _EmojiGrid extends StatelessWidget {
-  const _EmojiGrid({required this.field, this.focus, required this.channel});
+  const _EmojiGrid({required this.field, required this.channel, this.focus});
   final TextEditingController field;
   final FocusNode? focus;
   final List<ChannelEmoji> channel;

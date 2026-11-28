@@ -101,7 +101,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
     while (source != null && _running < parallel && _waiting.isNotEmpty) {
       final id = _waiting.removeLast();
       _running++;
-      source.fetch(ChannelRef(id, '')).then((url) {
+      unawaited(source.fetch(ChannelRef(id, '')).then((url) {
         if (url != null) {
           _put(id, url);
           notifyListeners();
@@ -111,7 +111,7 @@ class ChannelAvatarLookup extends ChangeNotifier {
       }).whenComplete(() {
         _running--;
         _pump();
-      });
+      }));
     }
   }
 

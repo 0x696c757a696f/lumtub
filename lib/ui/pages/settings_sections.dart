@@ -4,55 +4,55 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../window_glass.dart';
 import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
+import '../../app_log.dart';
+import '../../app_preferences.dart';
+import '../../app_window.dart';
+import '../../appearance_settings.dart';
 import '../../blocked_groups.dart';
+import '../../decoder_status.dart';
+import '../../device.dart';
+import '../../downloads/download_manager.dart' show DownloadManager;
+import '../../encrypted_dns.dart';
 import '../../feed_quality.dart';
 import '../../format_policy.dart';
-import '../../save_file.dart';
-import '../../sun_times.dart';
-import '../../app_log.dart';
-import '../../app_window.dart';
-import '../../app_preferences.dart';
-import '../../appearance_settings.dart';
-import '../../decoder_status.dart';
-import '../../encrypted_dns.dart';
+import '../../friendly_error.dart';
+import '../../l10n/l10n.dart';
 import '../../native_core.dart';
-import '../../downloads/download_manager.dart' show DownloadManager;
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
-import '../../device.dart';
-import '../../upscale_shaders.dart';
 import '../../progress_line.dart';
 import '../../right_click.dart';
-import '../../wheel_gesture.dart';
+import '../../save_file.dart';
 import '../../shortcut_bindings.dart';
+import '../../skins/skin_library.dart';
+import '../../sun_times.dart';
+import '../../upscale_shaders.dart';
 import '../../video_codec.dart';
+import '../../wheel_gesture.dart';
 import '../../widgets/settings_tiles.dart';
+import '../../window_glass.dart';
 import '../../windows_video_info.dart';
-import '../../friendly_error.dart';
+import '../app_icons.dart';
 import '../common.dart';
 import '../diagnostics_dialog.dart';
-import 'downloads_page.dart' show openInExplorer;
 import '../format_policy_dialogs.dart';
+import '../learning/learning_page.dart';
+import '../motion.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
-import '../motion.dart';
-import '../../skins/skin_library.dart';
-import 'skins_page.dart';
 import '../theme.dart';
 import 'account_settings.dart';
+import 'downloads_page.dart' show openInExplorer;
 import 'relay_servers_page.dart';
 import 'scrobble_settings.dart';
 import 'settings_subpages.dart';
+import 'skins_page.dart';
 import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
-import '../learning/learning_page.dart';
 import 'watch_stats_page.dart';
-import '../../l10n/l10n.dart';
-import '../app_icons.dart';
 
 /// The groups in the settings list, in display order: each holds one kind
 /// of setting, so none grows into a catch-all. [account] and [about] are
@@ -632,7 +632,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('Auto sync'),
               subtitle: tr("Current: {0} (this is mpv's --autosync; 0 is off)", [settings.autosync == 0 ? tr('Close') : settings.autosync]),
               leading: _icon(AppIcons.arrowsCounterClockwise),
-              onTap: () => pickWithSlider(context, title: tr('Auto sync'), value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, suffix: '', onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
+              onTap: () => pickWithSlider(context, title: tr('Auto sync'), value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
             ), subtitle: 'autosync'),
         SettingEntry(tr('Video and A/V sync adjustments'), (context) => NormalItem(
               title: tr('Video and A/V sync adjustments'),
@@ -851,7 +851,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           ];
           return NormalItem(
             title: tr('Certificate authorities'),
-            subtitle: tr("Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. yt-dlp, videos and live streams follow it too; Piped and Invidious servers do not", [labelOf(roots, settings.certificateRoots)]),
+            subtitle: tr('Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. yt-dlp, videos and live streams follow it too; Piped and Invidious servers do not', [labelOf(roots, settings.certificateRoots)]),
             leading: _icon(AppIcons.sealCheck),
             onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
           );
@@ -1140,7 +1140,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.downloadSimple),
               onTap: () {
                 final library = controller.library;
-                if (library != null) importSubscriptionsFromFile(context, library);
+                if (library != null) unawaited(importSubscriptionsFromFile(context, library));
               },
             )),
         SettingEntry(tr('Export subscriptions'), (context) => NormalItem(
@@ -1149,7 +1149,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.fileArrowUp),
               onTap: () {
                 final library = controller.library;
-                if (library != null) exportSubscriptionsToFile(context, library);
+                if (library != null) unawaited(exportSubscriptionsToFile(context, library));
               },
             ), subtitle: tr('Backup')),
     ],
@@ -1288,7 +1288,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 ]),
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(5),
-                  child: Image.asset(appearance.appIcon.preview, width: 24, height: 24, filterQuality: FilterQuality.medium),
+                  child: Image.asset(appearance.appIcon.preview, width: 24, height: 24),
                 ),
                 onTap: () => pickFromDialog<AppIcon>(
                   context,
@@ -1840,7 +1840,7 @@ class _ClearDataDialogState extends State<_ClearDataDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _chosen.contains(kind),
                 title: Text(kind.label),
-                onChanged: (v) => setState(() => v == true ? _chosen.add(kind) : _chosen.remove(kind)),
+                onChanged: (v) => setState(() => v ?? false ? _chosen.add(kind) : _chosen.remove(kind)),
               ),
             const SizedBox(height: 8),
             Text(tr("Only data on this computer is removed; your YouTube account isn't affected. Favorites, playlists and followed channels are kept."), style: TextStyle(fontSize: 12, color: context.colors.outline)),

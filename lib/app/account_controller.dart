@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../app_log.dart';
 import '../friendly_error.dart';
 import '../google_auth.dart';
+import '../l10n/l10n.dart';
 import '../models.dart';
 import '../secure_store.dart';
 import '../youtube_account.dart';
@@ -15,7 +16,6 @@ import '../youtube_account_feed.dart';
 import '../youtube_web_account.dart';
 import '../youtube_web_sign_in.dart';
 import 'library_controller.dart';
-import '../l10n/l10n.dart';
 
 enum AccountState { signedOut, signingIn, signedIn }
 
@@ -340,7 +340,7 @@ class AccountController extends ChangeNotifier {
   /// whether it was posted. The browser sign-in writes in the comment box
   /// the comments page named: [createParams] for the video's,
   /// [replyParams] for the comment's.
-  Future<bool> postComment({required String videoId, String? parentId, required String text, String? createParams, String? replyParams}) async {
+  Future<bool> postComment({required String videoId, required String text, String? parentId, String? createParams, String? replyParams}) async {
     if (!_writable() || text.trim().isEmpty) return false;
     final params = parentId == null ? createParams : replyParams;
     try {

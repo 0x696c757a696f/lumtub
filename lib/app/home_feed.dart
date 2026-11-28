@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
 import '../feed_quality.dart';
-import '../friendly_error.dart';
 import '../feed_reason.dart';
+import '../friendly_error.dart';
+import '../l10n/l10n.dart';
 import '../library_store.dart' show WatchProgress;
 import '../models.dart';
 import '../recommendations.dart';
-import '../l10n/l10n.dart';
 
 /// Where [HomeFeed] gathers videos from; each may fail on its own.
 class HomeFeedSources {

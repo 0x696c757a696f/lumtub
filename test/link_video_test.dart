@@ -17,14 +17,14 @@ void main() {
   test('the details fill in a placeholder and what a card left out', () {
     final placeholder = linkPlaceholder('tNa-SfPF6pY');
     expect(isLinkPlaceholder(placeholder), isTrue);
-    final details = VideoDetails(title: 'Living in Every Color', channel: 'Some Channel', channelId: 'UC1234567890123456789012', viewCount: 1200, uploadDate: DateTime(2026, 11, 1));
+    final details = VideoDetails(title: 'Living in Every Color', channel: 'Some Channel', channelId: 'UC1234567890123456789012', viewCount: 1200, uploadDate: DateTime(2026, 11));
     final filled = filledFromDetails(placeholder, details, length: 754);
     expect(filled.title, 'Living in Every Color');
     expect(filled.channel, 'Some Channel');
     expect(filled.channelId, 'UC1234567890123456789012');
     expect(filled.viewCount, 1200);
     expect(filled.duration, 754);
-    expect(filled.published, DateTime(2026, 11, 1));
+    expect(filled.published, DateTime(2026, 11));
     expect(isLinkPlaceholder(filled), isFalse);
     expect(saysMore(placeholder, filled), isTrue);
     // A named card keeps its own title and channel.

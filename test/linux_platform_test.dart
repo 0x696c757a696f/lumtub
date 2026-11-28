@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_updater.dart';
-import 'package:lumtub/zip_archive.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/power.dart';
 import 'package:lumtub/screenshot.dart';
 import 'package:lumtub/secure_store.dart';
 import 'package:lumtub/user_folders.dart';
+import 'package:lumtub/zip_archive.dart';
 
 void main() {
   test('only a discharging system battery saves power on Linux', () {

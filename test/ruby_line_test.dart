@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/learning/word_token.dart';
 import 'package:lumtub/ui/learning/ruby_line.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('Japanese words stand close, a long reading fits over its word', (tester) async {

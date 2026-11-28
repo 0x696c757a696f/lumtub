@@ -3,25 +3,25 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../device.dart';
 import '../../app/app_controller.dart';
+import '../../device.dart';
 import '../../explore_filters.dart';
 import '../../explore_topics.dart';
+import '../../l10n/l10n.dart';
+import '../../models.dart';
+import '../../search_options.dart';
+import '../../widgets/settings_tiles.dart' show confirmDialog;
+import '../app_icons.dart';
 import '../chip_strip.dart';
 import '../common.dart';
 import '../fitting_segments.dart';
 import '../haptics.dart';
-import '../reveal.dart';
-import '../../search_options.dart';
-import '../theme.dart';
-import '../linked_text.dart';
-import '../video_card.dart';
-import '../../widgets/settings_tiles.dart' show confirmDialog;
-import '../../l10n/l10n.dart';
-import '../../models.dart';
-import '../motion.dart';
-import '../app_icons.dart';
 import '../learning/learning_page.dart' show openLevelVideos;
+import '../linked_text.dart';
+import '../motion.dart';
+import '../reveal.dart';
+import '../theme.dart';
+import '../video_card.dart';
 
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
@@ -284,7 +284,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     onLongPress: (i) {
                       if (!topics[i].custom) return;
                       Haptics.menu();
-                      _removeTopic(context, section, topics[i]);
+                      unawaited(_removeTopic(context, section, topics[i]));
                     },
                     trailing: [
                       IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
@@ -388,7 +388,7 @@ class _ExplorePageState extends State<ExplorePage> {
               message: loader != null && loader.read > 0 ? tr('{0} were found, and your filters and settings left all of them out', [loader.read]) : null,
               action: loader != null && loader.hasMore
                   ? FilledButton.icon(
-                      onPressed: () => loader.loadMore(),
+                      onPressed: loader.loadMore,
                       icon: Icon(AppIcons.magnifyingGlass),
                       label: Text(tr('Keep looking')),
                     )
@@ -529,7 +529,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   key: ValueKey(topic.key),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
+                  leading: ReorderableDragStartListener(index: i, child: Padding(padding: const EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
                   title: Row(children: [
                     Icon(topic.icon, size: 20, color: shown ? null : context.colors.outline),
                     const SizedBox(width: 8),

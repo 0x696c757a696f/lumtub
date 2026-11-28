@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind;
+import '../video_summary.dart' show VideoOverview;
+import 'app_icons.dart';
 import 'common.dart';
 import 'linked_text.dart';
 import 'pages/translation_settings_page.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 import 'video_notes.dart';
-import '../video_summary.dart' show VideoOverview;
 
 /// AI 总结 of the video playing, as AI 概览 (what it is about, chapters
 /// and key quotes), with the person's notes on it under it. The times in
@@ -37,7 +39,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     super.initState();
     final id = widget.controller.playing?.id;
     _summary = id == null ? null : widget.controller.summaryOf(id);
-    if (_summary == null && widget.controller.canSummarize) _run();
+    if (_summary == null && widget.controller.canSummarize) unawaited(_run());
   }
 
   /// Subtitles from 语音识别 first, then the summary made again from them.
@@ -78,7 +80,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
   /// Out of the way so the moment shows; the summary is kept and opens
   /// again at once.
   void _seek(Duration time) {
-    widget.controller.seek(time);
+    unawaited(widget.controller.seek(time));
     Navigator.pop(context);
   }
 
@@ -144,7 +146,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
             onPressed: () async {
               await openTranslationSettings(context, controller);
               if (mounted) setState(() {});
-              if (mounted && controller.canSummarize && _summary == null) _run();
+              if (mounted && controller.canSummarize && _summary == null) unawaited(_run());
             },
             child: Text(tr('Set up AI service')),
           ),

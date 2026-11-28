@@ -50,7 +50,7 @@ class _ScrobbleSettingsState extends State<ScrobbleSettings> {
           ],
         ),
       );
-      if (disconnect == true) {
+      if (disconnect ?? false) {
         await scrobbler.disconnect();
         if (mounted) setState(() {});
       }
@@ -59,7 +59,7 @@ class _ScrobbleSettingsState extends State<ScrobbleSettings> {
     final connected = await showDialog<bool>(context: context, builder: (context) => _TokenDialog(scrobbler: scrobbler));
     if (!mounted) return;
     setState(() {});
-    if (connected == true && context.mounted) {
+    if ((connected ?? false) && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Connected as {0}', [scrobbler.user ?? '']))));
     }
   }

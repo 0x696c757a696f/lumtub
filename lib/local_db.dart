@@ -227,7 +227,7 @@ extension LocalDbTexts on LocalDb {
 
   /// Keeps a note on [video] at [at], or changes note [id]'s words.
   /// Answers the note's id.
-  Future<int> putNote({int id = 0, required String video, String title = '', Duration at = Duration.zero, String quote = '', String body = ''}) async {
+  Future<int> putNote({required String video, int id = 0, String title = '', Duration at = Duration.zero, String quote = '', String body = ''}) async {
     final answer = await _texts('note.put', {'id': id, 'video': video, 'title': title, 'at': at.inMilliseconds, 'quote': quote, 'body': body});
     return (answer['id'] as num?)?.toInt() ?? 0;
   }
@@ -248,7 +248,7 @@ extension LocalDbTexts on LocalDb {
 /// A note on a moment of a video: the subtitle words it is about and what
 /// the person wrote, or had AI write, about them.
 class VideoNote {
-  const VideoNote({required this.id, required this.video, this.title = '', required this.at, this.quote = '', this.body = '', required this.created});
+  const VideoNote({required this.id, required this.video, required this.at, required this.created, this.title = '', this.quote = '', this.body = ''});
   factory VideoNote.fromJson(Map<dynamic, dynamic> json) => VideoNote(
         id: (json['id'] as num?)?.toInt() ?? 0,
         video: '${json['video'] ?? ''}',

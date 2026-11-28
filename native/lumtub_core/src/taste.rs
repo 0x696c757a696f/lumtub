@@ -4,8 +4,6 @@
 //! Dart sends JSON in and gets JSON or plain numbers back; see
 //! lib/recommendations.dart for the side that calls this.
 
-#![allow(clippy::missing_safety_doc)]
-
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::ffi::{CString, c_char};
@@ -321,7 +319,7 @@ struct Suggested {
     /// Its source's weight times its seed's.
     s: f64,
     /// Taken off for kinds the settings want less of, and for channels
-    /// marked 不感兴趣.
+    /// marked "Not interested".
     #[serde(default)]
     p: f64,
     /// Hours since it was published.
@@ -537,10 +535,17 @@ fn pick(pool: &[Pooled], channels: usize, interests: usize, count: usize) -> Vec
     picked
 }
 
+/// The UTF-8 text at [ptr], empty when null, empty or not UTF-8.
+///
+/// # Safety
+/// [ptr] must be null or point to [len] readable bytes that stay unchanged
+/// while the text is used.
 pub(crate) unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
     if ptr.is_null() || len == 0 {
         return "";
     }
+    // SAFETY: `ptr` is non-null and `len` is above zero (checked above), and the caller guarantees
+    // `len` readable bytes.
     std::str::from_utf8(unsafe { std::slice::from_raw_parts(ptr, len) }).unwrap_or("")
 }
 
@@ -549,10 +554,15 @@ pub(crate) unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
 pub(crate) const MAX_BODY: usize = 32 << 20;
 
 /// [text] for an answer from outside: empty past [MAX_BODY].
+///
+/// # Safety
+/// As for [text].
 pub(crate) unsafe fn outside<'a>(ptr: *const u8, len: usize) -> &'a str {
     if len > MAX_BODY {
         return "";
     }
+    // SAFETY: `ptr` and `len` pass through unchanged, so the caller's guarantee of `len` readable
+    // bytes holds.
     unsafe { text(ptr, len) }
 }
 
@@ -566,59 +576,94 @@ pub(crate) fn give_json<T: serde::Serialize>(value: &T) -> *mut c_char {
 
 /// Learns a taste from the history in [json]; null when it does not parse.
 /// Free it with [lumtub_taste_free].
+///
+/// # Safety
+/// [json] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_new(json: *const u8, len: usize) -> *mut Taste {
+    // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
     match serde_json::from_str::<History>(unsafe { text(json, len) }) {
         Ok(data) => Box::into_raw(Box::new(Taste::from(data))),
         Err(_) => std::ptr::null_mut(),
     }
 }
 
+/// Frees a [Taste] from `lumtub_taste_new`.
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new`, and not be used after.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_free(taste: *mut Taste) {
     if !taste.is_null() {
+        // SAFETY: `taste` was just checked non-null; it came from `lumtub_taste_new`
+        // (`Box::into_raw`) and the caller frees it only once.
         drop(unsafe { Box::from_raw(taste) });
     }
 }
 
+/// The affinity of the channel [key].
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new` and not be freed.
+/// [key] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_affinity(
     taste: *const Taste,
     key: *const u8,
     len: usize,
 ) -> f64 {
+    // SAFETY: `taste` is null or came from `lumtub_taste_new` and is not freed yet; `key` points to
+    // `len` readable bytes, per this function's `# Safety`.
     unsafe { taste.as_ref() }.map_or(0.0, |t| t.affinity(unsafe { text(key, len) }))
 }
 
+/// How well [title] matches the taste.
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new` and not be freed.
+/// [title] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_match(
     taste: *const Taste,
     title: *const u8,
     len: usize,
 ) -> f64 {
+    // SAFETY: `taste` is null or came from `lumtub_taste_new` and is not freed yet; `title` points
+    // to `len` readable bytes, per this function's `# Safety`.
     unsafe { taste.as_ref() }.map_or(0.0, |t| t.title_match(unsafe { text(title, len) }))
 }
 
 /// The interest of [title], or null for none. Free it with
 /// [lumtub_string_free].
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new` and not be freed.
+/// [title] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_interest(
     taste: *const Taste,
     title: *const u8,
     len: usize,
 ) -> *mut c_char {
+    // SAFETY: `taste` is null or came from `lumtub_taste_new` and is not freed yet; `title` points
+    // to `len` readable bytes, per this function's `# Safety`.
     unsafe { taste.as_ref() }
         .and_then(|t| t.interest(unsafe { text(title, len) }))
         .map_or(std::ptr::null_mut(), give)
 }
 
 /// A JSON list of the top [count] channels ([words] false) or words.
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new` and not be freed.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_taste_top(
     taste: *const Taste,
     words: bool,
     count: u32,
 ) -> *mut c_char {
+    // SAFETY: `taste` is null or came from `lumtub_taste_new` and is not freed yet, per this
+    // function's `# Safety`.
     match unsafe { taste.as_ref() } {
         Some(t) => give_json(&if words {
             t.top_words(count as usize)
@@ -630,32 +675,49 @@ pub unsafe extern "C" fn lumtub_taste_top(
 }
 
 /// [title]'s words as a JSON list.
+///
+/// # Safety
+/// [title] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_title_words(title: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: `title` points to `len` readable bytes, per this function's `# Safety`.
     give_json(&title_words(unsafe { text(title, len) }))
 }
 
 /// Ranks the candidates in [json] by [taste]: a JSON list of
 /// [video candidate, reason candidate] index pairs, best first; null when
 /// the JSON does not parse.
+///
+/// # Safety
+/// [taste] must be null or come from `lumtub_taste_new` and not be freed.
+/// [json] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_recommend(
     taste: *const Taste,
     json: *const u8,
     len: usize,
 ) -> *mut c_char {
+    // SAFETY: `taste` is null (handled below) or came from `lumtub_taste_new` and is not freed yet,
+    // per this function's `# Safety`.
     let Some(taste) = (unsafe { taste.as_ref() }) else {
         return std::ptr::null_mut();
     };
+    // SAFETY: `json` points to `len` readable bytes, per this function's `# Safety`.
     match serde_json::from_str::<Ranking>(unsafe { text(json, len) }) {
         Ok(ranking) => give_json(&rank(taste, &ranking)),
         Err(_) => std::ptr::null_mut(),
     }
 }
 
+/// Frees a string that one of this library's functions gave.
+///
+/// # Safety
+/// [value] must be null or such a string, not freed before.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_string_free(value: *mut c_char) {
     if !value.is_null() {
+        // SAFETY: `value` was just checked non-null; it came from `give` (`CString::into_raw`) and
+        // the caller frees it only once.
         drop(unsafe { CString::from_raw(value) });
     }
 }
@@ -843,6 +905,9 @@ mod tests {
             {"id":"cook","k":"UCcook","t":"家常菜","s":0.5},
             {"id":"keys","k":"UCkeys","t":"机械键盘 轴体 评测","s":1.0},
             {"id":"keys","k":"UCkeys","t":"机械键盘 轴体 评测","s":0.7}]}"#;
+        // SAFETY: The pointers come from live `&str`s with their own lengths; `t` came from
+        // `lumtub_taste_new`, was checked non-null and is freed once; each answer string comes from
+        // this crate and is freed once.
         unsafe {
             let t = lumtub_taste_new(history.as_ptr(), history.len());
             assert!(!t.is_null());

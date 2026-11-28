@@ -17,7 +17,7 @@ import 'youtube_web.dart';
 /// What a card shows of a video and its listing may leave out: the length,
 /// the views and the day it was published.
 class VideoFacts {
-  const VideoFacts({this.length, this.views, this.published, this.liveStatus, required this.asked});
+  const VideoFacts({required this.asked, this.length, this.views, this.published, this.liveStatus});
 
   final int? length;
   final int? views;
@@ -165,7 +165,7 @@ class VideoFactsLookup extends ChangeNotifier {
     while (source != null && _running < parallel && _waiting.isNotEmpty) {
       final id = _waiting.removeLast();
       _running++;
-      source(id).then((facts) {
+      unawaited(source(id).then((facts) {
         if (facts != null) {
           _put(id, facts);
           for (final watcher in [...?_watchers[id]]) {
@@ -180,7 +180,7 @@ class VideoFactsLookup extends ChangeNotifier {
       }).whenComplete(() {
         _running--;
         _pump();
-      });
+      }));
     }
   }
 

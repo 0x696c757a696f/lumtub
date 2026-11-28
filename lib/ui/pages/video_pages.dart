@@ -2,19 +2,20 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart' show LibraryController;
+import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../search_options.dart';
 import '../../video_repository.dart';
+import '../app_icons.dart';
 import '../common.dart';
 import '../haptics.dart';
+import '../pull_to_refresh.dart';
 import '../reveal.dart';
 import '../theme.dart';
-import '../pull_to_refresh.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+
 export 'history_page.dart';
-import '../../l10n/l10n.dart';
-import '../app_icons.dart';
 
 /// Home: a search prompt and the most recently watched videos.
 class HomeFeedPage extends StatelessWidget {
@@ -72,7 +73,7 @@ class HomeFeedPage extends StatelessWidget {
           // After 下拉刷新 the new videos come first, then a line where the
           // ones seen before begin; pressing it loads newer ones again.
           for (final (i, part) in _seenSplit(feed.items, feed.seenFrom).indexed) ...[
-            if (i == 1) SliverToBoxAdapter(child: _SeenHere(onTap: () => PullToRefresh.refresh())),
+            if (i == 1) const SliverToBoxAdapter(child: _SeenHere(onTap: PullToRefresh.refresh)),
             if (part.isNotEmpty)
               SliverReveal(key: ValueKey('feed $i'), sliver: SliverVideoGrid(
                 items: part,

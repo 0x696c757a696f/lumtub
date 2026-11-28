@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/testing.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:lumtub/caption_tracks.dart';
 import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/learning/english_dictionary.dart' show EnglishLevel;
@@ -195,8 +195,8 @@ void main() {
     test('speech is counted in each language\'s own units', () {
       expect(speechUnits('zh', _w('学生们', 'zh')), 3);
       expect(speechUnits('ko', _w('안녕하세요', 'ko')), 5);
-      expect(speechUnits('ja', WordToken('東京', 'とうきょう', isWord: true, language: 'ja')), 4);
-      expect(speechUnits('ja', WordToken('ちょっと', null, isWord: true, language: 'ja')), 3);
+      expect(speechUnits('ja', const WordToken('東京', 'とうきょう', isWord: true, language: 'ja')), 4);
+      expect(speechUnits('ja', const WordToken('ちょっと', null, isWord: true, language: 'ja')), 3);
       expect(speechUnits('it', _w('casa')), 1);
     });
 

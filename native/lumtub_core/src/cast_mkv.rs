@@ -43,8 +43,8 @@ pub const VIDEO: u64 = 1;
 pub const AUDIO: u64 = 2;
 pub const TEXT: u64 = 3;
 
-const CLUSTER: u32 = 0x1F43_B675;
-const CUES: u32 = 0x1C53_BB6B;
+const CLUSTER: u32 = 0x1f43_b675;
+const CUES: u32 = 0x1c53_bb6b;
 
 fn id(out: &mut Vec<u8>, id: u32) {
     let bytes = id.to_be_bytes();
@@ -97,33 +97,33 @@ pub fn head(
 ) -> Head {
     let webm = !matroska && webm_holds(video, audio, extra);
     let mut out = Vec::new();
-    master(&mut out, 0x1A45_DFA3, |o| {
+    master(&mut out, 0x1a45_dfa3, |o| {
         uint(o, 0x4286, 1);
-        uint(o, 0x42F7, 1);
-        uint(o, 0x42F2, 4);
-        uint(o, 0x42F3, 8);
+        uint(o, 0x42f7, 1);
+        uint(o, 0x42f2, 4);
+        uint(o, 0x42f3, 8);
         element(o, 0x4282, if webm { b"webm" } else { b"matroska" });
         uint(o, 0x4287, 4);
         uint(o, 0x4285, 2);
     });
     id(&mut out, 0x1853_8067);
-    out.extend_from_slice(&[0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    out.extend_from_slice(&[0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
     let segment = out.len();
     let mut cues_at = None;
     if file {
         // SeekHead { Seek { SeekID Cues, SeekPosition (8 bytes) } }
-        id(&mut out, 0x114D_9B74);
+        id(&mut out, 0x114d_9b74);
         size(&mut out, 21);
-        id(&mut out, 0x4DBB);
+        id(&mut out, 0x4dbb);
         size(&mut out, 18);
-        element(&mut out, 0x53AB, &CUES.to_be_bytes());
-        id(&mut out, 0x53AC);
+        element(&mut out, 0x53ab, &CUES.to_be_bytes());
+        id(&mut out, 0x53ac);
         size(&mut out, 8);
         cues_at = Some(out.len());
         out.extend_from_slice(&[0; 8]);
     }
     let mut info = Vec::new();
-    uint(&mut info, 0x2AD7B1, 1_000_000);
+    uint(&mut info, 0x2ad7b1, 1_000_000);
     let mut duration_at = None;
     if duration > 0.0 || file {
         id(&mut info, 0x4489);
@@ -132,66 +132,66 @@ pub fn head(
         info.extend_from_slice(&duration.to_be_bytes());
     }
     if let Some(title) = extra.title.filter(|t| !t.is_empty()) {
-        element(&mut info, 0x7BA9, title.as_bytes());
+        element(&mut info, 0x7ba9, title.as_bytes());
     }
-    element(&mut info, 0x4D80, b"Lumtub");
+    element(&mut info, 0x4d80, b"Lumtub");
     element(&mut info, 0x5741, b"Lumtub");
-    id(&mut out, 0x1549_A966);
+    id(&mut out, 0x1549_a966);
     size(&mut out, info.len() as u64);
     let duration_at = duration_at.filter(|_| file).map(|at| out.len() + at);
     out.extend_from_slice(&info);
-    master(&mut out, 0x1654_AE6B, |o| {
+    master(&mut out, 0x1654_ae6b, |o| {
         for (number, info) in [(VIDEO, video), (AUDIO, audio)] {
-            master(o, 0xAE, |o| {
-                uint(o, 0xD7, number);
-                uint(o, 0x73C5, number);
+            master(o, 0xae, |o| {
+                uint(o, 0xd7, number);
+                uint(o, 0x73c5, number);
                 uint(o, 0x83, if info.video.is_some() { 1 } else { 2 });
-                uint(o, 0x9C, 0);
+                uint(o, 0x9c, 0);
                 element(o, 0x86, info.codec.as_bytes());
-                element(o, 0x0022_B59C, b"und");
+                element(o, 0x0022_b59c, b"und");
                 if let Some(private) = &info.private {
-                    element(o, 0x63A2, private);
+                    element(o, 0x63a2, private);
                 }
                 if info.delay > 0 {
-                    uint(o, 0x56AA, info.delay);
+                    uint(o, 0x56aa, info.delay);
                 }
                 if info.preroll > 0 {
-                    uint(o, 0x56BB, info.preroll);
+                    uint(o, 0x56bb, info.preroll);
                 }
                 if let Some((width, height)) = info.video {
-                    master(o, 0xE0, |o| {
-                        uint(o, 0xB0, width as u64);
-                        uint(o, 0xBA, height as u64);
+                    master(o, 0xe0, |o| {
+                        uint(o, 0xb0, width as u64);
+                        uint(o, 0xba, height as u64);
                     });
                 }
                 if let Some((rate, channels)) = info.audio {
-                    master(o, 0xE1, |o| {
-                        float(o, 0xB5, rate);
-                        uint(o, 0x9F, channels as u64);
+                    master(o, 0xe1, |o| {
+                        float(o, 0xb5, rate);
+                        uint(o, 0x9f, channels as u64);
                     });
                 }
             });
         }
         for (i, &(language, name, ass)) in extra.texts.iter().enumerate() {
-            master(o, 0xAE, |o| {
-                uint(o, 0xD7, TEXT + i as u64);
-                uint(o, 0x73C5, TEXT + i as u64);
+            master(o, 0xae, |o| {
+                uint(o, 0xd7, TEXT + i as u64);
+                uint(o, 0x73c5, TEXT + i as u64);
                 uint(o, 0x83, 0x11);
-                uint(o, 0x9C, 0);
+                uint(o, 0x9c, 0);
                 uint(o, 0x88, u64::from(i == 0));
                 match ass {
                     Some(header) => {
                         element(o, 0x86, b"S_TEXT/ASS");
-                        element(o, 0x63A2, header.as_bytes());
+                        element(o, 0x63a2, header.as_bytes());
                     }
                     None => element(o, 0x86, b"S_TEXT/UTF8"),
                 }
                 if !name.is_empty() {
-                    element(o, 0x536E, name.as_bytes());
+                    element(o, 0x536e, name.as_bytes());
                 }
-                element(o, 0x0022_B59C, crate::embed::iso639_2(language).as_bytes());
+                element(o, 0x0022_b59c, crate::embed::iso639_2(language).as_bytes());
                 if !language.is_empty() {
-                    element(o, 0x0022_B59D, language.as_bytes());
+                    element(o, 0x0022_b59d, language.as_bytes());
                 }
             });
         }
@@ -200,12 +200,12 @@ pub fn head(
         // Attachments { AttachedFile { name, type, data, id } }, named so
         // players show it as the cover.
         let png = crate::embed::is_png(cover);
-        master(&mut out, 0x1941_A469, |o| {
-            master(o, 0x61A7, |o| {
-                element(o, 0x466E, if png { b"cover.png" } else { b"cover.jpg" });
+        master(&mut out, 0x1941_a469, |o| {
+            master(o, 0x61a7, |o| {
+                element(o, 0x466e, if png { b"cover.png" } else { b"cover.jpg" });
                 element(o, 0x4660, if png { b"image/png" } else { b"image/jpeg" });
-                element(o, 0x465C, cover);
-                uint(o, 0x46AE, 1);
+                element(o, 0x465c, cover);
+                uint(o, 0x46ae, 1);
             });
         });
     }
@@ -256,21 +256,21 @@ impl Clusters {
         block.extend_from_slice(&((time - self.start.unwrap_or(time)) as i16).to_be_bytes());
         block.push(if key { 0x80 } else { 0 });
         block.extend_from_slice(data);
-        element(&mut self.body, 0xA3, &block);
+        element(&mut self.body, 0xa3, &block);
     }
 
     /// Adds a subtitle of track `track` shown from `time` ms for `duration` ms.
     pub fn text(&mut self, out: &mut Vec<u8>, track: u64, time: i64, duration: u64, text: &str) {
         self.open(out, time, false);
         let relative = (time - self.start.unwrap_or(time)) as i16;
-        master(&mut self.body, 0xA0, |o| {
+        master(&mut self.body, 0xa0, |o| {
             let mut block = Vec::with_capacity(text.len() + 4);
             size(&mut block, track);
             block.extend_from_slice(&relative.to_be_bytes());
             block.push(0);
             block.extend_from_slice(text.as_bytes());
-            element(o, 0xA1, &block);
-            uint(o, 0x9B, duration);
+            element(o, 0xa1, &block);
+            uint(o, 0x9b, duration);
         });
     }
 
@@ -287,7 +287,7 @@ impl Clusters {
                 self.points.push((time.max(0), self.position));
             }
             self.start = Some(time);
-            uint(&mut self.body, 0xE7, time.max(0) as u64);
+            uint(&mut self.body, 0xe7, time.max(0) as u64);
         }
     }
 
@@ -311,11 +311,11 @@ impl Clusters {
         let before = out.len();
         master(out, CUES, |o| {
             for &(time, position) in &self.points {
-                master(o, 0xBB, |o| {
-                    uint(o, 0xB3, time as u64);
-                    master(o, 0xB7, |o| {
-                        uint(o, 0xF7, VIDEO);
-                        uint(o, 0xF1, position);
+                master(o, 0xbb, |o| {
+                    uint(o, 0xb3, time as u64);
+                    master(o, 0xb7, |o| {
+                        uint(o, 0xf7, VIDEO);
+                        uint(o, 0xf1, position);
                     });
                 });
             }
@@ -336,6 +336,6 @@ mod tests {
         size(&mut out, 126);
         size(&mut out, 127);
         size(&mut out, 300);
-        assert_eq!(out, [0x85, 0xFE, 0x40, 0x7F, 0x41, 0x2C]);
+        assert_eq!(out, [0x85, 0xfe, 0x40, 0x7f, 0x41, 0x2c]);
     }
 }

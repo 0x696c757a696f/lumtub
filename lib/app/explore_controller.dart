@@ -155,7 +155,7 @@ extension ExploreActions on AppController {
     }
   }
 
-  void _reloadExplore({ExploreSection? section, required int topic}) {
+  void _reloadExplore({required int topic, ExploreSection? section}) {
     explore?.dispose();
     explore = null;
     setExplore(section: section, topic: topic < 0 ? 0 : topic);

@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widgets.dart' as widgets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/app/home_feed.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 VideoItem _video(int i) => VideoItem(id: 'v$i'.padRight(11, '0'), title: 'Video $i', channel: 'Channel $i', channelId: 'UC$i', url: 'u');
 

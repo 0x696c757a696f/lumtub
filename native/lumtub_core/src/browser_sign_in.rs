@@ -350,7 +350,7 @@ impl Socket {
                         "the browser closed the DevTools connection",
                     ));
                 }
-                0x9 => self.send(0xA, &payload)?,
+                0x9 => self.send(0xa, &payload)?,
                 0x0..=0x2 => {
                     message.extend_from_slice(&payload);
                     payload.zeroize();
@@ -607,7 +607,7 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
         let said = said.clone();
         std::thread::spawn(move || {
             for line in BufReader::new(stderr).lines().map_while(Result::ok) {
-                let mut said = said.lock().unwrap_or_else(|e| e.into_inner());
+                let mut said = said.lock().expect("lock poisoned by a panic");
                 if said.len() < 16 * 1024 {
                     said.push_str(&line);
                     said.push('\n');

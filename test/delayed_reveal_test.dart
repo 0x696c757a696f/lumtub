@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/app_icons.dart';
 import 'package:lumtub/ui/common.dart';
@@ -6,6 +5,7 @@ import 'package:lumtub/ui/motion.dart';
 import 'package:lumtub/ui/skeleton.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   tearDown(() => Motion.reduced = false);

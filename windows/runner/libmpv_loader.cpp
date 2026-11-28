@@ -32,40 +32,51 @@ std::wstring StateDirectory() {
 
 std::wstring Widen(const std::string& text) {
   if (text.empty()) return L"";
-  const int size = ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
+  const int size = ::MultiByteToWideChar(
+      CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
   std::wstring result(size, L'\0');
-  ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), size);
+  ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()),
+                        result.data(), size);
   return result;
 }
 
 std::string Narrow(const std::wstring& text) {
   if (text.empty()) return "";
-  const int size = ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+  const int size = ::WideCharToMultiByte(CP_UTF8, 0, text.data(),
+                                         static_cast<int>(text.size()), nullptr,
+                                         0, nullptr, nullptr);
   std::string result(size, '\0');
-  ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), size, nullptr, nullptr);
+  ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()),
+                        result.data(), size, nullptr, nullptr);
   return result;
 }
 
 std::wstring ReadText(const std::wstring& path) {
-  HANDLE file = ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE file =
+      ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) return L"";
   std::string content;
   char chunk[4096];
   DWORD read = 0;
-  while (::ReadFile(file, chunk, sizeof(chunk), &read, nullptr) && read > 0 && content.size() < 65536) {
+  while (::ReadFile(file, chunk, sizeof(chunk), &read, nullptr) && read > 0 &&
+         content.size() < 65536) {
     content.append(chunk, read);
   }
   ::CloseHandle(file);
   return Widen(content);
 }
 
-void WriteText(const std::wstring& path, const std::wstring& text, bool append) {
-  HANDLE file = ::CreateFileW(path.c_str(), append ? FILE_APPEND_DATA : GENERIC_WRITE, 0, nullptr,
-                              append ? OPEN_ALWAYS : CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+void WriteText(const std::wstring& path, const std::wstring& text,
+               bool append) {
+  HANDLE file = ::CreateFileW(
+      path.c_str(), append ? FILE_APPEND_DATA : GENERIC_WRITE, 0, nullptr,
+      append ? OPEN_ALWAYS : CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) return;
   const std::string bytes = Narrow(text);
   DWORD written = 0;
-  ::WriteFile(file, bytes.data(), static_cast<DWORD>(bytes.size()), &written, nullptr);
+  ::WriteFile(file, bytes.data(), static_cast<DWORD>(bytes.size()), &written,
+              nullptr);
   ::CloseHandle(file);
 }
 
@@ -76,11 +87,14 @@ std::wstring Trim(const std::wstring& text) {
   return text.substr(start, end - start + 1);
 }
 
-std::wstring FirstLine(const std::wstring& text) { return Trim(text.substr(0, text.find(L'\n'))); }
+std::wstring FirstLine(const std::wstring& text) {
+  return Trim(text.substr(0, text.find(L'\n')));
+}
 
 std::wstring SecondLine(const std::wstring& text) {
   const size_t newline = text.find(L'\n');
-  return newline == std::wstring::npos ? L"" : FirstLine(text.substr(newline + 1));
+  return newline == std::wstring::npos ? L""
+                                       : FirstLine(text.substr(newline + 1));
 }
 
 bool ListedIn(const std::wstring& list, const std::wstring& path) {
@@ -88,7 +102,9 @@ bool ListedIn(const std::wstring& list, const std::wstring& path) {
   while (start <= list.size()) {
     size_t end = list.find(L'\n', start);
     if (end == std::wstring::npos) end = list.size();
-    if (::CompareStringOrdinal(Trim(list.substr(start, end - start)).c_str(), -1, path.c_str(), -1, TRUE) == CSTR_EQUAL) return true;
+    if (::CompareStringOrdinal(Trim(list.substr(start, end - start)).c_str(),
+                               -1, path.c_str(), -1, TRUE) == CSTR_EQUAL)
+      return true;
     start = end + 1;
   }
   return false;
@@ -108,7 +124,8 @@ void AddFailed(const std::wstring& directory, const std::wstring& path) {
     start = end + 1;
   }
   paths.push_back(path);
-  const size_t first = paths.size() > kMaxFailed ? paths.size() - kMaxFailed : 0;
+  const size_t first =
+      paths.size() > kMaxFailed ? paths.size() - kMaxFailed : 0;
   std::wstring text;
   for (size_t i = first; i < paths.size(); ++i) text += paths[i] + L"\n";
   WriteText(directory + L"failed.txt", text, false);
@@ -126,29 +143,39 @@ void LoadPreferredLibmpv() {
   const std::wstring directory = StateDirectory();
   if (directory.empty()) return;
   const std::wstring path = FirstLine(ReadText(directory + L"use.txt"));
-  if (path.empty() || ::GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+  if (path.empty() ||
+      ::GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES)
+    return;
   if (ListedIn(ReadText(directory + L"failed.txt"), path)) return;
 
-  const bool confirmed = ::CompareStringOrdinal(FirstLine(ReadText(directory + L"confirmed.txt")).c_str(), -1, path.c_str(), -1, TRUE) == CSTR_EQUAL;
+  const bool confirmed =
+      ::CompareStringOrdinal(
+          FirstLine(ReadText(directory + L"confirmed.txt")).c_str(), -1,
+          path.c_str(), -1, TRUE) == CSTR_EQUAL;
   if (!confirmed) {
     // An earlier launch that crashed while starting a video, or several
     // launches that never played one, mean this copy should not be trusted.
     const std::wstring pending = ReadText(directory + L"pending.txt");
     int launches = 0;
-    if (::CompareStringOrdinal(FirstLine(pending).c_str(), -1, path.c_str(), -1, TRUE) == CSTR_EQUAL) {
+    if (::CompareStringOrdinal(FirstLine(pending).c_str(), -1, path.c_str(), -1,
+                               TRUE) == CSTR_EQUAL) {
       const std::wstring state = SecondLine(pending);
-      launches = state == L"playing" ? kMaxUnconfirmedLaunches : _wtoi(state.c_str());
+      launches =
+          state == L"playing" ? kMaxUnconfirmedLaunches : _wtoi(state.c_str());
     }
     if (launches >= kMaxUnconfirmedLaunches) {
       MarkFailed(directory, path);
       return;
     }
-    WriteText(directory + L"pending.txt", path + L"\n" + std::to_wstring(launches + 1) + L"\n", false);
+    WriteText(directory + L"pending.txt",
+              path + L"\n" + std::to_wstring(launches + 1) + L"\n", false);
   }
 
   // The DLL's own dependencies resolve from its folder, then Lumtub's
   // folder and System32; never from PATH or the current folder.
-  if (::LoadLibraryExW(path.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) == nullptr) {
+  if (::LoadLibraryExW(path.c_str(), nullptr,
+                       LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR |
+                           LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) == nullptr) {
     MarkFailed(directory, path);
     return;
   }

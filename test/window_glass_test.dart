@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
@@ -13,6 +12,7 @@ import 'package:lumtub/ui/glass_look.dart';
 import 'package:lumtub/ui/skin_chrome.dart';
 import 'package:lumtub/ui/skin_paint.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 窗口透明 (docs/specs/window-glass.md): every word on the glass reads
 /// over anything behind the window, under every skin, light and dark.

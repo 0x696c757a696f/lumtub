@@ -183,7 +183,7 @@ static SESSION: LazyLock<Mutex<Session>> = LazyLock::new(|| {
 static OPENING: Mutex<()> = Mutex::new(());
 
 fn session() -> std::sync::MutexGuard<'static, Session> {
-    SESSION.lock().unwrap_or_else(|e| e.into_inner())
+    SESSION.lock().expect("lock poisoned by a panic")
 }
 
 fn write_file(file: &Path, sealed: &[u8]) -> Result<(), String> {
@@ -230,7 +230,7 @@ enum Shut {
 /// user first where it guards them. [ask] asks again after the user
 /// closed the prompt once.
 fn unlock(ask: bool) -> Result<(), Shut> {
-    let _opening = OPENING.lock().unwrap_or_else(|e| e.into_inner());
+    let _opening = OPENING.lock().expect("lock poisoned by a panic");
     let (sealed, reason) = {
         let mut session = session();
         if session.open.is_some() {
@@ -479,6 +479,7 @@ pub unsafe extern "C" fn lumtub_web_open(
     json: *const u8,
     length: usize,
 ) -> *mut std::os::raw::c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let Some(folder) = options.get("folder").and_then(Value::as_str) else {
         return give_json(&status());
@@ -539,6 +540,7 @@ fn shred(file: &Path) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_web_import(port: i64, json: *const u8, length: usize) -> bool {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let Some(path) = options
         .get("path")
@@ -590,6 +592,7 @@ pub unsafe extern "C" fn lumtub_web_browser_sign_in(
     json: *const u8,
     length: usize,
 ) -> bool {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let hello = options
         .get("hello")
@@ -680,6 +683,7 @@ pub unsafe extern "C" fn lumtub_web_cookies_file(
     json: *const u8,
     length: usize,
 ) -> bool {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let Some(path) = options
         .get("path")
@@ -737,6 +741,7 @@ pub unsafe extern "C" fn lumtub_web_cookies_file(
 /// [path] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_web_wipe_cookies(path: *const u8, length: usize) {
+    // SAFETY: `path` points to `length` readable bytes, per this function's `# Safety`.
     shred(Path::new(unsafe { text(path, length) }));
 }
 
@@ -748,6 +753,7 @@ pub unsafe extern "C" fn lumtub_web_wipe_cookies(path: *const u8, length: usize)
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_web_innertube(port: i64, json: *const u8, length: usize) -> bool {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(request) = serde_json::from_str::<Request>(unsafe { text(json, length) }) else {
         return false;
     };
@@ -913,6 +919,7 @@ fn youtube_https(url: &str) -> bool {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_web_watched(port: i64, json: *const u8, length: usize) -> bool {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(request) = serde_json::from_str::<WatchedRequest>(unsafe { text(json, length) }) else {
         return false;
     };
@@ -1026,12 +1033,16 @@ mod tests {
         let folder = std::env::temp_dir().join(format!("lumtub-web-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let options = json!({"folder": folder.to_string_lossy()}).to_string();
+        // SAFETY: `options` is a live `String` and the pointer and length are its own; the returned
+        // string comes from `give` and is freed once.
         unsafe {
             crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len()))
         };
         assert_eq!(status()["signedIn"], false);
         let jar = read_cookies("SAPISID=abc; LOGIN_INFO=x");
         let guard = keep(&jar, true).unwrap();
+        // SAFETY: `options` is a live `String` and the pointer and length are its own; the returned
+        // string comes from `give` and is freed once.
         unsafe {
             crate::taste::lumtub_string_free(lumtub_web_open(options.as_ptr(), options.len()))
         };

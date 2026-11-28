@@ -29,10 +29,10 @@ void main() {
     });
 
     test('tells channels and their tabs apart', () {
-      final a = ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'A');
+      final a = const ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'A');
       expect(BackEntry.page(PageMode.channel, channel: a).same(BackEntry.page(PageMode.channel, channel: a)), isTrue);
       expect(BackEntry.page(PageMode.channel, channel: a).same(BackEntry.page(PageMode.channel, channel: a, channelTab: ChannelTab.shorts)), isFalse);
-      expect(BackEntry.page(PageMode.channel, channel: a).same(BackEntry.page(PageMode.channel, channel: ChannelRef('UCbbbbbbbbbbbbbbbbbbbbbb', 'B'))), isFalse);
+      expect(BackEntry.page(PageMode.channel, channel: a).same(const BackEntry.page(PageMode.channel, channel: ChannelRef('UCbbbbbbbbbbbbbbbbbbbbbb', 'B'))), isFalse);
     });
 
     test('forgets the oldest places past its limit', () {

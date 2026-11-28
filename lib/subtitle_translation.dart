@@ -147,7 +147,7 @@ Future<Map<String, SubtitleTrack>> mpvSubtitleTracks(NativePlayer platform) asyn
   final list = jsonDecode(await platform.getProperty('track-list'));
   return {
     if (list is List)
-      for (final t in list.whereType<Map>())
+      for (final t in list.whereType<Map<dynamic, dynamic>>())
         if (t['type'] == 'sub' && t['id'] != null) '${t['id']}': SubtitleTrack('${t['id']}', t['title'] as String?, t['lang'] as String?),
   };
 }

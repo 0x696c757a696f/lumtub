@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -20,6 +19,7 @@ import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/video_pages.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _video = VideoItem(id: 'abcdefghijk', title: 'How lighthouses are built', channel: 'Coast Stories', url: 'u', duration: 185, viewCount: 12000);
 const _live = VideoItem(id: 'live0000000', title: 'Harbour camera', channel: 'Port Authority', url: 'u', liveStatus: 'is_live', membersOnly: true);

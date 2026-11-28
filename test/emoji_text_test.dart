@@ -1,6 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/emoji_text.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('custom emoji shortcuts become pictures, the rest stays text', (tester) async {

@@ -6,13 +6,13 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'background_json.dart';
 import 'bounded_get.dart';
+import 'format_policy.dart';
+import 'l10n/l10n.dart';
 import 'media_url_policy.dart';
 import 'native_core.dart';
-import 'format_policy.dart';
 import 'player_settings.dart';
 import 'relay_servers.dart';
 import 'video_codec.dart';
-import 'l10n/l10n.dart';
 
 /// The public server networks that can fetch a video in place of YouTube.
 enum RelayKind { piped, invidious }
@@ -65,7 +65,7 @@ List<String> parsePipedInstanceList(String text) {
     final list = jsonDecode(text);
     return [
       if (list is List)
-        for (final entry in list.whereType<Map>())
+        for (final entry in list.whereType<Map<Object?, Object?>>())
           if (entry['up_to_date'] != false)
             if (normalizePipedServer('${entry['api_url']}') case final server?) server,
     ];
@@ -96,9 +96,9 @@ class PipedStream {
   /// A stream the core read, `[address, codec, height, bitrate, container, video only]`,
   /// or null when its address is not an allowed media address.
   static PipedStream? fromRow(List<Object?> row, Iterable<String> trustedHosts, {String? url}) {
-    final address = url ?? row[0] as String;
+    final address = url ?? row[0]! as String;
     if (!isAllowedMediaUrl(address, trustedHosts: trustedHosts)) return null;
-    return PipedStream(url: address, codec: row[1] as String, height: row[2] as int, bitrate: row[3] as int, videoOnly: row[5] as bool, mime: row[4] as String);
+    return PipedStream(url: address, codec: row[1]! as String, height: row[2]! as int, bitrate: row[3]! as int, videoOnly: row[5]! as bool, mime: row[4]! as String);
   }
 
   /// The stream in [raw], or null when its address is not an allowed media
@@ -137,15 +137,6 @@ typedef CoreRelayVideo = ({List<List<Object?>> video, List<List<Object?>> audio,
 
 /// What a Piped server returned for one video.
 class PipedVideo {
-  const PipedVideo({required this.server, required this.video, required this.audio, this.live = false, this.muxed = const []});
-  final String server;
-  final List<PipedStream> video;
-  final List<PipedStream> audio;
-  /// Streams with video and audio in one file (mp4), which a TV can play
-  /// from a single address; see `castStreamOf`.
-  final List<PipedStream> muxed;
-  final bool live;
-
   /// [read], the core's reading of a Piped answer from [server]; streams
   /// are kept as in [PipedVideo.fromJson].
   factory PipedVideo.fromCore(String server, CoreRelayVideo read) {
@@ -177,6 +168,15 @@ class PipedVideo {
           .toList(),
     );
   }
+
+  const PipedVideo({required this.server, required this.video, required this.audio, this.live = false, this.muxed = const []});
+  final String server;
+  final List<PipedStream> video;
+  final List<PipedStream> audio;
+  /// Streams with video and audio in one file (mp4), which a TV can play
+  /// from a single address; see `castStreamOf`.
+  final List<PipedStream> muxed;
+  final bool live;
 
   /// This video without the streams on a host that is not YouTube's and
   /// resolves to an address on this computer or its network.

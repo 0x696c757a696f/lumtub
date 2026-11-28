@@ -158,6 +158,8 @@ struct Request {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_comment_action_for(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(request) = serde_json::from_str::<Request>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };

@@ -21,7 +21,8 @@ class WindowFrame {
 
   // Handles the frame's window messages (before Flutter sees them); returns
   // true, with the result in |result|, when it did.
-  bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result);
+  bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam,
+                     LRESULT* result);
 
   // Flutter's view is a child window covering the whole client area, so
   // the hit tests for the bar reach it, not the frame. Hooked here, it
@@ -34,13 +35,15 @@ class WindowFrame {
     double left = 0, top = 0, right = 0, bottom = 0;
   };
 
-  void HandleCall(const flutter::MethodCall<flutter::EncodableValue>& call,
-                  std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleCall(
+      const flutter::MethodCall<flutter::EncodableValue>& call,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void SetCustom(bool on);
   // Lets the desktop show where Flutter leaves the window clear, blurred
   // when |blur| and the system can; answers what it managed.
-  flutter::EncodableValue SetDesktopGlass(bool on, bool dark, bool blur, DWORD tint);
+  flutter::EncodableValue SetDesktopGlass(bool on, bool dark, bool blur,
+                                          DWORD tint);
   // The system blur behind the window: acrylic, the older blur or none.
   void ApplyBlur(bool moving);
   // Sizes Flutter's view to the client area, which a frame change alters
@@ -51,8 +54,8 @@ class WindowFrame {
   void ApplyMargins();
   bool Active() const;
   LRESULT HitTest(LPARAM lparam);
-  static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
-                                   UINT_PTR id, DWORD_PTR data);
+  static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam,
+                                   LPARAM lparam, UINT_PTR id, DWORD_PTR data);
   void SetButton(int state);
   // Hides the pointer while it rests in |area| of Flutter's view, until it
   // moves (see WindowFrame.hidePointer in lib/window_frame.dart).

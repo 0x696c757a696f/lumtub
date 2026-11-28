@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,6 +10,7 @@ import 'package:lumtub/subtitle_translation.dart';
 import 'package:lumtub/translation.dart';
 import 'package:lumtub/translation_services.dart';
 import 'package:lumtub/ui/translatable.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _Fake implements Translator {
   int calls = 0;

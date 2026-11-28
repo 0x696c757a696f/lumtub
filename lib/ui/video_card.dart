@@ -3,36 +3,36 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
-import '../device.dart';
 import '../app/app_controller.dart';
+import '../appearance_settings.dart';
 import '../church_wording.dart';
+import '../dearrow.dart';
+import '../device.dart';
+import '../feed_reason.dart';
+import '../l10n/l10n.dart';
 import '../learning/video_difficulty.dart';
 import '../learning/video_words.dart' show VideoLevel, VideoWords;
-import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
-import '../dearrow.dart';
-import '../title_translation.dart';
 import '../thumbnail_cache.dart';
+import '../title_translation.dart';
+import '../video_facts_lookup.dart';
 import '../youtube_account.dart' show RemotePlaylist;
+import 'accessibility.dart';
+import 'app_icons.dart';
 import 'common.dart';
+import 'frame_pressure.dart';
 import 'haptics.dart';
+import 'motion.dart';
 import 'pages/downloads_page.dart';
+import 'press_scale.dart';
 import 'skeleton.dart';
 import 'skin_paint.dart';
 import 'theme.dart';
-import '../l10n/l10n.dart';
-import '../video_facts_lookup.dart';
-import 'motion.dart';
-import 'press_scale.dart';
-import 'app_icons.dart';
-import '../feed_reason.dart';
-import 'frame_pressure.dart';
-import 'accessibility.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// line with the reason, the channel and the menu. The views and age sit
@@ -656,7 +656,7 @@ class _CardSkeleton extends StatelessWidget {
   const _CardSkeleton();
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+  Widget build(BuildContext context) => const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         AspectRatio(aspectRatio: 16 / 9, child: SkeletonBox(radius: AppStyle.radius)),
         SizedBox(height: 12),
         SkeletonBox(height: 14),
@@ -1373,7 +1373,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
   final channel = item.channelRef;
   final favorite = library?.isFavorite(item.id) ?? false;
   final later = library?.isWatchLater(item.id) ?? false;
-  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
   // On a phone the same rows come up from the bottom, a finger's height each.
   final phone = isPhone(context);
   final rows = <SheetChoice<String>>[];
@@ -1562,7 +1562,7 @@ Offset _centreOf(BuildContext context) {
 class MetaLine extends StatelessWidget {
   const MetaLine({super.key, required this.lead, required this.tail, required this.style});
 
-  factory MetaLine.of(VideoItem item, {String? extra, required TextStyle style}) {
+  factory MetaLine.of(VideoItem item, {required TextStyle style, String? extra}) {
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     return MetaLine(
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),

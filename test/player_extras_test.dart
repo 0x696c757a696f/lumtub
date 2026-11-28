@@ -1,27 +1,27 @@
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
-import 'package:lumtub/right_click.dart';
 import 'package:lumtub/heatmap.dart';
 import 'package:lumtub/keep_awake.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/picture_transform.dart';
 import 'package:lumtub/progress_line.dart';
+import 'package:lumtub/right_click.dart';
 import 'package:lumtub/screenshot.dart';
+import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/storyboard.dart';
 import 'package:lumtub/ui/player_controls.dart';
-import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
 import 'package:lumtub/ui/theater_mode.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:lumtub/wheel_gesture.dart';
 import 'package:lumtub/widgets/mini_progress_line.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
-import 'package:lumtub/wheel_gesture.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 import 'tooltip_finder.dart';
@@ -97,7 +97,7 @@ void main() {
       expect(Heatmap.from({}), isNull);
       expect(Heatmap.from({'heatmap': null}), isNull);
       expect(Heatmap.from({'heatmap': [{'start_time': 0, 'end_time': 5, 'value': 1}]}), isNull);
-      expect(Heatmap.from({'heatmap': [{'start_time': 'a'}, 3, {}]}), isNull);
+      expect(Heatmap.from({'heatmap': [{'start_time': 'a'}, 3, <String, Object?>{}]}), isNull);
     });
 
     test('clamps values', () {

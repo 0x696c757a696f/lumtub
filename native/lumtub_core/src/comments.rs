@@ -616,6 +616,8 @@ pub fn page(response: &Value) -> Page {
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_youtube_comments(body: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `body` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(data) = serde_json::from_str::<Value>(unsafe { outside(body, length) }) else {
         return std::ptr::null_mut();
     };

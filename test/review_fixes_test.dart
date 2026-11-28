@@ -101,7 +101,7 @@ void main() {
   });
 
   group('API keys follow their host', () {
-    const openai = TranslationConfig(aiPreset: 'openai');
+    const openai = TranslationConfig();
 
     test('a key is only used for the host it was saved for', () {
       const keys = {'ai@api.openai.com': 'sk-1'};
@@ -123,7 +123,7 @@ void main() {
     });
 
     test('speech uses its own key for its host, else the AI key of that host', () {
-      const config = TranslationConfig(aiPreset: 'openai', speechPreset: 'openai');
+      const config = TranslationConfig(speechPreset: 'openai');
       expect(speechKeyFor(config, const {'ai@api.openai.com': 'sk'}), 'sk');
       expect(speechKeyFor(config, const {'ai@api.openai.com': 'sk', 'speech@api.openai.com': 'own'}), 'own');
       expect(speechKeyFor(config, const {'speech@api.groq.com': 'gsk'}), '');

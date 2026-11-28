@@ -237,10 +237,10 @@ extension PictureHealth on AppController {
     if (_lightRendering != null || settings.strategy != PlaybackStrategy.auto || settings.scale != const PlayerSettings().scale || settings.deband || settings.interpolation) return;
     String reason;
     final mobile = Platform.isIOS || Platform.isAndroid;
-    final height = software == true ? int.tryParse(await platform.getProperty('video-params/h')) ?? 0 : 0;
+    final height = software ?? false ? int.tryParse(await platform.getProperty('video-params/h')) ?? 0 : 0;
     if (Power.saving) {
       reason = 'battery';
-    } else if (software == true && (height > 1080 || (mobile && height >= 1080))) {
+    } else if ((software ?? false) && (height > 1080 || (mobile && height >= 1080))) {
       reason = 'software';
     } else {
       final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);

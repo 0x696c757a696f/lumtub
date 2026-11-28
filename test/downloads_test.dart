@@ -4,14 +4,14 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/blocked_sign_in.dart';
-import 'package:lumtub/stream_resolver.dart' show MembersCookies;
-import 'package:lumtub/video_codec.dart';
 import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/sponsor_block.dart';
+import 'package:lumtub/stream_resolver.dart' show MembersCookies;
+import 'package:lumtub/video_codec.dart';
 
 class FakeProcess implements Process {
   final _stdout = StreamController<List<int>>();
@@ -206,7 +206,7 @@ void main() {
       expect(processes, hasLength(1), reason: 'off by default');
       expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);
       expect(signIn.recentlyBlocked, isTrue);
-      m.remove('aaaaaaaaaaa');
+      unawaited(m.remove('aaaaaaaaaaa'));
       await settle();
 
       on = true;
@@ -534,7 +534,7 @@ void main() {
       expect(requests.single.toJson()['cut'], [[10.0, 20.0], [50.0, 60.0]]);
       final local = LocalVideo.read(File(task.filePath!));
       expect(local.info['duration'], 94);
-      expect([for (final c in local.info['chapters'] as List) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
+      expect([for (final c in (local.info['chapters'] as List<Object?>).cast<Map<String, Object?>>()) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
       expect([for (final s in local.segments) (s.start, s.end, s.category)], [(sec * 10, sec * 14, 'sponsor'), (sec * 44, sec * 54, 'selfpromo')]);
     });
 
@@ -613,7 +613,7 @@ void main() {
       }
       File('${dir.path}/downloads.json').writeAsStringSync(jsonEncode({
         'tasks': [
-          (DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem)).toJson(),
+          DownloadTask(item: video('lllllllllll').withLiveStatus('is_live'), quality: DownloadQuality.best, directory: '${dir.path}/videos', status: DownloadStatus.downloading, filePath: stem).toJson(),
         ],
       }));
       final m = manager(recorder: recorder, join: (r) async {
@@ -659,7 +659,7 @@ void main() {
       await settle();
       expect(list.existsSync(), isFalse);
       await m.flush();
-      expect(jsonDecode(list.readAsStringSync())['tasks'], hasLength(2));
+      expect((jsonDecode(list.readAsStringSync()) as Map<String, Object?>)['tasks'], hasLength(2));
     });
 
     test('keeps the list and the folder across restarts, and resumes interrupted downloads', () async {

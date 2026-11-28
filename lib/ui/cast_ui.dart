@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'dart:async';
+import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
@@ -9,9 +8,9 @@ import '../cast/airplay.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_discovery.dart';
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
 import 'common.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 
 /// Lists the TVs and Chromecasts on the network and casts the playing video
 /// to the one picked.
@@ -343,7 +342,7 @@ class _CastBarState extends State<CastBar> {
                   Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())), style: context.text.labelMedium),
                   Expanded(
                     child: Slider(
-                      value: seconds.toDouble(),
+                      value: seconds,
                       max: max > 0 ? max : 1.0,
                       onChanged: max > 0 ? (v) => setState(() => _drag = v) : null,
                       onChangeEnd: (v) {

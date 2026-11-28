@@ -20,13 +20,13 @@ void main() {
 
   String skinText(String id) {
     final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync());
-    return jsonEncode({...json as Map<String, Object?>, 'id': id});
+    return jsonEncode({...json! as Map<String, Object?>, 'id': id});
   }
 
   test('a font file changed while Lumtub runs is loaded again under a new name', () async {
     final skins = Directory('${temp.path}/skins');
     final folder = Directory('${skins.path}/font-skin')..createSync(recursive: true);
-    final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync()) as Map<String, Object?>;
+    final json = decodeJsonc(File('skins/paper/skin.jsonc').readAsStringSync())! as Map<String, Object?>;
     File('${folder.path}/skin.jsonc').writeAsStringSync(jsonEncode({
       ...json,
       'id': 'font-skin',

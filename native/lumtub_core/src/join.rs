@@ -148,7 +148,7 @@ impl Extra {
             .cover
             .as_ref()
             .and_then(|p| std::fs::read(p).ok())
-            .filter(|b| b.starts_with(&[0xFF, 0xD8]) || crate::embed::is_png(b));
+            .filter(|b| b.starts_with(&[0xff, 0xd8]) || crate::embed::is_png(b));
         crate::embed::Extras {
             texts,
             title: self.title.clone().filter(|t| !t.is_empty()),
@@ -284,6 +284,8 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
         #[serde(flatten)]
         extra: Extra,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Request>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|r| join(&r.video, &r.audio, &r.out, &r.container, &r.extra));
@@ -301,7 +303,7 @@ mod tests {
     fn extras(dir: &str) -> Extra {
         std::fs::write(format!("{dir}/en.vtt"), "WEBVTT\n\n00:00:00.500 --> 00:00:02.500\nFirst line\n\n00:00:08.000 --> 00:00:12.000\nSecond line\n").unwrap();
         std::fs::write(format!("{dir}/de.srt"), "1\n00:00:01,000 --> 00:00:03,000\nErste Zeile\n\n2\n00:00:09,000 --> 00:00:11,000\nZweite Zeile\n").unwrap();
-        let mut jpeg = vec![0xFF, 0xD8, 0xFF, 0xE0];
+        let mut jpeg = vec![0xff, 0xd8, 0xff, 0xe0];
         jpeg.extend_from_slice(&[0x42; 100]);
         std::fs::write(format!("{dir}/cover.jpg"), jpeg).unwrap();
         Extra {
@@ -509,7 +511,7 @@ mod tests {
                     has(b"Second line") && has(b"Zweite Zeile") && has(b"A title"),
                     "{out}"
                 );
-                assert!(has(&[0xFF, 0xD8, 0xFF, 0xE0]), "cover in {out}");
+                assert!(has(&[0xff, 0xd8, 0xff, 0xe0]), "cover in {out}");
             }
         }
         let audio = format!("{dir}/a.mp4");

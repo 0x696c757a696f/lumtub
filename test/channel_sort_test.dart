@@ -11,7 +11,7 @@ void main() {
               'contents': [
                 {'chipCloudChipRenderer': {'text': {'simpleText': 'Latest'}, 'isSelected': true}},
                 {'chipCloudChipRenderer': {'text': {'simpleText': 'Popular'}, 'navigationEndpoint': {'continuationCommand': {'token': 'POP'}}}},
-                {'chipCloudChipRenderer': {'text': {'runs': [{'text': 'Old'}, {'text': 'est'}]}, 'navigationEndpoint': {'commandMetadata': {}, 'continuationCommand': {'token': 'OLD'}}}},
+                {'chipCloudChipRenderer': {'text': {'runs': [{'text': 'Old'}, {'text': 'est'}]}, 'navigationEndpoint': {'commandMetadata': <String, Object?>{}, 'continuationCommand': {'token': 'OLD'}}}},
               ],
             },
           },

@@ -92,7 +92,7 @@ class DeArrow extends ChangeNotifier {
   }
 
   Future<void> _fetch(String videoId) async {
-    Branding found = Branding.none;
+    var found = Branding.none;
     try {
       final (status, body) = await getBounded(_client!, requestUri(videoId), limit: 1 << 20, headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
       // 404: no video with this prefix has submissions.

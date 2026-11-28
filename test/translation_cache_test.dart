@@ -19,7 +19,7 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('lumtub-cache');
     addTearDown(() => dir.delete(recursive: true));
     final file = File('${dir.path}/translations.json');
-    var now = DateTime(2026, 10, 1);
+    var now = DateTime(2026, 10);
     final inner = _Counting();
     final cache = TranslationCache(file: file, now: () => now);
     final translator = CachingTranslator(inner, cache, 'google');

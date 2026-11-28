@@ -97,7 +97,7 @@ fn run_here(source: &str) -> (String, Option<String>) {
                 .map(|p| p.0)
                 .collect::<Vec<_>>()
                 .join(" ");
-            let mut out = sink.lock().unwrap_or_else(|e| e.into_inner());
+            let mut out = sink.lock().expect("lock poisoned by a panic");
             out.push_str(&line);
             out.push('\n');
         })
@@ -111,7 +111,7 @@ fn run_here(source: &str) -> (String, Option<String>) {
             .catch(&ctx)
             .map_err(|e| e.to_string())
     });
-    let out = std::mem::take(&mut *printed.lock().unwrap_or_else(|e| e.into_inner()));
+    let out = std::mem::take(&mut *printed.lock().expect("lock poisoned by a panic"));
     match result {
         Ok(()) => (out, None),
         Err(_) if stopped.load(Ordering::Relaxed) => (
@@ -183,7 +183,7 @@ fn solve_on_thread(input: SolveInput) -> Result<Value, String> {
     let mut job = SolveJob { input, reply };
     loop {
         let (thread, waiting) = {
-            let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
+            let mut solver = SOLVER.lock().expect("lock poisoned by a panic");
             let Some(thread) = solver.clone() else {
                 *solver = Some(start_solver(job)?);
                 break;
@@ -240,7 +240,7 @@ fn solver_thread(jobs: mpsc::Receiver<SolveJob>) {
             Err(RecvTimeoutError::Timeout) => {
                 // Jobs sent after this point find the sender gone and start
                 // a new thread.
-                let mut solver = SOLVER.lock().unwrap_or_else(|e| e.into_inner());
+                let mut solver = SOLVER.lock().expect("lock poisoned by a panic");
                 match jobs.try_recv() {
                     Ok(job) => {
                         drop(solver);
@@ -413,6 +413,8 @@ fn compile(player: &str) -> Result<Vec<u8>, String> {
                 flags,
             )
         };
+        // SAFETY: `function` is the live value JS_Eval just returned; JS_IsException only inspects
+        // it.
         if unsafe { qjs::JS_IsException(function) } {
             return Err(format!("The player did not compile: {}", exception(&ctx)));
         }
@@ -503,6 +505,8 @@ fn answer(context: &Context, requests: &[SolveRequest]) -> Result<Value, String>
 /// [input] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_js_solve(input: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `input` pointing at `len` readable bytes, as this function
+    // requires.
     give_json(&solve(unsafe { text(input, len) }))
 }
 
@@ -515,6 +519,8 @@ pub unsafe extern "C" fn lumtub_js_solve(input: *const u8, len: usize) -> *mut c
 /// [source] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_js_run(source: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `source` pointing at `len` readable bytes, as this function
+    // requires.
     give_json(&run(unsafe { text(source, len) }))
 }
 

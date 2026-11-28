@@ -7,6 +7,18 @@ import 'l10n/l10n.dart';
 enum DecoderKind { unverified, software, hardware }
 
 class DecoderStatus {
+  const DecoderStatus._(this.kind, [this.hwdec, this.height = 0]);
+
+  const DecoderStatus.unverified() : this._(DecoderKind.unverified);
+  const DecoderStatus.software() : this._(DecoderKind.software);
+  const DecoderStatus.hardware(String hwdec, {int height = 0}) : this._(DecoderKind.hardware, hwdec, height);
+  /// Reads libmpv's `hwdec-current` property after playback started.
+  factory DecoderStatus.fromMpv(String hwdecCurrent) {
+    final value = hwdecCurrent.trim();
+    if (value.isEmpty || value == 'no' || value == 'none') return const DecoderStatus.software();
+    return DecoderStatus.hardware(value);
+  }
+
   final DecoderKind kind;
 
   /// The libmpv `hwdec-current` value, only set for [DecoderKind.hardware].
@@ -16,24 +28,12 @@ class DecoderStatus {
   /// probe measured it; 0 when unknown.
   final int height;
 
-  const DecoderStatus._(this.kind, [this.hwdec, this.height = 0]);
-  const DecoderStatus.unverified() : this._(DecoderKind.unverified);
-  const DecoderStatus.software() : this._(DecoderKind.software);
-  const DecoderStatus.hardware(String hwdec, {int height = 0}) : this._(DecoderKind.hardware, hwdec, height);
-
   /// This status with the probe's [height] of [measured] kept, for a
   /// decoder libmpv reports (which says nothing of sizes).
   DecoderStatus keeping(DecoderStatus? measured) =>
       isHardware && height == 0 && (measured?.height ?? 0) > 0 ? DecoderStatus.hardware(hwdec!, height: measured!.height) : this;
 
   static const codecs = ['h264', 'vp9', 'av1'];
-
-  /// Reads libmpv's `hwdec-current` property after playback started.
-  factory DecoderStatus.fromMpv(String hwdecCurrent) {
-    final value = hwdecCurrent.trim();
-    if (value.isEmpty || value == 'no' || value == 'none') return const DecoderStatus.software();
-    return DecoderStatus.hardware(value);
-  }
 
   /// Accepts the structured form and the free-text strings older builds saved.
   static DecoderStatus? fromJson(Object? raw) {

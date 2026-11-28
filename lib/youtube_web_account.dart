@@ -107,7 +107,7 @@ class WebAccountApi implements AccountApi {
     if (core == null) throw StateError(NativeCore.missingMessage);
     final current = await feed.playlistEntries(playlistId);
     if (current.isEmpty) throw StateError(tr('YouTube did not list this playlist'));
-    final requests = core.playlistMoves(current, videoIds, perRequest: perRequest);
+    final requests = core.playlistMoves(current, videoIds);
     var moved = 0;
     for (final actions in requests) {
       await _send('browse/edit_playlist', {'playlistId': playlistId, 'actions': actions}, 'a playlist change');

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
@@ -8,6 +7,7 @@ import 'package:lumtub/app/video_list_loader.dart';
 import 'package:lumtub/main.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/video_repository.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   // On a desktop nothing is focused when the app starts, nor after a click

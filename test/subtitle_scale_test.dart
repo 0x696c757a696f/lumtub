@@ -26,7 +26,7 @@ void main() {
     expect(px(244, 137), closeTo(7.3, 0.1), reason: 'not the 12 px floor, which took two lines over half the window');
     expect(px(120, 68), 6, reason: 'never under 6 px');
     final view = subtitleViewFor(const PlayerSettings(), smallWindow: const Size(244, 137), byHeight: true);
-    expect(view.scaleFor?.call(const Size(244, 137)), TextScaler.linear(137 * 0.0533 / 32));
+    expect(view.scaleFor?.call(const Size(244, 137)), const TextScaler.linear(137 * 0.0533 / 32));
   });
 
   test('subtitles in picture in picture and the mini player are on until turned off', () {
@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('the watch page passes the height rule to the subtitle view', (tester) async {
     final view = subtitleViewFor(const PlayerSettings(), byHeight: true);
-    expect(view.scaleFor?.call(const Size(852, 393)), TextScaler.linear(393 * 0.0533 / 32));
+    expect(view.scaleFor?.call(const Size(852, 393)), const TextScaler.linear(393 * 0.0533 / 32));
     expect(subtitleViewFor(const PlayerSettings()).scaleFor, isNull);
   });
 }

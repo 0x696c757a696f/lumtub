@@ -123,14 +123,17 @@ std::string ExecutableDirectory() {
   return full.substr(0, full.rfind('/'));
 }
 
-std::string IconPath() { return ExecutableDirectory() + "/data/" + shell.icon_name + ".png"; }
+std::string IconPath() {
+  return ExecutableDirectory() + "/data/" + shell.icon_name + ".png";
+}
 
 void Send(const char* method, FlValue* argument) {
   if (shell.channel == nullptr) {
     fl_value_unref(argument);
     return;
   }
-  fl_method_channel_invoke_method(shell.channel, method, argument, nullptr, nullptr, nullptr);
+  fl_method_channel_invoke_method(shell.channel, method, argument, nullptr,
+                                  nullptr, nullptr);
   fl_value_unref(argument);
 }
 
@@ -139,11 +142,14 @@ void SendFrame(const char* method, FlValue* argument) {
     fl_value_unref(argument);
     return;
   }
-  fl_method_channel_invoke_method(shell.frame_channel, method, argument, nullptr, nullptr, nullptr);
+  fl_method_channel_invoke_method(shell.frame_channel, method, argument,
+                                  nullptr, nullptr, nullptr);
   fl_value_unref(argument);
 }
 
-void SendButton(const char* button) { Send("button", fl_value_new_string(button)); }
+void SendButton(const char* button) {
+  Send("button", fl_value_new_string(button));
+}
 
 // ---- Tray -----------------------------------------------------------------
 
@@ -151,17 +157,24 @@ bool LoadIndicator() {
   if (shell.indicator_loaded) return shell.indicator_new != nullptr;
   shell.indicator_loaded = true;
   void* library = nullptr;
-  for (const char* name : {"libayatana-appindicator3.so.1", "libappindicator3.so.1"}) {
+  for (const char* name :
+       {"libayatana-appindicator3.so.1", "libappindicator3.so.1"}) {
     library = dlopen(name, RTLD_NOW | RTLD_LOCAL);
     if (library != nullptr) break;
   }
   if (library == nullptr) return false;
-  shell.indicator_new = reinterpret_cast<IndicatorNew>(dlsym(library, "app_indicator_new_with_path"));
-  shell.indicator_set_status = reinterpret_cast<IndicatorSetStatus>(dlsym(library, "app_indicator_set_status"));
-  shell.indicator_set_menu = reinterpret_cast<IndicatorSetMenu>(dlsym(library, "app_indicator_set_menu"));
-  shell.indicator_set_title = reinterpret_cast<IndicatorSetTitle>(dlsym(library, "app_indicator_set_title"));
-  shell.indicator_set_icon = reinterpret_cast<IndicatorSetIcon>(dlsym(library, "app_indicator_set_icon_full"));
-  if (shell.indicator_new == nullptr || shell.indicator_set_status == nullptr || shell.indicator_set_menu == nullptr) {
+  shell.indicator_new = reinterpret_cast<IndicatorNew>(
+      dlsym(library, "app_indicator_new_with_path"));
+  shell.indicator_set_status = reinterpret_cast<IndicatorSetStatus>(
+      dlsym(library, "app_indicator_set_status"));
+  shell.indicator_set_menu = reinterpret_cast<IndicatorSetMenu>(
+      dlsym(library, "app_indicator_set_menu"));
+  shell.indicator_set_title = reinterpret_cast<IndicatorSetTitle>(
+      dlsym(library, "app_indicator_set_title"));
+  shell.indicator_set_icon = reinterpret_cast<IndicatorSetIcon>(
+      dlsym(library, "app_indicator_set_icon_full"));
+  if (shell.indicator_new == nullptr || shell.indicator_set_status == nullptr ||
+      shell.indicator_set_menu == nullptr) {
     shell.indicator_new = nullptr;
     return false;
   }
@@ -169,11 +182,16 @@ bool LoadIndicator() {
 }
 
 // Whether the window is there and shown; it is gone once destroyed.
-bool WindowVisible() { return shell.window != nullptr && gtk_widget_get_visible(GTK_WIDGET(shell.window)); }
+bool WindowVisible() {
+  return shell.window != nullptr &&
+         gtk_widget_get_visible(GTK_WIDGET(shell.window));
+}
 
 void ShowFromTray() {
   if (shell.window == nullptr) return;
-  if (shell.indicator != nullptr && !shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
+  if (shell.indicator != nullptr && !shell.close_to_tray &&
+      !shell.minimize_to_tray)
+    shell.indicator_set_status(shell.indicator, kStatusPassive);
   gtk_widget_show(GTK_WIDGET(shell.window));
   gtk_window_present(shell.window);
 }
@@ -183,7 +201,8 @@ void ExitFromTray() {
   // The normal close path, so Dart saves progress and releases the player.
   shell.close_to_tray = false;
   shell.minimize_to_tray = false;
-  if (shell.indicator != nullptr) shell.indicator_set_status(shell.indicator, kStatusPassive);
+  if (shell.indicator != nullptr)
+    shell.indicator_set_status(shell.indicator, kStatusPassive);
   gtk_widget_show(GTK_WIDGET(shell.window));
   gtk_window_close(shell.window);
 }
@@ -199,14 +218,27 @@ void BuildMenu() {
   if (shell.menu != nullptr) gtk_widget_destroy(shell.menu);
   shell.menu = gtk_menu_new();
   GtkMenuShell* items = GTK_MENU_SHELL(shell.menu);
-  gtk_menu_shell_append(items, MenuItem(shell.show_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) { ShowFromTray(); })));
-  gtk_menu_shell_append(items, MenuItem(shell.play_pause_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) { SendButton("playpause"); })));
-  gtk_menu_shell_append(items, MenuItem(shell.next_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) { SendButton("next"); })));
+  gtk_menu_shell_append(
+      items, MenuItem(shell.show_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) {
+                        ShowFromTray();
+                      })));
+  gtk_menu_shell_append(items, MenuItem(shell.play_pause_label,
+                                        G_CALLBACK(+[](GtkMenuItem*, gpointer) {
+                                          SendButton("playpause");
+                                        })));
+  gtk_menu_shell_append(
+      items, MenuItem(shell.next_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) {
+                        SendButton("next");
+                      })));
   GtkWidget* separator = gtk_separator_menu_item_new();
   gtk_widget_show(separator);
   gtk_menu_shell_append(items, separator);
-  gtk_menu_shell_append(items, MenuItem(shell.exit_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) { ExitFromTray(); })));
-  if (shell.indicator != nullptr) shell.indicator_set_menu(shell.indicator, GTK_MENU(shell.menu));
+  gtk_menu_shell_append(
+      items, MenuItem(shell.exit_label, G_CALLBACK(+[](GtkMenuItem*, gpointer) {
+                        ExitFromTray();
+                      })));
+  if (shell.indicator != nullptr)
+    shell.indicator_set_menu(shell.indicator, GTK_MENU(shell.menu));
 }
 
 // Whether a tray that shows StatusNotifier icons runs: GNOME has none
@@ -218,13 +250,17 @@ bool ShowTrayIcon();
 void WatchTray() {
   if (shell.tray_watch != 0) return;
   shell.tray_watch = g_bus_watch_name(
-      G_BUS_TYPE_SESSION, "org.kde.StatusNotifierWatcher", G_BUS_NAME_WATCHER_FLAGS_NONE,
+      G_BUS_TYPE_SESSION, "org.kde.StatusNotifierWatcher",
+      G_BUS_NAME_WATCHER_FLAGS_NONE,
       +[](GDBusConnection*, const gchar*, const gchar*, gpointer) {
         shell.tray_runs = true;
         // Tray settings that came before the answer show the icon now.
         if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
       },
-      +[](GDBusConnection*, const gchar*, gpointer) { shell.tray_runs = false; }, nullptr, nullptr);
+      +[](GDBusConnection*, const gchar*, gpointer) {
+        shell.tray_runs = false;
+      },
+      nullptr, nullptr);
 }
 
 // Shows the tray icon; false when there is no tray to show it in.
@@ -234,9 +270,12 @@ bool ShowTrayIcon() {
     // An icon name looked up in the app's own folder: tray hosts read a
     // name with a theme path, not every one reads a file path.
     const std::string folder = ExecutableDirectory() + "/data";
-    shell.indicator = shell.indicator_new("lumtub", shell.icon_name.c_str(), kCategoryApplicationStatus, folder.c_str());
+    shell.indicator =
+        shell.indicator_new("lumtub", shell.icon_name.c_str(),
+                            kCategoryApplicationStatus, folder.c_str());
     if (shell.indicator == nullptr) return false;
-    if (shell.indicator_set_title != nullptr) shell.indicator_set_title(shell.indicator, "Lumtub");
+    if (shell.indicator_set_title != nullptr)
+      shell.indicator_set_title(shell.indicator, "Lumtub");
     BuildMenu();
   }
   shell.indicator_set_status(shell.indicator, kStatusActive);
@@ -283,31 +322,42 @@ bool OnWayland() {
 void SaveWindowState() {
   if (shell.window == nullptr || shell.pip || !shell.has_normal) return;
   GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(shell.window));
-  if (surface != nullptr && (gdk_window_get_state(surface) & GDK_WINDOW_STATE_FULLSCREEN)) return;
+  if (surface != nullptr &&
+      (gdk_window_get_state(surface) & GDK_WINDOW_STATE_FULLSCREEN))
+    return;
   const std::string path = WindowStateFile();
   if (path.empty()) return;
   g_autofree gchar* directory = g_path_get_dirname(path.c_str());
   g_mkdir_with_parents(directory, 0755);
   FILE* file = fopen(path.c_str(), "w");
   if (file == nullptr) return;
-  fprintf(file, "%d %d %d %d %d\n", shell.normal_width, shell.normal_height, shell.normal_x, shell.normal_y, gtk_window_is_maximized(shell.window) ? 1 : 0);
+  fprintf(file, "%d %d %d %d %d\n", shell.normal_width, shell.normal_height,
+          shell.normal_x, shell.normal_y,
+          gtk_window_is_maximized(shell.window) ? 1 : 0);
   fclose(file);
 }
 
 void SaveWindowStateSoon() {
   if (shell.save_timer != 0) return;
-  shell.save_timer = g_timeout_add(1000, +[](gpointer) -> gboolean {
-    shell.save_timer = 0;
-    SaveWindowState();
-    return G_SOURCE_REMOVE;
-  }, nullptr);
+  shell.save_timer = g_timeout_add(
+      1000,
+      +[](gpointer) -> gboolean {
+        shell.save_timer = 0;
+        SaveWindowState();
+        return G_SOURCE_REMOVE;
+      },
+      nullptr);
 }
 
 gboolean OnConfigure(GtkWidget*, GdkEventConfigure*, gpointer) {
   GtkWindow* window = shell.window;
-  if (window == nullptr || shell.pip || gtk_window_is_maximized(window)) return FALSE;
+  if (window == nullptr || shell.pip || gtk_window_is_maximized(window))
+    return FALSE;
   GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(window));
-  if (surface == nullptr || (gdk_window_get_state(surface) & (GDK_WINDOW_STATE_FULLSCREEN | GDK_WINDOW_STATE_TILED))) return FALSE;
+  if (surface == nullptr ||
+      (gdk_window_get_state(surface) &
+       (GDK_WINDOW_STATE_FULLSCREEN | GDK_WINDOW_STATE_TILED)))
+    return FALSE;
   gtk_window_get_size(window, &shell.normal_width, &shell.normal_height);
   gtk_window_get_position(window, &shell.normal_x, &shell.normal_y);
   shell.has_normal = true;
@@ -332,13 +382,17 @@ void OnMinimizeButton(GtkButton*, gpointer) {
 }
 
 void HookMinimizeButtons(GtkWidget* widget, gpointer) {
-  if (GTK_IS_BUTTON(widget) && gtk_style_context_has_class(gtk_widget_get_style_context(widget), "minimize") &&
+  if (GTK_IS_BUTTON(widget) &&
+      gtk_style_context_has_class(gtk_widget_get_style_context(widget),
+                                  "minimize") &&
       g_object_get_data(G_OBJECT(widget), "lumtub-minimize") == nullptr) {
-    g_signal_handlers_disconnect_matched(widget, G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, shell.window);
+    g_signal_handlers_disconnect_matched(widget, G_SIGNAL_MATCH_DATA, 0, 0,
+                                         nullptr, nullptr, shell.window);
     g_signal_connect(widget, "clicked", G_CALLBACK(OnMinimizeButton), nullptr);
     g_object_set_data(G_OBJECT(widget), "lumtub-minimize", GINT_TO_POINTER(1));
   }
-  if (GTK_IS_CONTAINER(widget)) gtk_container_forall(GTK_CONTAINER(widget), HookMinimizeButtons, nullptr);
+  if (GTK_IS_CONTAINER(widget))
+    gtk_container_forall(GTK_CONTAINER(widget), HookMinimizeButtons, nullptr);
 }
 
 void HookHeaderBar() {
@@ -352,21 +406,29 @@ void HookHeaderBar() {
 gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
   if (event->changed_mask & GDK_WINDOW_STATE_MAXIMIZED) {
     SaveWindowStateSoon();
-    SendFrame("maximized", fl_value_new_bool((event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0));
+    SendFrame("maximized",
+              fl_value_new_bool(
+                  (event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0));
   }
   if (event->changed_mask & GDK_WINDOW_STATE_FOCUSED) {
-    SendFrame("active", fl_value_new_bool((event->new_window_state & GDK_WINDOW_STATE_FOCUSED) != 0));
+    SendFrame("active", fl_value_new_bool((event->new_window_state &
+                                           GDK_WINDOW_STATE_FOCUSED) != 0));
   }
-  g_idle_add(+[](gpointer) -> gboolean {
-    HookHeaderBar();
-    return G_SOURCE_REMOVE;
-  }, nullptr);
-  const bool minimised = (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED);
+  g_idle_add(
+      +[](gpointer) -> gboolean {
+        HookHeaderBar();
+        return G_SOURCE_REMOVE;
+      },
+      nullptr);
+  const bool minimised = (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) &&
+                         (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED);
   if (minimised && shell.minimize_to_tray) {
-    g_idle_add(+[](gpointer) -> gboolean {
-      if (shell.minimize_to_tray && WindowVisible()) HideToTray();
-      return G_SOURCE_REMOVE;
-    }, nullptr);
+    g_idle_add(
+        +[](gpointer) -> gboolean {
+          if (shell.minimize_to_tray && WindowVisible()) HideToTray();
+          return G_SOURCE_REMOVE;
+        },
+        nullptr);
   }
   return FALSE;
 }
@@ -416,18 +478,27 @@ constexpr char kIntrospection[] = R"XML(
   </interface>
 </node>)XML";
 
-std::string TrackId() { return "/io/github/lumtub/track/" + std::to_string(shell.track); }
+std::string TrackId() {
+  return "/io/github/lumtub/track/" + std::to_string(shell.track);
+}
 
 GVariant* Metadata() {
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   if (shell.status != "Stopped" || !shell.title.empty()) {
-    g_variant_builder_add(&builder, "{sv}", "mpris:trackid", g_variant_new_object_path(TrackId().c_str()));
-    g_variant_builder_add(&builder, "{sv}", "xesam:title", g_variant_new_string(shell.title.c_str()));
+    g_variant_builder_add(&builder, "{sv}", "mpris:trackid",
+                          g_variant_new_object_path(TrackId().c_str()));
+    g_variant_builder_add(&builder, "{sv}", "xesam:title",
+                          g_variant_new_string(shell.title.c_str()));
     const gchar* artists[] = {shell.artist.c_str(), nullptr};
-    g_variant_builder_add(&builder, "{sv}", "xesam:artist", g_variant_new_strv(artists, -1));
-    if (!shell.art.empty()) g_variant_builder_add(&builder, "{sv}", "mpris:artUrl", g_variant_new_string(shell.art.c_str()));
-    if (shell.duration_ms > 0) g_variant_builder_add(&builder, "{sv}", "mpris:length", g_variant_new_int64(shell.duration_ms * 1000));
+    g_variant_builder_add(&builder, "{sv}", "xesam:artist",
+                          g_variant_new_strv(artists, -1));
+    if (!shell.art.empty())
+      g_variant_builder_add(&builder, "{sv}", "mpris:artUrl",
+                            g_variant_new_string(shell.art.c_str()));
+    if (shell.duration_ms > 0)
+      g_variant_builder_add(&builder, "{sv}", "mpris:length",
+                            g_variant_new_int64(shell.duration_ms * 1000));
   }
   return g_variant_builder_end(&builder);
 }
@@ -435,29 +506,41 @@ GVariant* Metadata() {
 GVariant* PlayerProperty(const gchar* name) {
   const std::string property(name);
   const bool active = shell.status != "Stopped";
-  if (property == "PlaybackStatus") return g_variant_new_string(shell.status.c_str());
-  if (property == "Rate" || property == "Volume" || property == "MinimumRate" || property == "MaximumRate") return g_variant_new_double(1.0);
+  if (property == "PlaybackStatus")
+    return g_variant_new_string(shell.status.c_str());
+  if (property == "Rate" || property == "Volume" || property == "MinimumRate" ||
+      property == "MaximumRate")
+    return g_variant_new_double(1.0);
   if (property == "Metadata") return Metadata();
-  if (property == "Position") return g_variant_new_int64(shell.position_ms * 1000);
+  if (property == "Position")
+    return g_variant_new_int64(shell.position_ms * 1000);
   if (property == "CanGoNext") return g_variant_new_boolean(shell.can_next);
-  if (property == "CanGoPrevious") return g_variant_new_boolean(shell.can_previous);
-  if (property == "CanPlay" || property == "CanPause" || property == "CanSeek") return g_variant_new_boolean(active);
+  if (property == "CanGoPrevious")
+    return g_variant_new_boolean(shell.can_previous);
+  if (property == "CanPlay" || property == "CanPause" || property == "CanSeek")
+    return g_variant_new_boolean(active);
   if (property == "CanControl") return g_variant_new_boolean(TRUE);
   return nullptr;
 }
 
 GVariant* RootProperty(const gchar* name) {
   const std::string property(name);
-  if (property == "CanQuit" || property == "CanRaise") return g_variant_new_boolean(TRUE);
+  if (property == "CanQuit" || property == "CanRaise")
+    return g_variant_new_boolean(TRUE);
   if (property == "HasTrackList") return g_variant_new_boolean(FALSE);
   if (property == "Identity") return g_variant_new_string("Lumtub");
   if (property == "DesktopEntry") return g_variant_new_string(APPLICATION_ID);
-  if (property == "SupportedUriSchemes" || property == "SupportedMimeTypes") return g_variant_new_strv(nullptr, 0);
+  if (property == "SupportedUriSchemes" || property == "SupportedMimeTypes")
+    return g_variant_new_strv(nullptr, 0);
   return nullptr;
 }
 
-GVariant* GetProperty(GDBusConnection*, const gchar*, const gchar*, const gchar* interface, const gchar* name, GError**, gpointer) {
-  return g_str_equal(interface, "org.mpris.MediaPlayer2") ? RootProperty(name) : PlayerProperty(name);
+GVariant* GetProperty(GDBusConnection*, const gchar*, const gchar*,
+                      const gchar* interface, const gchar* name, GError**,
+                      gpointer) {
+  return g_str_equal(interface, "org.mpris.MediaPlayer2")
+             ? RootProperty(name)
+             : PlayerProperty(name);
 }
 
 void SeekTo(int64_t ms) {
@@ -466,7 +549,8 @@ void SeekTo(int64_t ms) {
   Send("seek", fl_value_new_int(ms));
 }
 
-void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*, const gchar* method, GVariant* parameters,
+void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*,
+                const gchar* method, GVariant* parameters,
                 GDBusMethodInvocation* invocation, gpointer) {
   const std::string name(method);
   if (name == "Raise") {
@@ -474,10 +558,12 @@ void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*, cons
   } else if (name == "Minimized") {
     // KWin's script reports a minimised window, which Wayland itself does not.
     if (shell.minimize_to_tray && WindowVisible()) {
-      g_idle_add(+[](gpointer) -> gboolean {
-        if (shell.minimize_to_tray && WindowVisible()) HideToTray();
-        return G_SOURCE_REMOVE;
-      }, nullptr);
+      g_idle_add(
+          +[](gpointer) -> gboolean {
+            if (shell.minimize_to_tray && WindowVisible()) HideToTray();
+            return G_SOURCE_REMOVE;
+          },
+          nullptr);
     }
   } else if (name == "Quit") {
     ExitFromTray();
@@ -514,16 +600,23 @@ void PlayerChanged(std::initializer_list<const char*> names) {
     GVariant* value = PlayerProperty(name);
     if (value != nullptr) g_variant_builder_add(&changed, "{sv}", name, value);
   }
-  g_dbus_connection_emit_signal(shell.bus, nullptr, kMprisPath, "org.freedesktop.DBus.Properties", "PropertiesChanged",
-                                g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &changed, nullptr), nullptr);
+  g_dbus_connection_emit_signal(
+      shell.bus, nullptr, kMprisPath, "org.freedesktop.DBus.Properties",
+      "PropertiesChanged",
+      g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &changed,
+                    nullptr),
+      nullptr);
 }
 
 void OnBus(GDBusConnection* connection, const gchar*, gpointer) {
   GDBusNodeInfo* node = g_dbus_node_info_new_for_xml(kIntrospection, nullptr);
   if (node == nullptr) return;
-  static const GDBusInterfaceVTable vtable = {CallMethod, GetProperty, nullptr, {}};
+  static const GDBusInterfaceVTable vtable = {
+      CallMethod, GetProperty, nullptr, {}};
   for (int i = 0; node->interfaces[i] != nullptr; i++) {
-    g_dbus_connection_register_object(connection, kMprisPath, node->interfaces[i], &vtable, nullptr, nullptr, nullptr);
+    g_dbus_connection_register_object(connection, kMprisPath,
+                                      node->interfaces[i], &vtable, nullptr,
+                                      nullptr, nullptr);
   }
   g_dbus_node_info_unref(node);
   shell.bus = connection;
@@ -531,8 +624,11 @@ void OnBus(GDBusConnection* connection, const gchar*, gpointer) {
 
 void StartMpris() {
   // A second Lumtub takes a name of its own, as the specification asks.
-  const std::string name = "org.mpris.MediaPlayer2.lumtub.instance" + std::to_string(getpid());
-  shell.bus_name = g_bus_own_name(G_BUS_TYPE_SESSION, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE, OnBus, nullptr, nullptr, nullptr, nullptr);
+  const std::string name =
+      "org.mpris.MediaPlayer2.lumtub.instance" + std::to_string(getpid());
+  shell.bus_name = g_bus_own_name(G_BUS_TYPE_SESSION, name.c_str(),
+                                  G_BUS_NAME_OWNER_FLAGS_NONE, OnBus, nullptr,
+                                  nullptr, nullptr, nullptr);
 }
 
 // ---- Fonts ----------------------------------------------------------------
@@ -545,7 +641,9 @@ FlValue* SystemFontFamilies() {
   if (fonts != nullptr) {
     for (int i = 0; i < fonts->nfont; i++) {
       FcChar8* family = nullptr;
-      if (FcPatternGetString(fonts->fonts[i], FC_FAMILY, 0, &family) == FcResultMatch && family != nullptr) {
+      if (FcPatternGetString(fonts->fonts[i], FC_FAMILY, 0, &family) ==
+              FcResultMatch &&
+          family != nullptr) {
         names.insert(reinterpret_cast<const char*>(family));
       }
     }
@@ -554,50 +652,69 @@ FlValue* SystemFontFamilies() {
   FcObjectSetDestroy(objects);
   FcPatternDestroy(pattern);
   FlValue* list = fl_value_new_list();
-  for (const auto& name : names) fl_value_append_take(list, fl_value_new_string(name.c_str()));
+  for (const auto& name : names)
+    fl_value_append_take(list, fl_value_new_string(name.c_str()));
   return list;
 }
 
 // ---- Channel --------------------------------------------------------------
 
 std::string StringArg(FlValue* args, const char* key) {
-  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) return "";
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP)
+    return "";
   FlValue* value = fl_value_lookup_string(args, key);
-  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_STRING ? fl_value_get_string(value) : "";
+  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_STRING
+             ? fl_value_get_string(value)
+             : "";
 }
 
 bool BoolArg(FlValue* args, const char* key) {
-  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) return false;
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP)
+    return false;
   FlValue* value = fl_value_lookup_string(args, key);
-  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL && fl_value_get_bool(value);
+  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL &&
+         fl_value_get_bool(value);
 }
 
 int64_t IntArg(FlValue* args, const char* key) {
   if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) return 0;
   FlValue* value = fl_value_lookup_string(args, key);
-  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_INT ? fl_value_get_int(value) : 0;
+  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_INT
+             ? fl_value_get_int(value)
+             : 0;
 }
 
 double DoubleArg(FlValue* args, const char* key) {
-  FlValue* value = key != nullptr && args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP ? fl_value_lookup_string(args, key) : args;
+  FlValue* value = key != nullptr && args != nullptr &&
+                           fl_value_get_type(args) == FL_VALUE_TYPE_MAP
+                       ? fl_value_lookup_string(args, key)
+                       : args;
   if (value == nullptr) return 0;
-  if (fl_value_get_type(value) == FL_VALUE_TYPE_FLOAT) return fl_value_get_float(value);
-  if (fl_value_get_type(value) == FL_VALUE_TYPE_INT) return static_cast<double>(fl_value_get_int(value));
+  if (fl_value_get_type(value) == FL_VALUE_TYPE_FLOAT)
+    return fl_value_get_float(value);
+  if (fl_value_get_type(value) == FL_VALUE_TYPE_INT)
+    return static_cast<double>(fl_value_get_int(value));
   return 0;
 }
 
 // A window size in pixels; 0 when it is missing, not finite or too large.
 int SizeArg(FlValue* args, const char* key) {
   const double value = DoubleArg(args, key);
-  return std::isfinite(value) && value >= 1 && value <= 16384 ? static_cast<int>(value + 0.5) : 0;
+  return std::isfinite(value) && value >= 1 && value <= 16384
+             ? static_cast<int>(value + 0.5)
+             : 0;
 }
 
-bool BoolValue(FlValue* value) { return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL && fl_value_get_bool(value); }
+bool BoolValue(FlValue* value) {
+  return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL &&
+         fl_value_get_bool(value);
+}
 
 // Keeps the window's ratio while it is resized; 0 lets it go.
 void KeepAspect(double aspect) {
   if (aspect <= 0) {
-    gtk_window_set_geometry_hints(shell.window, nullptr, nullptr, static_cast<GdkWindowHints>(0));
+    gtk_window_set_geometry_hints(shell.window, nullptr, nullptr,
+                                  static_cast<GdkWindowHints>(0));
     gtk_widget_set_size_request(GTK_WIDGET(shell.window), 480, 360);
     return;
   }
@@ -607,7 +724,9 @@ void KeepAspect(double aspect) {
   geometry.min_aspect = aspect;
   geometry.max_aspect = aspect;
   gtk_widget_set_size_request(GTK_WIDGET(shell.window), -1, -1);
-  gtk_window_set_geometry_hints(shell.window, nullptr, &geometry, static_cast<GdkWindowHints>(GDK_HINT_ASPECT | GDK_HINT_MIN_SIZE));
+  gtk_window_set_geometry_hints(
+      shell.window, nullptr, &geometry,
+      static_cast<GdkWindowHints>(GDK_HINT_ASPECT | GDK_HINT_MIN_SIZE));
 }
 
 void EnterPip(double aspect, int width, int height) {
@@ -627,11 +746,15 @@ void EnterPip(double aspect, int width, int height) {
   gtk_window_resize(window, width, height);
   // Wayland compositors place windows themselves and ignore this.
   GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(window));
-  GdkMonitor* monitor = surface != nullptr ? gdk_display_get_monitor_at_window(gdk_window_get_display(surface), surface) : nullptr;
+  GdkMonitor* monitor = surface != nullptr
+                            ? gdk_display_get_monitor_at_window(
+                                  gdk_window_get_display(surface), surface)
+                            : nullptr;
   if (monitor == nullptr) return;
   GdkRectangle area;
   gdk_monitor_get_workarea(monitor, &area);
-  int x = area.x + area.width - width - 16, y = area.y + area.height - height - 16;
+  int x = area.x + area.width - width - 16,
+      y = area.y + area.height - height - 16;
   if (shell.has_last) {
     x = std::max(area.x, std::min(shell.last_x, area.x + area.width - width));
     y = std::max(area.y, std::min(shell.last_y, area.y + area.height - height));
@@ -658,11 +781,14 @@ void ExitPip(bool keep_on_top) {
 }
 
 void SetPipAspect(double aspect) {
-  if (shell.window == nullptr || !shell.pip || !(aspect > 0) || !std::isfinite(aspect)) return;
+  if (shell.window == nullptr || !shell.pip || !(aspect > 0) ||
+      !std::isfinite(aspect))
+    return;
   int width = 0, height = 0;
   gtk_window_get_size(shell.window, &width, &height);
   KeepAspect(aspect);
-  gtk_window_resize(shell.window, width, static_cast<int>(width / aspect + 0.5));
+  gtk_window_resize(shell.window, width,
+                    static_cast<int>(width / aspect + 0.5));
 }
 
 // Moves or resizes the window with the pointer, from a press on the picture.
@@ -670,11 +796,13 @@ void BeginDrag(bool resize) {
   GtkWindow* window = shell.window;
   if (window == nullptr) return;
   GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(window));
-  GdkDevice* pointer = gdk_seat_get_pointer(gdk_display_get_default_seat(display));
+  GdkDevice* pointer =
+      gdk_seat_get_pointer(gdk_display_get_default_seat(display));
   int x = 0, y = 0;
   gdk_device_get_position(pointer, nullptr, &x, &y);
   if (resize) {
-    gtk_window_begin_resize_drag(window, GDK_WINDOW_EDGE_SOUTH_EAST, 1, x, y, GDK_CURRENT_TIME);
+    gtk_window_begin_resize_drag(window, GDK_WINDOW_EDGE_SOUTH_EAST, 1, x, y,
+                                 GDK_CURRENT_TIME);
   } else {
     gtk_window_begin_move_drag(window, 1, x, y, GDK_CURRENT_TIME);
   }
@@ -684,10 +812,14 @@ void BeginDrag(bool resize) {
 // desktop's session manager, the portal or the screen saver, whichever
 // answers.
 void SetKeepAwake(bool on) {
-  GtkApplication* application = shell.window != nullptr ? gtk_window_get_application(shell.window) : nullptr;
+  GtkApplication* application = shell.window != nullptr
+                                    ? gtk_window_get_application(shell.window)
+                                    : nullptr;
   if (application == nullptr) return;
   if (on && shell.inhibit == 0) {
-    shell.inhibit = gtk_application_inhibit(application, shell.window, GTK_APPLICATION_INHIBIT_IDLE, "Playing a video");
+    shell.inhibit = gtk_application_inhibit(application, shell.window,
+                                            GTK_APPLICATION_INHIBIT_IDLE,
+                                            "Playing a video");
   } else if (!on && shell.inhibit != 0) {
     gtk_application_uninhibit(application, shell.inhibit);
     shell.inhibit = 0;
@@ -730,7 +862,9 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
     time = shell.press->button.time;
   } else {
     GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(window));
-    gdk_device_get_position(gdk_seat_get_pointer(gdk_display_get_default_seat(display)), nullptr, &x, &y);
+    gdk_device_get_position(
+        gdk_seat_get_pointer(gdk_display_get_default_seat(display)), nullptr,
+        &x, &y);
   }
   if (resize) {
     gtk_window_begin_resize_drag(window, edge, 1, x, y, time);
@@ -740,19 +874,25 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
 }
 
 GdkDevice* Pointer(GdkWindow* window) {
-  return gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_window_get_display(window)));
+  return gdk_seat_get_pointer(
+      gdk_display_get_default_seat(gdk_window_get_display(window)));
 }
 
 // Gives the pointer back once it moved, unless Flutter set another one
 // meanwhile: Flutter answers the move with the pointer it wants, which may
 // be the one it already had and so is not set again.
 gboolean WatchHiddenPointer(gpointer) {
-  GdkWindow* window = shell.window != nullptr ? gtk_widget_get_window(GTK_WIDGET(shell.window)) : nullptr;
+  GdkWindow* window = shell.window != nullptr
+                          ? gtk_widget_get_window(GTK_WIDGET(shell.window))
+                          : nullptr;
   int x = 0;
   int y = 0;
-  if (window != nullptr) gdk_device_get_position(Pointer(window), nullptr, &x, &y);
-  if (window != nullptr && x == shell.hidden_x && y == shell.hidden_y) return G_SOURCE_CONTINUE;
-  if (window != nullptr && gdk_window_get_cursor(window) == shell.pointer_blank) gdk_window_set_cursor(window, shell.pointer_before);
+  if (window != nullptr)
+    gdk_device_get_position(Pointer(window), nullptr, &x, &y);
+  if (window != nullptr && x == shell.hidden_x && y == shell.hidden_y)
+    return G_SOURCE_CONTINUE;
+  if (window != nullptr && gdk_window_get_cursor(window) == shell.pointer_blank)
+    gdk_window_set_cursor(window, shell.pointer_before);
   g_clear_object(&shell.pointer_before);
   shell.pointer_watch = 0;
   return G_SOURCE_REMOVE;
@@ -761,13 +901,20 @@ gboolean WatchHiddenPointer(gpointer) {
 // Hides the pointer while it rests in the box |area| (left, top, right,
 // bottom in logical pixels of Flutter's view), until it moves.
 void HidePointer(FlValue* area) {
-  if (area == nullptr || fl_value_get_type(area) != FL_VALUE_TYPE_LIST || fl_value_get_length(area) != 4) return;
-  if (shell.view == nullptr || shell.window == nullptr || shell.pointer_watch != 0 || !gtk_window_is_active(shell.window)) return;
+  if (area == nullptr || fl_value_get_type(area) != FL_VALUE_TYPE_LIST ||
+      fl_value_get_length(area) != 4)
+    return;
+  if (shell.view == nullptr || shell.window == nullptr ||
+      shell.pointer_watch != 0 || !gtk_window_is_active(shell.window))
+    return;
   double box[4];
   for (size_t i = 0; i < 4; ++i) {
     FlValue* item = fl_value_get_list_value(area, i);
     const FlValueType type = fl_value_get_type(item);
-    box[i] = type == FL_VALUE_TYPE_FLOAT ? fl_value_get_float(item) : type == FL_VALUE_TYPE_INT ? static_cast<double>(fl_value_get_int(item)) : 0;
+    box[i] = type == FL_VALUE_TYPE_FLOAT ? fl_value_get_float(item)
+             : type == FL_VALUE_TYPE_INT
+                 ? static_cast<double>(fl_value_get_int(item))
+                 : 0;
   }
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(shell.window));
   if (window == nullptr) return;
@@ -776,12 +923,21 @@ void HidePointer(FlValue* area) {
   gdk_window_get_device_position(window, Pointer(window), &x, &y, nullptr);
   int view_x = 0;
   int view_y = 0;
-  if (!gtk_widget_translate_coordinates(GTK_WIDGET(shell.window), GTK_WIDGET(shell.view), x, y, &view_x, &view_y)) return;
-  if (view_x < box[0] || view_y < box[1] || view_x >= box[2] || view_y >= box[3]) return;
-  if (shell.pointer_blank == nullptr) shell.pointer_blank = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_BLANK_CURSOR);
+  if (!gtk_widget_translate_coordinates(GTK_WIDGET(shell.window),
+                                        GTK_WIDGET(shell.view), x, y, &view_x,
+                                        &view_y))
+    return;
+  if (view_x < box[0] || view_y < box[1] || view_x >= box[2] ||
+      view_y >= box[3])
+    return;
+  if (shell.pointer_blank == nullptr)
+    shell.pointer_blank = gdk_cursor_new_for_display(
+        gdk_window_get_display(window), GDK_BLANK_CURSOR);
   GdkCursor* before = gdk_window_get_cursor(window);
-  shell.pointer_before = before != nullptr ? GDK_CURSOR(g_object_ref(before)) : nullptr;
-  gdk_device_get_position(Pointer(window), nullptr, &shell.hidden_x, &shell.hidden_y);
+  shell.pointer_before =
+      before != nullptr ? GDK_CURSOR(g_object_ref(before)) : nullptr;
+  gdk_device_get_position(Pointer(window), nullptr, &shell.hidden_x,
+                          &shell.hidden_y);
   gdk_window_set_cursor(window, shell.pointer_blank);
   shell.pointer_watch = g_timeout_add(100, WatchHiddenPointer, nullptr);
 }
@@ -804,21 +960,24 @@ const struct wl_message kBlurRequests[] = {
     {"set_region", "?o", kBlurRegionTypes},
     {"release", "", nullptr},
 };
-const struct wl_interface kBlurInterface = {"org_kde_kwin_blur", 1, 3, kBlurRequests, 0, nullptr};
+const struct wl_interface kBlurInterface = {"org_kde_kwin_blur", 1, 3,
+                                            kBlurRequests,       0, nullptr};
 const struct wl_interface* kBlurCreateTypes[] = {&kBlurInterface, nullptr};
 const struct wl_interface* kBlurUnsetTypes[] = {nullptr};
 const struct wl_message kBlurManagerRequests[] = {
     {"create", "no", kBlurCreateTypes},
     {"unset", "o", kBlurUnsetTypes},
 };
-const struct wl_interface kBlurManagerInterface = {"org_kde_kwin_blur_manager", 1, 2, kBlurManagerRequests, 0, nullptr};
+const struct wl_interface kBlurManagerInterface = {
+    "org_kde_kwin_blur_manager", 1, 2, kBlurManagerRequests, 0, nullptr};
 
 const struct wl_interface* kEffectRegionTypes[] = {nullptr};
 const struct wl_message kEffectRequests[] = {
     {"destroy", "", nullptr},
     {"set_blur_region", "?o", kEffectRegionTypes},
 };
-const struct wl_interface kEffectInterface = {"ext_background_effect_surface_v1", 1, 2, kEffectRequests, 0, nullptr};
+const struct wl_interface kEffectInterface = {
+    "ext_background_effect_surface_v1", 1, 2, kEffectRequests, 0, nullptr};
 const struct wl_interface* kEffectGetTypes[] = {&kEffectInterface, nullptr};
 const struct wl_message kEffectManagerRequests[] = {
     {"destroy", "", nullptr},
@@ -827,7 +986,13 @@ const struct wl_message kEffectManagerRequests[] = {
 const struct wl_message kEffectManagerEvents[] = {
     {"capabilities", "u", kNoTypes},
 };
-const struct wl_interface kEffectManagerInterface = {"ext_background_effect_manager_v1", 1, 2, kEffectManagerRequests, 1, kEffectManagerEvents};
+const struct wl_interface kEffectManagerInterface = {
+    "ext_background_effect_manager_v1",
+    1,
+    2,
+    kEffectManagerRequests,
+    1,
+    kEffectManagerEvents};
 
 struct WaylandClient {
   const struct wl_interface* registry_interface;
@@ -841,7 +1006,9 @@ struct WaylandClient {
   void (*destroy)(struct wl_proxy*);
   uint32_t (*version)(struct wl_proxy*);
   void (*set_queue)(struct wl_proxy*, struct wl_event_queue*);
-  struct wl_proxy* (*marshal)(struct wl_proxy*, uint32_t, const struct wl_interface*, uint32_t, uint32_t, ...);
+  struct wl_proxy* (*marshal)(struct wl_proxy*, uint32_t,
+                              const struct wl_interface*, uint32_t, uint32_t,
+                              ...);
 };
 
 // The functions of the libwayland-client GTK uses; false when one is missing.
@@ -849,23 +1016,37 @@ bool LoadWaylandClient(WaylandClient& wl) {
   void* library = dlopen("libwayland-client.so.0", RTLD_NOW | RTLD_NOLOAD);
   if (library == nullptr) return false;
   auto find = [library](const char* name) { return dlsym(library, name); };
-  auto surface = static_cast<const struct wl_interface*>(find("wl_surface_interface"));
-  wl.registry_interface = static_cast<const struct wl_interface*>(find("wl_registry_interface"));
-  wl.compositor_interface = static_cast<const struct wl_interface*>(find("wl_compositor_interface"));
-  wl.region_interface = static_cast<const struct wl_interface*>(find("wl_region_interface"));
-  wl.create_queue = reinterpret_cast<decltype(wl.create_queue)>(find("wl_display_create_queue"));
-  wl.roundtrip_queue = reinterpret_cast<decltype(wl.roundtrip_queue)>(find("wl_display_roundtrip_queue"));
-  wl.destroy_queue = reinterpret_cast<decltype(wl.destroy_queue)>(find("wl_event_queue_destroy"));
+  auto surface =
+      static_cast<const struct wl_interface*>(find("wl_surface_interface"));
+  wl.registry_interface =
+      static_cast<const struct wl_interface*>(find("wl_registry_interface"));
+  wl.compositor_interface =
+      static_cast<const struct wl_interface*>(find("wl_compositor_interface"));
+  wl.region_interface =
+      static_cast<const struct wl_interface*>(find("wl_region_interface"));
+  wl.create_queue = reinterpret_cast<decltype(wl.create_queue)>(
+      find("wl_display_create_queue"));
+  wl.roundtrip_queue = reinterpret_cast<decltype(wl.roundtrip_queue)>(
+      find("wl_display_roundtrip_queue"));
+  wl.destroy_queue = reinterpret_cast<decltype(wl.destroy_queue)>(
+      find("wl_event_queue_destroy"));
   wl.flush = reinterpret_cast<decltype(wl.flush)>(find("wl_display_flush"));
-  wl.add_listener = reinterpret_cast<decltype(wl.add_listener)>(find("wl_proxy_add_listener"));
+  wl.add_listener = reinterpret_cast<decltype(wl.add_listener)>(
+      find("wl_proxy_add_listener"));
   wl.destroy = reinterpret_cast<decltype(wl.destroy)>(find("wl_proxy_destroy"));
-  wl.version = reinterpret_cast<decltype(wl.version)>(find("wl_proxy_get_version"));
-  wl.set_queue = reinterpret_cast<decltype(wl.set_queue)>(find("wl_proxy_set_queue"));
-  wl.marshal = reinterpret_cast<decltype(wl.marshal)>(find("wl_proxy_marshal_flags"));
-  if (surface == nullptr || wl.registry_interface == nullptr || wl.compositor_interface == nullptr ||
-      wl.region_interface == nullptr || wl.create_queue == nullptr || wl.roundtrip_queue == nullptr ||
-      wl.destroy_queue == nullptr || wl.flush == nullptr || wl.add_listener == nullptr || wl.destroy == nullptr ||
-      wl.version == nullptr || wl.set_queue == nullptr || wl.marshal == nullptr) {
+  wl.version =
+      reinterpret_cast<decltype(wl.version)>(find("wl_proxy_get_version"));
+  wl.set_queue =
+      reinterpret_cast<decltype(wl.set_queue)>(find("wl_proxy_set_queue"));
+  wl.marshal =
+      reinterpret_cast<decltype(wl.marshal)>(find("wl_proxy_marshal_flags"));
+  if (surface == nullptr || wl.registry_interface == nullptr ||
+      wl.compositor_interface == nullptr || wl.region_interface == nullptr ||
+      wl.create_queue == nullptr || wl.roundtrip_queue == nullptr ||
+      wl.destroy_queue == nullptr || wl.flush == nullptr ||
+      wl.add_listener == nullptr || wl.destroy == nullptr ||
+      wl.version == nullptr || wl.set_queue == nullptr ||
+      wl.marshal == nullptr) {
     return false;
   }
   kBlurRegionTypes[0] = wl.region_interface;
@@ -892,17 +1073,24 @@ struct WaylandBlur {
 WaylandBlur wayland_blur;
 
 // wl_registry.bind (request 0), as wayland-client-protocol.h writes it.
-struct wl_proxy* Bind(struct wl_proxy* registry, uint32_t name, const struct wl_interface* interface, uint32_t version) {
-  return wayland_blur.wl.marshal(registry, 0, interface, version, 0, name, interface->name, version, nullptr);
+struct wl_proxy* Bind(struct wl_proxy* registry, uint32_t name,
+                      const struct wl_interface* interface, uint32_t version) {
+  return wayland_blur.wl.marshal(registry, 0, interface, version, 0, name,
+                                 interface->name, version, nullptr);
 }
 
-void OnGlobal(void*, struct wl_proxy* registry, uint32_t name, const char* interface, uint32_t) {
-  if (g_strcmp0(interface, kEffectManagerInterface.name) == 0 && wayland_blur.effects == nullptr) {
+void OnGlobal(void*, struct wl_proxy* registry, uint32_t name,
+              const char* interface, uint32_t) {
+  if (g_strcmp0(interface, kEffectManagerInterface.name) == 0 &&
+      wayland_blur.effects == nullptr) {
     wayland_blur.effects = Bind(registry, name, &kEffectManagerInterface, 1);
-  } else if (g_strcmp0(interface, kBlurManagerInterface.name) == 0 && wayland_blur.kde == nullptr) {
+  } else if (g_strcmp0(interface, kBlurManagerInterface.name) == 0 &&
+             wayland_blur.kde == nullptr) {
     wayland_blur.kde = Bind(registry, name, &kBlurManagerInterface, 1);
-  } else if (g_strcmp0(interface, "wl_compositor") == 0 && wayland_blur.compositor == nullptr) {
-    wayland_blur.compositor = Bind(registry, name, wayland_blur.wl.compositor_interface, 1);
+  } else if (g_strcmp0(interface, "wl_compositor") == 0 &&
+             wayland_blur.compositor == nullptr) {
+    wayland_blur.compositor =
+        Bind(registry, name, wayland_blur.wl.compositor_interface, 1);
   }
 }
 void OnGlobalRemove(void*, struct wl_proxy*, uint32_t) {}
@@ -914,7 +1102,8 @@ struct {
 // Asks the compositor to blur behind the whole window; false where it
 // offers neither protocol (Sway, older GNOME and others).
 bool SetWaylandBlur(GdkWindow* surface, bool on) {
-  struct wl_display* display = gdk_wayland_display_get_wl_display(gdk_window_get_display(surface));
+  struct wl_display* display =
+      gdk_wayland_display_get_wl_display(gdk_window_get_display(surface));
   struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(surface);
   if (display == nullptr || wl_surface == nullptr) return false;
   WaylandClient& wl = wayland_blur.wl;
@@ -925,11 +1114,16 @@ bool SetWaylandBlur(GdkWindow* surface, bool on) {
     struct wl_event_queue* queue = wl.create_queue(display);
     // wl_display.get_registry (request 1).
     auto* proxy_display = reinterpret_cast<struct wl_proxy*>(display);
-    struct wl_proxy* registry = wl.marshal(proxy_display, 1, wl.registry_interface, wl.version(proxy_display), 0, nullptr);
+    struct wl_proxy* registry =
+        wl.marshal(proxy_display, 1, wl.registry_interface,
+                   wl.version(proxy_display), 0, nullptr);
     wl.set_queue(registry, queue);
-    wl.add_listener(registry, reinterpret_cast<void (**)(void)>(&kRegistryListener), nullptr);
+    wl.add_listener(registry,
+                    reinterpret_cast<void (**)(void)>(&kRegistryListener),
+                    nullptr);
     wl.roundtrip_queue(display, queue);
-    for (struct wl_proxy* bound : {wayland_blur.effects, wayland_blur.kde, wayland_blur.compositor}) {
+    for (struct wl_proxy* bound :
+         {wayland_blur.effects, wayland_blur.kde, wayland_blur.compositor}) {
       if (bound != nullptr) wl.set_queue(bound, nullptr);
     }
     wl.destroy(registry);
@@ -937,35 +1131,48 @@ bool SetWaylandBlur(GdkWindow* surface, bool on) {
   }
   if (wayland_blur.effects != nullptr && wayland_blur.compositor != nullptr) {
     const uint32_t version = wl.version(wayland_blur.effects);
-    if (wayland_blur.effect != nullptr && wayland_blur.effect_surface != wl_surface) {
-      wl.marshal(wayland_blur.effect, 0 /* destroy */, nullptr, wl.version(wayland_blur.effect), WL_MARSHAL_FLAG_DESTROY);
+    if (wayland_blur.effect != nullptr &&
+        wayland_blur.effect_surface != wl_surface) {
+      wl.marshal(wayland_blur.effect, 0 /* destroy */, nullptr,
+                 wl.version(wayland_blur.effect), WL_MARSHAL_FLAG_DESTROY);
       wayland_blur.effect = nullptr;
     }
     if (wayland_blur.effect == nullptr) {
-      wayland_blur.effect = wl.marshal(wayland_blur.effects, 1 /* get_background_effect */, &kEffectInterface, version, 0, nullptr, wl_surface);
+      wayland_blur.effect =
+          wl.marshal(wayland_blur.effects, 1 /* get_background_effect */,
+                     &kEffectInterface, version, 0, nullptr, wl_surface);
       wayland_blur.effect_surface = wl_surface;
     }
     struct wl_proxy* region = nullptr;
     if (on) {
       // wl_compositor.create_region (1), then wl_region.add (1) over all of it.
-      region = wl.marshal(wayland_blur.compositor, 1, wl.region_interface, wl.version(wayland_blur.compositor), 0, nullptr);
-      wl.marshal(region, 1, nullptr, wl.version(region), 0, 0, 0, INT32_MAX, INT32_MAX);
+      region = wl.marshal(wayland_blur.compositor, 1, wl.region_interface,
+                          wl.version(wayland_blur.compositor), 0, nullptr);
+      wl.marshal(region, 1, nullptr, wl.version(region), 0, 0, 0, INT32_MAX,
+                 INT32_MAX);
     }
     // No region removes the blur.
-    wl.marshal(wayland_blur.effect, 1 /* set_blur_region */, nullptr, version, 0, region);
-    if (region != nullptr) wl.marshal(region, 0 /* destroy */, nullptr, wl.version(region), WL_MARSHAL_FLAG_DESTROY);
+    wl.marshal(wayland_blur.effect, 1 /* set_blur_region */, nullptr, version,
+               0, region);
+    if (region != nullptr)
+      wl.marshal(region, 0 /* destroy */, nullptr, wl.version(region),
+                 WL_MARSHAL_FLAG_DESTROY);
   } else if (wayland_blur.kde != nullptr) {
     const uint32_t version = wl.version(wayland_blur.kde);
     if (wayland_blur.kde_blur != nullptr) {
-      wl.marshal(wayland_blur.kde_blur, 2 /* release */, nullptr, version, WL_MARSHAL_FLAG_DESTROY);
+      wl.marshal(wayland_blur.kde_blur, 2 /* release */, nullptr, version,
+                 WL_MARSHAL_FLAG_DESTROY);
       wayland_blur.kde_blur = nullptr;
     }
     if (on) {
-      wayland_blur.kde_blur = wl.marshal(wayland_blur.kde, 0 /* create */, &kBlurInterface, version, 0, nullptr, wl_surface);
+      wayland_blur.kde_blur =
+          wl.marshal(wayland_blur.kde, 0 /* create */, &kBlurInterface, version,
+                     0, nullptr, wl_surface);
       // No region: the whole surface.
       wl.marshal(wayland_blur.kde_blur, 0 /* commit */, nullptr, version, 0);
     } else {
-      wl.marshal(wayland_blur.kde, 1 /* unset */, nullptr, version, 0, wl_surface);
+      wl.marshal(wayland_blur.kde, 1 /* unset */, nullptr, version, 0,
+                 wl_surface);
     }
   } else {
     return false;
@@ -986,18 +1193,23 @@ FlValue* SetDesktopGlass(bool on, bool blur) {
   shell.glass_blur = blur;
   GtkWidget* window = GTK_WIDGET(shell.window);
   GdkScreen* screen = gtk_widget_get_screen(window);
-  const bool possible = shell.view != nullptr && gdk_screen_is_composited(screen) &&
-                        gtk_widget_get_visual(window) == gdk_screen_get_rgba_visual(screen);
+  const bool possible =
+      shell.view != nullptr && gdk_screen_is_composited(screen) &&
+      gtk_widget_get_visual(window) == gdk_screen_get_rgba_visual(screen);
   const bool clear = on && possible;
   GdkRGBA background{0, 0, 0, clear ? 0.0 : 1.0};
-  if (shell.view != nullptr) fl_view_set_background_color(shell.view, &background);
+  if (shell.view != nullptr)
+    fl_view_set_background_color(shell.view, &background);
   bool blurred = false;
   GdkWindow* surface = gtk_widget_get_window(window);
 #ifdef GDK_WINDOWING_X11
   if (surface != nullptr && GDK_IS_X11_WINDOW(surface)) {
-    GdkAtom atom = gdk_atom_intern_static_string("_KDE_NET_WM_BLUR_BEHIND_REGION");
+    GdkAtom atom =
+        gdk_atom_intern_static_string("_KDE_NET_WM_BLUR_BEHIND_REGION");
     if (clear && blur) {
-      gdk_property_change(surface, atom, gdk_atom_intern_static_string("CARDINAL"), 32, GDK_PROP_MODE_REPLACE, nullptr, 0);
+      gdk_property_change(surface, atom,
+                          gdk_atom_intern_static_string("CARDINAL"), 32,
+                          GDK_PROP_MODE_REPLACE, nullptr, 0);
       // KWin lists the atom among what it supports while its blur is on.
       blurred = gdk_x11_screen_supports_net_wm_hint(screen, atom);
     } else {
@@ -1027,13 +1239,16 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   }
   if (method == "state") {
     g_autoptr(FlValue) state = fl_value_new_map();
-    fl_value_set_string_take(state, "maximized", fl_value_new_bool(gtk_window_is_maximized(window)));
-    fl_value_set_string_take(state, "active", fl_value_new_bool(gtk_window_is_active(window)));
+    fl_value_set_string_take(
+        state, "maximized", fl_value_new_bool(gtk_window_is_maximized(window)));
+    fl_value_set_string_take(state, "active",
+                             fl_value_new_bool(gtk_window_is_active(window)));
     fl_method_call_respond_success(call, state, nullptr);
     return;
   }
   if (method == "setDesktopGlass") {
-    g_autoptr(FlValue) answer = SetDesktopGlass(BoolArg(args, "on"), BoolArg(args, "blur"));
+    g_autoptr(FlValue) answer =
+        SetDesktopGlass(BoolArg(args, "on"), BoolArg(args, "blur"));
     fl_method_call_respond_success(call, answer, nullptr);
     return;
   }
@@ -1053,7 +1268,8 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   } else if (method == "startDrag") {
     BeginFrameDrag(false, GDK_WINDOW_EDGE_NORTH);
   } else if (method == "startResize") {
-    const bool named = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
+    const bool named =
+        args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
     BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
   } else if (method == "hidePointer") {
     HidePointer(args);
@@ -1091,18 +1307,28 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     shell.exit_label = StringArg(args, "exit");
     if (shell.indicator != nullptr) {
       BuildMenu();
-      if (!shell.close_to_tray && !shell.minimize_to_tray && shell.window != nullptr && !WindowVisible()) ShowFromTray();
-      if (!shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
+      if (!shell.close_to_tray && !shell.minimize_to_tray &&
+          shell.window != nullptr && !WindowVisible())
+        ShowFromTray();
+      if (!shell.close_to_tray && !shell.minimize_to_tray)
+        shell.indicator_set_status(shell.indicator, kStatusPassive);
     }
     // With either tray option on, the icon stays while the window is open too.
     if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
   } else if (method == "setAppIcon") {
-    const std::string chosen = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING ? fl_value_get_string(args) : "";
-    const std::string name = chosen == "tabor" || chosen == "gold" ? "lumtub-" + chosen : "lumtub";
+    const std::string chosen =
+        args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING
+            ? fl_value_get_string(args)
+            : "";
+    const std::string name =
+        chosen == "tabor" || chosen == "gold" ? "lumtub-" + chosen : "lumtub";
     if (name != shell.icon_name) {
       shell.icon_name = name;
-      if (shell.window != nullptr) gtk_window_set_icon_from_file(shell.window, IconPath().c_str(), nullptr);
-      if (shell.indicator != nullptr && shell.indicator_set_icon != nullptr) shell.indicator_set_icon(shell.indicator, name.c_str(), "Lumtub");
+      if (shell.window != nullptr)
+        gtk_window_set_icon_from_file(shell.window, IconPath().c_str(),
+                                      nullptr);
+      if (shell.indicator != nullptr && shell.indicator_set_icon != nullptr)
+        shell.indicator_set_icon(shell.indicator, name.c_str(), "Lumtub");
     }
   } else if (method == "setMetadata") {
     shell.title = StringArg(args, "title");
@@ -1112,10 +1338,16 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     shell.position_ms = 0;
     PlayerChanged({"Metadata"});
   } else if (method == "setStatus") {
-    const std::string status = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING ? fl_value_get_string(args) : "";
-    shell.status = status == "playing" ? "Playing" : status == "paused" ? "Paused" : "Stopped";
+    const std::string status =
+        args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING
+            ? fl_value_get_string(args)
+            : "";
+    shell.status = status == "playing"  ? "Playing"
+                   : status == "paused" ? "Paused"
+                                        : "Stopped";
     if (shell.status == "Stopped") shell.title.clear();
-    PlayerChanged({"PlaybackStatus", "Metadata", "CanPlay", "CanPause", "CanSeek"});
+    PlayerChanged(
+        {"PlaybackStatus", "Metadata", "CanPlay", "CanPause", "CanSeek"});
   } else if (method == "setTimeline") {
     const int64_t position = IntArg(args, "position");
     const int64_t duration = IntArg(args, "duration");
@@ -1126,16 +1358,19 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
       PlayerChanged({"Metadata"});
     }
     if (jumped && shell.bus != nullptr) {
-      g_dbus_connection_emit_signal(shell.bus, nullptr, kMprisPath, "org.mpris.MediaPlayer2.Player", "Seeked",
-                                    g_variant_new("(x)", position * 1000), nullptr);
+      g_dbus_connection_emit_signal(
+          shell.bus, nullptr, kMprisPath, "org.mpris.MediaPlayer2.Player",
+          "Seeked", g_variant_new("(x)", position * 1000), nullptr);
     }
   } else if (method == "setKeepAwake") {
     SetKeepAwake(BoolValue(args));
   } else if (method == "setTopmost") {
     shell.above = BoolValue(args);
-    if (shell.window != nullptr) gtk_window_set_keep_above(shell.window, shell.above);
+    if (shell.window != nullptr)
+      gtk_window_set_keep_above(shell.window, shell.above);
   } else if (method == "enterPip") {
-    EnterPip(DoubleArg(args, "aspect"), SizeArg(args, "width"), SizeArg(args, "height"));
+    EnterPip(DoubleArg(args, "aspect"), SizeArg(args, "width"),
+             SizeArg(args, "height"));
   } else if (method == "exitPip") {
     ExitPip(BoolValue(args));
   } else if (method == "setPipAspect") {
@@ -1161,32 +1396,39 @@ void linux_shell_attach(GtkWindow* window) {
   // signing in, keep the desktop's own choice.
   if (getenv("LUMTUB_X11") != nullptr) unsetenv("GDK_BACKEND");
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
-  g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState), nullptr);
+  g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState),
+                   nullptr);
   g_signal_connect(window, "configure-event", G_CALLBACK(OnConfigure), nullptr);
   g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) {
-    HookHeaderBar();
-    if (shell.glass_set) {
-      g_idle_add(+[](gpointer) -> gboolean {
-        if (shell.window != nullptr) fl_value_unref(SetDesktopGlass(shell.glass_on, shell.glass_blur));
-        return G_SOURCE_REMOVE;
-      }, nullptr);
-    }
-  }), nullptr);
+                     HookHeaderBar();
+                     if (shell.glass_set) {
+                       g_idle_add(
+                           +[](gpointer) -> gboolean {
+                             if (shell.window != nullptr)
+                               fl_value_unref(SetDesktopGlass(
+                                   shell.glass_on, shell.glass_blur));
+                             return G_SOURCE_REMOVE;
+                           },
+                           nullptr);
+                     }
+                   }),
+                   nullptr);
   // Nothing may reach the window, or the view inside it, once it is gone:
   // MPRIS, the tray and timers can still run while the app shuts down.
   g_signal_connect(window, "destroy", G_CALLBACK(+[](GtkWidget*, gpointer) {
-    if (shell.save_timer != 0) {
-      g_source_remove(shell.save_timer);
-      shell.save_timer = 0;
-    }
-    if (shell.pointer_watch != 0) {
-      g_source_remove(shell.pointer_watch);
-      shell.pointer_watch = 0;
-    }
-    g_clear_object(&shell.pointer_before);
-    shell.window = nullptr;
-    shell.view = nullptr;
-  }), nullptr);
+                     if (shell.save_timer != 0) {
+                       g_source_remove(shell.save_timer);
+                       shell.save_timer = 0;
+                     }
+                     if (shell.pointer_watch != 0) {
+                       g_source_remove(shell.pointer_watch);
+                       shell.pointer_watch = 0;
+                     }
+                     g_clear_object(&shell.pointer_before);
+                     shell.window = nullptr;
+                     shell.view = nullptr;
+                   }),
+                   nullptr);
   WatchTray();
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();
@@ -1199,9 +1441,12 @@ void linux_shell_restore_window(GtkWindow* window) {
   FILE* file = fopen(path.c_str(), "r");
   if (file == nullptr) return;
   int width = 0, height = 0, x = 0, y = 0, maximized = 0;
-  const int read = fscanf(file, "%d %d %d %d %d", &width, &height, &x, &y, &maximized);
+  const int read =
+      fscanf(file, "%d %d %d %d %d", &width, &height, &x, &y, &maximized);
   fclose(file);
-  if (read != 5 || width < kMinWidth || height < kMinHeight || width > 16384 || height > 16384) return;
+  if (read != 5 || width < kMinWidth || height < kMinHeight || width > 16384 ||
+      height > 16384)
+    return;
   gtk_window_set_default_size(window, width, height);
   shell.normal_width = width;
   shell.normal_height = height;
@@ -1213,10 +1458,13 @@ void linux_shell_restore_window(GtkWindow* window) {
     // Skip a place on a screen that is no longer there.
     GdkDisplay* display = gdk_display_get_default();
     bool visible = false;
-    for (int i = 0; display != nullptr && i < gdk_display_get_n_monitors(display); i++) {
+    for (int i = 0;
+         display != nullptr && i < gdk_display_get_n_monitors(display); i++) {
       GdkRectangle area, window_area = {x, y, width, height}, overlap;
       gdk_monitor_get_workarea(gdk_display_get_monitor(display, i), &area);
-      if (gdk_rectangle_intersect(&area, &window_area, &overlap) && overlap.width >= 120 && overlap.height >= 60) visible = true;
+      if (gdk_rectangle_intersect(&area, &window_area, &overlap) &&
+          overlap.width >= 120 && overlap.height >= 60)
+        visible = true;
     }
     if (visible) gtk_window_move(window, x, y);
   }
@@ -1227,11 +1475,17 @@ void linux_shell_connect(FlView* view) {
   shell.view = view;
   FlEngine* engine = fl_view_get_engine(view);
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-  shell.channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kChannel, FL_METHOD_CODEC(codec));
-  fl_method_channel_set_method_call_handler(shell.channel, HandleCall, nullptr, nullptr);
-  shell.frame_channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kFrameChannel, FL_METHOD_CODEC(codec));
-  fl_method_channel_set_method_call_handler(shell.frame_channel, HandleFrameCall, nullptr, nullptr);
-  g_signal_connect(view, "button-press-event", G_CALLBACK(OnViewButtonPress), nullptr);
+  shell.channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine),
+                                        kChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(shell.channel, HandleCall, nullptr,
+                                            nullptr);
+  shell.frame_channel =
+      fl_method_channel_new(fl_engine_get_binary_messenger(engine),
+                            kFrameChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(shell.frame_channel,
+                                            HandleFrameCall, nullptr, nullptr);
+  g_signal_connect(view, "button-press-event", G_CALLBACK(OnViewButtonPress),
+                   nullptr);
 }
 
 void linux_shell_use_alpha_visual(GtkWindow* window) {

@@ -107,7 +107,7 @@ void main() {
     final backup = parse(jsonEncode({
       'app': 'Lumtub',
       'version': 2,
-      'player': {},
+      'player': <String, Object?>{},
       'library': {
         'channels': [
           {'id': c, 'name': 'C'},

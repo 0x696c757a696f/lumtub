@@ -20,6 +20,7 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+import sys
 import threading
 
 from yt_dlp.extractor.youtube.jsc._builtin.ejs import EJSBaseJCP
@@ -37,11 +38,20 @@ _core_lock = threading.Lock()
 _KEEP_PLAYERS = 3
 
 
+def _setting(name, default=None):
+    """A setting of Lumtub's: from the app's own Python (iOS, where the
+    runner holds them) or else from the environment yt-dlp was started
+    with."""
+    runner = sys.modules.get('_lumtub_runner')
+    settings = getattr(runner, 'SETTINGS', None) or {}
+    return settings.get(name, os.environ.get(name, default))
+
+
 def _library():
     global _core
     with _core_lock:
         if _core is None:
-            path = os.environ.get('LUMTUB_CORE')
+            path = _setting('LUMTUB_CORE')
             if not path:
                 return None
             core = ctypes.CDLL(path)

@@ -191,7 +191,7 @@ class CachingTranslator implements Translator {
     // The callback returns nothing: given the removed future, whenComplete
     // would wait on itself.
     return _pending[key] ??= _fetch(text, target).whenComplete(() {
-      _pending.remove(key);
+      unawaited(_pending.remove(key));
     });
   }
 

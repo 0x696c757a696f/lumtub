@@ -29,8 +29,10 @@ pub struct Config {
     pub home: String,
     /// Where a failure to start is written for the core to read.
     pub temporary: String,
-    /// Set in the environment before Python starts (LUMTUB_CORE,
-    /// SSL_CERT_FILE…).
+    /// Settings the runner and the plugins read (LUMTUB_CORE,
+    /// SSL_CERT_FILE…), handed to Python as the runner's `SETTINGS`. The
+    /// process environment is never changed: another thread may be
+    /// reading it.
     #[serde(default)]
     pub environment: HashMap<String, String>,
 }
@@ -58,7 +60,7 @@ static STATE: Mutex<State> = Mutex::new(State::Unconfigured);
 /// Records where Python is; it starts with the first run. A second call
 /// with other settings is ignored once Python has started.
 pub fn configure(config: Config) {
-    let mut state = STATE.lock().unwrap_or_else(|e| e.into_inner());
+    let mut state = STATE.lock().expect("lock poisoned by a panic");
     if matches!(*state, State::Unconfigured | State::Configured(_)) {
         *state = State::Configured(config);
     }
@@ -66,13 +68,15 @@ pub fn configure(config: Config) {
 
 /// Python, started on the first call; the error says why it cannot run.
 fn api() -> Result<Api, String> {
-    let mut state = STATE.lock().unwrap_or_else(|e| e.into_inner());
+    let mut state = STATE.lock().expect("lock poisoned by a panic");
     let config = match &*state {
         State::Ready(api) => return Ok(*api),
         State::Failed(error) => return Err(error.clone()),
         State::Unconfigured => return Err("Python is not set up in this app".into()),
         State::Configured(config) => config.clone(),
     };
+    // SAFETY: `start_python` runs once, under the STATE lock, and its `config` names the Python
+    // library to load.
     let result = unsafe { start_python(&config) };
     *state = match &result {
         Ok(api) => State::Ready(*api),
@@ -83,18 +87,23 @@ fn api() -> Result<Api, String> {
 
 unsafe fn symbol<T>(library: *mut c_void, name: &str) -> Result<T, String> {
     let c = CString::new(name).unwrap_or_default();
+    // SAFETY: `library` is a live dlopen handle and `c` ends in NUL.
     let found = unsafe { libc::dlsym(library, c.as_ptr()) };
     if found.is_null() {
         return Err(format!("Python has no {name}"));
     }
+    // SAFETY: `found` is the non-null address of `name`, and the caller picks `T` as the pointer
+    // type that symbol has.
     Ok(unsafe { std::mem::transmute_copy::<*mut c_void, T>(&found) })
 }
 
 fn dl_error() -> String {
+    // SAFETY: dlerror takes no arguments and returns null or a NUL-terminated message.
     let error = unsafe { libc::dlerror() };
     if error.is_null() {
         return "unknown error".into();
     }
+    // SAFETY: `error` is non-null and NUL-terminated, and is read before any other dl call.
     unsafe { std::ffi::CStr::from_ptr(error) }
         .to_string_lossy()
         .into_owned()
@@ -138,12 +147,19 @@ unsafe fn initialize_configured(
     type SetInt = unsafe extern "C" fn(*mut c_void, *const c_char, i64) -> c_int;
     type Start = unsafe extern "C" fn(*mut c_void) -> c_int;
     type GetError = unsafe extern "C" fn(*mut c_void, *mut *const c_char) -> c_int;
+    // SAFETY: dlsym finds `PyInitConfig_Create`, whose C signature matches `Create`.
     let create: Create = unsafe { symbol(library, "PyInitConfig_Create") }.ok()?;
+    // SAFETY: dlsym finds `PyInitConfig_Free`, whose C signature matches `Free`.
     let free: Free = unsafe { symbol(library, "PyInitConfig_Free") }.ok()?;
+    // SAFETY: dlsym finds `PyInitConfig_SetStr`, whose C signature matches `SetStr`.
     let set_str: SetStr = unsafe { symbol(library, "PyInitConfig_SetStr") }.ok()?;
+    // SAFETY: dlsym finds `PyInitConfig_SetInt`, whose C signature matches `SetInt`.
     let set_int: SetInt = unsafe { symbol(library, "PyInitConfig_SetInt") }.ok()?;
+    // SAFETY: dlsym finds `Py_InitializeFromInitConfig`, whose C signature matches `Start`.
     let start: Start = unsafe { symbol(library, "Py_InitializeFromInitConfig") }.ok()?;
+    // SAFETY: dlsym finds `PyInitConfig_GetError`, whose C signature matches `GetError`.
     let get_error: GetError = unsafe { symbol(library, "PyInitConfig_GetError") }.ok()?;
+    // SAFETY: `create` takes no arguments; its result is checked for null below.
     let init = unsafe { create() };
     if init.is_null() {
         return Some(Err("Python could not be configured".into()));
@@ -171,6 +187,7 @@ unsafe fn initialize_configured(
         let mut message: *const c_char = std::ptr::null();
         // SAFETY: the message, when given, lives as long as [init].
         let detail = if unsafe { get_error(init, &mut message) } == 1 && !message.is_null() {
+            // SAFETY: [message] is non-null, NUL-terminated and lives until [init] is freed.
             unsafe { std::ffi::CStr::from_ptr(message) }
                 .to_string_lossy()
                 .into_owned()
@@ -179,68 +196,60 @@ unsafe fn initialize_configured(
         };
         Err(format!("Python did not start: {detail}"))
     };
+    // SAFETY: `init` is non-null and live, and is freed only here.
     unsafe { free(init) };
     Some(result)
 }
 
 unsafe fn start_python(config: &Config) -> Result<Api, String> {
-    // The app's own settings (LUMTUB_CORE, SSL_CERT_FILE…) are read from
-    // the environment by the runner and by OpenSSL, so they go there, once:
-    // Python starts only on the first run.
-    for (name, value) in &config.environment {
-        unsafe { std::env::set_var(name, value) };
-    }
     let path = CString::new(config.library.as_str()).map_err(|e| e.to_string())?;
+    // SAFETY: `path` ends in NUL; the handle is checked for null below.
     let library = unsafe { libc::dlopen(path.as_ptr(), libc::RTLD_NOW | libc::RTLD_GLOBAL) };
     if library.is_null() {
         return Err(format!("Could not load Python: {}", dl_error()));
     }
-    let initialize: unsafe extern "C" fn(c_int) = unsafe { symbol(library, "Py_InitializeEx")? };
     let is_initialized: unsafe extern "C" fn() -> c_int =
+        // SAFETY: dlsym finds `Py_IsInitialized`, whose C signature is `int (void)`.
         unsafe { symbol(library, "Py_IsInitialized")? };
     let save_thread: unsafe extern "C" fn() -> *mut c_void =
+        // SAFETY: dlsym finds `PyEval_SaveThread`, whose C signature is `void *(void)`.
         unsafe { symbol(library, "PyEval_SaveThread")? };
+    // SAFETY: dlsym finds each of these three names, and each `Api` field type
+    // is the C signature of that function.
+    let run = unsafe { symbol(library, "PyRun_SimpleString")? };
+    // SAFETY: as for `run` above.
+    let ensure = unsafe { symbol(library, "PyGILState_Ensure")? };
+    // SAFETY: as for `run` above.
+    let release = unsafe { symbol(library, "PyGILState_Release")? };
     let api = Api {
-        run: unsafe { symbol(library, "PyRun_SimpleString")? },
-        ensure: unsafe { symbol(library, "PyGILState_Ensure")? },
-        release: unsafe { symbol(library, "PyGILState_Release")? },
+        run,
+        ensure,
+        release,
     };
-    match unsafe { initialize_configured(library, config) } {
-        Some(started) => started?,
-        None => {
-            // An older Python reads its settings from the environment.
-            let (strings, _) = settings(config);
-            for (name, value) in [
-                ("PYTHONHOME", strings[0].1),
-                ("PYTHONUTF8", "1"),
-                ("PYTHONIOENCODING", "utf-8"),
-                ("PYTHONDONTWRITEBYTECODE", "1"),
-                ("PYTHONNOUSERSITE", "1"),
-                ("PYTHONUNBUFFERED", "1"),
-            ] {
-                unsafe { std::env::set_var(name, value) };
-            }
-            // Text is UTF-8 whatever the locale says.
-            if let Ok(utf8) = unsafe { symbol::<*mut c_int>(library, "Py_UTF8Mode") } {
-                unsafe { *utf8 = 1 };
-            }
-            // 0: Python leaves the app's signal handlers alone.
-            unsafe { initialize(0) };
-        }
-    }
+    // SAFETY: `library` is a live handle and this function's caller holds the STATE lock.
+    let Some(started) = (unsafe { initialize_configured(library, config) }) else {
+        return Err("This Python is older than 3.14, which Lumtub needs".into());
+    };
+    started?;
+    // SAFETY: `is_initialized` is `Py_IsInitialized`, which may be called at any time.
     if unsafe { is_initialized() } == 0 {
         return Err("Python did not start".into());
     }
     let error_file = format!("{}/python-error.txt", config.temporary);
     let _ = std::fs::remove_file(&error_file);
+    let settings_json = serde_json::to_string(&config.environment).map_err(|e| e.to_string())?;
     let bootstrap = format!(
-        "try:\n    import sys, types\n    _m = types.ModuleType('_lumtub_runner')\n    exec(compile({}, 'lumtub_runner', 'exec'), _m.__dict__)\n    sys.modules['_lumtub_runner'] = _m\n    del _m\nexcept BaseException:\n    import traceback\n    with open({}, 'w') as _f:\n        _f.write(traceback.format_exc())\n    raise\n",
+        "try:\n    import json, sys, types\n    _m = types.ModuleType('_lumtub_runner')\n    _m.SETTINGS = json.loads({})\n    exec(compile({}, 'lumtub_runner', 'exec'), _m.__dict__)\n    sys.modules['_lumtub_runner'] = _m\n    del _m\nexcept BaseException:\n    import traceback\n    with open({}, 'w') as _f:\n        _f.write(traceback.format_exc())\n    raise\n",
+        literal(&settings_json),
         literal(RUNNER),
         literal(&error_file)
     );
+    // SAFETY: Python is initialized, and the GIL is held by this thread (it started Python), so
+    // `lock` is false.
     let ok = unsafe { run_code(&api, &bootstrap, false) };
     // The thread that started Python lets go of it; every later call
     // takes it again with PyGILState_Ensure.
+    // SAFETY: This thread started Python and holds the GIL, which PyEval_SaveThread releases.
     unsafe { save_thread() };
     if !ok {
         let detail = std::fs::read_to_string(&error_file).unwrap_or_default();
@@ -258,12 +267,15 @@ unsafe fn run_code(api: &Api, code: &str, lock: bool) -> bool {
         return false;
     };
     let gil = if lock {
+        // SAFETY: `api.ensure` is PyGILState_Ensure, valid once Python is initialized.
         Some(unsafe { (api.ensure)() })
     } else {
         None
     };
+    // SAFETY: `api.run` is PyRun_SimpleString, `code` ends in NUL, and this thread holds the GIL.
     let result = unsafe { (api.run)(code.as_ptr()) };
     if let Some(gil) = gil {
+        // SAFETY: `gil` is what PyGILState_Ensure returned on this thread.
         unsafe { (api.release)(gil) };
     }
     result == 0
@@ -292,6 +304,8 @@ pub fn start(port: i64, request: String) -> bool {
                     "import _lumtub_runner\n_lumtub_runner.start({port}, {})\n",
                     literal(&request)
                 );
+                // SAFETY: `api` came from `start_python`, so Python is initialized; `lock` takes
+                // the GIL.
                 if unsafe { run_code(&api, &code, true) } {
                     None
                 } else {
@@ -318,6 +332,8 @@ pub fn kill(port: i64) {
     spawn("lumtub-python-kill", move || {
         if let Ok(api) = api() {
             let code = format!("import _lumtub_runner\n_lumtub_runner.kill({port})\n");
+            // SAFETY: `api` came from `start_python`, so Python is initialized; `lock` takes the
+            // GIL.
             unsafe { run_code(&api, &code, true) };
         }
     });
@@ -330,6 +346,7 @@ pub fn kill(port: i64) {
 /// [json] must point to [len] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_py_configure(json: *const u8, len: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, as this function requires.
     match serde_json::from_str::<Config>(unsafe { text(json, len) }) {
         Ok(config) => {
             configure(config);
@@ -346,6 +363,7 @@ pub unsafe extern "C" fn lumtub_py_configure(json: *const u8, len: usize) -> boo
 /// [json] must point to [len] bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_py_start(port: i64, json: *const u8, len: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, as this function requires.
     start(port, unsafe { text(json, len) }.to_owned())
 }
 
@@ -363,6 +381,8 @@ pub unsafe extern "C" fn lumtub_py_emit(port: i64, fd: i32, data: *const u8, len
     if data.is_null() || len == 0 {
         return;
     }
+    // SAFETY: `data` is non-null here and, per this function's `# Safety`, points at `len` readable
+    // bytes.
     let bytes = unsafe { std::slice::from_raw_parts(data, len) }.to_vec();
     let fd = if fd as i64 == STDOUT { STDOUT } else { STDERR };
     post(port, vec![Item::Int(fd), Item::Bytes(bytes)]);
@@ -417,14 +437,18 @@ mod tests {
             .filter(|k| k.starts_with("PYTHON"))
             .collect();
         let handler = |signal| {
+            // SAFETY: `sigaction` is a C struct for which all-zero bytes are valid.
             let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
             assert_eq!(
+                // SAFETY: The new action is null, so this only reads the current handler into
+                // `action`.
                 unsafe { libc::sigaction(signal, std::ptr::null(), &mut action) },
                 0
             );
             action.sa_sigaction
         };
         let handlers = [handler(libc::SIGINT), handler(libc::SIGPIPE)];
+        // SAFETY: The test calls this once, before any other Python use in the process.
         let api = unsafe { start_python(&config) }.unwrap();
         // The process's own handlers are as they were: Python installs
         // none when it starts.
@@ -433,9 +457,10 @@ mod tests {
         }
         let out = temporary.join("seen.json");
         let code = format!(
-            "import json, os, sys, ssl\nwith open({}, 'w') as f:\n    json.dump({{'utf8': sys.flags.utf8_mode, 'bytecode': sys.dont_write_bytecode, 'user_site': sys.flags.no_user_site, 'prefix': sys.prefix, 'python_vars': sorted(k for k in os.environ if k.startswith('PYTHON')), 'setting': os.environ.get('LUMTUB_TEST_SETTING'), 'stdout': sys.stdout.encoding, 'runner': '_lumtub_runner' in sys.modules}}, f)\n",
+            "import json, os, sys, ssl\nwith open({}, 'w') as f:\n    json.dump({{'utf8': sys.flags.utf8_mode, 'bytecode': sys.dont_write_bytecode, 'user_site': sys.flags.no_user_site, 'prefix': sys.prefix, 'python_vars': sorted(k for k in os.environ if k.startswith('PYTHON')), 'setting': sys.modules['_lumtub_runner'].SETTINGS.get('LUMTUB_TEST_SETTING'), 'in_environ': 'LUMTUB_TEST_SETTING' in os.environ, 'stdout': sys.stdout.encoding, 'runner': '_lumtub_runner' in sys.modules}}, f)\n",
             literal(&out.to_string_lossy())
         );
+        // SAFETY: `api` came from `start_python`, so Python is initialized; `lock` takes the GIL.
         assert!(unsafe { run_code(&api, &code, true) });
         let seen: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&out).unwrap()).unwrap();
@@ -453,6 +478,8 @@ mod tests {
             .collect();
         assert!(set.is_empty(), "{seen}");
         assert_eq!(seen["setting"], "kept", "{seen}");
+        // The settings reach the runner, not the process environment.
+        assert_eq!(seen["in_environ"], false, "{seen}");
         assert_eq!(seen["stdout"], "utf-8", "{seen}");
         assert_eq!(seen["runner"], true, "{seen}");
     }

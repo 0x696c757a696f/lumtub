@@ -59,7 +59,7 @@ static ACCOUNT: LazyLock<Mutex<Account>> = LazyLock::new(|| {
 static ATTEMPT: AtomicU64 = AtomicU64::new(0);
 
 fn account() -> std::sync::MutexGuard<'static, Account> {
-    ACCOUNT.lock().unwrap_or_else(|e| e.into_inner())
+    ACCOUNT.lock().expect("lock poisoned by a panic")
 }
 
 /// Where requests go: YouTube, or a test server.
@@ -554,6 +554,8 @@ async fn innertube(port: i64, request: InnerTubeRequest) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_tv_open(json: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
     let Some(folder) = options.get("folder").and_then(Value::as_str) else {
         return false;
@@ -607,6 +609,8 @@ pub extern "C" fn lumtub_tv_signed_in() -> bool {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_tv_innertube(port: i64, json: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let Ok(request) = serde_json::from_str::<InnerTubeRequest>(unsafe { text(json, length) })
     else {
         return false;
@@ -704,6 +708,8 @@ mod store {
             let bytes =
                 unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) }
                     .to_vec();
+            // SAFETY: `output.pbData` is non-null memory allocated by the DPAPI call, freed once
+            // here after the copy.
             unsafe { LocalFree(output.pbData as HLOCAL) };
             Some(bytes)
         }

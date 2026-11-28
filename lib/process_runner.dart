@@ -33,7 +33,7 @@ class CollectedProcess {
       process.kill();
     });
     _err = _tail(process.stderr.transform(decoder), stderrLimit);
-    process.exitCode.then((_) => exited = true, onError: (_) => exited = true);
+    unawaited(process.exitCode.then((_) => exited = true, onError: (_) => exited = true));
   }
 
   final Process process;

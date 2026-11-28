@@ -4,9 +4,9 @@ import 'dart:ui' show Brightness, Color;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart' show paletteSkinId;
 import 'package:lumtub/skins/jsonc.dart';
-import 'package:lumtub/ui/palettes.dart' show palettes;
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/skins/skin_library.dart';
+import 'package:lumtub/ui/palettes.dart' show palettes;
 
 /// Every skin in skins/ reads without a single warning, contrast included,
 /// on every kind of device.

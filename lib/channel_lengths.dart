@@ -70,6 +70,7 @@ class ChannelLengths {
     var run = 0;
     var whole = false;
     Object? failure;
+    StackTrace? failureStack;
     try {
       reading:
       while (found.length < ChannelSort.wholeTab) {
@@ -94,13 +95,14 @@ class ChannelLengths {
           break;
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
       failure = e;
+      failureStack = stack;
     } finally {
       source.close();
     }
     // Nothing read and nothing kept: the failure is what the page shows.
-    if (failure != null && found.isEmpty && known.isEmpty) throw failure;
+    if (failure != null && found.isEmpty && known.isEmpty) Error.throwWithStackTrace(failure, failureStack!);
     final ordered = await _ask(dir == null
         ? {'op': 'order', 'fresh': found, 'order': _order}
         : {'op': 'update', 'dir': dir, 'channel': channel.id, 'tab': _tabName, 'now': _clock().millisecondsSinceEpoch ~/ 1000, 'whole': whole && known.isEmpty, 'fresh': found, 'order': _order});

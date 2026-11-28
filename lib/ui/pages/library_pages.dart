@@ -1,32 +1,32 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
+import '../../l10n/l10n.dart';
 import '../../library_store.dart';
 import '../../list_order.dart';
 import '../../models.dart';
+import '../../search_options.dart' show SearchDuration;
 import '../../thumbnail_cache.dart';
 import '../../widgets/settings_tiles.dart' show DialogTextFields;
 import '../../youtube_account_feed.dart';
+import '../app_icons.dart';
 import '../common.dart';
-import '../motion.dart';
 import '../haptics.dart';
 import '../key_scroll.dart';
+import '../motion.dart';
 import '../playlist_length.dart';
-import '../theme.dart';
 import '../sort_menu.dart';
-import '../../search_options.dart' show SearchDuration;
+import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
-import 'subscription_import_dialog.dart';
 import 'explore_page.dart';
-import '../../l10n/l10n.dart';
-import '../app_icons.dart';
+import 'subscription_import_dialog.dart';
 
 /// Newest uploads of the channels followed on this computer, under a row of
 /// their avatars in the order chosen for them (by default, the ones that
@@ -453,7 +453,7 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  const _ChannelStrip({required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll, this.vertical = false, this.itemWidth = 72});
   /// Already in the order chosen for them.
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
@@ -1104,7 +1104,7 @@ class PlaylistDetailPage extends StatelessWidget {
         FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
       ],
     ));
-    if (confirmed == true) library.clearWatchLater();
+    if (confirmed ?? false) library.clearWatchLater();
   }
 
   Future<void> _rename(BuildContext context, LibraryController library, LocalPlaylist playlist) async {
@@ -1121,7 +1121,7 @@ class PlaylistDetailPage extends StatelessWidget {
         FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete'))),
       ],
     ));
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       library.deletePlaylist(playlist);
       controller.goBack();
     }

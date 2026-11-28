@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
-import 'background_json.dart';
-import 'models.dart';
-import 'l10n/l10n.dart';
 import 'app_log.dart';
+import 'background_json.dart';
+import 'l10n/l10n.dart';
 import 'local_db.dart';
+import 'models.dart';
 
 /// How far into a video playback stopped.
 class WatchProgress {

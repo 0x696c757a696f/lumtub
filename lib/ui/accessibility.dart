@@ -76,7 +76,7 @@ abstract final class Accessibility {
     if (message.isEmpty || !SemanticsBinding.instance.semanticsEnabled) return;
     final view = View.maybeOf(context);
     if (view == null) return;
-    SemanticsService.sendAnnouncement(view, message, Directionality.maybeOf(context) ?? TextDirection.ltr);
+    unawaited(SemanticsService.sendAnnouncement(view, message, Directionality.maybeOf(context) ?? TextDirection.ltr));
   }
 
   static String _spoken = '';
@@ -119,7 +119,7 @@ abstract final class Accessibility {
 /// [actions] carry what the pieces' own small buttons do. Leaving the
 /// pieces out also keeps the semantics tree of a long feed small.
 class SpokenAs extends StatelessWidget {
-  const SpokenAs({super.key, required this.label, this.button = true, this.actions, required this.child});
+  const SpokenAs({super.key, required this.label, required this.child, this.button = true, this.actions});
   final String label;
   final bool button;
   final Map<CustomSemanticsAction, VoidCallback>? actions;

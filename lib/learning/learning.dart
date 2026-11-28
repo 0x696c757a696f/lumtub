@@ -22,12 +22,12 @@ import 'lexicon.dart';
 import 'license.dart';
 import 'video_difficulty.dart';
 import 'vocabulary.dart';
-import 'word_levels.dart';
 import 'wiktionary_dictionary.dart';
+import 'word_levels.dart';
 import 'word_voice.dart';
 
-export 'word_voice.dart' show VoiceService, VoiceException;
 export 'word_levels.dart' show LevelScale;
+export 'word_voice.dart' show VoiceService, VoiceException;
 
 /// Where the dictionary packs are published: a release of the app's own
 /// repository that holds data only, never an app version.

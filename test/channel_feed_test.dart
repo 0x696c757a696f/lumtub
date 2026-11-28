@@ -61,14 +61,14 @@ void main() {
   test('merges channel feeds newest first, undated last', () {
     VideoItem video(String id, [DateTime? published]) => VideoItem(id: id, title: id, channel: '', url: '', published: published);
     final merged = LibraryController.mergeFeeds([
-      [video('a', DateTime(2026, 1, 1)), video('b')],
-      [video('c', DateTime(2026, 3, 1)), video('a', DateTime(2026, 1, 1))],
+      [video('a', DateTime(2026)), video('b')],
+      [video('c', DateTime(2026, 3)), video('a', DateTime(2026))],
     ]);
     expect(merged.map((item) => item.id), ['c', 'a', 'b']);
   });
 
   test('lists given videos before falling back to a search', () async {
-    final listing = VideoRepository('yt-dlp.exe').videosOr(() async => [VideoItem(id: 'abcdefghijk', title: 'Related', channel: 'C', url: 'https://www.youtube.com/watch?v=abcdefghijk', duration: 90)], 'query');
+    final listing = VideoRepository('yt-dlp.exe').videosOr(() async => [const VideoItem(id: 'abcdefghijk', title: 'Related', channel: 'C', url: 'https://www.youtube.com/watch?v=abcdefghijk', duration: 90)], 'query');
     final items = (await listing.next(5).toList()).whereType<VideoItem>().toList();
     expect(items.map((i) => (i.id, i.title, i.duration)), [('abcdefghijk', 'Related', 90)]);
   });

@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
@@ -9,9 +10,9 @@ import '../l10n/l10n.dart';
 import '../models.dart';
 import '../translation.dart';
 import '../video_codec.dart';
+import 'app_icons.dart';
 import 'common.dart';
 import 'theme.dart';
-import 'app_icons.dart';
 
 /// What the download dialog returns: the formats picked, or just a simple
 /// [quality] when the formats could not be read.
@@ -80,7 +81,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
   @override
   void initState() {
     super.initState();
-    widget.loadFormats().then((formats) {
+    unawaited(widget.loadFormats().then((formats) {
       if (!mounted) return;
       if (formats.video.isEmpty && formats.audio.isEmpty) throw StateError(tr('No downloadable formats found'));
       setState(() {
@@ -89,12 +90,12 @@ class _DownloadDialogState extends State<DownloadDialog> {
       });
     }).catchError((Object e) {
       if (mounted) setState(() => _error = e);
-    });
-    widget.loadSubtitles?.call().then((choices) {
+    }));
+    unawaited(widget.loadSubtitles?.call().then((choices) {
       if (mounted) setState(() => _applySubtitles(choices));
     }).catchError((Object _) {
       if (mounted) setState(() => _subtitlesFailed = true);
-    });
+    }));
   }
 
   /// Offers [choices], with the picks remembered from last time in the
@@ -412,7 +413,8 @@ class _DownloadDialogState extends State<DownloadDialog> {
     ]);
   }
 
-  /// 当前选择: `VP9 · 1080p · 自动封装（WebM） · 约 850 MB`.
+  /// The summary of the selection, such as
+  /// `当前选择: VP9 · 1080p · 自动封装（WebM） · 约 850 MB`.
   String _summary(DownloadSelection s) {
     final parts = s.audioOnly
         ? [tr('Audio only')]

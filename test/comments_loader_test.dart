@@ -18,7 +18,7 @@ class _FakeSignIn implements WebInnerTube {
 
   @override
   Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false, String? hl}) async {
-    if (endpoint == 'comment/perform_comment_action') actions.add((body['actions'] as List).single);
+    if (endpoint == 'comment/perform_comment_action') actions.add((body['actions']! as List).single);
     return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(answer(endpoint, body)))));
   }
 }

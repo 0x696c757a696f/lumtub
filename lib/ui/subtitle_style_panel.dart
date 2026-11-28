@@ -1,12 +1,14 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../player_settings.dart';
+import 'app_icons.dart';
 import 'pages/settings_subpages.dart' show openSubtitleSettings;
 import 'player_panel.dart';
 import 'subtitle_style.dart';
-import 'app_icons.dart';
 
 /// The subtitle look as a side panel over the player, so each change shows
 /// on the video while it is made: sliders preview as they move and save
@@ -22,7 +24,7 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
           label: tr('All subtitle settings'),
           onPressed: (panel) {
             Navigator.of(panel).pop();
-            openSubtitleSettings(context, controller);
+            unawaited(openSubtitleSettings(context, controller));
           },
         ),
       ],

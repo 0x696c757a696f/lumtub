@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../l10n/l10n.dart';
 import '../format_policy.dart';
+import '../l10n/l10n.dart';
 import '../player_settings.dart';
 import '../video_codec.dart';
 import '../widgets/settings_tiles.dart';

@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../youtube_web_sign_in.dart';
-import '../common.dart';
-import '../theme.dart';
 import '../../l10n/l10n.dart';
+import '../../youtube_web_sign_in.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../sign_in_row.dart';
+import '../theme.dart';
 
 /// The cookie sign-in, for liking posts, voting in polls and writing under
 /// posts: signing in in a browser window of its own, or importing a
@@ -74,7 +74,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
         ),
       ),
     );
-    if (confirmed == true) widget.sign.importFile(file.path, presence: _presence, delete: delete);
+    if (confirmed ?? false) widget.sign.importFile(file.path, presence: _presence, delete: delete);
   }
 
   @override

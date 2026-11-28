@@ -183,24 +183,10 @@ class LibassLayout {
 /// in logical pixels of the player ([view]); mpv in units of a 720-tall
 /// picture, the video fitted in that player.
 class LibassLook {
-  const LibassLook({required this.em, required this.margin, required this.border, required this.gap});
-
-  /// A letter's size (an em) at subtitle size 1, in mpv's units.
-  final double em;
-
-  /// `sub-margin-y`: the room under the main subtitle.
-  final int margin;
-
-  /// `sub-border-size`.
-  final double border;
-
-  /// The room between the two subtitles.
-  final double gap;
-
   /// For a player [view] showing a picture of [aspect], whose subtitle view
   /// scales text by [textScale] and its padding by [paddingScale].
   /// [position] is the 字幕位置 setting, [border] the 描边 one.
-  factory LibassLook.of({required Size view, required double aspect, required double textScale, double paddingScale = 1, required int position, required double border}) {
+  factory LibassLook.of({required Size view, required double aspect, required double textScale, required int position, required double border, double paddingScale = 1}) {
     final picture = view.isEmpty ? 720.0 : min(view.height, view.width / max(aspect, 0.1));
     final unit = LibassLayout._canvas / max(picture, 1);
     // The view's bottom padding, less the band below the picture that mpv
@@ -214,6 +200,20 @@ class LibassLook {
       gap: 6 * textScale * unit,
     );
   }
+
+  const LibassLook({required this.em, required this.margin, required this.border, required this.gap});
+
+  /// A letter's size (an em) at subtitle size 1, in mpv's units.
+  final double em;
+
+  /// `sub-margin-y`: the room under the main subtitle.
+  final int margin;
+
+  /// `sub-border-size`.
+  final double border;
+
+  /// The room between the two subtitles.
+  final double gap;
 
   /// A video filling a 16:9 player 720 tall, before the player's own size
   /// is known. [byHeight] sizes text as Android does, [caption] times 5.33%

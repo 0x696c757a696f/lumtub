@@ -116,10 +116,11 @@ void main() {
       expect(sent.map((s) => s['listen_type']), ['playing_now']);
       await listen(scrobbler, advance, 40, from: 21);
       expect(sent.map((s) => s['listen_type']), ['playing_now', 'single']);
-      final listen0 = (sent.last['payload'] as List).single as Map;
+      final listen0 = (sent.last['payload'] as List<Object?>).single! as Map<String, Object?>;
+      final metadata = listen0['track_metadata']! as Map<String, Object?>;
       expect(listen0['listened_at'], DateTime(2026, 11, 27, 12).millisecondsSinceEpoch ~/ 1000);
-      expect(listen0['track_metadata']['artist_name'], 'Artist');
-      expect(listen0['track_metadata']['additional_info']['origin_url'], 'https://www.youtube.com/watch?v=abcdefghijk');
+      expect(metadata['artist_name'], 'Artist');
+      expect((metadata['additional_info']! as Map<String, Object?>)['origin_url'], 'https://www.youtube.com/watch?v=abcdefghijk');
     });
 
     test('seeking ahead does not count as listening', () async {

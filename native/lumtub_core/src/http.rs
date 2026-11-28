@@ -80,7 +80,7 @@ pub(crate) enum Item {
 }
 
 pub(crate) fn post(port: i64, items: Vec<Item>) -> bool {
-    let Some(send) = *POST.read().unwrap_or_else(|e| e.into_inner()) else {
+    let Some(send) = *POST.read().expect("lock poisoned by a panic") else {
         return false;
     };
     let strings: Vec<Option<CString>> = items
@@ -146,7 +146,7 @@ struct Settings {
     /// or the `*_PROXY` variables) instead of connecting directly.
     #[serde(default)]
     system: bool,
-    /// 加密 DNS for direct connections.
+    /// Encrypted DNS for direct connections.
     #[serde(default)]
     dns: crate::dns::Settings,
     /// The certificate authorities every connection trusts.
@@ -237,7 +237,7 @@ pub(crate) fn runtime() -> &'static Runtime {
 
 /// The client every request goes through, on the app's proxy and DNS.
 pub(crate) fn client() -> reqwest::Client {
-    CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone()
+    CLIENT.read().expect("lock poisoned by a panic").clone()
 }
 
 static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| {
@@ -296,7 +296,7 @@ struct Request {
 const PIECE: usize = 64 * 1024;
 
 async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow>) {
-    let client = CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone();
+    let client = CLIENT.read().expect("lock poisoned by a panic").clone();
     let method =
         reqwest::Method::from_bytes(request.method.as_bytes()).unwrap_or(reqwest::Method::GET);
     let mut builder = client.request(method, &request.url);
@@ -422,10 +422,10 @@ fn describe(error: &reqwest::Error) -> String {
 /// [post] must be the VM's `Dart_PostCObject`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
-    *POST.write().unwrap_or_else(|e| e.into_inner()) = Some(post);
+    *POST.write().expect("lock poisoned by a panic") = Some(post);
 }
 
-/// Sets the proxy and 加密 DNS from JSON `{"proxy": "socks5://…" | null,
+/// Sets the proxy and encrypted DNS from JSON `{"proxy": "socks5://…" | null,
 /// "system": bool, "dns": {"url", "bootstrap"}, "roots": "system" |
 /// "mozilla" | "google", "quantum": "prefer" | "off" | "require"}`;
 /// connections already open finish on the old route.
@@ -434,15 +434,17 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(settings) = serde_json::from_str::<Settings>(unsafe { text(json, length) }) else {
         eprintln!("lumtub: the network settings could not be read; requests will fail");
-        *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = blocked();
+        *CLIENT.write().expect("lock poisoned by a panic") = blocked();
         return;
     };
     crate::tls::set(settings.tls());
     crate::dns::set(settings.dns.clone());
-    *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
-    *LAST.write().unwrap_or_else(|e| e.into_inner()) = Some(settings);
+    *CLIENT.write().expect("lock poisoned by a panic") = build(&settings);
+    *LAST.write().expect("lock poisoned by a panic") = Some(settings);
     // Started with the first settings, so it watches from app start.
     crate::netwatch::generation();
 }
@@ -450,7 +452,7 @@ pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
 /// The proxy the app's settings send traffic through, when one is set.
 pub(crate) fn proxy_address() -> Option<String> {
     LAST.read()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .as_ref()
         .and_then(|settings| settings.proxy.clone())
         .map(|p| p.trim().to_string())
@@ -464,9 +466,9 @@ static LAST: LazyLock<RwLock<Option<Settings>>> = LazyLock::new(|| RwLock::new(N
 /// so its pool keeps no connection from the old route and a system proxy
 /// the new network brought is read.
 pub(crate) fn network_changed() {
-    let last = LAST.read().unwrap_or_else(|e| e.into_inner()).clone();
+    let last = LAST.read().expect("lock poisoned by a panic").clone();
     if let Some(settings) = last {
-        *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
+        *CLIENT.write().expect("lock poisoned by a panic") = build(&settings);
     }
 }
 
@@ -487,8 +489,12 @@ pub unsafe extern "C" fn lumtub_http_send(
     let body = if body.is_null() || body_length == 0 {
         Vec::new()
     } else {
+        // SAFETY: `body` is non-null and the caller passes it pointing at `body_length` readable
+        // bytes, per this function's `# Safety`.
         unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec()
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     start(id, port, unsafe { text(json, length) }, body)
 }
 
@@ -506,6 +512,8 @@ pub extern "C" fn lumtub_http_body(length: usize) -> *mut u8 {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_body_free(body: *mut u8, length: usize) {
     if !body.is_null() {
+        // SAFETY: `body` is non-null and, with `length`, is the allocation `lumtub_http_body` gave;
+        // the caller frees it only once.
         drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, length)) });
     }
 }
@@ -528,8 +536,12 @@ pub unsafe extern "C" fn lumtub_http_send_owned(
     let body = if body.is_null() {
         Vec::new()
     } else {
+        // SAFETY: `body` is non-null and, with `body_length`, is the allocation `lumtub_http_body`
+        // gave; the caller does not use it again.
         unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_length)) }.into_vec()
     };
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     start(id, port, unsafe { text(json, length) }, body)
 }
 
@@ -543,17 +555,17 @@ fn start(id: i64, port: i64, json: &str, body: Vec<u8>) -> bool {
     let flow = Arc::new(Flow::default());
     FLOWS
         .lock()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .insert(id, flow.clone());
     let task = RUNTIME.spawn(async move {
         run(id, port, request, body, flow).await;
         RUNNING
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .expect("lock poisoned by a panic")
             .remove(&id);
-        FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+        FLOWS.lock().expect("lock poisoned by a panic").remove(&id);
     });
-    let mut running = RUNNING.lock().unwrap_or_else(|e| e.into_inner());
+    let mut running = RUNNING.lock().expect("lock poisoned by a panic");
     if !task.is_finished() {
         running.insert(id, task.abort_handle());
     }
@@ -565,12 +577,12 @@ fn start(id: i64, port: i64, json: &str, body: Vec<u8>) -> bool {
 pub extern "C" fn lumtub_http_cancel(id: i64) {
     if let Some(task) = RUNNING
         .lock()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .remove(&id)
     {
         task.abort();
     }
-    FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+    FLOWS.lock().expect("lock poisoned by a panic").remove(&id);
 }
 
 /// Dart's reader has taken [bytes] more of request [id]'s body.
@@ -578,7 +590,7 @@ pub extern "C" fn lumtub_http_cancel(id: i64) {
 pub extern "C" fn lumtub_http_take(id: i64, bytes: i64) {
     let flow = FLOWS
         .lock()
-        .unwrap_or_else(|e| e.into_inner())
+        .expect("lock poisoned by a panic")
         .get(&id)
         .cloned();
     if let Some(flow) = flow {

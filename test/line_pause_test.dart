@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +6,7 @@ import 'package:lumtub/line_pause.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/subtitle_cues.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit_video/media_kit_video.dart' show BlurredUntilShown, SecondaryRevealArea, SubtitleLine, SubtitleViewConfiguration;
 
 Duration ms(int value) => Duration(milliseconds: value);

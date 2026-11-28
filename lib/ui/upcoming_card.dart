@@ -4,8 +4,8 @@ import 'dart:ui' show ImageFilter;
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n/l10n.dart';
-import 'common.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'theme.dart';
 
 /// How long until a stream starts, as the card's headline.

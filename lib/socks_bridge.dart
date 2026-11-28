@@ -4,8 +4,8 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
-import 'native_core.dart';
 import 'app_log.dart';
+import 'native_core.dart';
 
 /// A local HTTP proxy that forwards through a SOCKS proxy. libmpv and
 /// dart:io can only use HTTP proxies, so a SOCKS setting reaches them as

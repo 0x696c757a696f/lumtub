@@ -219,7 +219,7 @@ extension PlaybackOpening on AppController {
       // Which TLS carries the streams: only the core's relay uses the
       // post-quantum setting.
       final path = split != null || _relayed == item.id
-          ? (relay is NativeRelay ? "the core's relay" : "the Dart relay")
+          ? (relay is NativeRelay ? "the core's relay" : 'the Dart relay')
           : direct != null
               ? "libmpv's own connection"
               : "libmpv and yt-dlp's own connections";
@@ -233,7 +233,7 @@ extension PlaybackOpening on AppController {
         final infoJson = direct == null ? video?.file.path : null;
         // ytdl_hook asking YouTube itself leaves out the TV clients too
         // while their addresses are being refused.
-        final extractorArgs = infoJson == null && !live && _repository?.streams.avoidingTv == true ? StreamResolver.visionOnly : null;
+        final extractorArgs = infoJson == null && !live && (_repository?.streams.avoidingTv ?? false) ? StreamResolver.visionOnly : null;
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: infoJson, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort, extractorArgs: extractorArgs));
         final liveAgent = (mobileLive?['http_headers'] as Map?)?['User-Agent'] as String? ?? agent;
         if (direct != null && agent != null) {
@@ -437,7 +437,7 @@ extension PlaybackOpening on AppController {
     _recovery.cancelPending();
     logError('Playback failed ${item.id} (${failure.kind.name}): ${failure.detail}');
     if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
-    if (failure.kind == FailureKind.membersOnly) failure = PlaybackFailure(failure.kind, failure.detail, signedIn: webSignIn?.signedIn == true);
+    if (failure.kind == FailureKind.membersOnly) failure = PlaybackFailure(failure.kind, failure.detail, signedIn: webSignIn?.signedIn ?? false);
     switch (failure.kind) {
       case FailureKind.rateLimited:
         _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));

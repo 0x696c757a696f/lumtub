@@ -7,9 +7,9 @@ import 'dart:typed_data';
 
 import 'app_log.dart';
 import 'live_chat.dart';
+import 'native_core.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
-import 'native_core.dart';
 
 /// Fetches the read-only chat replay that yt-dlp exposes as the `live_chat`
 /// subtitle track. It shares yt-dlp's component, proxy and disk cache with

@@ -90,10 +90,10 @@ void main() {
       await gate.future;
       context.checkCancelled();
       return 1;
-    }, lane: JobLane.network);
+    });
     await pumpEventQueue();
     queue.cancel('one');
-    final again = queue.run('one', (context) async => 2, lane: JobLane.network);
+    final again = queue.run('one', (context) async => 2);
     gate.complete();
     await expectLater(first, throwsA(isA<JobCancelled>()));
     expect(await again, 2);

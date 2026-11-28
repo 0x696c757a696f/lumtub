@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'motion.dart';
 
@@ -10,7 +10,7 @@ import 'motion.dart';
 /// screen is kept above the page and faded away, instead of every colour
 /// being interpolated and the whole tree rebuilt on each frame.
 class ThemeCrossFade extends StatefulWidget {
-  const ThemeCrossFade({super.key, this.duration = ThemeCrossFade.standard, this.instant, required this.child});
+  const ThemeCrossFade({required this.child, super.key, this.duration = ThemeCrossFade.standard, this.instant});
   final Duration duration;
 
   /// Asked at each change: whether to switch without a fade.

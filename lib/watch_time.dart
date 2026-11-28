@@ -7,8 +7,8 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 
 import 'app_directories.dart';
-import 'native_core.dart';
 import 'app_log.dart';
+import 'native_core.dart';
 
 /// 观看统计: how long videos played each day, per channel, kept in
 /// `data/watch_time.json` on this computer only.
@@ -34,11 +34,11 @@ class WatchTime {
     try {
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) throw const FormatException('Not a JSON object');
-      for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const {}).entries) {
+      for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is! Map) continue;
         _days['$key'] = {for (final MapEntry(key: channel, value: seconds) in value.entries) if (seconds is num && seconds > 0) '$channel': seconds.round()};
       }
-      for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const {}).entries) {
+      for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const <dynamic, dynamic>{}).entries) {
         if (value is String) _names['$key'] = value;
       }
     } catch (e) {
@@ -107,20 +107,8 @@ class WatchTime {
 
 /// What lumtub_core worked out from [WatchTime], in seconds.
 class WatchStats {
-  const WatchStats({required this.today, required this.week, required this.month, required this.total, required this.average, required this.days, required this.top});
-  final int today;
-  final int week;
-  final int month;
-  final int total;
-  /// A day's average over the span.
-  final int average;
-  /// Each day of the span, oldest first.
-  final List<(String, int)> days;
-  /// The channels watched most in the span: key, name, seconds.
-  final List<(String, String, int)> top;
-
   factory WatchStats.fromJson(Object? raw) {
-    final map = raw is Map ? raw : const {};
+    final map = raw is Map ? raw : const <dynamic, dynamic>{};
     int number(String key) => (map[key] as num?)?.toInt() ?? 0;
     return WatchStats(
       today: number('today'),
@@ -132,4 +120,16 @@ class WatchStats {
       top: [for (final t in map['top'] is List ? map['top'] as List : const []) if (t is List && t.length == 3) ('${t[0]}', '${t[1]}', (t[2] as num).toInt())],
     );
   }
+
+  const WatchStats({required this.today, required this.week, required this.month, required this.total, required this.average, required this.days, required this.top});
+  final int today;
+  final int week;
+  final int month;
+  final int total;
+  /// A day's average over the span.
+  final int average;
+  /// Each day of the span, oldest first.
+  final List<(String, int)> days;
+  /// The channels watched most in the span: key, name, seconds.
+  final List<(String, String, int)> top;
 }

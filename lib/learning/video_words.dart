@@ -75,7 +75,7 @@ bool looksLikeName(WordToken t) {
 /// the interface thread. Null without the core or a dictionary.
 Future<VideoWords?> videoWordsOf(Learning learning, KnownWords known, String id, List<String> lines, {int most = 12}) {
   final key = '$id|${lines.length}|${known.revision}|${learning.levelKey}';
-  if (_cache.length > 8) _cache.remove(_cache.keys.first);
+  if (_cache.length > 8) unawaited(_cache.remove(_cache.keys.first));
   return _cache[key] ??= _videoWords(learning, known, lines, most);
 }
 

@@ -72,7 +72,10 @@ fn replace(message: &str, find: impl Fn(&str) -> Option<(usize, usize, &'static 
             out.push_str(with);
             at += whole;
         } else {
-            let c = rest.chars().next().unwrap();
+            let c = rest
+                .chars()
+                .next()
+                .expect("at is below the length, so rest is not empty");
             out.push(c);
             at += c.len_utf8();
         }
@@ -124,6 +127,7 @@ pub fn redact(message: &str) -> String {
 /// [message] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_redact(message: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `message` points to `length` readable bytes, per this function's `# Safety`.
     give(redact(unsafe { text(message, length) }).replace('\0', ""))
 }
 

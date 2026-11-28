@@ -89,7 +89,7 @@ class MdnsCollector {
       }
     }
     for (final row in rows('txt')) {
-      if (row case [final String name, final Map entries] when room(_txt, name)) {
+      if (row case [final String name, final Map<Object?, Object?> entries] when room(_txt, name)) {
         _txt[name] = {for (final MapEntry(:key, :value) in entries.entries) '$key': '$value'};
         touched.add(name);
       }

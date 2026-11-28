@@ -8,7 +8,7 @@ part of 'app_controller.dart';
 extension SmokeCheck on AppController {
   static String? get _outFile => Platform.environment['LUMTUB_SMOKE'];
 
-  static bool get requested => _outFile?.isNotEmpty == true || _showcase?.isNotEmpty == true;
+  static bool get requested => (_outFile?.isNotEmpty ?? false) || (_showcase?.isNotEmpty ?? false);
 
   /// A folder to fill with pictures of the main pages, for the README. The
   /// app asks for each picture by writing `want-<name>` there and waits for
@@ -66,7 +66,7 @@ extension SmokeCheck on AppController {
       _update(() {});
       final player = this.player;
       if (player != null) {
-        unawaited(play(VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
+        unawaited(play(const VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
         final clock = Stopwatch()..start();
         while (clock.elapsed < const Duration(seconds: 120) && player.state.position < const Duration(seconds: 5)) {
           await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -256,7 +256,7 @@ extension SmokeCheck on AppController {
     await part('danmaku', () async {
       await saveSettings(settingsBefore.copyWith(subtitleMode: SubtitleMode.off));
       await setDanmaku(danmakuBefore.copyWith(enabled: true));
-      unawaited(play(VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
+      unawaited(play(const VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
       await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
       await shot('danmaku$suffix', settle: const Duration(seconds: 40));
       await player.stop();
@@ -374,7 +374,7 @@ extension SmokeCheck on AppController {
         _ensureVideo(player);
         await player.open(Media(local));
         results['local'] = await _smokeWatch(player, '${out.path}.local.png');
-        passed = (results['local'] as Map)['played'] == true;
+        passed = (results['local']! as Map)['played'] == true;
       }
       final youtube = Platform.environment['LUMTUB_SMOKE_YOUTUBE'];
       if (youtube != null && youtube.isNotEmpty) {

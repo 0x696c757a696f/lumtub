@@ -1,6 +1,6 @@
 //! Text and numbers Lumtub works out from what it already has: a video's
-//! subtitles as a transcript for AI 总结, 语音识别 results as subtitles, and
-//! 观看统计 from the watch time kept on this computer.
+//! subtitles as a transcript for AI summaries, speech recognition results as subtitles, and
+//! watch statistics from the watch time kept on this computer.
 
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
@@ -180,7 +180,7 @@ fn short(text: &str, most: usize) -> String {
     }
 }
 
-/// The AI 概览 a model wrote for the subtitles [source], with every time
+/// The AI overview a model wrote for the subtitles [source], with every time
 /// checked against them, so a made-up time never seeks: a chapter starts
 /// where the paragraph its time falls in starts, the first at 0:00, none
 /// past the end; a quote starts where its words are said, or else where
@@ -312,7 +312,7 @@ fn day_text(number: i64) -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
-/// 观看统计 of `{days: {day: {channel: seconds}}, names: {channel: name},
+/// Watch statistics of `{days: {day: {channel: seconds}}, names: {channel: name},
 /// today, span}`: today, the last 7 and [span] days, all of it, the
 /// seconds of each of the last [span] days and the channels watched most
 /// in them.
@@ -538,6 +538,7 @@ pub fn speech_vtt(input: &Value) -> String {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *mut c_char {
     let input: Value =
+        // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
         serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     give(speech_vtt(&input))
 }
@@ -549,6 +550,7 @@ pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *m
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usize) -> *mut c_char {
     let input: Value =
+        // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
         serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     let source = input.get("source").and_then(Value::as_str).unwrap_or("");
     let budget = input
@@ -571,6 +573,7 @@ pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usiz
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_overview_check(json: *const u8, length: usize) -> *mut c_char {
     let input: Value =
+        // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
         serde_json::from_str(unsafe { crate::taste::outside(json, length) }).unwrap_or(Value::Null);
     let source = input.get("source").and_then(Value::as_str).unwrap_or("");
     give(overview_check(source, input.get("overview").unwrap_or(&Value::Null)).to_string())
@@ -582,6 +585,7 @@ pub unsafe extern "C" fn lumtub_overview_check(json: *const u8, length: usize) -
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_watch_stats(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
     give(watch_stats(&input).to_string())
 }

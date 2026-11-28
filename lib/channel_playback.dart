@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
-import 'models.dart';
 import 'app_log.dart';
+import 'models.dart';
 
 /// The speed and volume last chosen on each channel's videos, kept in
 /// `data/channel_playback.json` on this computer and used again the next

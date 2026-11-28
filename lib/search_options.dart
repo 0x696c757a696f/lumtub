@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'video_repository.dart';
 import 'l10n/l10n.dart';
+import 'video_repository.dart';
 
 /// How YouTube orders search results.
 enum SearchSort {

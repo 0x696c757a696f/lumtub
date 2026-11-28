@@ -57,7 +57,7 @@ abstract final class NativeHttp {
     final native = _native;
     if (native == null) return;
     final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}, 'roots': roots, 'quantum': quantum}));
-    _withBytes(bytes, (p, n) => native.configure(p, n));
+    _withBytes(bytes, native.configure);
   }
 
   static int _nextId = 1;
@@ -137,9 +137,9 @@ class _Pending {
 
   void head(int status, String headersJson, int? length, String? url) {
     final headers = <String, String>{};
-    for (final pair in jsonDecode(headersJson) as List) {
-      final name = (pair[0] as String).toLowerCase();
-      final value = pair[1] as String;
+    for (final pair in (jsonDecode(headersJson) as List<Object?>).cast<List<Object?>>()) {
+      final name = (pair[0]! as String).toLowerCase();
+      final value = pair[1]! as String;
       // As dart:io joins repeated headers.
       headers[name] = headers.containsKey(name) ? '${headers[name]},$value' : value;
     }
@@ -159,8 +159,6 @@ class _Pending {
       contentLength: length,
       request: request,
       headers: headers,
-      isRedirect: false,
-      reasonPhrase: null,
     ));
   }
 

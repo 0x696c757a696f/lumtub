@@ -4,7 +4,8 @@
 //! LUMTUB_UPDATE_KEY (128 hex digits: the Ed25519 seed, then the ML-DSA-65
 //! seed). `lumtub-sign --public OUT` writes that key's public keys to OUT.
 
-use lumtub_core::{hashes::file_sha256, signing};
+use lumtub_core::hashes::file_sha256;
+use lumtub_core::signing;
 use std::path::Path;
 use std::process::ExitCode;
 

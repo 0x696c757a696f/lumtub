@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 import '../community_posts.dart';
-import '../models.dart';
 import '../friendly_error.dart';
+import '../models.dart';
 
 /// Pages through a channel's posts for the 社区 tab.
 class PostsLoader extends ChangeNotifier {

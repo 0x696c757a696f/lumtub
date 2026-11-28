@@ -288,7 +288,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   void wipeCookies(String path) {
     final wipe = _native?.wipeCookies;
     if (wipe != null) {
-      _withText(path, (p, n) => wipe(p, n));
+      _withText(path, wipe);
     } else {
       try {
         File(path).deleteSync();

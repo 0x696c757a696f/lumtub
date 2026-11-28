@@ -43,7 +43,7 @@ void main() {
     expect(ByteData.sublistView(tail).getUint32(40, Endian.little), 2000);
     expect(ByteData.sublistView(tail).getUint32(4, Endian.little), tail.length - 8);
     // The last sample stays the last.
-    expect(tail[tail.length - 2], (2999) & 0xff);
+    expect(tail[tail.length - 2], 2999 & 0xff);
     // A size of 0, as a file written while playing may say, reads to the end.
     expect(wavTail(wav(1000, 3000, dataSize: 0), 0.5).length, 44 + 1000);
     expect(wavTail([1, 2, 3], 1), [1, 2, 3]);
@@ -63,9 +63,9 @@ void main() {
 
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(server.close);
-    final asked = <Map>[];
+    final asked = <Map<String, Object?>>[];
     server.listen((request) async {
-      final body = jsonDecode(await utf8.decodeStream(request)) as Map;
+      final body = jsonDecode(await utf8.decodeStream(request)) as Map<String, Object?>;
       asked.add(body);
       final result = switch (body['action']) {
         'version' => 6,
@@ -85,24 +85,24 @@ void main() {
       pictures.add(id);
       return (bytes: [1, 2], webp: false);
     }), 1);
-    final model = asked.firstWhere((a) => a['action'] == 'createModel')['params'] as Map;
+    final model = asked.firstWhere((a) => a['action'] == 'createModel')['params']! as Map<String, Object?>;
     expect(model['modelName'], 'Lumtub');
     expect(model['inOrderFields'], AnkiCard.fields);
-    expect((model['css'] as String).startsWith(AnkiCard.styleMarker), isTrue);
-    final add = asked.firstWhere((a) => a['action'] == 'addNotes')['params']['notes'] as List;
+    expect((model['css']! as String).startsWith(AnkiCard.styleMarker), isTrue);
+    final add = _notesOf(asked.firstWhere((a) => a['action'] == 'addNotes'));
     expect(add, hasLength(1));
-    final note = add.single as Map;
+    final note = add.single! as Map<String, Object?>;
     expect(note['modelName'], 'Lumtub');
     expect(note['tags'], ['lumtub', 'lumtub::fr']);
     // Newest first: 'main' then 'docteur'; canAddNotes kept the first,
     // which has no video, so no picture was asked for.
-    expect((note['fields'] as Map)['Word'], 'main');
+    expect((note['fields']! as Map<String, Object?>)['Word'], 'main');
     expect(pictures, isEmpty);
-    final docteur = (asked.firstWhere((a) => a['action'] == 'canAddNotes')['params']['notes'] as List)[1] as Map;
+    final docteur = _notesOf(asked.firstWhere((a) => a['action'] == 'canAddNotes'))[1]! as Map<String, Object?>;
     // Sounds are read only for the words Anki takes.
     expect(docteur.containsKey('audio'), isFalse);
-    expect((docteur['fields'] as Map)['Sentence'], '<b>docteur</b> en neurosciences');
-    expect((docteur['fields'] as Map)['Time'], '0:09');
+    expect((docteur['fields']! as Map<String, Object?>)['Sentence'], '<b>docteur</b> en neurosciences');
+    expect((docteur['fields']! as Map<String, Object?>)['Time'], '0:09');
   });
 
   test('a new word goes with its sound', () async {
@@ -116,9 +116,9 @@ void main() {
     await sound.writeAsBytes(wav(100, 10));
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(server.close);
-    final asked = <Map>[];
+    final asked = <Map<String, Object?>>[];
     server.listen((request) async {
-      final body = jsonDecode(await utf8.decodeStream(request)) as Map;
+      final body = jsonDecode(await utf8.decodeStream(request)) as Map<String, Object?>;
       asked.add(body);
       final result = switch (body['action']) {
         'version' => 6,
@@ -131,8 +131,8 @@ void main() {
       await request.response.close();
     });
     expect(await AnkiConnect(client: _Redirect(server.port)).send(book.words, book), 1);
-    final note = (asked.firstWhere((a) => a['action'] == 'addNotes')['params']['notes'] as List).single as Map;
-    expect((note['audio'] as List).single['fields'], ['Audio']);
+    final note = _notesOf(asked.firstWhere((a) => a['action'] == 'addNotes')).single! as Map<String, Object?>;
+    expect(((note['audio']! as List<Object?>).single! as Map<String, Object?>)['fields'], ['Audio']);
   });
 
   test('an older Lumtub style is updated, a changed one is kept', () async {
@@ -140,8 +140,8 @@ void main() {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final asked = <String>[];
       server.listen((request) async {
-        final body = jsonDecode(await utf8.decodeStream(request)) as Map;
-        asked.add(body['action'] as String);
+        final body = jsonDecode(await utf8.decodeStream(request)) as Map<String, Object?>;
+        asked.add(body['action']! as String);
         final result = switch (body['action']) {
           'modelNames' => ['Lumtub'],
           'modelFieldNames' => AnkiCard.fields.where((f) => f != 'Notes').toList(),
@@ -201,3 +201,6 @@ class _Redirect extends http.BaseClient {
     return _inner.send(moved);
   }
 }
+
+/// The `notes` of an AnkiConnect request's params.
+List<Object?> _notesOf(Map<String, Object?> request) => (request['params']! as Map<String, Object?>)['notes']! as List<Object?>;

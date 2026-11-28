@@ -354,7 +354,7 @@ class Skin {
   static Map<String, Object?> _deepMerge(Map<String, Object?> base, Map<String, Object?> over) => {
         ...base,
         for (final e in over.entries)
-          e.key: base[e.key] is Map<String, Object?> && e.value is Map<String, Object?> ? _deepMerge(base[e.key] as Map<String, Object?>, e.value as Map<String, Object?>) : e.value,
+          e.key: base[e.key] is Map<String, Object?> && e.value is Map<String, Object?> ? _deepMerge(base[e.key]! as Map<String, Object?>, e.value! as Map<String, Object?>) : e.value,
       };
 
   Color? colorOf(Object? value, [String? where]) {
@@ -407,7 +407,7 @@ class SkinColors {
     if (selected != null && onSelectedRaw == null) skin.readableOn(text, chosen, 'colors.text on colors.selected');
     chrome = skin.colorOf(m['chrome'], 'colors.chrome');
     if (chrome != null) skin.readableOn(text, Color.alphaBlend(chrome!, page), 'colors.text on colors.chrome');
-    tint = ((m['tint'] is num ? m['tint'] as num : 0).toDouble()).clamp(0.0, 0.3);
+    tint = (m['tint'] is num ? m['tint']! as num : 0).toDouble().clamp(0.0, 0.3);
     strong = m['strong'] == true;
     final reasonRaw = skin.colorOf(m['reason'], 'colors.reason');
     reason = reasonRaw == null ? null : skin.readableOn(reasonRaw, card == null ? page : Color.alphaBlend(card!, page), 'colors.reason');
@@ -496,7 +496,7 @@ sealed class SkinPaint {
       if (path == null) return _bad(skin, 'image "$name" must be a file inside the skin folder');
       final focus = _list(value['focus']);
       if (value['focus'] != null && (focus.length != 2 || focus.any((v) => v is! num || v < 0 || v > 1))) skin.warn('image focus must be [x, y], each from 0 to 1');
-      final (x, y) = focus.length == 2 && focus.every((v) => v is num) ? ((focus[0] as num).toDouble().clamp(0.0, 1.0), (focus[1] as num).toDouble().clamp(0.0, 1.0)) : (0.5, 0.5);
+      final (x, y) = focus.length == 2 && focus.every((v) => v is num) ? ((focus[0]! as num).toDouble().clamp(0.0, 1.0), (focus[1]! as num).toDouble().clamp(0.0, 1.0)) : (0.5, 0.5);
       return ImagePaint(path, builtIn: skin.builtIn, fit: _str(value['fit']) ?? 'cover', opacity: (_num(value['opacity']) ?? 1).clamp(0, 1).toDouble(), focus: Alignment(x * 2 - 1, y * 2 - 1));
     }
     if (value['pattern'] case final Map<String, Object?> m) {
@@ -631,7 +631,7 @@ class SkinSurface {
     } else if (b is Map<String, Object?>) {
       border = skin.colorOf(b['color'], 'border.color');
       borderWidth = _num(b['width']) ?? 1;
-      if (b['sides'] is List) sides = {for (final s in b['sides'] as List) if (s is String) s};
+      if (b['sides'] is List) sides = {for (final s in b['sides']! as List) if (s is String) s};
     }
     final shadows = <BoxShadow>[
       for (final s in _list(value['shadow']))
@@ -779,7 +779,7 @@ sealed class SkinDecoration {
       case 'perspectiveGrid':
         return PerspectiveGridDecoration(color: color ?? const Color(0x55FF3FD2), spacing: (_num(value['spacing']) ?? 48).clamp(8, 400).toDouble(), horizon: (_num(value['horizon']) ?? 0.55).clamp(0, 1).toDouble(), above: above);
       case 'beam':
-        return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: (_num(value['position']) ?? 0.45).toDouble(), above: above);
+        return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: _num(value['position']) ?? 0.45, above: above);
       case 'waves':
         return WavesDecoration(count: (_num(value['count']) ?? 3).round().clamp(1, 8), color: color ?? const Color(0x4D3FC8FF), seed: (_num(value['seed']) ?? 5).round(), position: (_num(value['position']) ?? 0.8).clamp(0, 1).toDouble(), above: above);
       case 'scene':
@@ -806,7 +806,7 @@ class BubblesDecoration extends SkinDecoration {
 }
 
 class SparklesDecoration extends SkinDecoration {
-  const SparklesDecoration({required this.count, required this.color, this.glow, required this.seed, required super.above});
+  const SparklesDecoration({required this.count, required this.color, required this.seed, required super.above, this.glow});
   final int count;
   final Color color;
   final Color? glow;
@@ -851,7 +851,7 @@ class WavesDecoration extends SkinDecoration {
 }
 
 class PatternDecoration extends SkinDecoration {
-  const PatternDecoration(this.paint, {this.fade, required super.above});
+  const PatternDecoration(this.paint, {required super.above, this.fade});
   final PatternPaint paint;
   /// top or bottom: the pattern fades out towards that edge.
   final String? fade;
@@ -1197,7 +1197,7 @@ List<Object?> _list(Object? v) => v is List ? v : const [];
 Map<String, String> _strings(Object? v) => {
       if (v is Map<String, Object?>)
         for (final e in v.entries)
-          if (e.value is String) e.key: e.value as String,
+          if (e.value is String) e.key: e.value! as String,
     };
 
 String? _localized(Map<String, String> m, String language) => m[language] ?? m[language.split('-').first];

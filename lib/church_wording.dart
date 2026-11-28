@@ -89,12 +89,12 @@ abstract final class ChurchWording {
     try {
       final saved = jsonDecode(await file.readAsString());
       if (saved is! Map) return;
-      if (saved['sure'] case final Map sure) {
+      if (saved['sure'] case final Map<Object?, Object?> sure) {
         for (final MapEntry(:key, :value) in sure.entries) {
           if (key is String && value is int && value >= 0 && value < ChurchRite.values.length) _sure.putIfAbsent(key, () => ChurchRite.values[value]);
         }
       }
-      if (saved['seen'] case final Map seen) {
+      if (saved['seen'] case final Map<Object?, Object?> seen) {
         for (final MapEntry(:key, :value) in seen.entries) {
           if (key is String && value is List && value.length == 3 && value.every((n) => n is int && n >= 0)) {
             _tallies.putIfAbsent(key, () => [for (final n in value) n as int]);

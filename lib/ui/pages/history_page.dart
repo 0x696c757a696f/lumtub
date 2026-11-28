@@ -6,13 +6,13 @@ import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../video_repository.dart' show historyLimit;
+import '../app_icons.dart';
 import '../common.dart';
-import '../motion.dart';
 import '../haptics.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'watch_stats_page.dart';
-import '../app_icons.dart';
 
 /// The watch history, with a search box, single delete from a card's menu,
 /// and a 选择 mode to delete several at once.
@@ -203,7 +203,7 @@ class _HistoryPageState extends State<HistoryPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) controller.openYoutubeHistory();
       });
-      return CustomScrollView(slivers: [SliverToBoxAdapter(child: PageHeader(tr('Watch history'))), SliverToBoxAdapter(child: _sourceChips()), const SliverSkeletonGrid(rows: 3)]);
+      return CustomScrollView(slivers: [SliverToBoxAdapter(child: PageHeader(tr('Watch history'))), SliverToBoxAdapter(child: _sourceChips()), const SliverSkeletonGrid()]);
     }
     final items = controller.visible(loader.items);
     final error = loader.error;
@@ -255,7 +255,7 @@ class _HistoryPageState extends State<HistoryPage> {
         FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
       ],
     ));
-    if (confirmed == true) await controller.clearHistory();
+    if (confirmed ?? false) await controller.clearHistory();
   }
 }
 

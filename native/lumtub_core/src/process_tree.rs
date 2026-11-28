@@ -11,11 +11,10 @@ mod imp {
     use std::mem::{size_of, zeroed};
     use std::ptr::null;
     use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
-    use windows_sys::Win32::System::JobObjects::JOB_OBJECT_LIMIT_PRIORITY_CLASS;
     use windows_sys::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, TerminateJobObject,
+        JOB_OBJECT_LIMIT_PRIORITY_CLASS, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JobObjectExtendedLimitInformation, SetInformationJobObject, TerminateJobObject,
     };
     use windows_sys::Win32::System::Threading::{
         BELOW_NORMAL_PRIORITY_CLASS, GetCurrentProcess, OpenProcess,
@@ -25,6 +24,9 @@ mod imp {
     };
 
     pub fn adopt(pid: u32) -> isize {
+        // SAFETY: Plain Win32 calls: `limits` is a zeroed struct of the size given, `process` is
+        // checked non-null before use, and each handle opened here is closed here or returned as
+        // the job.
         unsafe {
             let job = CreateJobObjectW(null(), null());
             if job.is_null() {
@@ -53,10 +55,14 @@ mod imp {
     }
 
     pub fn kill(job: isize, code: u32) -> bool {
+        // SAFETY: `job` is the job handle `adopt` returned and the caller has not passed to `close`
+        // yet.
         unsafe { TerminateJobObject(job as HANDLE, code) != 0 }
     }
 
     pub fn close(job: isize) {
+        // SAFETY: `job` is a handle `adopt` returned; `lumtub_tree_close` skips 0 and the caller
+        // closes it once.
         unsafe {
             CloseHandle(job as HANDLE);
         }
@@ -74,6 +80,8 @@ mod imp {
                 0
             },
         };
+        // SAFETY: `state` is a fully initialised struct of the size given, and `process` is a live
+        // process handle.
         unsafe {
             SetProcessInformation(
                 process,
@@ -85,6 +93,8 @@ mod imp {
     }
 
     pub fn background(job: isize, pid: u32) -> bool {
+        // SAFETY: `limits` is a zeroed struct of the size given, `job` is a handle from `adopt`,
+        // and `process` is checked non-null and closed before returning.
         unsafe {
             // Everything in the job, ffmpeg included, below normal priority.
             let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = zeroed();
@@ -108,6 +118,8 @@ mod imp {
     }
 
     pub fn efficient_self(on: bool) -> bool {
+        // SAFETY: `GetCurrentProcess` returns a pseudo-handle that is always valid for this
+        // process.
         unsafe { efficiency(GetCurrentProcess(), on) }
     }
 }
@@ -133,7 +145,7 @@ mod imp {
     static WATCH: Once = Once::new();
 
     fn trees() -> std::sync::MutexGuard<'static, Option<HashMap<libc::pid_t, Vec<Member>>>> {
-        TREES.lock().unwrap_or_else(|e| e.into_inner())
+        TREES.lock().expect("lock poisoned by a panic")
     }
 
     /// The "job" is the first process's id.
@@ -150,6 +162,7 @@ mod imp {
         WATCH.call_once(|| {
             // Lumtub quitting ends the trees, as closing its job objects does
             // on Windows.
+            // SAFETY: `end_all` is an `extern "C" fn()` with the signature `atexit` takes.
             unsafe { libc::atexit(end_all) };
             let _ = std::thread::Builder::new()
                 .name("lumtub-tree".into())
@@ -230,6 +243,8 @@ mod imp {
             .map(|m| m.0)
             .collect();
         for pid in &tree {
+            // SAFETY: `kill` takes plain integers and touches no memory; `pid` is a process id from
+            // the tracked tree.
             unsafe { libc::kill(*pid, libc::SIGSTOP) };
         }
         let mut seen: HashSet<libc::pid_t> = tree.iter().copied().collect();
@@ -242,6 +257,8 @@ mod imp {
             while i < tree.len() {
                 for child in now.children(tree[i]) {
                     if seen.insert(child) {
+                        // SAFETY: `kill` takes plain integers and touches no memory; `child` is a
+                        // process id from the snapshot.
                         unsafe { libc::kill(child, libc::SIGSTOP) };
                         tree.push(child);
                     }
@@ -263,6 +280,8 @@ mod imp {
         }
         let mut any = false;
         for pid in stop_all(root).iter().rev() {
+            // SAFETY: `kill` takes plain integers and touches no memory; `pid` is a process id from
+            // the tracked tree.
             any |= unsafe { libc::kill(*pid, libc::SIGKILL) } == 0;
         }
         any
@@ -277,6 +296,8 @@ mod imp {
             return;
         }
         for pid in stop_all(root).iter().rev() {
+            // SAFETY: `kill` takes plain integers and touches no memory; `pid` is a process id from
+            // the tracked tree.
             unsafe { libc::kill(*pid, libc::SIGKILL) };
         }
         if let Some(trees) = trees().as_mut() {
@@ -368,6 +389,7 @@ mod imp {
 
     #[cfg(target_os = "macos")]
     pub fn started(pid: libc::pid_t) -> Option<u64> {
+        // SAFETY: `proc_bsdinfo` is a plain C struct for which all-zero bytes are a valid value.
         let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
         let size = std::mem::size_of::<libc::proc_bsdinfo>() as libc::c_int;
         // SAFETY: [info] is a proc_bsdinfo of the size given.
@@ -387,11 +409,14 @@ mod imp {
 
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     pub fn started(pid: libc::pid_t) -> Option<u64> {
+        // SAFETY: Signal 0 only checks that the process exists; `kill` takes plain integers and
+        // touches no memory.
         (unsafe { libc::kill(pid, 0) } == 0).then_some(0)
     }
 
     /// Below normal priority, which the processes it starts inherit.
     pub fn background(_job: isize, pid: u32) -> bool {
+        // SAFETY: `setpriority` takes plain integers and touches no memory.
         unsafe { libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, 10) == 0 }
     }
 
@@ -418,6 +443,8 @@ mod imp {
         let mut pids = vec![0 as libc::pid_t; 4096];
         let size = (pids.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int;
         // The answer is in bytes.
+        // SAFETY: `pids` has room for `size` bytes, which is what `proc_listpids` is told it may
+        // write.
         let bytes = unsafe {
             proc_listpids(
                 PROC_PPID_ONLY,

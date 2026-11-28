@@ -40,7 +40,7 @@ void main() {
   final skip = NativeCore.instance == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : null;
 
   test('searches page by page through the web API', () async {
-    final bodies = <Map>[];
+    final bodies = <Map<dynamic, dynamic>>[];
     final client = MockClient((request) async {
       final body = jsonDecode(request.body) as Map;
       bodies.add(body);
@@ -168,7 +168,7 @@ void main() {
     await expectLater(YoutubeListing.orElse(partial, fallback), emitsInOrder(['web', emitsError(isStateError)]));
   });
 
-  test("a channel without a tab lists nothing instead of failing", () {
+  test('a channel without a tab lists nothing instead of failing', () {
     expect(VideoRepository.missingTab('ERROR: [youtube:tab] UCOKz4SMjsjrJ3FHuVVj_sng: This channel does not have a videos tab'), isTrue);
     expect(VideoRepository.missingTab('ERROR: [youtube:tab] UC1: This channel does not have a shorts tab'), isTrue);
     expect(VideoRepository.missingTab('ERROR: [youtube] abc: Video unavailable'), isFalse);

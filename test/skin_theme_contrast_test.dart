@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
-import 'package:lumtub/ui/skin_scenes.dart';
 import 'package:lumtub/ui/linked_text.dart';
+import 'package:lumtub/ui/skin_scenes.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The colours the app's widgets put on top of each other, for every
 /// built-in skin on both sides: what is chosen in segmented buttons, lists
@@ -21,7 +21,7 @@ void main() {
   Future<List<Color>> picture(String path) async {
     final codec = await ui.instantiateImageCodec(File(path).readAsBytesSync(), targetWidth: 48, targetHeight: 27);
     final image = (await codec.getNextFrame()).image;
-    final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+    final bytes = (await image.toByteData())!;
     return [for (var i = 0; i < bytes.lengthInBytes; i += 4) Color.fromARGB(255, bytes.getUint8(i), bytes.getUint8(i + 1), bytes.getUint8(i + 2))];
   }
 

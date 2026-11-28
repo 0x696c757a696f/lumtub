@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -253,6 +255,6 @@ abstract final class KeyScroll {
       return;
     }
     _heading[position] = clamped;
-    position.animateTo(clamped, duration: duration, curve: Curves.easeOutCubic).then((_) => settled());
+    unawaited(position.animateTo(clamped, duration: duration, curve: Curves.easeOutCubic).then((_) => settled()));
   }
 }

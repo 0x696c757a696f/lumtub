@@ -203,6 +203,8 @@ fn character(reference: &str) -> Option<char> {
 /// [xml] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_channel_feed(xml: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `xml` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     give_json(&parse(unsafe { outside(xml, length) }))
 }
 

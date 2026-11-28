@@ -76,7 +76,7 @@ class SkeletonBox extends StatelessWidget {
 /// Shows [child] only once [delay] has passed, so a load that finishes
 /// quickly never flashes a placeholder.
 class DelayedReveal extends StatefulWidget {
-  const DelayedReveal({super.key, this.delay = DelayedReveal.wait, required this.child});
+  const DelayedReveal({required this.child, super.key, this.delay = DelayedReveal.wait});
   final Duration delay;
   final Widget child;
 

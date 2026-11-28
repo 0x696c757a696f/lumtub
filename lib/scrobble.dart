@@ -11,7 +11,7 @@ import 'secure_store.dart';
 
 /// A song as ListenBrainz is told about it.
 class ScrobbleTrack {
-  const ScrobbleTrack({required this.artist, required this.title, this.album, required this.videoId, this.length});
+  const ScrobbleTrack({required this.artist, required this.title, required this.videoId, this.album, this.length});
   final String artist;
   final String title;
   final String? album;

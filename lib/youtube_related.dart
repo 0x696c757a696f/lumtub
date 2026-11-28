@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
@@ -26,7 +27,7 @@ class YoutubeRelated {
   /// YouTube's `/next` response for [videoId], in the interface language;
   /// the related videos and the translated title both come from it.
   Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _next(String videoId) {
-    if (_cache.length > 40) _cache.remove(_cache.keys.first);
+    if (_cache.length > 40) unawaited(_cache.remove(_cache.keys.first));
     return _cache[videoId] ??= () async {
       final response = await _client
           .post(
@@ -50,7 +51,7 @@ class YoutubeRelated {
     try {
       return (await _next(videoId)).related.where((item) => item.id != videoId).toList();
     } catch (_) {
-      _cache.remove(videoId);
+      unawaited(_cache.remove(videoId));
       rethrow;
     }
   }
@@ -61,7 +62,7 @@ class YoutubeRelated {
     try {
       return (await _next(videoId)).text;
     } catch (_) {
-      _cache.remove(videoId);
+      unawaited(_cache.remove(videoId));
       return null;
     }
   }

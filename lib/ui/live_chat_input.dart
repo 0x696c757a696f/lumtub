@@ -196,13 +196,13 @@ class _LiveChatInputState extends State<LiveChatInput> {
   @override
   void initState() {
     super.initState();
-    _open();
+    unawaited(_open());
   }
 
   @override
   void didUpdateWidget(LiveChatInput old) {
     super.didUpdateWidget(old);
-    if (old.videoId != widget.videoId) _open();
+    if (old.videoId != widget.videoId) unawaited(_open());
   }
 
   @override

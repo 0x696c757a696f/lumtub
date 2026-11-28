@@ -1,27 +1,27 @@
 import 'dart:async';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../app/app_controller.dart';
-import '../church_wording.dart';
 import '../app/comments_loader.dart';
 import '../app_preferences.dart' show AppPreferences;
+import '../church_wording.dart';
+import '../l10n/l10n.dart';
 import '../models.dart';
 import '../youtube_comments.dart';
+import 'app_icons.dart';
 import 'common.dart';
+import 'emoji_picker.dart';
 import 'haptics.dart';
 import 'linked_text.dart';
-import 'rating_buttons.dart';
+import 'live_chat_input.dart';
 import 'motion.dart';
-import 'reveal.dart';
 import 'pages/channel_page.dart';
+import 'rating_buttons.dart';
+import 'reveal.dart';
 import 'theme.dart';
 import 'translatable.dart';
-import '../l10n/l10n.dart';
-import 'app_icons.dart';
-import 'emoji_picker.dart';
-import 'live_chat_input.dart';
 
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
@@ -279,7 +279,7 @@ class _CommentsSectionState extends State<CommentsSection> {
                 selected: {loader.newest},
                 onSelectionChanged: (value) {
                   Haptics.select();
-                  loader.setNewest(value.first);
+                  unawaited(loader.setNewest(value.first));
                 },
               );
               final title = Text(loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
@@ -446,7 +446,7 @@ class _CommentTile extends StatelessWidget {
               TextButton(
                 style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
                 onPressed: onReply,
-                child: Text(tr('Reply'), style: TextStyle(fontSize: 12)),
+                child: Text(tr('Reply'), style: const TextStyle(fontSize: 12)),
               ),
             ],
           ]),

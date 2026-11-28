@@ -1,8 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/translation_services.dart';
 import 'package:lumtub/ui/pages/translation_settings_page.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 void main() {

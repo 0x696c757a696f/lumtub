@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
@@ -40,7 +41,7 @@ class _TileViewState extends State<_TileView> {
 
   void _fetch() {
     final sheet = widget.tile.sheet;
-    widget.sheets.sheet(widget.board.sheets[sheet].url).then((image) {
+    unawaited(widget.sheets.sheet(widget.board.sheets[sheet].url).then((image) {
       // The pointer may have moved to another sheet meanwhile; the frame
       // shown stays until the right one arrives.
       if (mounted && image != null && widget.tile.sheet == sheet) {
@@ -49,7 +50,7 @@ class _TileViewState extends State<_TileView> {
           _loaded = sheet;
         });
       }
-    });
+    }));
   }
 
   @override

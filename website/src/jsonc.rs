@@ -27,7 +27,9 @@ pub fn strip(source: &str) -> String {
             }
             b'/' if bytes.get(i + 1) == Some(&b'*') => {
                 out.push_str(&source[start..i]);
-                i = source[i + 2..].find("*/").map_or(bytes.len(), |end| i + 2 + end + 2);
+                i = source[i + 2..]
+                    .find("*/")
+                    .map_or(bytes.len(), |end| i + 2 + end + 2);
                 start = i;
             }
             _ => i += 1,

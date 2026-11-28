@@ -5,12 +5,12 @@ import 'package:file_selector/file_selector.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/library_controller.dart';
-import '../../app_log.dart';
 import '../../app/subscription_import_actions.dart';
+import '../../app_log.dart';
+import '../../friendly_error.dart';
 import '../../l10n/l10n.dart';
 import '../../save_file.dart';
 import '../../subscription_import.dart';
-import '../../friendly_error.dart';
 
 /// Asks for a NewPipe, FreeTube or Google Takeout file, follows its channels
 /// and says what happened. The file is read here and goes nowhere else.

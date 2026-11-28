@@ -68,7 +68,7 @@ pub(crate) fn continuation_len(bytes: &[u8]) -> usize {
 }
 
 fn continuation(bytes: &[u8]) -> &[u8] {
-    let at = if bytes.starts_with(&[0x1A, 0x45, 0xDF, 0xA3]) {
+    let at = if bytes.starts_with(&[0x1a, 0x45, 0xdf, 0xa3]) {
         webm_clusters(bytes)
     } else {
         mp4_fragments(bytes)
@@ -159,7 +159,7 @@ fn fetch_fragment(
 /// Where a fragment starts in the stream, in seconds: a WebM fragment's
 /// first cluster, or an MP4 fragment's `tfdt` in its track's time scale.
 fn fragment_time(b: &[u8]) -> Option<f64> {
-    if b.starts_with(&[0x1A, 0x45, 0xDF, 0xA3]) {
+    if b.starts_with(&[0x1a, 0x45, 0xdf, 0xa3]) {
         webm_time(b)
     } else {
         mp4_time(b)
@@ -168,9 +168,9 @@ fn fragment_time(b: &[u8]) -> Option<f64> {
 
 fn webm_time(b: &[u8]) -> Option<f64> {
     use crate::cast_webm::{CLUSTER, EBML, SEGMENT, element};
-    const INFO: u32 = 0x1549_A966;
-    const TIMECODE_SCALE: u32 = 0x2A_D7B1;
-    const TIMECODE: u32 = 0xE7;
+    const INFO: u32 = 0x1549_a966;
+    const TIMECODE_SCALE: u32 = 0x2a_d7b1;
+    const TIMECODE: u32 = 0xe7;
     let uint = |from: usize, to: usize| -> Option<u64> {
         let bytes = b.get(from..to)?;
         (bytes.len() <= 8).then(|| bytes.iter().fold(0u64, |v, &x| (v << 8) | x as u64))
@@ -208,11 +208,12 @@ fn boxes(b: &[u8], from: usize, to: usize) -> Vec<([u8; 4], usize, usize)> {
     let mut found = Vec::new();
     let mut at = from;
     while at + 8 <= to {
-        let size = u32::from_be_bytes(b[at..at + 4].try_into().unwrap()) as u64;
-        let kind: [u8; 4] = b[at + 4..at + 8].try_into().unwrap();
+        let size =
+            u32::from_be_bytes(b[at..at + 4].try_into().expect("the slice is 4 bytes")) as u64;
+        let kind: [u8; 4] = b[at + 4..at + 8].try_into().expect("the slice is 4 bytes");
         let (size, body) = match size {
             1 if at + 16 <= to => (
-                u64::from_be_bytes(b[at + 8..at + 16].try_into().unwrap()),
+                u64::from_be_bytes(b[at + 8..at + 16].try_into().expect("the slice is 8 bytes")),
                 at + 16,
             ),
             0 => ((to - at) as u64, at + 8),
@@ -236,11 +237,11 @@ fn mp4_time(b: &[u8]) -> Option<f64> {
     };
     let be32 = |at: usize| {
         b.get(at..at + 4)
-            .map(|x| u32::from_be_bytes(x.try_into().unwrap()) as u64)
+            .map(|x| u32::from_be_bytes(x.try_into().expect("the slice is 4 bytes")) as u64)
     };
     let be64 = |at: usize| {
         b.get(at..at + 8)
-            .map(|x| u64::from_be_bytes(x.try_into().unwrap()))
+            .map(|x| u64::from_be_bytes(x.try_into().expect("the slice is 8 bytes")))
     };
     let (_, moov, moov_end) = find(0, b.len(), b"moov")?;
     let (_, trak, trak_end) = find(moov, moov_end, b"trak")?;
@@ -696,21 +697,21 @@ mod tests {
 
     fn webm_fragment(timecode: u64) -> Vec<u8> {
         let mut segment = ebml(
-            &[0x15, 0x49, 0xA9, 0x66],
-            &ebml(&[0x2A, 0xD7, 0xB1], &1_000_000u64.to_be_bytes()),
+            &[0x15, 0x49, 0xa9, 0x66],
+            &ebml(&[0x2a, 0xd7, 0xb1], &1_000_000u64.to_be_bytes()),
         );
         segment.extend(ebml(
-            &[0x1F, 0x43, 0xB6, 0x75],
+            &[0x1f, 0x43, 0xb6, 0x75],
             &[
-                ebml(&[0xE7], &timecode.to_be_bytes()),
-                ebml(&[0xA3], &[0x81, 0, 0, 0x80, 1]),
+                ebml(&[0xe7], &timecode.to_be_bytes()),
+                ebml(&[0xa3], &[0x81, 0, 0, 0x80, 1]),
             ]
             .concat(),
         ));
         // A live fragment's segment has no length.
-        let mut out = ebml(&[0x1A, 0x45, 0xDF, 0xA3], &ebml(&[0x42, 0x82], b"webm"));
+        let mut out = ebml(&[0x1a, 0x45, 0xdf, 0xa3], &ebml(&[0x42, 0x82], b"webm"));
         out.extend_from_slice(&[
-            0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ]);
         out.extend(segment);
         out
@@ -872,15 +873,15 @@ mod tests {
     fn later_fragments_lose_their_headers() {
         // EBML header, Segment of unknown size, Info, Cluster.
         let webm = [
-            vec![0x1A, 0x45, 0xDF, 0xA3, 0x81, 0x00],
+            vec![0x1a, 0x45, 0xdf, 0xa3, 0x81, 0x00],
             vec![
-                0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             ],
-            vec![0x15, 0x49, 0xA9, 0x66, 0x82, 0, 0],
-            vec![0x1F, 0x43, 0xB6, 0x75, 0x81, 0x07],
+            vec![0x15, 0x49, 0xa9, 0x66, 0x82, 0, 0],
+            vec![0x1f, 0x43, 0xb6, 0x75, 0x81, 0x07],
         ]
         .concat();
-        assert_eq!(continuation(&webm), &[0x1F, 0x43, 0xB6, 0x75, 0x81, 0x07]);
+        assert_eq!(continuation(&webm), &[0x1f, 0x43, 0xb6, 0x75, 0x81, 0x07]);
         let mut mp4 = vec![];
         for (kind, body) in [(b"ftyp", 4usize), (b"moov", 8), (b"moof", 2), (b"mdat", 3)] {
             mp4.extend_from_slice(&((8 + body) as u32).to_be_bytes());

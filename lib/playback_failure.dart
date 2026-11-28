@@ -48,14 +48,14 @@ class PlaybackFailure {
     (FailureKind.upcoming, RegExp(r'Premieres in|live event will begin|will begin in|waiting for scheduled stream', caseSensitive: false)),
     (FailureKind.membersOnly, RegExp(r"members.only|join this channel|channel's members", caseSensitive: false)),
     (FailureKind.unavailable, RegExp(
-      r"Video unavailable|Private video|video is private|has been removed|"
-      r"account[^.]{0,40}terminated|copyright|not available in your country|geo.?restrict|age.?restrict|confirm your age|"
-      r"inappropriate|This live stream recording is not available",
+      r'Video unavailable|Private video|video is private|has been removed|'
+      r'account[^.]{0,40}terminated|copyright|not available in your country|geo.?restrict|age.?restrict|confirm your age|'
+      r'inappropriate|This live stream recording is not available',
       caseSensitive: false,
     )),
     (FailureKind.noFormat, RegExp(r'Requested format is not available', caseSensitive: false)),
     (FailureKind.rateLimited, RegExp(r'\b429\b|Too Many Requests|rate.?limit', caseSensitive: false)),
-    (FailureKind.botCheck, RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false)),
+    (FailureKind.botCheck, RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false)),
     (FailureKind.challenge, RegExp(r'n challenge|nsig|signature (solving|extraction|function)|JavaScript runtime|js.?runtime', caseSensitive: false)),
     (FailureKind.forbidden, RegExp(r'\b403\b|Forbidden|PO Token', caseSensitive: false)),
     (FailureKind.network, RegExp(

@@ -4,14 +4,14 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
+import 'scripts.dart';
 import 'translation.dart';
 import 'translation_cache.dart';
 import 'translation_services.dart';
 import 'youtube_web.dart';
-import 'app_log.dart';
-import 'scripts.dart';
 
 /// Subtitles fetched by the app and handed to mpv as files.
 ///
@@ -88,9 +88,9 @@ class SubtitleFiles {
     final (key, translator) = _keyOf(option);
     final pending = _paths[key] ??= _fetch(option, key, translator);
     pending.ignore();
-    return pending.catchError((Object e) {
-      _paths.remove(key);
-      throw e;
+    return pending.catchError((Object e, StackTrace stack) {
+      unawaited(_paths.remove(key));
+      Error.throwWithStackTrace(e, stack);
     });
   }
 
@@ -183,16 +183,16 @@ class SubtitleFiles {
         if (whole == null) {
           // No longer shown: what is translated stays in the cache, and the
           // track is followed again when it is next asked for.
-          _paths.remove(key);
+          unawaited(_paths.remove(key));
           return;
         }
         await file.writeAsString(whole);
         await onUpdated?.call(file.path);
       }).catchError((Object e) {
         // The lines translated so far stay; the track is asked again next time.
-        _paths.remove(key);
+        unawaited(_paths.remove(key));
       }).whenComplete(() {
-        _finishing.remove(key);
+        unawaited(_finishing.remove(key));
         _whole.remove(key);
       });
     }
@@ -465,7 +465,7 @@ class WebVtt {
   }
 
   static List<({String timing, String text})> _cuesOf(String json) => [
-        for (final c in jsonDecode(json) as List) (timing: c[0] as String, text: c[1] as String),
+        for (final c in (jsonDecode(json) as List<Object?>).cast<List<Object?>>()) (timing: c[0]! as String, text: c[1]! as String),
       ];
 
   /// [cues] without the native core.
@@ -638,7 +638,7 @@ class WebVtt {
     return (
       cues: _cuesOf(jsonEncode(map['cues'])),
       pieces: [
-        for (final p in map['pieces'] as List) [for (final l in p as List) (timing: l[0] as String, weight: l[1] as int)],
+        for (final p in (map['pieces'] as List<Object?>).cast<List<Object?>>()) [for (final l in p.cast<List<Object?>>()) (timing: l[0]! as String, weight: l[1]! as int)],
       ],
     );
   }

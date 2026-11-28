@@ -310,7 +310,7 @@ extension SettingsActions on AppController {
     if (next.skipSilence != oldSettings.skipSilence || next.audioFilter != oldSettings.audioFilter) unawaited(_syncSilenceSkipping(player));
     // The audio session is opened with the audio output: opened again now.
     if (next.mixWithOthers != oldSettings.mixWithOthers && player.platform is NativePlayer) {
-      unawaited((player.platform as NativePlayer).command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e')));
+      unawaited((player.platform! as NativePlayer).command(['ao-reload']).catchError((Object e) => logDebug(() => 'Could not reopen the audio output: $e')));
     }
     if (next.volumeBalance != oldSettings.volumeBalance || next.audioFilter != oldSettings.audioFilter) unawaited(_syncVolumeBalance(player));
     // The video playing skips by the new SponsorBlock choice too.
@@ -391,7 +391,7 @@ extension SettingsActions on AppController {
       await manager.prepare(next);
       final migrate = await confirmMigrate(target.path);
       // The old folders are deleted only after the new location is saved.
-      if (migrate == true) {
+      if (migrate ?? false) {
         await manager.migrate(settings, next, commit: () => saveSettings(next));
       } else {
         await saveSettings(next);

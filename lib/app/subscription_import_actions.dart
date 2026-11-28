@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../models.dart';
 import '../subscription_import.dart';
 import 'library_controller.dart';
@@ -15,6 +17,6 @@ class ImportOutcome {
 ImportOutcome followImported(LibraryController library, SubscriptionImport data) {
   final channels = [for (final (id, name) in data.channels) ChannelRef(id, name)];
   final added = library.followAll(channels);
-  if (added > 0) library.fillMissingAvatars();
+  if (added > 0) unawaited(library.fillMissingAvatars());
   return ImportOutcome(added: added, already: channels.length - added, skipped: data.skipped);
 }

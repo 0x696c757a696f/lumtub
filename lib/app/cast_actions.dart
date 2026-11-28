@@ -9,7 +9,7 @@ extension CastActions on AppController {
   Future<CastMedia> castMedia(Duration start, CastDevice device) async {
     final item = playing;
     if (item == null || item.isLive || _repository == null) throw CastException(tr('No stream can be cast (a single MP4 address with sound is needed)'));
-    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    final title = details?.title.isNotEmpty ?? false ? details!.title : item.title;
     // What is shown now goes to the TV too: one subtitle, or two.
     final subtitles = await castSubtitleCues();
     if (subtitles.cues.isNotEmpty) logInfo('Cast: with ${subtitles.cues.length} subtitle lines');

@@ -379,6 +379,8 @@ fn answer(ask: &str) -> String {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_store_texts(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     give(answer(unsafe { text(json, length) }))
 }
 

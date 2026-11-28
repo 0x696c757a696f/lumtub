@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../skins/skin.dart';
 import 'linked_text.dart';
@@ -170,7 +170,7 @@ ThemeData withGlass(ThemeData theme, {required double transparency, required boo
 /// desktop shows through, so they read whatever lies behind the window.
 /// Without glass it is [child] alone.
 class GlassPlate extends StatelessWidget {
-  const GlassPlate({super.key, this.surface, required this.child});
+  const GlassPlate({required this.child, super.key, this.surface});
 
   /// The bar [child] sits on, whose colour the plate takes; null for the
   /// bars of the standard look, in [GlassLook.chrome].

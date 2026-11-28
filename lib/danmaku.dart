@@ -13,6 +13,24 @@ import 'ui/danmaku_picture.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
+  factory DanmakuSettings.fromJson(Object? raw) {
+    const d = DanmakuSettings();
+    if (raw is! Map) return d;
+    double number(String key, double fallback, double min, double max) => raw[key] is num ? (raw[key] as num).toDouble().clamp(min, max) : fallback;
+    return DanmakuSettings(
+      enabled: raw['enabled'] is bool ? raw['enabled'] as bool : d.enabled,
+      opacity: number('opacity', d.opacity, 0.2, 1),
+      // Before version 3 the default was 44, which read too small.
+      size: (raw['version'] is! int || (raw['version'] as int) < 3) && raw['size'] == 44 ? d.size : number('size', d.size, 24, 96),
+      // Before version 2 the default crossed in 8 s, before version 4 in
+      // 12 s; both read too fast.
+      seconds: raw['version'] is! int || (raw['version'] as int) < 2 || ((raw['version'] as int) < 4 && raw['seconds'] == 12) ? d.seconds : number('seconds', d.seconds, 4, 20),
+      area: number('area', d.area, 0.25, 1),
+      paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
+      comments: raw['comments'] is bool ? raw['comments'] as bool : d.comments,
+    );
+  }
+
   const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 52, this.seconds = 16, this.area = 0.5, this.paid = true, this.comments = true});
 
   /// The chat flies across the picture.
@@ -44,24 +62,6 @@ class DanmakuSettings {
       );
 
   Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'comments': comments, 'version': 4};
-
-  factory DanmakuSettings.fromJson(Object? raw) {
-    const d = DanmakuSettings();
-    if (raw is! Map) return d;
-    double number(String key, double fallback, double min, double max) => raw[key] is num ? (raw[key] as num).toDouble().clamp(min, max) : fallback;
-    return DanmakuSettings(
-      enabled: raw['enabled'] is bool ? raw['enabled'] as bool : d.enabled,
-      opacity: number('opacity', d.opacity, 0.2, 1),
-      // Before version 3 the default was 44, which read too small.
-      size: (raw['version'] is! int || (raw['version'] as int) < 3) && raw['size'] == 44 ? d.size : number('size', d.size, 24, 96),
-      // Before version 2 the default crossed in 8 s, before version 4 in
-      // 12 s; both read too fast.
-      seconds: raw['version'] is! int || (raw['version'] as int) < 2 || ((raw['version'] as int) < 4 && raw['seconds'] == 12) ? d.seconds : number('seconds', d.seconds, 4, 20),
-      area: number('area', d.area, 0.25, 1),
-      paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
-      comments: raw['comments'] is bool ? raw['comments'] as bool : d.comments,
-    );
-  }
 
   /// What the layout in lumtub_core needs.
   String get layoutJson => jsonEncode({'font_size': size, 'duration_ms': seconds * 1000, 'area': area, 'opacity': opacity, 'font': PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont)});
@@ -333,7 +333,7 @@ class DanmakuOverlay extends ChangeNotifier {
         batch[i]['start_ms'] = starts[i];
       }
     }
-    batch.sort((a, b) => (a['start_ms'] as double).compareTo(b['start_ms'] as double));
+    batch.sort((a, b) => (a['start_ms']! as double).compareTo(b['start_ms']! as double));
     core.withText(jsonEncode(batch), (bytes, length) => core.danmakuAdd(layout, bytes, length));
     _changed();
   }

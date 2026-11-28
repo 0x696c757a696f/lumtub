@@ -39,7 +39,7 @@ extension NetworkActions on AppController {
   /// Whether both IPv4 and IPv6 reach YouTube with nothing between, so a
   /// video taken for a bot over one is asked again over the other.
   bool get _bothFamilies =>
-      settings.ipVersion != 'ipv4' && proxy.url == null && !(settings.proxyMode == ProxyMode.system && proxyEndpoint != null) && _ipv6Works == true;
+      settings.ipVersion != 'ipv4' && proxy.url == null && !(settings.proxyMode == ProxyMode.system && proxyEndpoint != null) && (_ipv6Works ?? false);
 
   /// Whether yt-dlp keeps to IPv4. On 自动 it does when IPv6 does not reach
   /// YouTube; behind a proxy the proxy picks, so it is left alone. The

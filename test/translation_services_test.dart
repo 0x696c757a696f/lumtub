@@ -70,7 +70,7 @@ void main() {
     });
 
     test('rejects unsupported languages and maps errors', () async {
-      final ok = MockClient((_) async => _json({'translations': []}));
+      final ok = MockClient((_) async => _json({'translations': <Object?>[]}));
       expect(await _fails(DeepLTranslator(ok, key: 'k').translate('a', 'th')), tr('DeepL does not support this language'));
       for (final entry in {
         403: tr('The DeepL key is not valid'),
@@ -105,7 +105,7 @@ void main() {
       late http.Request seen;
       final client = MockClient((request) async {
         seen = request;
-        final items = jsonDecode(request.body) as List;
+        final items = (jsonDecode(request.body) as List).cast<Map<String, dynamic>>();
         return _json([for (final item in items) {'translations': [{'text': '译${item['Text']}', 'to': 'zh-Hans'}]}]);
       });
       final result = await MicrosoftTranslator(client, key: 'k', region: 'eastasia').translate('a\n\nb', 'zh-CN');
@@ -137,7 +137,7 @@ void main() {
       var calls = 0;
       final client = MockClient((request) async {
         calls++;
-        final items = jsonDecode(request.body) as List;
+        final items = (jsonDecode(request.body) as List).cast<Map<String, dynamic>>();
         return _json([for (final item in items) {'translations': [{'text': item['Text']}]}]);
       });
       final text = [for (var i = 0; i < 250; i++) 'l$i'].join('\n');
@@ -155,7 +155,7 @@ void main() {
       late http.Request seen;
       final client = MockClient((request) async {
         seen = request;
-        final q = (jsonDecode(request.body)['q'] as List).cast<String>();
+        final q = ((jsonDecode(request.body) as Map)['q'] as List).cast<String>();
         return _json({'translatedText': [for (final s in q) '译$s']});
       });
       final result = await LibreTranslator(client, server: 'https://libre.example.com/', key: 'secret').translate('a\n\nb', 'zh-CN');
@@ -178,7 +178,7 @@ void main() {
       });
       expect(await LibreTranslator(client, server: 'http://localhost:5000').translate('hello', 'fr'), 'bonjour');
       expect((jsonDecode(seen.body) as Map).containsKey('api_key'), isFalse);
-      expect(jsonDecode(seen.body)['target'], 'fr');
+      expect((jsonDecode(seen.body) as Map)['target'], 'fr');
     });
 
     test('needs a http or https server', () async {
@@ -201,7 +201,7 @@ void main() {
             {'code': 'zh', 'name': 'Chinese', 'targets': ['en', 'zh', 'zt']},
           ]);
         }
-        targets.add(jsonDecode(request.body)['target'] as String);
+        targets.add((jsonDecode(request.body) as Map)['target'] as String);
         return _json({'translatedText': ['x']});
       });
       final libre = LibreTranslator(client, server: 'https://old-libre.example.com');
@@ -333,9 +333,9 @@ void main() {
     });
 
     test('sends several lines as numbered segments and matches the answer by number', () async {
-      final bodies = <Map>[];
+      final bodies = <Map<String, dynamic>>[];
       final client = MockClient((request) async {
-        bodies.add(jsonDecode(request.body) as Map);
+        bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
         // Out of order, with a code fence: still matched by id.
         return reply('```json\n{"segments": [{"id": "2", "text": "二"}, {"id": "1", "text": "一"}]}\n```');
       });
@@ -354,9 +354,9 @@ void main() {
     });
 
     test('retries once with a note when the line count is wrong', () async {
-      final bodies = <Map>[];
+      final bodies = <Map<String, dynamic>>[];
       final client = MockClient((request) async {
-        bodies.add(jsonDecode(request.body) as Map);
+        bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
         // No JSON, then one line short, then right.
         return reply(bodies.length <= 2 ? '一' : '一\n二');
       });
@@ -379,9 +379,9 @@ void main() {
     test('splits long text at line ends', () async {
       final sizes = <int>[];
       final client = MockClient((request) async {
-        final user = (jsonDecode(request.body)['messages'] as List)[1]['content'] as String;
+        final user = ((jsonDecode(request.body) as Map)['messages'] as List<dynamic>).cast<Map<String, dynamic>>()[1]['content'] as String;
         // Segments are measured by their texts, as the limit is.
-        final segments = user.startsWith('{') ? [for (final s in jsonDecode(user)['segments'] as List) s['text'] as String] : null;
+        final segments = user.startsWith('{') ? [for (final s in ((jsonDecode(user) as Map)['segments'] as List<dynamic>).cast<Map<String, dynamic>>()) s['text'] as String] : null;
         sizes.add(segments == null ? user.length : segments.join('\n').length);
         return reply(user);
       });
@@ -527,9 +527,9 @@ void main() {
     });
 
     test('DeepLX joins lines and falls back to one request per line', () async {
-      final bodies = <Map>[];
+      final bodies = <Map<String, dynamic>>[];
       final client = MockClient((request) async {
-        final body = jsonDecode(request.body) as Map;
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
         bodies.add(body);
         final text = body['text'] as String;
         // Loses the line break the first time.
@@ -556,9 +556,9 @@ void main() {
     });
 
     test('AI style, glossary, temperature and context reach the request', () async {
-      final sent = <Map>[];
+      final sent = <Map<String, dynamic>>[];
       final client = MockClient((request) async {
-        final body = jsonDecode(request.body) as Map;
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
         sent.add(body);
         final user = ((body['messages'] as List)[1] as Map)['content'] as String;
         return _json({'choices': [{'message': {'content': user.split('\n').map((l) => '译$l').join('\n')}}]});

@@ -306,6 +306,7 @@ pub unsafe extern "C" fn lumtub_update_offer(json: *const u8, length: usize) -> 
         #[serde(default)]
         portable: bool,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };
@@ -410,6 +411,7 @@ pub unsafe extern "C" fn lumtub_update_launch(json: *const u8, length: usize) ->
         name: Option<String>,
         signature: Option<String>,
     }
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(launch) = serde_json::from_str::<Launch>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };
@@ -445,6 +447,7 @@ pub unsafe extern "C" fn lumtub_update_launch(json: *const u8, length: usize) ->
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_update_script(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     let Ok(install) = serde_json::from_str::<Install>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };

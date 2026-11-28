@@ -1,24 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:lumtub/device.dart';
 import 'package:lumtub/app/app_controller.dart';
+import 'package:lumtub/device.dart';
 import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/ui/app_icons.dart';
 import 'package:lumtub/ui/common.dart';
+import 'package:lumtub/ui/learning_drawer.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
-import 'package:lumtub/ui/learning_drawer.dart';
 import 'package:lumtub/ui/theme.dart';
-import 'package:lumtub/widgets/video_progress_bar.dart';
 import 'package:lumtub/wheel_gesture.dart';
-import 'package:lumtub/ui/app_icons.dart';
+import 'package:lumtub/widgets/video_progress_bar.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:media_kit/media_kit.dart';
+
 import 'tooltip_finder.dart';
 
 /// A player without libmpv: state changes are pushed through the streams
@@ -109,6 +110,11 @@ class FakePlayer implements Player {
     _volume.add(volume);
   }
 
+  /// Ends the streams once a test is over.
+  Future<void> close() async {
+    await Future.wait([_playing.close(), _completed.close(), _position.close(), _volume.close(), _rate.close()]);
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -125,6 +131,8 @@ void main() {
     controller.player = player;
     controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
+
+  tearDown(() => player.close());
 
   Future<void> pump(WidgetTester tester) async {
     tester.view.physicalSize = const Size(960, 540);
@@ -555,20 +563,20 @@ void main() {
     await pump(tester);
     final rect = tester.getRect(find.byType(PlayerControls));
     final playing = player.state.playing;
-    await tester.tapAt(rect.center, kind: PointerDeviceKind.touch);
+    await tester.tapAt(rect.center);
     await tester.pump(const Duration(milliseconds: 400));
     expect(player.state.playing, playing, reason: 'one tap leaves playback alone');
     Future<void> doubleTap(Offset at) async {
-      await tester.tapAt(at, kind: PointerDeviceKind.touch);
+      await tester.tapAt(at);
       await tester.pump(const Duration(milliseconds: 50));
-      await tester.tapAt(at, kind: PointerDeviceKind.touch);
+      await tester.tapAt(at);
       await tester.pump(const Duration(milliseconds: 400));
     }
 
     await doubleTap(rect.centerRight - const Offset(60, 0));
     expect(player.state.playing, !playing, reason: 'a double tap at the side pauses too');
     final seeks = player.seeks.length;
-    final finger = await tester.startGesture(rect.center, kind: PointerDeviceKind.touch);
+    final finger = await tester.startGesture(rect.center);
     for (var i = 0; i < 10; i++) {
       await finger.moveBy(Offset(rect.width / 40, 0));
       await tester.pump(const Duration(milliseconds: 16));
@@ -576,7 +584,7 @@ void main() {
     await finger.up();
     await tester.pump(const Duration(milliseconds: 100));
     expect(player.seeks.length, seeks + 1);
-    expect(player.seeks.last, greaterThan(const Duration(minutes: 1, seconds: 30)), reason: "a quarter of the width is about 45 s of the 3 minutes it spans");
+    expect(player.seeks.last, greaterThan(const Duration(minutes: 1, seconds: 30)), reason: 'a quarter of the width is about 45 s of the 3 minutes it spans');
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });

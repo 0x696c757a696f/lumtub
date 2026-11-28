@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'app_log.dart';
-import 'background_json.dart';
-import 'heatmap.dart';
-import 'blocked_sign_in.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
+import 'background_json.dart';
+import 'blocked_sign_in.dart';
+import 'heatmap.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'native_http.dart';
@@ -20,8 +20,8 @@ import 'process_runner.dart';
 import 'storyboard.dart';
 import 'video_codec.dart';
 import 'video_facts_lookup.dart';
-import 'youtube_player_probe.dart';
 import 'volume_balance.dart';
+import 'youtube_player_probe.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows. What the formats offer
@@ -114,7 +114,7 @@ class ResolvedVideo {
   Heatmap? get heatmap {
     final summary = _summary();
     if (summary == null) return Heatmap.from(info);
-    return switch (summary['heatmap']) { final List values => Heatmap([for (final v in values) (v as num).toDouble()]), _ => null };
+    return switch (summary['heatmap']) { final List<dynamic> values => Heatmap([for (final v in values) (v as num).toDouble()]), _ => null };
   }
 
   /// Video heights this video offers, highest first; with [settings], only
@@ -155,7 +155,7 @@ class ResolvedVideo {
     final streams = _summary()?['streams'];
     if (streams is! List || streams.isEmpty) return null;
     final addresses = [
-      for (final stream in streams.cast<Map>())
+      for (final stream in streams.cast<Map<dynamic, dynamic>>())
         relay?.call(stream['url'] as String, stream['size'] as int?) ?? stream['url'] as String,
     ];
     return NativeCore.instance?.edl(addresses);
@@ -176,7 +176,7 @@ abstract interface class MembersCookies {
 }
 
 class StreamResolver {
-  StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
+  StreamResolver(this.ytDlpPath, {required this.infoDirectory, this.cacheDirectory, this.deno, this.proxy, Map<String, String>? environment})
       : _environment = environment {
     unawaited(deleteStaleInfo());
   }
@@ -221,7 +221,7 @@ class StreamResolver {
   void Function(String videoId)? onSignedInPlay;
 
   /// What yt-dlp says when YouTube takes the address for a bot.
-  static final botCheck = RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false);
+  static final botCheck = RegExp(r'not a bot|confirm you.?re not|Sign in to confirm', caseSensitive: false);
 
   /// Each kept answer takes about 5 MB once decoded (measured with a 1 MB
   /// answer: 55 MB for 12), so only the last few are kept.
@@ -309,7 +309,7 @@ class StreamResolver {
   Future<void> checkVisionCut(Map<String, dynamic> info) async {
     final proxy = this.proxy?.call();
     if (_visionChecking || (_visionCheckedProxy == proxy && DateTime.now().difference(_visionCheckedAt) < visionCheckFor)) return;
-    final formats = [...?(info['requested_formats'] as List?)?.whereType<Map>(), info];
+    final formats = [...?(info['requested_formats'] as List<dynamic>?)?.whereType<Map<dynamic, dynamic>>(), info];
     final format = formats.firstWhere((f) => f['url'] is String && ((f['filesize'] as num?) ?? 0) > visionCutAt + 4096, orElse: () => const {});
     final url = format['url'];
     if (url is! String) return;
@@ -455,7 +455,7 @@ class StreamResolver {
         // too, so it asks its default clients for a while.
         if (answer.contains('"LOGIN_REQUIRED"') && avoidingTv) {
           _tvNeededUntil = DateTime.now().add(tvNeededFor);
-          logInfo("visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes");
+          logInfo('visionOS was taken for a bot; yt-dlp asks its default clients for ${tvNeededFor.inMinutes} minutes');
         }
         if (answer.contains('"LOGIN_REQUIRED"') && botCheck.hasMatch(answer)) blockedSignIn.noteBlocked();
         logInfo('Quick start of $videoId: left to yt-dlp (${VideoFactsLookup.playerWhy(answer)})');
@@ -549,7 +549,7 @@ class StreamResolver {
     _formatSorts.remove(videoId);
     _proxies.remove(videoId);
     _lives.remove(videoId);
-    _results.remove(videoId);
+    unawaited(_results.remove(videoId));
     _done.remove(videoId);
     _deleteInfo(videoId);
   }
@@ -565,7 +565,7 @@ class StreamResolver {
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
   void forget(String videoId) {
-    _results.remove(videoId);
+    unawaited(_results.remove(videoId));
     _done.remove(videoId);
     _formats.remove(videoId);
     _formatSorts.remove(videoId);
@@ -617,7 +617,7 @@ class StreamResolver {
 
   Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) {
     final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly, live: live);
-    _results.remove(videoId);
+    unawaited(_results.remove(videoId));
     _done.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
@@ -636,13 +636,13 @@ class StreamResolver {
       _drop(_results.keys.firstWhere((id) => id != _asked && id != videoId));
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
-    future.then((video) {
+    unawaited(future.then((video) {
       _noteSuccess(videoId);
       if (identical(_results[videoId], future)) _done[videoId] = video;
     }, onError: (Object e) {
       _noteFailure(videoId, e);
       if (identical(_results[videoId], future)) forget(videoId);
-    });
+    }));
     return future;
   }
 

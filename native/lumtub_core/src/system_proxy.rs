@@ -24,6 +24,8 @@ pub fn read() -> Option<SystemProxy> {
     let key = wide(r"Software\Microsoft\Windows\CurrentVersion\Internet Settings");
     let mut enabled = 0u32;
     let mut size = std::mem::size_of::<u32>() as u32;
+    // SAFETY: `key` and the `wide(..)` temporary are NUL-terminated UTF-16 that outlive the call,
+    // and `enabled` is a `u32` with `size` set to its 4 bytes.
     let status = unsafe {
         RegGetValueW(
             HKEY_CURRENT_USER,
@@ -41,6 +43,8 @@ pub fn read() -> Option<SystemProxy> {
     let string = |name: &str| {
         let name = wide(name);
         let mut size = 0u32;
+        // SAFETY: `key` and `name` are NUL-terminated UTF-16 that outlive the call; with a null
+        // data pointer the call only writes the needed byte count to `size`.
         let status = unsafe {
             RegGetValueW(
                 HKEY_CURRENT_USER,
@@ -56,6 +60,8 @@ pub fn read() -> Option<SystemProxy> {
             return String::new();
         }
         let mut buffer = vec![0u16; (size as usize).div_ceil(2)];
+        // SAFETY: `buffer` has room for `size` bytes, as the first call reported, and `size` is its
+        // capacity.
         let status = unsafe {
             RegGetValueW(
                 HKEY_CURRENT_USER,

@@ -85,9 +85,9 @@ void main() {
     final main = (cues: [(start: s(0), end: s(2), text: 'Hello there'), (start: s(2), end: s(5), text: 'General Kenobi')], font: 'Arial', room: 60.0, wrapFont: '');
 
     test('sits where the main subtitle does, at any size', () {
-      expect(LibassLayout.secondaryPosition('Hello\nthere', position: 100, scale: 2, margin: 34, whole: true), 95.2);
-      expect(LibassLayout.secondaryPosition('', position: 100, scale: 1, margin: 34, whole: true), 95.2);
-      expect(LibassLayout.secondaryPosition('', position: 80, scale: 1, margin: 34, whole: true), lessThan(95.2));
+      expect(LibassLayout.secondaryPosition('Hello\nthere', position: 100, scale: 2, whole: true), 95.2);
+      expect(LibassLayout.secondaryPosition('', position: 100, scale: 1, whole: true), 95.2);
+      expect(LibassLayout.secondaryPosition('', position: 80, scale: 1, whole: true), lessThan(95.2));
     });
 
     test('each event holds the main lines shown with it, invisible, at their size', () {

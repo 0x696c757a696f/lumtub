@@ -3,22 +3,23 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app/library_controller.dart';
 import 'package:lumtub/app/video_list_loader.dart';
 import 'package:lumtub/library_store.dart';
 import 'package:lumtub/list_order.dart';
-import 'package:lumtub/ui/app_icons.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/ui/app_icons.dart';
+import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/pages/channel_page.dart';
 import 'package:lumtub/ui/pages/library_pages.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/ui/video_card.dart';
 import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/youtube_account.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'tooltip_finder.dart';
 
 void main() {

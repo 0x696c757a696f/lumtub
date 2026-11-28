@@ -443,7 +443,7 @@ void _sky(Canvas canvas, Size size, math.Random random, bool night) {
   _verticalGradient(canvas, rect, night ? _SkyNight.sky : _SkyDay.sky, const [0, 0.35, 0.75, 1]);
   final sun = Offset(size.width * 0.82, size.height * 0.12);
   if (night) {
-    _stars(canvas, size, random, down: 0.7, count: 160);
+    _stars(canvas, size, random, down: 0.7);
   } else {
     _flare(canvas, sun, rect.center + Offset(-size.width * 0.25, size.height * 0.15), m * 0.06, tint: const Color(0xFFFFF9E6));
   }
@@ -582,7 +582,7 @@ void _underwater(Canvas canvas, Size size, math.Random random, bool night) {
     final r = math.pow(random.nextDouble(), 2) * 30 + 3;
     rainbowBubble(canvas, Offset(x, random.nextDouble() * size.height * 0.85), r.toDouble(), opacity: night ? 0.55 : 1);
   }
-  _bokeh(canvas, rect, random, color: night ? const Color(0xFF40E0FF) : Colors.white, count: 24, size: 12);
+  _bokeh(canvas, rect, random, color: night ? const Color(0xFF40E0FF) : Colors.white, size: 12);
   canvas.restore();
 }
 
@@ -900,7 +900,7 @@ void _collage(Canvas canvas, Size size, math.Random random, bool night) {
     ..arcToPoint(Offset(drop.dx - dr, drop.dy), radius: Radius.circular(dr))
     ..cubicTo(drop.dx - dr, drop.dy - dr * 0.6, drop.dx - dr * 0.35, drop.dy - dr * 1.3, drop.dx, drop.dy - dr * 1.9)
     ..close();
-  canvas.drawPath(tear, Paint()..shader = RadialGradient(colors: [const Color(0x0080E0FF), const Color(0x1080E0FF), const Color(0xAA2A8AD8)], stops: const [0, 0.7, 1]).createShader(Rect.fromCircle(center: drop - Offset(0, dr * 0.4), radius: dr * 1.5)));
+  canvas.drawPath(tear, Paint()..shader = const RadialGradient(colors: [Color(0x0080E0FF), Color(0x1080E0FF), Color(0xAA2A8AD8)], stops: [0, 0.7, 1]).createShader(Rect.fromCircle(center: drop - Offset(0, dr * 0.4), radius: dr * 1.5)));
   canvas.drawPath(tear, Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.5

@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/ui/common.dart';
 import 'package:lumtub/ui/fitting_tab_bar.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   Future<void> pumpTabs(WidgetTester tester, List<String> labels, double width) async {

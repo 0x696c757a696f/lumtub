@@ -264,6 +264,8 @@ async fn report(port: i64, watched: Watched) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_tv_watched(port: i64, json: *const u8, length: usize) -> bool {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let Ok(watched) = serde_json::from_str::<Watched>(unsafe { text(json, length) }) else {
         return false;
     };

@@ -5,9 +5,10 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+
+import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'system_env.dart';
-import 'app_log.dart';
 
 /// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -245,7 +246,5 @@ class GoogleAuth {
     }
   }
 
-  static String _page(String title, String message) => '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title>'
-      '<body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0">'
-      '<div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
+  static String _page(String title, String message) => '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Lumtub</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0"><div style="text-align:center"><h2>$title</h2><p>$message</p></div></body></html>';
 }

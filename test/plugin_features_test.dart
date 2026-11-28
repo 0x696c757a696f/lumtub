@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -21,6 +20,7 @@ import 'package:lumtub/ui/video_notes.dart' show notesText;
 import 'package:lumtub/video_summary.dart';
 import 'package:lumtub/watch_time.dart';
 import 'package:lumtub/youtube_comments.dart';
+import 'package:material_ui/material_ui.dart';
 
 http.Response _reply(String content) => http.Response.bytes(
       utf8.encode(jsonEncode({'choices': [{'message': {'content': content}}]})),
@@ -281,8 +281,8 @@ void main() {
 
     test('needs an AI service with its key, except a local one', () {
       final client = MockClient((_) async => _reply(''));
-      expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {}, client), isNull);
-      expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {'ai@api.openai.com': 'k'}, client), isNotNull);
+      expect(aiServiceFor(const TranslationConfig(), const {}, client), isNull);
+      expect(aiServiceFor(const TranslationConfig(), const {'ai@api.openai.com': 'k'}, client), isNotNull);
       expect(aiServiceFor(const TranslationConfig(aiPreset: 'ollama'), const {}, client), isNotNull);
     });
   });

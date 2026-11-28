@@ -9,7 +9,7 @@ import 'page_switcher.dart';
 /// [enabled] false and anything while animations are reduced is simply
 /// there. Settled, it costs no layer.
 class Reveal extends StatefulWidget {
-  const Reveal({super.key, this.enabled = true, required this.child});
+  const Reveal({required this.child, super.key, this.enabled = true});
 
   /// Read when it is first built only.
   final bool enabled;
@@ -52,7 +52,7 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
 /// [Reveal] for a sliver, such as a grid of results: it only fades, as one
 /// layer for the whole sliver, never card by card.
 class SliverReveal extends StatefulWidget {
-  const SliverReveal({super.key, this.enabled = true, required this.sliver});
+  const SliverReveal({required this.sliver, super.key, this.enabled = true});
   final bool enabled;
   final Widget sliver;
 
@@ -87,7 +87,7 @@ class _SliverRevealState extends State<SliverReveal> with SingleTickerProviderSt
 /// change fades the new one in as it grows to size, over the old one fading
 /// out. The faces need keys, or icons, that tell them apart.
 class Swap extends StatelessWidget {
-  const Swap({super.key, this.scale = 0.8, required this.child});
+  const Swap({required this.child, super.key, this.scale = 0.8});
   final double scale;
   final Widget child;
 

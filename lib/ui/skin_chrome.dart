@@ -9,8 +9,8 @@ import '../l10n/l10n.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'app_icons.dart';
-import 'motion.dart';
 import 'glass_look.dart';
+import 'motion.dart';
 import 'skin_paint.dart';
 import 'theme.dart';
 

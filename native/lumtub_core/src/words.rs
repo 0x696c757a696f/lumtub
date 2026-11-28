@@ -535,7 +535,7 @@ fn hiragana(katakana: &str) -> String {
     katakana
         .chars()
         .map(|c| match c as u32 {
-            code @ 0x30A1..=0x30F6 => char::from_u32(code - 0x60).unwrap_or(c),
+            code @ 0x30a1..=0x30f6 => char::from_u32(code - 0x60).unwrap_or(c),
             _ => c,
         })
         .collect()
@@ -808,6 +808,8 @@ pub unsafe extern "C" fn lumtub_words_open(json: *const u8, length: usize) -> *m
         language: String,
         path: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {
@@ -834,6 +836,8 @@ pub unsafe extern "C" fn lumtub_words_close(json: *const u8, length: usize) -> *
     struct Ask {
         language: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     if let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         && let Ok(mut open) = cutters().lock()
     {
@@ -859,6 +863,8 @@ pub unsafe extern "C" fn lumtub_words(json: *const u8, length: usize) -> *mut c_
     struct Answer {
         lines: Vec<Vec<Word>>,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, per this function's `#
+    // Safety`.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {

@@ -375,6 +375,8 @@ struct FolderAsk {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_packs_in(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let folder = serde_json::from_str::<FolderAsk>(unsafe { text(json, length) })
         .map(|a| a.folder)
         .unwrap_or_default();
@@ -406,6 +408,8 @@ pub unsafe extern "C" fn lumtub_packs_take(json: *const u8, length: usize) -> *m
     struct Failed {
         error: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     let answer = serde_json::from_str::<Ask>(unsafe { text(json, length) })
         .map_err(|e| e.to_string())
         .and_then(|ask| {
@@ -432,6 +436,8 @@ pub unsafe extern "C" fn lumtub_pack_check(json: *const u8, length: usize) -> *m
     struct Failed {
         error: String,
     }
+    // SAFETY: The caller passes `json` pointing at `length` readable bytes, as this function
+    // requires.
     match read_entry(unsafe { text(json, length) }.as_bytes()) {
         Ok(pack) => give_json(&pack),
         Err(error) => give_json(&Failed { error }),

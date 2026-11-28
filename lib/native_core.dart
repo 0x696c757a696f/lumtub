@@ -7,9 +7,9 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 
 import 'android_python.dart';
+import 'app_log.dart';
 import 'ios_python.dart';
 import 'js_challenge_plugin.dart';
-import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'yt_dlp_tls.dart';
@@ -505,8 +505,8 @@ class NativeCore {
       final map = answer == null ? null : jsonDecode(answer);
       if (map is Map && map['path'] is String) {
         final cut = [
-          for (final c in (map['cut'] as List? ?? const []).whereType<List>())
-            if (c.length == 2 && c[0] is int && c[1] is int) (Duration(milliseconds: c[0] as int), Duration(milliseconds: c[1] as int)),
+          for (final c in (map['cut'] as List? ?? const []).whereType<List<Object?>>())
+            if (c case [final int from, final int to]) (Duration(milliseconds: from), Duration(milliseconds: to)),
         ];
         return (path: map['path'] as String, error: null, cut: cut);
       }
@@ -529,7 +529,7 @@ class NativeCore {
       final answer = core.take(core.withText(jsonEncode({'input': audio, 'stem': stem, 'every': every.inMilliseconds / 1000}), call));
       final map = answer == null ? null : jsonDecode(answer);
       if (map is Map && map['parts'] is List) {
-        return (parts: [for (final p in (map['parts'] as List).cast<Map>()) (path: p['path'] as String, start: (p['start'] as num).toDouble())], error: null);
+        return (parts: [for (final p in (map['parts'] as List).cast<Map<String, dynamic>>()) (path: p['path'] as String, start: (p['start'] as num).toDouble())], error: null);
       }
       return (parts: null, error: map is Map ? '${map['error']}' : 'the audio could not be cut');
     } on ArgumentError {
@@ -546,7 +546,7 @@ class NativeCore {
     final seen = core.library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_tls_seen');
     try {
       final list = jsonDecode(core.take(seen()) ?? '[]') as List;
-      return [for (final entry in list.whereType<Map>()) TlsSeen.fromJson(entry)];
+      return [for (final entry in list.whereType<Map<Object?, Object?>>()) TlsSeen.fromJson(entry)];
     } catch (_) {
       return const [];
     }
@@ -652,7 +652,7 @@ class NativeCore {
 /// Without lumtub_core.dll it is [process] alone.
 class ProcessTree implements Process {
   ProcessTree._(this._process, this._job) {
-    _process.exitCode.then((_) => _release(), onError: (_) => _release());
+    unawaited(_process.exitCode.then((_) => _release(), onError: (_) => _release()));
   }
 
   /// Starts [executable] like [Process.start] and puts it in its own tree.
@@ -760,7 +760,7 @@ class ProcessTree implements Process {
 class TlsSeen {
   const TlsSeen({required this.host, required this.group, required this.postQuantum, required this.at});
 
-  factory TlsSeen.fromJson(Map json) => TlsSeen(
+  factory TlsSeen.fromJson(Map<Object?, Object?> json) => TlsSeen(
         host: json['host']?.toString() ?? '',
         group: json['group']?.toString() ?? '',
         postQuantum: json['quantum'] == true,

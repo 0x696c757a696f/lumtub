@@ -27,7 +27,7 @@ static STATE: Mutex<State> = Mutex::new(State {
 });
 
 fn state() -> std::sync::MutexGuard<'static, State> {
-    STATE.lock().unwrap_or_else(|e| e.into_inner())
+    STATE.lock().expect("lock poisoned by a panic")
 }
 
 /// The host of [url] and where it sits in it.

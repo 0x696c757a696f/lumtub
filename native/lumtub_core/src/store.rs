@@ -1,4 +1,4 @@
-//! lumtub.db: the library (favorites, 稍后观看, playlists, followed
+//! lumtub.db: the library (favorites, watch later, playlists, followed
 //! channels, watch progress) and the watch history, in SQLite. Texts
 //! made for a video, such as recognized subtitles and AI summaries, are
 //! kept in the same file (store_texts.rs).
@@ -70,7 +70,7 @@ CREATE INDEX IF NOT EXISTS note_video ON note(video, at);
 static BUSY: Mutex<()> = Mutex::new(());
 
 fn lock() -> MutexGuard<'static, ()> {
-    BUSY.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    BUSY.lock().expect("lock poisoned by a panic")
 }
 
 #[derive(Debug)]
@@ -624,6 +624,7 @@ fn write_json(ask: &str) -> String {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_store_read(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     give(read_json(unsafe { text(json, length) }))
 }
 
@@ -638,6 +639,7 @@ pub unsafe extern "C" fn lumtub_store_read(json: *const u8, length: usize) -> *m
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_store_write(json: *const u8, length: usize) -> *mut c_char {
+    // SAFETY: `json` points to `length` readable bytes, per this function's `# Safety`.
     give(write_json(unsafe { text(json, length) }))
 }
 

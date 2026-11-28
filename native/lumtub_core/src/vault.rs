@@ -24,8 +24,10 @@ pub struct Locked {
     size: usize,
 }
 
-// SAFETY: [Locked] owns its pages alone.
+// SAFETY: [Locked] owns its pages alone, so moving it to another thread moves that ownership.
 unsafe impl Send for Locked {}
+// SAFETY: [Locked] owns its pages alone, and a shared reference reaches them only through its own
+// methods.
 unsafe impl Sync for Locked {}
 
 impl Locked {
@@ -226,7 +228,7 @@ impl Sealer {
         // One at a time: two first seals at once would each make a key and
         // the second would replace the first.
         static MAKING: std::sync::Mutex<()> = std::sync::Mutex::new(());
-        let _making = MAKING.lock().unwrap_or_else(|e| e.into_inner());
+        let _making = MAKING.lock().expect("lock poisoned by a panic");
         // A keyring holds one key for the app: one already there is used
         // again, so that files sealed earlier still open.
         for &mode in keys::modes(presence) {
@@ -377,10 +379,13 @@ mod memory {
 
     pub fn lock(ptr: *mut u8, size: usize) {
         // Fails only past the working set's limit; the bytes are still wiped.
+        // SAFETY: `ptr` is the start of `size` bytes of this process's own allocation, per
+        // `Locked`; a failure only leaves the pages unlocked.
         unsafe { VirtualLock(ptr as _, size) };
     }
 
     pub fn unlock(ptr: *mut u8, size: usize) {
+        // SAFETY: `ptr` and `size` are the range that `lock` was given.
         unsafe { VirtualUnlock(ptr as _, size) };
     }
 
@@ -425,6 +430,7 @@ mod memory {
     }
 
     pub fn unlock(ptr: *mut u8, size: usize) {
+        // SAFETY: `ptr` is the start of `size` bytes of whole pages, as in `lock`.
         unsafe {
             #[cfg(any(target_os = "linux", target_os = "android"))]
             libc::madvise(ptr as _, size, libc::MADV_DODUMP);
@@ -562,7 +568,7 @@ mod keys {
     const ALLOW_DECRYPT: u32 = 1;
     const ALLOW_SIGNING: u32 = 2;
     /// HRESULT_FROM_WIN32(ERROR_CANCELLED).
-    const ERROR_CANCELLED: HRESULT = 0x800704C7_u32 as _;
+    const ERROR_CANCELLED: HRESULT = 0x800704c7_u32 as _;
 
     pub fn modes(presence: bool) -> &'static [u8] {
         if presence {
@@ -583,6 +589,8 @@ mod keys {
     impl Drop for Handle {
         fn drop(&mut self) {
             if self.0 != 0 {
+                // SAFETY: `self.0` is a non-null NCrypt handle that this guard owns and frees only
+                // here.
                 unsafe { NCryptFreeObject(self.0) };
             }
         }
@@ -658,6 +666,8 @@ mod keys {
             1
         }
         let mut found: HWND = std::ptr::null_mut();
+        // SAFETY: `each` matches `WNDENUMPROC`, and `found` points to the `HWND` above, which
+        // outlives the call.
         unsafe { EnumWindows(Some(each), &mut found as *mut HWND as LPARAM) };
         found
     }
@@ -958,7 +968,7 @@ mod keys {
     const ASK_AGAIN: Duration = Duration::from_secs(60);
 
     fn down() -> Option<Down> {
-        let mut down = DOWN.lock().unwrap_or_else(|e| e.into_inner());
+        let mut down = DOWN.lock().expect("lock poisoned by a panic");
         match *down {
             Some((since, why)) if since.elapsed() < ASK_AGAIN => Some(why),
             _ => {
@@ -969,7 +979,7 @@ mod keys {
     }
 
     fn mark(why: Down) {
-        *DOWN.lock().unwrap_or_else(|e| e.into_inner()) = Some((Instant::now(), why));
+        *DOWN.lock().expect("lock poisoned by a panic") = Some((Instant::now(), why));
     }
 
     /// True when the last attempt found no Secret Service at all.
@@ -1107,6 +1117,7 @@ pub unsafe extern "C" fn lumtub_vault_seal(
     text: *const u8,
     length: usize,
 ) -> *mut std::os::raw::c_char {
+    // SAFETY: `text` points to `length` readable bytes, per this function's `# Safety`.
     let plain = unsafe { crate::taste::text(text, length) };
     match Sealer::new(false, "Lumtub").and_then(|sealer| sealer.seal(plain.as_bytes())) {
         Some(sealed) => crate::taste::give(sealed.iter().map(|b| format!("{b:02x}")).collect()),
@@ -1124,6 +1135,7 @@ pub unsafe extern "C" fn lumtub_vault_open(
     hex: *const u8,
     length: usize,
 ) -> *mut std::os::raw::c_char {
+    // SAFETY: `hex` points to `length` readable bytes, per this function's `# Safety`.
     let hex = unsafe { crate::taste::text(hex, length) };
     if hex.len() % 2 != 0 {
         return std::ptr::null_mut();

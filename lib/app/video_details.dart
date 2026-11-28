@@ -74,7 +74,7 @@ extension VideoDetailsActions on AppController {
   Future<String> _summarize(VideoItem item, VideoDetails? details, Intelligence intelligence, void Function(int done, int total)? onProgress) async {
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
-    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    final title = details?.title.isNotEmpty ?? false ? details!.title : item.title;
     Future<String> complete(String system, String user) => intelligence.complete(system, user);
     if (option == null) {
       // No subtitles, not even YouTube's automatic ones: the description
@@ -117,7 +117,7 @@ extension VideoDetailsActions on AppController {
   Future<void> addNote({required Duration at, String quote = '', String body = ''}) async {
     final item = playing;
     if (item == null) throw TranslationException(tr('No video is playing'));
-    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    final title = details?.title.isNotEmpty ?? false ? details!.title : item.title;
     await _notesDb.putNote(video: item.id, title: title, at: at, quote: quote.trim(), body: body.trim());
     notesChanged.value++;
   }
@@ -138,7 +138,7 @@ extension VideoDetailsActions on AppController {
     final intelligence = this.intelligence;
     if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
     final item = playing;
-    final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
+    final title = details?.title.isNotEmpty ?? false ? details!.title : item?.title ?? '';
     return explainSubtitle(intelligence.complete, text, title: title, before: before, after: after);
   }
 
@@ -149,7 +149,7 @@ extension VideoDetailsActions on AppController {
     if (!intelligence.can(Capability.complete)) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
     final details = this.details;
     final item = playing;
-    final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
+    final title = details?.title.isNotEmpty ?? false ? details!.title : item?.title ?? '';
     return completeQuoteText(intelligence.complete, quote, title: title, before: before, after: after);
   }
 
@@ -166,7 +166,7 @@ extension VideoDetailsActions on AppController {
   void prefetch(VideoItem item, {bool hover = false}) {
     // Each one starts yt-dlp; on battery only the next video in line is.
     if (hover && Power.saving) return;
-    if (hover && player?.state.playing == true) return;
+    if (hover && (player?.state.playing ?? false)) return;
     if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
 

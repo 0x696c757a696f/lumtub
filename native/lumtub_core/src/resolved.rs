@@ -494,8 +494,12 @@ pub unsafe extern "C" fn lumtub_resolved(
     ask: *const u8,
     ask_len: usize,
 ) -> *mut c_char {
+    // SAFETY: The caller passes `ask` pointing at `ask_len` readable bytes, as this function
+    // requires.
     let ask: Ask =
         serde_json::from_str(unsafe { crate::taste::text(ask, ask_len) }).unwrap_or_default();
+    // SAFETY: The caller passes `info` pointing at `info_len` readable bytes, as this function
+    // requires.
     match serde_json::from_str::<Value>(unsafe { crate::taste::outside(info, info_len) }) {
         Ok(info) if info.is_object() => crate::taste::give_json(&summary(&info, &ask)),
         _ => std::ptr::null_mut(),
@@ -508,6 +512,7 @@ pub unsafe extern "C" fn lumtub_resolved(
 /// [json] must point to [len] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_edl(json: *const u8, len: usize) -> *mut c_char {
+    // SAFETY: The caller passes `json` pointing at `len` readable bytes, as this function requires.
     match serde_json::from_str::<Vec<String>>(unsafe { crate::taste::text(json, len) }) {
         Ok(list) if !list.is_empty() => crate::taste::give(edl(&list)),
         _ => std::ptr::null_mut(),

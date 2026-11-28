@@ -46,7 +46,7 @@ void main() {
     final mix = store.createPlaylist('Mix');
     store.addToPlaylist(mix, video(4));
     store.addToPlaylist(mix, video(5));
-    store.toggleFollow(const ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'A', null));
+    store.toggleFollow(const ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'A'));
     store.channelGroups.add(ChannelGroup('Music', {'UCaaaaaaaaaaaaaaaaaaaaaa'}));
     store.liveVideos['v1'] = ('UCaaaaaaaaaaaaaaaaaaaaaa', 'is_live');
     store.setProgress(video(1).id, const Duration(seconds: 30), const Duration(seconds: 100));

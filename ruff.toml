@@ -15,6 +15,12 @@ select = [
   "SIM",      # simpler forms
   "PLE", "PLW",
   "RUF",
+  "A",        # shadowed builtins
+  "BLE",      # blind except: a catch-all says why
+  # Security checks that matter in scripts: exec and eval, pickle, unsafe
+  # YAML, shell=True, weak hashes. Subprocess and urlopen checks are left
+  # out: every script runs fixed commands and URLs.
+  "S102", "S301", "S307", "S324", "S506", "S602", "S604", "S605",
 ]
 ignore = [
   # Text in other languages is data (parsers, titles, translations).

@@ -162,7 +162,7 @@ def _challenges():
         module = importlib.util.module_from_spec(spec)
         sys.modules["lumtub_jsc"] = module
         spec.loader.exec_module(module)
-    except Exception:
+    except Exception:  # noqa: BLE001, the plugin is optional; its error is printed.
         import traceback
 
         traceback.print_exc()
@@ -201,7 +201,7 @@ def _tls(path):
         module = importlib.util.module_from_spec(spec)
         sys.modules["lumtub_tls"] = module
         spec.loader.exec_module(module)
-    except Exception:
+    except Exception:  # noqa: BLE001, the plugin is optional; its error is printed.
         import traceback
 
         traceback.print_exc()
@@ -211,7 +211,7 @@ def _version_of(app):
     with zipfile.ZipFile(app) as archive:
         source = archive.read("yt_dlp/version.py").decode()
     names = {}
-    exec(compile(source, "yt_dlp/version.py", "exec"), names)
+    exec(compile(source, "yt_dlp/version.py", "exec"), names)  # noqa: S102, this yt-dlp runs next anyway.
     return names["__version__"]
 
 
@@ -251,7 +251,7 @@ def _main(run, app, argv, environment=None):
             code = 1
     except KeyboardInterrupt:
         code = 130
-    except BaseException as error:
+    except BaseException as error:  # noqa: BLE001, every failure of a run becomes its exit code.
         import traceback
 
         traceback.print_exception(error)

@@ -89,7 +89,7 @@ def main():
         ):
             try:
                 state, note = check()
-            except Exception as e:  # a crash in the check is a broken check
+            except Exception as e:  # noqa: BLE001, a crash in the check is a broken check
                 state, note = "broken", f"{type(e).__name__}: {e}"
             rows.append((video, way, state, note))
             print(f"{video} {way}: {state}: {note}", flush=True)

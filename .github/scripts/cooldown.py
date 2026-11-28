@@ -90,7 +90,7 @@ def too_young(kind, before, after):
         for version in sorted(versions - old):
             try:
                 when = published(kind, name, version)
-            except Exception as error:
+            except Exception as error:  # noqa: BLE001, an unknown release time holds the version back.
                 print(f"{kind} {name} {version}: release time unknown ({error}); held back")
                 young.append((name, version, old))
                 continue

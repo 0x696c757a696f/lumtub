@@ -21,7 +21,19 @@ const rules = {
   'no-var': 'error',
   'prefer-const': 'error',
   'eqeqeq': ['error', 'always', {null: 'ignore'}],
+  // Google 4.1.1: braces for every control statement, except a simple
+  // statement that fits on the same line as an if with no else.
   'curly': ['error', 'multi-line'],
+  // Google 5.1.1 and 5.4.1: one variable per declaration, no Array().
+  'one-var': ['error', 'never'],
+  'no-array-constructor': 'error',
+  // No code built from strings, no changes to built-in prototypes.
+  'no-eval': 'error',
+  'no-implied-eval': 'error',
+  'no-new-func': 'error',
+  'no-extend-native': 'error',
+  'no-promise-executor-return': 'error',
+  'radix': 'error',
   'no-throw-literal': 'error',
   'prefer-rest-params': 'error',
   'prefer-spread': 'error',
